@@ -1,0 +1,21 @@
+<Directives>
+    <Application>
+		<Assembly Name="N_m3u8DL-RE" Dynamic="Required All"/>
+		<Assembly Name="N_m3u8DL-RE.Common" Dynamic="Required All"/>
+		<Assembly Name="N_m3u8DL-RE.Parser" Dynamic="Required All"/>
+		<Assembly Name="System.Text.Json" Dynamic="Required All">
+			<Type Name="System.Text.Json.Serialization.Converters.EnumConverter`1[[N_m3u8DL_RE.Common.Enum.MediaType,N_m3u8DL-RE.Common]]" Dynamic="Required All" />
+			<Type Name="System.Text.Json.Serialization.Converters.NullableConverter`1[[N_m3u8DL_RE.Common.Enum.MediaType,N_m3u8DL-RE.Common]]" Dynamic="Required All" />
+
+			<Type Name="System.Text.Json.Serialization.Converters.EnumConverter`1[[N_m3u8DL_RE.Common.Enum.EncryptMethod,N_m3u8DL-RE.Common]]" Dynamic="Required All" />
+			<Type Name="System.Text.Json.Serialization.Converters.NullableConverter`1[[N_m3u8DL_RE.Common.Enum.EncryptMethod,N_m3u8DL-RE.Common]]" Dynamic="Required All" />
+
+			<Type Name="System.Text.Json.Serialization.Converters.EnumConverter`1[[N_m3u8DL_RE.Common.Enum.Choise,N_m3u8DL-RE.Common]]" Dynamic="Required All" />
+			<Type Name="System.Text.Json.Serialization.Converters.NullableConverter`1[[N_m3u8DL_RE.Common.Enum.Choise,N_m3u8DL-RE.Common]]" Dynamic="Required All" />
+
+			<Type Name="System.Text.Json.Serialization.Converters.NullableConverter`1[[System.Int32,System.Private.CoreLib]]" Dynamic="Required All" />
+			<Type Name="System.Text.Json.Serialization.Converters.NullableConverter`1[[System.Double,System.Private.CoreLib]]" Dynamic="Required All" />
+
+		</Assembly>
+    </Application>
+</Directives>
