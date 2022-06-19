@@ -445,7 +445,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             {
                 //基本信息
                 StreamSpec streamSpec = new();
-                streamSpec.Name = item["FormatId"].GetValue<string>();
+                streamSpec.GroupId = item["FormatId"].GetValue<string>();
                 streamSpec.Bandwidth = item["Tbr"].GetValue<int>();
                 streamSpec.Codecs = item["Codecs"].GetValue<string>();
                 streamSpec.Language = item["Language"].GetValue<string>();
@@ -543,14 +543,40 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 streamSpec.Playlist = playlist;
                 streamList.Add(streamSpec);
             }
+
+            //为视频设置默认轨道
+            var aL = streamList.Where(s => s.MediaType == MediaType.AUDIO);
+            var sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES);
+            foreach (var item in streamList)
+            {
+                if (!string.IsNullOrEmpty(item.Resolution)) 
+                {
+                    if (aL.Any())
+                    {
+                        item.AudioId = aL.First().GroupId;
+                    }
+                    if (sL.Any())
+                    {
+                        item.SubtitleId = sL.First().GroupId;
+                    }
+                }
+            }
+
             return streamList;
         }
 
-        static bool CheckValid(string url)
+        bool CheckValid(string url)
         {
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(url));
+                if (ParserConfig.Headers != null)
+                {
+                    foreach (var item in ParserConfig.Headers)
+                    {
+                        request.Headers.Add(item.Key, item.Value);
+                    }
+                }
                 request.Timeout = 120000;
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 if (((int)response.StatusCode).ToString().StartsWith("2")) return true;

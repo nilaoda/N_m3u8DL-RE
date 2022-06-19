@@ -60,7 +60,7 @@ namespace N_m3u8DL_RE.Common.Entity
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {Name} | {FrameRate} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
                 returnStr = d.EscapeMarkup();
             }
 

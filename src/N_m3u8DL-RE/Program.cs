@@ -32,8 +32,8 @@ namespace N_m3u8DL_RE
                 //Logger.LogLevel = LogLevel.DEBUG;
                 var config = new ParserConfig();
                 var url = string.Empty;
-                url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
-                //url = "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd";
+                //url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
+                url = "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd";
 
                 if (string.IsNullOrEmpty(url))
                 {
