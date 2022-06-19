@@ -316,7 +316,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                                     if (representationMsInfo.ContainsKey("S"))
                                     {
-                                        var array = representationMsInfo["S"].GetValue<JsonArray>();
+                                        var array = representationMsInfo["S"].AsArray();
                                         for (int i = 0; i < array.Count; i++)
                                         {
                                             var s = array[i];
@@ -342,7 +342,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                                 var segmentIndex = 0;
                                 var timescale = representationMsInfo["Timescale"].GetValue<int>();
-                                foreach (var s in representationMsInfo["S"].GetValue<JsonArray>())
+                                foreach (var s in representationMsInfo["S"].AsArray())
                                 {
                                     var duration = DoubleOrNull(s["d"], timescale);
                                     for (int j = 0; j < s["r"].GetValue<long>() + 1; j++)
@@ -364,7 +364,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var fragments = new JsonArray();
 
                                 var segmentDuration = DoubleOrNull(representationMsInfo["SegmentDuration"].GetValue<double>(), representationMsInfo.ContainsKey("SegmentDuration") ? representationMsInfo["Timescale"].GetValue<int>() : 1);
-                                foreach (var jsonNode in representationMsInfo["SegmentUrls"].GetValue<JsonArray>())
+                                foreach (var jsonNode in representationMsInfo["SegmentUrls"].AsArray())
                                 {
                                     var segmentUrl = jsonNode.GetValue<string>();
                                     if (segmentDuration != -1)
@@ -529,10 +529,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 };
 
                 //统一添加EncryptInfo
-                playlist.MediaInit.EncryptInfo = new EncryptInfo()
+                if (playlist.MediaInit != null)
                 {
-                    Method = EncryptMethod.UNKNOWN
-                };
+                    playlist.MediaInit.EncryptInfo = new EncryptInfo()
+                    {
+                        Method = EncryptMethod.UNKNOWN
+                    };
+                }
                 foreach (var seg in playlist.MediaParts[0].MediaSegments)
                 {
                     seg.EncryptInfo = new EncryptInfo()
