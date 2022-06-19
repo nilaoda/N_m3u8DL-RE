@@ -14,6 +14,9 @@ namespace N_m3u8DL_RE.Parser.Util
     {
         public static List<StreamSpec> SelectStreams(IEnumerable<StreamSpec> lists)
         {
+            if (lists.Count() == 1)
+                return new List<StreamSpec>(lists);
+
             //基本流
             var basicStreams = lists.Where(x => x.MediaType == null);
             //可选音频轨道

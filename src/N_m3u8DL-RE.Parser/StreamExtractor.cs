@@ -38,6 +38,11 @@ namespace N_m3u8DL_RE.Parser
                 this.rawText = HTTPUtil.GetWebSourceAsync(url, parserConfig.Headers).Result;
                 parserConfig.Url = url;
             }
+            else if (File.Exists(url))
+            {
+                this.rawText = File.ReadAllText(url);
+                parserConfig.Url = new Uri(url).AbsoluteUri;
+            }
             this.rawText = rawText.Trim();
             LoadSourceFromText(this.rawText);
         }
@@ -51,9 +56,10 @@ namespace N_m3u8DL_RE.Parser
                 Logger.InfoMarkUp(ResString.matchHLS);
                 extractor = new HLSExtractor(parserConfig);
             }
-            else if (rawText.StartsWith(".."))
+            else if (rawText.Contains("<MPD "))
             {
-
+                Logger.InfoMarkUp(ResString.matchDASH);
+                extractor = new DASHExtractor(parserConfig);
             }
             else
             {
@@ -61,9 +67,24 @@ namespace N_m3u8DL_RE.Parser
             }
         }
 
-        public Task<List<StreamSpec>> ExtractStreamsAsync()
+        /// <summary>
+        /// 开始解析流媒体信息
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<StreamSpec>> ExtractStreamsAsync()
         {
-            return extractor.ExtractStreamsAsync(rawText);
+            Logger.Info(ResString.parsingStream);
+            return await extractor.ExtractStreamsAsync(rawText);
+        }
+
+        /// <summary>
+        /// 根据规格说明填充媒体播放列表信息
+        /// </summary>
+        /// <param name="streamSpecs"></param>
+        public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
+        {
+            Logger.Info(ResString.parsingStream);
+            await extractor.FetchPlayListAsync(streamSpecs);
         }
     }
 }

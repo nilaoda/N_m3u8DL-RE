@@ -70,6 +70,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 验证最后一个分片有效性 的本地化字符串。
+        /// </summary>
+        public static string checkingLast {
+            get {
+                return ResourceManager.GetString("checkingLast", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 获取:  的本地化字符串。
         /// </summary>
         public static string fetch {
@@ -106,6 +115,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 内容匹配: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/] 的本地化字符串。
+        /// </summary>
+        public static string matchDASH {
+            get {
+                return ResourceManager.GetString("matchDASH", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 内容匹配: [white on deepskyblue1]HTTP Live Streaming[/] 的本地化字符串。
         /// </summary>
         public static string matchHLS {
@@ -120,6 +138,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string notSupported {
             get {
                 return ResourceManager.GetString("notSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 正在解析媒体信息... 的本地化字符串。
+        /// </summary>
+        public static string parsingStream {
+            get {
+                return ResourceManager.GetString("parsingStream", resourceCulture);
             }
         }
         

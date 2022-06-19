@@ -35,6 +35,8 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public override string ToString()
         {
+            var prefixStr = "";
+            var returnStr = "";
             var encStr = string.Empty;
 
             //增加加密标志
@@ -45,19 +47,30 @@ namespace N_m3u8DL_RE.Common.Entity
 
             if (MediaType == Enum.MediaType.AUDIO)
             {
-                var d = $"{GroupId} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}".Replace("|  |", "|");
-                return $"[deepskyblue3]Aud[/] {encStr}" + d.EscapeMarkup().Trim().Trim('|').Trim();
+                prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
+                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
-                var d = $"{GroupId} | {Language} | {Name} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}".Replace("|  |", "|");
-                return $"[deepskyblue3_1]Sub[/] {encStr}" + d.EscapeMarkup().Trim().Trim('|').Trim();
+                prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
+                var d = $"{GroupId} | {Language} | {Name} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                returnStr = d.EscapeMarkup();
             }
             else
             {
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}".Replace("|  |", "|");
-                return $"[aqua]Vid[/] {encStr}" + d.EscapeMarkup().Trim().Trim('|').Trim();
+                prefixStr = $"[aqua]Vid[/] {encStr}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {Name} | {FrameRate} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                returnStr = d.EscapeMarkup();
             }
+
+            returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
+            while (returnStr.Contains("|  |"))
+            {
+                returnStr = returnStr.Replace("|  |", "|");
+            }
+
+            return returnStr;
         }
     }
 }

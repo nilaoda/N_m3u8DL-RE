@@ -136,4 +136,13 @@
   <data name="writeJson" xml:space="preserve">
     <value>Writing meta.json</value>
   </data>
+  <data name="matchDASH" xml:space="preserve">
+    <value>Content Matched: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]</value>
+  </data>
+  <data name="checkingLast" xml:space="preserve">
+    <value>Verifying the validity of the last segment</value>
+  </data>
+  <data name="parsingStream" xml:space="preserve">
+    <value>Parsing streams...</value>
+  </data>
 </root>

@@ -13,5 +13,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         ParserConfig ParserConfig { get; set; }
 
         Task<List<StreamSpec>> ExtractStreamsAsync(string rawText);
+
+        Task FetchPlayListAsync(List<StreamSpec> streamSpecs);
     }
 }

@@ -12,7 +12,7 @@ namespace N_m3u8DL_RE.Common.Entity
         //对应Url信息
         public string Url { get; set; }
         //是否直播
-        public bool IsLive { get; set; }
+        public bool IsLive { get; set; } = false;
         //INIT信息
         public MediaSegment? MediaInit { get; set; }
         //分片信息

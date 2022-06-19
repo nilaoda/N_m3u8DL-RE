@@ -32,8 +32,8 @@ namespace N_m3u8DL_RE
                 //Logger.LogLevel = LogLevel.DEBUG;
                 var config = new ParserConfig();
                 var url = string.Empty;
-                //url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
-                url = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8";
+                url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
+                //url = "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd";
 
                 if (string.IsNullOrEmpty(url))
                 {
@@ -44,7 +44,14 @@ namespace N_m3u8DL_RE
                 var extractor = new StreamExtractor(config);
                 extractor.LoadSourceFromUrl(url);
 
+                //解析流信息
                 var streams = await extractor.ExtractStreamsAsync();
+
+                if (streams.Count == 0)
+                {
+                    throw new Exception("解析失败");
+                }
+
                 //全部媒体
                 var lists = streams.OrderByDescending(p => p.Bandwidth);
                 //基本流
@@ -59,33 +66,23 @@ namespace N_m3u8DL_RE
 
                 Logger.Info(ResString.streamsInfo, lists.Count(), basicStreams.Count(), audios.Count(), subs.Count());
 
-                if (streams.Count > 1)
+                foreach (var item in lists)
                 {
-
-                    foreach (var item in lists) Logger.InfoMarkUp(item.ToString());
-
-                    var selectedStreams = PromptUtil.SelectStreams(lists);
-
-                    Logger.Info(ResString.selectedStream);
-                    await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
-                    foreach (var item in selectedStreams)
-                    {
-                        Logger.InfoMarkUp(item.ToString());
-                    }
+                    Logger.InfoMarkUp(item.ToString());
                 }
-                else if (streams.Count == 1)
+
+                //展示交互式选择框
+                var selectedStreams = PromptUtil.SelectStreams(lists);
+                //加载playlist
+                Logger.Info(ResString.selectedStream);
+                await extractor.FetchPlayListAsync(selectedStreams);
+                Logger.Warn(ResString.writeJson);
+                await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
+                foreach (var item in selectedStreams)
                 {
-                    var playlist = streams.First().Playlist;
-                    if (playlist.IsLive)
-                    {
-                        Logger.Warn(ResString.liveFound);
-                    }
-                    //Print(playlist);
+                    Logger.InfoMarkUp(item.ToString());
                 }
-                else
-                {
-                    throw new Exception("解析失败");
-                }
+
             }
             catch (Exception ex)
             {

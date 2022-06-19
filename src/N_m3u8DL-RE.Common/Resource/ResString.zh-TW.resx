@@ -136,4 +136,13 @@
   <data name="writeJson" xml:space="preserve">
     <value>寫出meta.json</value>
   </data>
+  <data name="matchDASH" xml:space="preserve">
+    <value>內容匹配: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]</value>
+  </data>
+  <data name="checkingLast" xml:space="preserve">
+    <value>驗證最後一個分片有效性</value>
+  </data>
+  <data name="parsingStream" xml:space="preserve">
+    <value>正在解析媒體信息...</value>
+  </data>
 </root>

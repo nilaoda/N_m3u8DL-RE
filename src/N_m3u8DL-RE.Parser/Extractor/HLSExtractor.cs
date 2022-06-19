@@ -107,14 +107,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         private string PreProcessUrl(string url)
         {
-            if (url.Contains("?__gda__"))
-            {
-                url += new Regex("\\?__gda__.*").Match(M3u8Url).Value;
-            }
-            if (M3u8Url.Contains("//dlsc.hcs.cmvideo.cn") && (url.EndsWith(".ts") || url.EndsWith(".mp4")))
+            if (ParserConfig.AppendUrlParams)
             {
                 url += new Regex("\\?.*").Match(M3u8Url).Value;
             }
+
             return url;
         }
 
@@ -480,9 +477,16 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private async Task<byte[]> ParseKeyAsync(string uri)
         {
-            var segUrl = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, uri));
-            var bytes = await HTTPUtil.GetBytesAsync(segUrl, ParserConfig.Headers);
-            return bytes;
+            if (uri.ToLower().StartsWith("base64:"))
+            {
+                return Convert.FromBase64String(uri.Substring(7));
+            }
+            else
+            {
+                var segUrl = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, uri));
+                var bytes = await HTTPUtil.GetBytesAsync(segUrl, ParserConfig.Headers);
+                return bytes;
+            }
         }
 
         public async Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
@@ -494,12 +498,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 Logger.Warn(ResString.masterM3u8Found);
                 var lists = await ParseMasterListAsync();
                 lists = lists.DistinctBy(p => p.Url).ToList();
-                for (int i = 0; i < lists.Count; i++)
-                {
-                    //重新加载m3u8
-                    await LoadM3u8FromUrlAsync(lists[i].Url);
-                    lists[i].Playlist = await ParseListAsync();
-                }
                 return lists;
             }
             else
@@ -529,6 +527,16 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
             this.M3u8Url = this.BaseUrl = url;
             this.PreProcessContent();
+        }
+
+        public async Task FetchPlayListAsync(List<StreamSpec> lists)
+        {
+            for (int i = 0; i < lists.Count; i++)
+            {
+                //重新加载m3u8
+                await LoadM3u8FromUrlAsync(lists[i].Url);
+                lists[i].Playlist = await ParseListAsync();
+            }
         }
     }
 }

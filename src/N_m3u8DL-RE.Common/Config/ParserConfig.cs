@@ -31,5 +31,14 @@ namespace N_m3u8DL_RE.Common.Config
         /// </summary>
         public byte[]? CustomeIV { get; set; }
 
+        /// <summary>
+        /// 组装视频分段的URL时，是否要把原本URL后的参数也加上去
+        /// 如 Base URL = "http://xxx.com/playlist.m3u8?hmac=xxx&token=xxx"
+        /// 相对路径 = clip_01.ts
+        /// 如果 AppendUrlParams=false，得 http://xxx.com/clip_01.ts
+        /// 如果 AppendUrlParams=true，得 http://xxx.com/clip_01.ts?hmac=xxx&token=xxx
+        /// </summary>
+        public bool AppendUrlParams { get; set; } = false;
+
     }
 }

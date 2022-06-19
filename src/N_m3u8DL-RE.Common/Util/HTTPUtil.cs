@@ -34,7 +34,7 @@ namespace N_m3u8DL_RE.Common.Util
             Timeout = TimeSpan.FromMinutes(2)
         };
 
-        public static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
+        private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
         {
             Logger.Debug(ResString.fetch + url); 
             using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
