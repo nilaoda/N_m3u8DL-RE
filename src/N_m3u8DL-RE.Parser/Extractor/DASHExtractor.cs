@@ -32,8 +32,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
             this.MpdUrl = parserConfig.Url ?? string.Empty;
             if (!string.IsNullOrEmpty(parserConfig.BaseUrl))
                 this.BaseUrl = parserConfig.BaseUrl;
-            else
-                this.BaseUrl = this.MpdUrl;
         }
 
 
