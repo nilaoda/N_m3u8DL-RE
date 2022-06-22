@@ -481,6 +481,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
             {
                 return Convert.FromBase64String(uri.Substring(7));
             }
+            else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
+            {
+                return Convert.FromBase64String(uri.Substring(23));
+            }
             else
             {
                 var segUrl = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, uri));
