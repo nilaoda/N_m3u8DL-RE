@@ -253,10 +253,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     if (!representationMsInfo.ContainsKey("TotalNumber") && representationMsInfo.ContainsKey("SegmentDuration"))
                                     {
                                         segmentDuration = DoubleOrNull(representationMsInfo["SegmentDuration"].GetValue<double>(), representationMsInfo["Timescale"].GetValue<int>());
-                                        representationMsInfo["TotalNumber"] = (int)Math.Ceiling(periodDuration.TotalSeconds / segmentDuration);
+                                        representationMsInfo["TotalNumber"] = (long)Math.Ceiling(periodDuration.TotalSeconds / segmentDuration);
                                     }
                                     var fragments = new JsonArray();
-                                    for (int i = representationMsInfo["StartNumber"].GetValue<int>(); i < representationMsInfo["StartNumber"].GetValue<int>() + representationMsInfo["TotalNumber"].GetValue<int>(); i++)
+                                    for (int i = representationMsInfo["StartNumber"].GetValue<int>(); i < representationMsInfo["StartNumber"].GetValue<int>() + representationMsInfo["TotalNumber"].GetValue<long>(); i++)
                                     {
                                         var segUrl = "";
                                         if (mediaTemplate.Contains("{0:D"))
@@ -626,12 +626,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     var sE = segmentTimeline.SelectNodes("ns:S", nsMgr);
                     if (sE?.Count > 0)
                     {
-                        MultisegmentInfo["TotalNumber"] = 0;
+                        MultisegmentInfo["TotalNumber"] = 0L;
                         var SList = new JsonArray();
                         foreach (XmlElement s in sE)
                         {
                             var r = string.IsNullOrEmpty(s.GetAttribute("r")) ? 0 : Convert.ToInt64(s.GetAttribute("r"));
-                            MultisegmentInfo["TotalNumber"] = MultisegmentInfo["TotalNumber"]?.GetValue<int>() + 1 + r;
+                            MultisegmentInfo["TotalNumber"] = MultisegmentInfo["TotalNumber"]?.GetValue<long>() + 1 + r;
                             SList.Add(new JsonObject()
                             {
                                 ["t"] = string.IsNullOrEmpty(s.GetAttribute("t")) ? 0 : Convert.ToInt64(s.GetAttribute("t")),
