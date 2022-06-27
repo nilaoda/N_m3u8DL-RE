@@ -88,6 +88,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 找不到支持的Processor 的本地化字符串。
+        /// </summary>
+        public static string keyProcessorNotFound {
+            get {
+                return ResourceManager.GetString("keyProcessorNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 检测到直播流 的本地化字符串。
         /// </summary>
         public static string liveFound {

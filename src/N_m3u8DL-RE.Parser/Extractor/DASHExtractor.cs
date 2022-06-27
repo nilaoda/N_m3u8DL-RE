@@ -1,9 +1,8 @@
-﻿using N_m3u8DL_RE.Common.Config;
+﻿using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
-using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Util;
 using System;
 using System.Collections.Generic;
@@ -723,9 +722,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         private string PreProcessUrl(string url)
         {
-            if (ParserConfig.AppendUrlParams)
+            foreach (var p in ParserConfig.DASHUrlProcessors)
             {
-                url += new Regex("\\?.*").Match(MpdUrl).Value;
+                if (p.CanProcess(url, ParserConfig))
+                {
+                    url = p.Process(url, ParserConfig);
+                }
             }
 
             return url;
@@ -733,10 +735,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private void PreProcessContent()
         {
-            //XiGua
-            if (this.MpdContent.Contains("<mas:") && !this.MpdContent.Contains("xmlns:mas"))
+            foreach (var p in ParserConfig.DASHContentProcessors)
             {
-                this.MpdContent = this.MpdContent.Replace("<MPD ", "<MPD xmlns:mas=\"urn:marlin:mas:1-0:services:schemas:mpd\" ");
+                if (p.CanProcess(MpdContent, ParserConfig))
+                {
+                    MpdContent = p.Process(MpdContent, ParserConfig);
+                }
             }
         }
 

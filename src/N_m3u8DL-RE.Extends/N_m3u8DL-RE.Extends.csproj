@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>N_m3u8DL_RE.Extends</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\N_m3u8DL-RE.Common\N_m3u8DL-RE.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Crypto\" />
+  </ItemGroup>
+
+</Project>

@@ -1,17 +1,17 @@
-﻿using N_m3u8DL_RE.Common.Config;
+﻿using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
-using N_m3u8DL_RE.Common.Util;
-using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Util;
+using N_m3u8DL_RE.Parser.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using N_m3u8DL_RE.Common.Util;
 
 namespace N_m3u8DL_RE.Parser.Extractor
 {
@@ -30,9 +30,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
             this.ParserConfig = parserConfig;
             this.M3u8Url = parserConfig.Url ?? string.Empty;
             if (!string.IsNullOrEmpty(parserConfig.BaseUrl))
+            {
                 this.BaseUrl = parserConfig.BaseUrl;
+            }
             else
-                this.BaseUrl = this.M3u8Url;
+            {
+                this.BaseUrl = parserConfig.BaseUrl = this.M3u8Url;
+            }
         }
 
         /// <summary>
@@ -46,59 +50,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 throw new Exception(ResString.badM3u8);
             }
 
-            //央视频回放
-            if (M3u8Url.Contains("tlivecloud-playback-cdn.ysp.cctv.cn") && M3u8Url.Contains("endtime="))
+            foreach (var p in ParserConfig.HLSContentProcessors)
             {
-                M3u8Content += Environment.NewLine + HLSTags.ext_x_endlist;
-            }
-
-            //IMOOC
-            if (M3u8Url.Contains("imooc.com/"))
-            {
-                //M3u8Content = DecodeImooc.DecodeM3u8(M3u8Content);
-            }
-
-            //iqy
-            if (M3u8Content.StartsWith("{\"payload\""))
-            {
-                //
-            }
-
-            //针对优酷#EXT-X-VERSION:7杜比视界片源修正
-            if (M3u8Content.Contains("#EXT-X-DISCONTINUITY") && M3u8Content.Contains("#EXT-X-MAP") && M3u8Content.Contains("ott.cibntv.net") && M3u8Content.Contains("ccode="))
-            {
-                Regex ykmap = new Regex("#EXT-X-DISCONTINUITY\\s+#EXT-X-MAP:URI=\\\"(.*?)\\\",BYTERANGE=\\\"(.*?)\\\"");
-                foreach (Match m in ykmap.Matches(M3u8Content))
+                if (p.CanProcess(M3u8Content, ParserConfig))
                 {
-                    M3u8Content = M3u8Content.Replace(m.Value, $"#EXTINF:0.000000,\n#EXT-X-BYTERANGE:{m.Groups[2].Value}\n{m.Groups[1].Value}");
+                    M3u8Content = p.Process(M3u8Content, ParserConfig);
                 }
-            }
-
-            //针对Disney+修正
-            if (M3u8Content.Contains("#EXT-X-DISCONTINUITY") && M3u8Content.Contains("#EXT-X-MAP") && M3u8Url.Contains("media.dssott.com/"))
-            {
-                Regex ykmap = new Regex("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY");
-                if (ykmap.IsMatch(M3u8Content))
-                {
-                    M3u8Content = M3u8Content.Replace(ykmap.Match(M3u8Content).Value, "#XXX");
-                }
-            }
-
-            //针对AppleTv修正
-            if (M3u8Content.Contains("#EXT-X-DISCONTINUITY") && M3u8Content.Contains("#EXT-X-MAP") && (M3u8Url.Contains(".apple.com/") || Regex.IsMatch(M3u8Content, "#EXT-X-MAP.*\\.apple\\.com/")))
-            {
-                //只取加密部分即可
-                Regex ykmap = new Regex("(#EXT-X-KEY:[\\s\\S]*?)(#EXT-X-DISCONTINUITY|#EXT-X-ENDLIST)");
-                if (ykmap.IsMatch(M3u8Content))
-                {
-                    M3u8Content = "#EXTM3U\r\n" + ykmap.Match(M3u8Content).Groups[1].Value + "\r\n#EXT-X-ENDLIST";
-                }
-            }
-
-            //修复#EXT-X-KEY与#EXTINF出现次序异常问题
-            if (Regex.IsMatch(M3u8Content, "(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)"))
-            {
-                M3u8Content = Regex.Replace(M3u8Content, "(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)", "$3$2$1");
             }
         }
 
@@ -107,9 +64,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         private string PreProcessUrl(string url)
         {
-            if (ParserConfig.AppendUrlParams)
+            foreach (var p in ParserConfig.HLSUrlProcessors)
             {
-                url += new Regex("\\?.*").Match(M3u8Url).Value;
+                if (p.CanProcess(url, ParserConfig))
+                {
+                    url = p.Process(url, ParserConfig);
+                }
             }
 
             return url;
@@ -338,7 +298,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     //自定义KEY情况 判断是否需要读取IV
                     if (line.Contains("IV=0x") && ParserConfig.CustomeKey != null && ParserConfig.CustomeIV == null) 
                     {
-                        currentEncryptInfo.Method = ParserConfig.CustomMethod;
+                        currentEncryptInfo.Method = ParserConfig.CustomMethod ?? EncryptMethod.AES_128;
                         currentEncryptInfo.Key = ParserConfig.CustomeKey;
                         currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
                     }
@@ -346,25 +306,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     if (uri != uri_last)
                     {
                         //解析key
-                        currentEncryptInfo.Key = await ParseKeyAsync(uri);
-                        //加密方式
-                        if (Enum.TryParse(method.Replace("-", "_"), out EncryptMethod m))
-                        {
-                            currentEncryptInfo.Method = m;
-                        }
-                        else
-                        {
-                            currentEncryptInfo.Method = EncryptMethod.UNKNOWN;
-                        }
-                        //没有读取到IV，自己生成
-                        if (string.IsNullOrEmpty(iv))
-                        {
-                            currentEncryptInfo.IV = HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
-                        }
-                        else
-                        {
-                            currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
-                        }
+                        currentEncryptInfo = ParseKey(method, uri, iv, segIndex);
                     }
                     lastKeyLine = line;
                 }
@@ -475,22 +417,17 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return playlist;
         }
 
-        private async Task<byte[]> ParseKeyAsync(string uri)
+        private EncryptInfo ParseKey(string method, string uriText, string ivText, int segIndex)
         {
-            if (uri.ToLower().StartsWith("base64:"))
+            foreach (var p in ParserConfig.HLSKeyProcessors)
             {
-                return Convert.FromBase64String(uri.Substring(7));
+                if (p.CanProcess(method, uriText, ivText, ParserConfig))
+                {
+                    return p.Process(method, uriText, ivText, segIndex, ParserConfig);
+                }
             }
-            else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
-            {
-                return Convert.FromBase64String(uri.Substring(23));
-            }
-            else
-            {
-                var segUrl = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, uri));
-                var bytes = await HTTPUtil.GetBytesAsync(segUrl, ParserConfig.Headers);
-                return bytes;
-            }
+
+            throw new Exception(ResString.keyProcessorNotFound);
         }
 
         public async Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)

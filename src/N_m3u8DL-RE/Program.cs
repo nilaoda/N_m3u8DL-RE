@@ -1,7 +1,7 @@
-﻿using N_m3u8DL_RE.Common.Config;
+﻿using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
-using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Parser.Util;
 using N_m3u8DL_RE.Parser;
 using Spectre.Console;
 using System.Text.Json;
@@ -10,7 +10,11 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
 using System.Globalization;
 using System.Text;
-using N_m3u8DL_RE.Parser.Util;
+using System.Text.RegularExpressions;
+using N_m3u8DL_RE.Extends.Subtitle;
+using System.Collections.Concurrent;
+using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Processor;
 
 namespace N_m3u8DL_RE
 {
@@ -26,18 +30,25 @@ namespace N_m3u8DL_RE
             //设置语言
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
+            //Logger.LogLevel = LogLevel.DEBUG;
 
             try
             {
-                //Logger.LogLevel = LogLevel.DEBUG;
                 var config = new ParserConfig();
+                //demo1
+                config.DASHContentProcessors.Insert(0, new DemoProcessor());
+                //demo2
+                config.HLSKeyProcessors.Insert(0, new DemoProcessor2());
+
                 var url = string.Empty;
-                //url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
-                url = "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd";
+                url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
+                //url = "https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd";
+
+
 
                 if (string.IsNullOrEmpty(url))
                 {
-                    url = AnsiConsole.Ask<string>("Input [green]URL[/]: ");
+                    url = AnsiConsole.Ask<string>("请输入 [green]URL[/]: ");
                 }
 
                 //流提取器配置
@@ -46,11 +57,6 @@ namespace N_m3u8DL_RE
 
                 //解析流信息
                 var streams = await extractor.ExtractStreamsAsync();
-
-                if (streams.Count == 0)
-                {
-                    throw new Exception("解析失败");
-                }
 
                 //全部媒体
                 var lists = streams.OrderByDescending(p => p.Bandwidth);
@@ -83,6 +89,8 @@ namespace N_m3u8DL_RE
                     Logger.InfoMarkUp(item.ToString());
                 }
 
+                Logger.Info("按任意键继续");
+                Console.ReadKey();
             }
             catch (Exception ex)
             {

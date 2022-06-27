@@ -53,6 +53,43 @@ namespace N_m3u8DL_RE.Common.Util
             return webResponse;
         }
 
+        //重定向
+        public static async Task<string> Get302Async(string url, Dictionary<string, string>? headers = null)
+        {
+            Logger.Debug(ResString.fetch + url);
+            var handler = new HttpClientHandler()
+            {
+                AllowAutoRedirect = false
+            };
+            string redirectedUrl = url;
+
+            using (HttpClient client = new HttpClient(handler))
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
+                    }
+                }
+                using (HttpResponseMessage response = await client.GetAsync(url))
+                using (HttpContent content = response.Content)
+                {
+                    Logger.Debug(ResString.fetch + response.Headers);
+                    if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved)
+                    {
+                        HttpResponseHeaders respHeaders = response.Headers;
+                        if (respHeaders != null && respHeaders.Location != null)
+                        {
+                            redirectedUrl = respHeaders.Location.AbsoluteUri;
+                        }
+                    }
+                }
+            }
+
+            return redirectedUrl;
+        }
+
         public static async Task<byte[]> GetBytesAsync(string url, Dictionary<string, string>? headers = null)
         {
             byte[] bytes = new byte[0];

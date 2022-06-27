@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Config;
+﻿using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using System;
 using System.Collections.Generic;
