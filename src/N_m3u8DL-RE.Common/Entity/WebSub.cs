@@ -23,6 +23,17 @@ namespace N_m3u8DL_RE.Common.Entity
         }
 
         /// <summary>
+        /// 从字节数组解析WEBVTT
+        /// </summary>
+        /// <param name="textBytes"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static WebSub Parse(byte[] textBytes, Encoding encoding)
+        {
+            return Parse(encoding.GetString(textBytes));
+        }
+
+        /// <summary>
         /// 从字符串解析WEBVTT
         /// </summary>
         /// <param name="text"></param>
@@ -66,9 +77,9 @@ namespace N_m3u8DL_RE.Common.Entity
                     {
                         StartTime = startTime,
                         EndTime = endTime,
-                        Payload = payload,
+                        Payload = string.Join("", payload.Where(c => c != 8203)), //Remove Zero Width Space!
                         Settings = style
-                    });
+                    }) ;
                     needPayload = false;
                 }
             }
