@@ -79,8 +79,9 @@ namespace N_m3u8DL_RE
 
                 //展示交互式选择框
                 var selectedStreams = PromptUtil.SelectStreams(lists);
-                //加载playlist
-                await extractor.FetchPlayListAsync(selectedStreams);
+                //一个以上的话，需要手动重新加载playlist
+                if (selectedStreams.Count() > 1)
+                    await extractor.FetchPlayListAsync(selectedStreams);
                 Logger.Warn(ResString.writeJson);
                 await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
                 Logger.Info(ResString.selectedStream);
