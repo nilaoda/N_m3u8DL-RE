@@ -215,6 +215,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             //当前的加密信息
             EncryptInfo currentEncryptInfo = new();
+            if (ParserConfig.CustomeKey != null)
+            {
+                currentEncryptInfo.Method = ParserConfig.CustomMethod ?? EncryptMethod.AES_128;
+                currentEncryptInfo.Key = ParserConfig.CustomeKey;
+                if (ParserConfig.CustomeIV != null)
+                    currentEncryptInfo.IV = ParserConfig.CustomeIV;
+            }
             //上次读取到的加密行，#EXT-X-KEY:……
             string lastKeyLine = "";
 
@@ -290,23 +297,37 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //解析KEY
                 else if (line.StartsWith(HLSTags.ext_x_key))
                 {
+                    //自定义KEY情况 不读取当前行的KEY信息 但是没自定义当前行有IV的话 就用
+                    if (ParserConfig.CustomeKey != null && ParserConfig.CustomeIV == null && line.Contains("IV=0x"))
+                    {
+                        currentEncryptInfo.IV = HexUtil.HexToBytes(ParserUtil.GetAttribute(line, "IV"));
+                        continue;
+                    }
+
                     var iv = ParserUtil.GetAttribute(line, "IV");
                     var method = ParserUtil.GetAttribute(line, "METHOD");
                     var uri = ParserUtil.GetAttribute(line, "URI");
                     var uri_last = ParserUtil.GetAttribute(lastKeyLine, "URI");
-
-                    //自定义KEY情况 判断是否需要读取IV
-                    if (line.Contains("IV=0x") && ParserConfig.CustomeKey != null && ParserConfig.CustomeIV == null) 
-                    {
-                        currentEncryptInfo.Method = ParserConfig.CustomMethod ?? EncryptMethod.AES_128;
-                        currentEncryptInfo.Key = ParserConfig.CustomeKey;
-                        currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
-                    }
+                    
                     //如果KEY URL相同，不进行重复解析
                     if (uri != uri_last)
                     {
-                        //解析key
-                        currentEncryptInfo = ParseKey(method, uri, iv, segIndex);
+                        //加密方式
+                        if (Enum.TryParse(method.Replace("-", "_"), out EncryptMethod m))
+                        {
+                            currentEncryptInfo.Method = m;
+                        }
+                        else
+                        {
+                            currentEncryptInfo.Method = EncryptMethod.UNKNOWN;
+                        }
+                        //IV
+                        if (!string.IsNullOrEmpty(iv))
+                        {
+                            currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
+                        }
+                        //KEY
+                        currentEncryptInfo.Key = ParseKey(method, uri);
                     }
                     lastKeyLine = line;
                 }
@@ -321,7 +342,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     {
                         segment.EncryptInfo.Method = currentEncryptInfo.Method;
                         segment.EncryptInfo.Key = currentEncryptInfo.Key;
-                        segment.EncryptInfo.IV = currentEncryptInfo.IV;
+                        segment.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
                     }
                     expectSegment = true;
                     segIndex++;
@@ -417,13 +438,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return playlist;
         }
 
-        private EncryptInfo ParseKey(string method, string uriText, string ivText, int segIndex)
+        private byte[] ParseKey(string method, string uriText)
         {
             foreach (var p in ParserConfig.HLSKeyProcessors)
             {
-                if (p.CanProcess(method, uriText, ivText, ParserConfig))
+                if (p.CanProcess(method, uriText, ParserConfig))
                 {
-                    return p.Process(method, uriText, ivText, segIndex, ParserConfig);
+                    return p.Process(method, uriText, ParserConfig);
                 }
             }
 

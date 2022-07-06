@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Parser.Processor
 {
     public abstract class KeyProcessor
     {
-        public abstract bool CanProcess(string method, string uriText, string ivText, ParserConfig parserConfig);
-        public abstract EncryptInfo Process(string method, string uriText, string ivText, int segIndex, ParserConfig parserConfig);
+        public abstract bool CanProcess(string method, string uriText, ParserConfig parserConfig);
+        public abstract byte[] Process(string method, string uriText, ParserConfig parserConfig);
     }
 }

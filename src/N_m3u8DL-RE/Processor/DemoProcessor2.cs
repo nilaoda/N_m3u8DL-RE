@@ -13,15 +13,15 @@ namespace N_m3u8DL_RE.Processor
 {
     internal class DemoProcessor2 : KeyProcessor
     {
-        public override bool CanProcess(string method, string uriText, string ivText, ParserConfig parserConfig)
+        public override bool CanProcess(string method, string uriText, ParserConfig parserConfig)
         {
             return parserConfig.Url.Contains("playertest.longtailvideo.com");
         }
 
-        public override EncryptInfo Process(string method, string uriText, string ivText, int segIndex, ParserConfig parserConfig)
+        public override byte[] Process(string method, string uriText, ParserConfig parserConfig)
         {
             Logger.InfoMarkUp("[white on green]My Key Processor![/]");
-            return new DefaultHLSKeyProcessor().Process(method, uriText, ivText, segIndex, parserConfig);
+            return new DefaultHLSKeyProcessor().Process(method, uriText, parserConfig);
         }
     }
 }
