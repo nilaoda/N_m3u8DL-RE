@@ -297,10 +297,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //解析KEY
                 else if (line.StartsWith(HLSTags.ext_x_key))
                 {
-                    //自定义KEY情况 不读取当前行的KEY信息 但是没自定义当前行有IV的话 就用
-                    if (ParserConfig.CustomeKey != null && ParserConfig.CustomeIV == null && line.Contains("IV=0x"))
+                    //自定义KEY情况 不读取当前行的KEY信息.
+                    //对于IV，没自定义且当前行有IV的话 就用
+                    if (ParserConfig.CustomeKey != null)
                     {
-                        currentEncryptInfo.IV = HexUtil.HexToBytes(ParserUtil.GetAttribute(line, "IV"));
+                        if (ParserConfig.CustomeIV == null && line.Contains("IV=0x"))
+                            currentEncryptInfo.IV = HexUtil.HexToBytes(ParserUtil.GetAttribute(line, "IV"));
                         continue;
                     }
 
