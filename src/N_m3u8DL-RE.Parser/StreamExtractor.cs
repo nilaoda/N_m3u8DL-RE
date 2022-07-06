@@ -19,6 +19,7 @@ namespace N_m3u8DL_RE.Parser
         private IExtractor extractor;
         private ParserConfig parserConfig = new ParserConfig();
         private string rawText;
+        private static SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
         public StreamExtractor()
         {
@@ -79,8 +80,16 @@ namespace N_m3u8DL_RE.Parser
         /// <returns></returns>
         public async Task<List<StreamSpec>> ExtractStreamsAsync()
         {
-            Logger.Info(ResString.parsingStream);
-            return await extractor.ExtractStreamsAsync(rawText);
+            try
+            {
+                await semaphore.WaitAsync();
+                Logger.Info(ResString.parsingStream);
+                return await extractor.ExtractStreamsAsync(rawText);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         /// <summary>
@@ -89,8 +98,16 @@ namespace N_m3u8DL_RE.Parser
         /// <param name="streamSpecs"></param>
         public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
         {
-            Logger.Info(ResString.parsingStream);
-            await extractor.FetchPlayListAsync(streamSpecs);
+            try
+            {
+                await semaphore.WaitAsync();
+                Logger.Info(ResString.parsingStream);
+                await extractor.FetchPlayListAsync(streamSpecs);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
     }
 }
