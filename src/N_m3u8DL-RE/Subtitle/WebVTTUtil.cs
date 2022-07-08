@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace N_m3u8DL_RE.Extends.Subtitle
+namespace N_m3u8DL_RE.Subtitle
 {
     public class WebVTTUtil
     {

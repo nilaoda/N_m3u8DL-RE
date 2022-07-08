@@ -17,6 +17,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
 {
     internal class HLSExtractor : IExtractor
     {
+        public ExtractorType ExtractorType => ExtractorType.HLS;
+
         private string M3u8Url = string.Empty;
         private string BaseUrl = string.Empty;
         private string M3u8Content = string.Empty;
@@ -50,9 +52,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 throw new Exception(ResString.badM3u8);
             }
 
-            foreach (var p in ParserConfig.HLSContentProcessors)
+            foreach (var p in ParserConfig.ContentProcessors)
             {
-                if (p.CanProcess(M3u8Content, ParserConfig))
+                if (p.CanProcess(ExtractorType, M3u8Content, ParserConfig))
                 {
                     M3u8Content = p.Process(M3u8Content, ParserConfig);
                 }
@@ -64,9 +66,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         private string PreProcessUrl(string url)
         {
-            foreach (var p in ParserConfig.HLSUrlProcessors)
+            foreach (var p in ParserConfig.UrlProcessors)
             {
-                if (p.CanProcess(url, ParserConfig))
+                if (p.CanProcess(ExtractorType, url, ParserConfig))
                 {
                     url = p.Process(url, ParserConfig);
                 }
@@ -442,10 +444,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private byte[] ParseKey(string method, string uriText)
         {
-            foreach (var p in ParserConfig.HLSKeyProcessors)
+            foreach (var p in ParserConfig.KeyProcessors)
             {
-                if (p.CanProcess(method, uriText, ParserConfig))
+                if (p.CanProcess(ExtractorType, method, uriText, ParserConfig))
                 {
+                    //匹配到对应处理器后不再继续
                     return p.Process(method, uriText, ParserConfig);
                 }
             }

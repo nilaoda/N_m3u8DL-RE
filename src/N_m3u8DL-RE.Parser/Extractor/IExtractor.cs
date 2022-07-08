@@ -5,11 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Parser.Extractor
 {
     internal interface IExtractor
     {
+        ExtractorType ExtractorType { get; }
+
         ParserConfig ParserConfig { get; set; }
 
         Task<List<StreamSpec>> ExtractStreamsAsync(string rawText);

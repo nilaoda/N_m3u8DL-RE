@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\N_m3u8DL-RE.Extends\N_m3u8DL-RE.Extends.csproj" />
     <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
   </ItemGroup>
 

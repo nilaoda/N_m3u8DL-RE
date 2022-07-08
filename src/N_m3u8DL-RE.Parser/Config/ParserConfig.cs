@@ -17,29 +17,19 @@ namespace N_m3u8DL_RE.Parser.Config
         };
 
         /// <summary>
-        /// HLS内容前置处理器. 调用顺序与列表顺序相同
+        /// 内容前置处理器. 调用顺序与列表顺序相同
         /// </summary>
-        public IList<ContentProcessor> HLSContentProcessors { get; } = new List<ContentProcessor>() { new DefaultHLSContentProcessor() };
-
-        /// <summary>
-        /// DASH内容前置处理器. 调用顺序与列表顺序相同
-        /// </summary>
-        public IList<ContentProcessor> DASHContentProcessors { get; } = new List<ContentProcessor>() { new DefaultDASHContentProcessor() };
+        public IList<ContentProcessor> ContentProcessors { get; } = new List<ContentProcessor>() { new DefaultHLSContentProcessor(), new DefaultDASHContentProcessor() };
 
         /// <summary>
         /// 添加分片URL前置处理器. 调用顺序与列表顺序相同
         /// </summary>
-        public IList<UrlProcessor> HLSUrlProcessors { get; } = new List<UrlProcessor>() { new DefaultUrlProcessor() };
+        public IList<UrlProcessor> UrlProcessors { get; } = new List<UrlProcessor>() { new DefaultUrlProcessor() };
 
         /// <summary>
-        /// DASH内容前置处理器. 调用顺序与列表顺序相同
+        /// KEY解析器. 调用顺序与列表顺序相同
         /// </summary>
-        public IList<UrlProcessor> DASHUrlProcessors { get; } = new List<UrlProcessor>() { new DefaultUrlProcessor() };
-
-        /// <summary>
-        /// HLS-KEY解析器. 调用顺序与列表顺序相同
-        /// </summary>
-        public IList<KeyProcessor> HLSKeyProcessors { get; } = new List<KeyProcessor>() { new DefaultHLSKeyProcessor() };
+        public IList<KeyProcessor> KeyProcessors { get; } = new List<KeyProcessor>() { new DefaultHLSKeyProcessor() };
 
 
         /// <summary>

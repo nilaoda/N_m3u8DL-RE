@@ -19,11 +19,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
     //code from https://github.com/ytdl-org/youtube-dl/blob/master/youtube_dl/extractor/common.py#L2076
     internal class DASHExtractor : IExtractor
     {
+        public ExtractorType ExtractorType => ExtractorType.MPEG_DASH;
+
         private string MpdUrl = string.Empty;
         private string BaseUrl = string.Empty;
         private string MpdContent = string.Empty;
 
         public ParserConfig ParserConfig { get; set; }
+
 
         public DASHExtractor(ParserConfig parserConfig)
         {
@@ -54,7 +57,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
             }
 
+            var type = ((XmlElement)xn).GetAttribute("type"); //static dynamic
             var mediaPresentationDuration = ((XmlElement)xn).GetAttribute("mediaPresentationDuration");
+
             var ns = ((XmlElement)xn).GetAttribute("xmlns");
 
             XmlNamespaceManager nsMgr = new XmlNamespaceManager(mpdDoc.NameTable);
@@ -722,9 +727,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         private string PreProcessUrl(string url)
         {
-            foreach (var p in ParserConfig.DASHUrlProcessors)
+            foreach (var p in ParserConfig.UrlProcessors)
             {
-                if (p.CanProcess(url, ParserConfig))
+                if (p.CanProcess(ExtractorType, url, ParserConfig))
                 {
                     url = p.Process(url, ParserConfig);
                 }
@@ -735,9 +740,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private void PreProcessContent()
         {
-            foreach (var p in ParserConfig.DASHContentProcessors)
+            foreach (var p in ParserConfig.ContentProcessors)
             {
-                if (p.CanProcess(MpdContent, ParserConfig))
+                if (p.CanProcess(ExtractorType, MpdContent, ParserConfig))
                 {
                     MpdContent = p.Process(MpdContent, ParserConfig);
                 }

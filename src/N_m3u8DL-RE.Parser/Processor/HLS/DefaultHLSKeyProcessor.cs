@@ -13,7 +13,8 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        public override bool CanProcess(string method, string uriText, ParserConfig paserConfig) => true;
+        public override bool CanProcess(ExtractorType extractorType, string method, string uriText, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
+
 
         public override byte[] Process(string method, string uriText, ParserConfig parserConfig)
         {
@@ -43,9 +44,9 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         /// </summary>
         private string PreProcessUrl(string url, ParserConfig parserConfig)
         {
-            foreach (var p in parserConfig.HLSUrlProcessors)
+            foreach (var p in parserConfig.UrlProcessors)
             {
-                if (p.CanProcess(url, parserConfig))
+                if (p.CanProcess(ExtractorType.HLS, url, parserConfig))
                 {
                     url = p.Process(url, parserConfig);
                 }

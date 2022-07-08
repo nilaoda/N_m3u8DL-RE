@@ -1,4 +1,5 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser.Config;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace N_m3u8DL_RE.Parser.Processor
 {
     public abstract class KeyProcessor
     {
-        public abstract bool CanProcess(string method, string uriText, ParserConfig parserConfig);
+        public abstract bool CanProcess(ExtractorType extractorType, string method, string uriText, ParserConfig parserConfig);
         public abstract byte[] Process(string method, string uriText, ParserConfig parserConfig);
     }
 }

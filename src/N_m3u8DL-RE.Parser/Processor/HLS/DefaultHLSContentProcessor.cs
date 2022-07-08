@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Parser.Config;
+﻿using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public class DefaultHLSContentProcessor : ContentProcessor
     {
-        public override bool CanProcess(string rawText, ParserConfig parserConfig) => true;
+        public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig) => extractorType == ExtractorType.HLS;
 
         public override string Process(string m3u8Content, ParserConfig parserConfig)
         {

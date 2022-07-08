@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Common.Log;
+﻿using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Parser.Config;
 using System;
 using System.Collections.Generic;
@@ -13,8 +14,10 @@ namespace N_m3u8DL_RE.Parser.Processor.DASH
     /// </summary>
     public class DefaultDASHContentProcessor : ContentProcessor
     {
-        public override bool CanProcess(string mpdContent, ParserConfig parserConfig)
+        public override bool CanProcess(ExtractorType extractorType, string mpdContent, ParserConfig parserConfig)
         {
+            if (extractorType != ExtractorType.MPEG_DASH) return false;
+
             if (mpdContent.Contains("<mas:") && !mpdContent.Contains("xmlns:mas"))
             {
                 return true;

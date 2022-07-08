@@ -11,7 +11,7 @@ using N_m3u8DL_RE.Common.Log;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using N_m3u8DL_RE.Extends.Subtitle;
+using N_m3u8DL_RE.Subtitle;
 using System.Collections.Concurrent;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Processor;
@@ -36,11 +36,12 @@ namespace N_m3u8DL_RE
             {
                 var config = new ParserConfig();
                 //demo1
-                config.DASHContentProcessors.Insert(0, new DemoProcessor());
+                config.ContentProcessors.Insert(0, new DemoProcessor());
                 //demo2
-                config.HLSKeyProcessors.Insert(0, new DemoProcessor2());
+                config.KeyProcessors.Insert(0, new DemoProcessor2());
 
                 var url = string.Empty;
+                //url = "http://livesim.dashif.org/livesim/mup_300/tsbd_500/testpic_2s/Manifest.mpd";
                 url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
                 //url = "https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd";
 
