@@ -43,7 +43,8 @@ namespace N_m3u8DL_RE.Common.Entity
             //增加加密标志
             if (Playlist != null && Playlist.MediaParts.Any(m => m.MediaSegments.Any(s => s.EncryptInfo.Method != EncryptMethod.NONE)))
             {
-                encStr = "[red]*[/] ";
+                var ms = Playlist.MediaParts.SelectMany(m => m.MediaSegments.Select(s => s.EncryptInfo.Method)).Where(e => e != EncryptMethod.NONE).Distinct();
+                encStr = $"[red]*{string.Join(",", ms).EscapeMarkup()}[/] ";
             }
 
             if (MediaType == Enum.MediaType.AUDIO)
