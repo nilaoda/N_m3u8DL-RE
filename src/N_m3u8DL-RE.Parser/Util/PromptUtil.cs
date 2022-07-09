@@ -37,11 +37,16 @@ namespace N_m3u8DL_RE.Parser.Util
                         .PageSize(10)
                         .MoreChoicesText(ResString.promptChoiceText)
                         .InstructionsText(ResString.promptInfo)
-                        .AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
+                        ;
 
             //默认选中第一个
             var first = lists.First();
             prompt.Select(first);
+
+            if (basicStreams.Any())
+            {
+                prompt.AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
+            }
 
             if (audios.Any())
             {
@@ -61,6 +66,10 @@ namespace N_m3u8DL_RE.Parser.Util
                     prompt.Select(subs.First(s => s.GroupId == first.SubtitleId));
                 }
             }
+
+            //如果此时还是没有选中任何流，自动选择一个
+            prompt.Select(basicStreams.Concat(audios).Concat(subs).First());
+
             //多选
             var selectedStreams = AnsiConsole.Prompt(prompt);
 
