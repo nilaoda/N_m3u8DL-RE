@@ -164,15 +164,38 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         var segmentBaseElements = representation.Elements().Where(e => e.Name.LocalName == "SegmentBase");
                         if (segmentBaseElements.Any())
                         {
-                            streamSpec.Playlist.MediaParts[0].MediaSegments.Add
-                            (
-                                new MediaSegment()
+                            //处理init url
+                            var initializationElements = segmentBaseElements.First().Elements().Where(e => e.Name.LocalName == "Initialization");
+                            if (initializationElements.Any())
+                            {
+                                var initialization = initializationElements.First();
+                                var sourceURL = initialization.Attribute("sourceURL")?.Value;
+                                if (sourceURL == null)
                                 {
-                                    Index = 0,
-                                    Url = PreProcessUrl(segBaseUrl),
-                                    Duration = XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds
+                                    streamSpec.Playlist.MediaParts[0].MediaSegments.Add
+                                    (
+                                        new MediaSegment()
+                                        {
+                                            Index = 0,
+                                            Url = PreProcessUrl(segBaseUrl),
+                                            Duration = XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds
+                                        }
+                                    );
                                 }
-                            );
+                                else
+                                {
+                                    var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value);
+                                    var initRange = initialization.Attribute("range")?.Value;
+                                    streamSpec.Playlist.MediaInit = new MediaSegment();
+                                    streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                                    if (initRange != null)
+                                    {
+                                        var (start, expect) = ParserUtil.ParseRange(initRange);
+                                        streamSpec.Playlist.MediaInit.StartRange = start;
+                                        streamSpec.Playlist.MediaInit.ExpectLength = expect;
+                                    }
+                                }
+                            }
                         }
 
                         //第二种形式 SegmentList.SegmentList
@@ -180,17 +203,22 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         if (segmentListElements.Any())
                         {
                             var segmentList = segmentListElements.First();
+                            var duration = segmentList.Attribute("duration")?.Value;
                             //处理init url
-                            var initialization = segmentList.Elements().First(e => e.Name.LocalName == "Initialization");
-                            var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value);
-                            var initRange = initialization.Attribute("range")?.Value;
-                            streamSpec.Playlist.MediaInit = new MediaSegment();
-                            streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
-                            if (initRange != null)
+                            var initializationElements = segmentList.Elements().Where(e => e.Name.LocalName == "Initialization");
+                            if (initializationElements.Any())
                             {
-                                var (start, expect) = ParserUtil.ParseRange(initRange);
-                                streamSpec.Playlist.MediaInit.StartRange = start;
-                                streamSpec.Playlist.MediaInit.ExpectLength = expect;
+                                var initialization = initializationElements.First();
+                                var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value);
+                                var initRange = initialization.Attribute("range")?.Value;
+                                streamSpec.Playlist.MediaInit = new MediaSegment();
+                                streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                                if (initRange != null)
+                                {
+                                    var (start, expect) = ParserUtil.ParseRange(initRange);
+                                    streamSpec.Playlist.MediaInit.StartRange = start;
+                                    streamSpec.Playlist.MediaInit.ExpectLength = expect;
+                                }
                             }
                             //处理分片
                             var segmentURLs = segmentList.Elements().Where(e => e.Name.LocalName == "SegmentURL");
@@ -200,10 +228,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value);
                                 var mediaRange = segmentURL.Attribute("range")?.Value;
                                 MediaSegment mediaSegment = new();
+                                mediaSegment.Duration = Convert.ToDouble(duration);
                                 mediaSegment.Url = PreProcessUrl(mediaUrl);
                                 if (mediaRange != null)
                                 {
-                                    var (start, expect) = ParserUtil.ParseRange(initRange);
+                                    var (start, expect) = ParserUtil.ParseRange(mediaRange);
                                     mediaSegment.StartRange = start;
                                     mediaSegment.ExpectLength = expect;
                                 }
