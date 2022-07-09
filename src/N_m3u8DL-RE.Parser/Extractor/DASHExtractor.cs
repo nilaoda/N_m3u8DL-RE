@@ -57,15 +57,28 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
             }
 
+            TimeSpan updateTs = TimeSpan.FromSeconds(0); //更新时长
+            TimeSpan totalTs = TimeSpan.FromSeconds(0); //总时长
+
             var type = ((XmlElement)xn).GetAttribute("type"); //static dynamic
-            var mediaPresentationDuration = ((XmlElement)xn).GetAttribute("mediaPresentationDuration");
+
+            if (type == "static")
+            {
+                var mediaPresentationDuration = ((XmlElement)xn).GetAttribute("mediaPresentationDuration");
+                totalTs = XmlConvert.ToTimeSpan(mediaPresentationDuration);
+            }
+            else if (type == "dynamic")
+            {
+                var minimumUpdatePeriod = ((XmlElement)xn).GetAttribute("minimumUpdatePeriod");
+                updateTs = XmlConvert.ToTimeSpan(minimumUpdatePeriod);
+            }
+
 
             var ns = ((XmlElement)xn).GetAttribute("xmlns");
 
             XmlNamespaceManager nsMgr = new XmlNamespaceManager(mpdDoc.NameTable);
             nsMgr.AddNamespace("ns", ns);
 
-            TimeSpan ts = XmlConvert.ToTimeSpan(mediaPresentationDuration); //时长
 
             //读取在MPD开头定义的<BaseURL>，并替换本身的URL
             var baseNode = xn.SelectSingleNode("ns:BaseURL", nsMgr);
@@ -90,7 +103,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             foreach (XmlElement period in xn.SelectNodes("ns:Period", nsMgr))
             {
                 periodIndex++;
-                var periodDuration = string.IsNullOrEmpty(period.GetAttribute("duration")) ? XmlConvert.ToTimeSpan(mediaPresentationDuration) : XmlConvert.ToTimeSpan(period.GetAttribute("duration"));
+                var periodDuration = string.IsNullOrEmpty(period.GetAttribute("duration")) ? totalTs : XmlConvert.ToTimeSpan(period.GetAttribute("duration"));
                 var periodMsInfo = ExtractMultisegmentInfo(period, nsMgr, new JsonObject()
                 {
                     ["StartNumber"] = 1,
@@ -410,7 +423,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     new JsonObject()
                                     {
                                         ["url"] = baseUrl,
-                                        ["duration"] = ts.TotalSeconds
+                                        ["duration"] = totalTs.TotalSeconds
                                     }
                                 };
                             }
@@ -463,6 +476,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                 //组装分片
                 Playlist playlist = new();
+                playlist.IsLive = type == "static" ? false : true;
+
+                //直播刷新间隔
+                if (playlist.IsLive)
+                {
+                    playlist.RefreshIntervalMs = updateTs.TotalMilliseconds;
+                }
+
                 List<MediaSegment> segments = new();
                 //Initial URL
                 if (item.ContainsKey("InitializationUrl"))
@@ -725,7 +746,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// <summary>
         /// 预处理URL
         /// </summary>
-        private string PreProcessUrl(string url)
+        public string PreProcessUrl(string url)
         {
             foreach (var p in ParserConfig.UrlProcessors)
             {
@@ -738,7 +759,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return url;
         }
 
-        private void PreProcessContent()
+        public void PreProcessContent()
         {
             foreach (var p in ParserConfig.ContentProcessors)
             {

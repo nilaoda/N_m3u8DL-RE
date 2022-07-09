@@ -44,7 +44,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// <summary>
         /// 预处理m3u8内容
         /// </summary>
-        private void PreProcessContent()
+        public void PreProcessContent()
         {
             M3u8Content = M3u8Content.Trim();
             if (!M3u8Content.StartsWith(HLSTags.ext_m3u))
@@ -64,7 +64,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// <summary>
         /// 预处理URL
         /// </summary>
-        private string PreProcessUrl(string url)
+        public string PreProcessUrl(string url)
         {
             foreach (var p in ParserConfig.UrlProcessors)
             {
@@ -262,7 +262,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //解析定义的分段长度
                 else if (line.StartsWith(HLSTags.ext_x_targetduration))
                 {
-                    segment.Duration = Convert.ToDouble(ParserUtil.GetAttribute(line));
+                    playlist.TargetDuration = Convert.ToDouble(ParserUtil.GetAttribute(line));
                 }
                 //解析起始编号
                 else if (line.StartsWith(HLSTags.ext_x_media_sequence))
@@ -438,6 +438,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             playlist.MediaParts = mediaParts;
             playlist.IsLive = !isEndlist;
+
+            //直播刷新间隔
+            if (playlist.IsLive)
+            {
+                //由于播放器默认从最后3个分片开始播放 此处设置刷新间隔为TargetDuration的2倍
+                playlist.RefreshIntervalMs = (int)((playlist.TargetDuration ?? 5) * 2 * 1000);
+            }
 
             return playlist;
         }

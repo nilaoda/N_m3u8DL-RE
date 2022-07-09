@@ -16,4 +16,8 @@
     <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Downloader\" />
+  </ItemGroup>
+
 </Project>

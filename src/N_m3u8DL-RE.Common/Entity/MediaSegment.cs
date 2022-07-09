@@ -9,14 +9,12 @@ namespace N_m3u8DL_RE.Common.Entity
     public class MediaSegment
     {
         public int Index { get; set; }
-
-        public int TargetDuration { get; set; }
         public double Duration { get; set; }
         public string? Title { get; set; }
 
-        public long StartRange { get; set; } = 0L;
-        public long StopRange { get => StartRange + ExpectLength - 1; }
-        public long ExpectLength { get; set; } = -1L;
+        public long? StartRange { get; set; }
+        public long? StopRange { get => (StartRange != null && ExpectLength != null) ? StartRange + ExpectLength - 1 : null; }
+        public long? ExpectLength { get; set; }
 
         public EncryptInfo EncryptInfo { get; set; } = new EncryptInfo();
 

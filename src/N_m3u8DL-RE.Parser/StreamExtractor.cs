@@ -66,7 +66,8 @@ namespace N_m3u8DL_RE.Parser
             else if (rawText.Contains("<MPD "))
             {
                 Logger.InfoMarkUp(ResString.matchDASH);
-                extractor = new DASHExtractor(parserConfig);
+                //extractor = new DASHExtractor(parserConfig);
+                extractor = new DASHExtractor2(parserConfig);
             }
             else
             {

@@ -32,7 +32,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string Url { get; set; }
 
-        public Playlist Playlist { get; set; }
+        public Playlist? Playlist { get; set; }
 
         public override string ToString()
         {
@@ -75,8 +75,8 @@ namespace N_m3u8DL_RE.Common.Entity
             //计算时长
             if (Playlist != null)
             {
-                var total = Playlist.MediaParts.Sum(x => x.MediaSegments.Sum(m => m.Duration));
-                returnStr += " | " + GlobalUtil.FormatTime((int)total);
+                var total = Playlist.TotalDuration;
+                returnStr += " | ~" + GlobalUtil.FormatTime((int)total);
             }
 
             return returnStr;

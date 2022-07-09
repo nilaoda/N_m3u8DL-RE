@@ -1,4 +1,5 @@
-﻿using System;
+﻿using N_m3u8DL_RE.Parser.Constants;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -55,6 +56,43 @@ namespace N_m3u8DL_RE.Parser.Util
                 }
             }
             return (0, null);
+        }
+
+        /// <summary>
+        /// 从100-300这种字符串中获取StartRange, ExpectLength信息
+        /// </summary>
+        /// <param name="range"></param>
+        /// <returns>StartRange, ExpectLength</returns>
+        public static (long, long) ParseRange(string range)
+        {
+            var start = Convert.ToInt64(range.Split('-')[0]);
+            var end = Convert.ToInt64(range.Split('-')[1]);
+            return (start, end - start + 1);
+        }
+
+        /// <summary>
+        /// MPD SegmentTemplate替换
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="keyValuePairs"></param>
+        /// <returns></returns>
+        public static string ReplaceVars(string text, Dictionary<string, object?> keyValuePairs)
+        {
+            foreach (var item in keyValuePairs)
+                if (text.Contains(item.Key))
+                    text = text.Replace(item.Key, item.Value.ToString());
+
+            //处理特殊形式数字 如 $Number%05d$
+            var regex = new Regex("\\$Number%([^$]+)d\\$");
+            if (regex.IsMatch(text) && keyValuePairs.ContainsKey(DASHTags.TemplateNumber)) 
+            {
+                foreach (Match m in regex.Matches(text))
+                {
+                    text = text.Replace(m.Value, keyValuePairs[DASHTags.TemplateNumber]?.ToString()?.PadLeft(Convert.ToInt32(m.Groups[1].Value), '0'));
+                }
+            }
+
+            return text;
         }
 
         /// <summary>

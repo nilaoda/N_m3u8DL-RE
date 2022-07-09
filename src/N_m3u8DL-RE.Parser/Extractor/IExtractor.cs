@@ -18,5 +18,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
         Task<List<StreamSpec>> ExtractStreamsAsync(string rawText);
 
         Task FetchPlayListAsync(List<StreamSpec> streamSpecs);
+
+        string PreProcessUrl(string url);
+
+        void PreProcessContent();
     }
 }
