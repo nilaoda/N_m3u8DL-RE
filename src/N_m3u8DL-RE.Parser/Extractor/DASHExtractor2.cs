@@ -334,6 +334,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         else
                         {
                             streamList.Add(streamSpec);
+                            //将segBaseUrl恢复 （重要）
+                            segBaseUrl = this.BaseUrl;
                         }
                     }
                 }
