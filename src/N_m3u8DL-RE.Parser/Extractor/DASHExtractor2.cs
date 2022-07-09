@@ -230,6 +230,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 MediaSegment mediaSegment = new();
                                 mediaSegment.Duration = Convert.ToDouble(duration);
                                 mediaSegment.Url = PreProcessUrl(mediaUrl);
+                                mediaSegment.Index = segmentIndex;
                                 if (mediaRange != null)
                                 {
                                     var (start, expect) = ParserUtil.ParseRange(mediaRange);
