@@ -8,7 +8,7 @@ namespace N_m3u8DL_RE.Common.Entity
 {
     public class MediaSegment
     {
-        public int Index { get; set; }
+        public long Index { get; set; }
         public double Duration { get; set; }
         public string? Title { get; set; }
 

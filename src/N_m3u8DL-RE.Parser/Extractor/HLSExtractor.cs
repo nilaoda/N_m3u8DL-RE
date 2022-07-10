@@ -208,9 +208,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
             string line;
             bool expectSegment = false;
             bool isEndlist = false;
-            int segIndex = 0;
+            long segIndex = 0;
             bool isAd = false;
-            int startIndex;
+            long startIndex;
 
             Playlist playlist = new();
             List<MediaPart> mediaParts = new();
@@ -267,7 +267,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //解析起始编号
                 else if (line.StartsWith(HLSTags.ext_x_media_sequence))
                 {
-                    segIndex = Convert.ToInt32(ParserUtil.GetAttribute(line));
+                    segIndex = Convert.ToInt64(ParserUtil.GetAttribute(line));
                     startIndex = segIndex;
                 }
                 //program date time
