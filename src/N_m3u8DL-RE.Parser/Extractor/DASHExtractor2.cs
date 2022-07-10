@@ -73,10 +73,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             //分片最大时长
             var maxSegmentDuration = mpdElement.Attribute("maxSegmentDuration")?.Value;
-            //MPD更新间隔
-            var minimumUpdatePeriod = mpdElement.Attribute("minimumUpdatePeriod")?.Value;
             //分片从该时间起可用
             var availabilityStartTime = mpdElement.Attribute("availabilityStartTime")?.Value;
+            //在availabilityStartTime的前XX段时间，分片有效
+            var timeShiftBufferDepth = mpdElement.Attribute("timeShiftBufferDepth")?.Value;
             //MPD发布时间
             var publishTime = mpdElement.Attribute("publishTime")?.Value;
             //MPD总时长
@@ -147,9 +147,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         };
                         streamSpec.Playlist.IsLive = isLive;
                         //设置刷新间隔
-                        if (minimumUpdatePeriod != null)
+                        if (timeShiftBufferDepth != null)
                         {
-                            streamSpec.Playlist.RefreshIntervalMs = XmlConvert.ToTimeSpan(minimumUpdatePeriod).TotalMilliseconds;
+                            streamSpec.Playlist.RefreshIntervalMs = XmlConvert.ToTimeSpan(timeShiftBufferDepth).TotalMilliseconds;
                         }
 
                         //读取声道数量
@@ -327,7 +327,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var now = publishTime == null ? DateTime.Now : DateTime.Parse(publishTime);
                                     var availableTime = DateTime.Parse(availabilityStartTime);
                                     var ts = now - availableTime;
-                                    var updateTs = XmlConvert.ToTimeSpan(minimumUpdatePeriod);
+                                    var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth);
                                     //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
                                     startNumber = (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
                                     totalNumber = (long)(updateTs.TotalSeconds * timescale / duration);
