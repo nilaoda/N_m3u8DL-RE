@@ -256,7 +256,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             varDic[DASHTags.TemplateRepresentationID] = streamSpec.GroupId;
                             varDic[DASHTags.TemplateBandwidth] = bandwidth?.Value;
                             //timesacle
-                            var timescaleStr = segmentTemplate.Attribute("timescale")?.Value ?? segmentTemplateOuter.Attribute("timescale")?.Value ?? "1000";
+                            var timescaleStr = segmentTemplate.Attribute("timescale")?.Value ?? segmentTemplateOuter.Attribute("timescale")?.Value ?? "1";
                             var durationStr = segmentTemplate.Attribute("duration")?.Value ?? segmentTemplateOuter.Attribute("duration")?.Value;
                             var startNumberStr = segmentTemplate.Attribute("startNumber")?.Value ?? segmentTemplateOuter.Attribute("startNumber")?.Value ?? "0";
                             //处理init url
@@ -318,10 +318,21 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 //没用SegmentTimeline 需要计算总分片数量 不精确
                                 var timescale = Convert.ToInt32(timescaleStr);
-                                var startNumber = Convert.ToInt32(startNumberStr);
+                                var startNumber = Convert.ToInt64(startNumberStr);
                                 var duration = Convert.ToInt32(durationStr);
-                                var totalNumber = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / Convert.ToInt32(durationStr));
-                                for (int index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
+                                var totalNumber = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / duration);
+                                //直播的情况，需要自己计算startNumber
+                                if (totalNumber == 0 && isLive)
+                                {
+                                    var now = publishTime == null ? DateTime.Now : DateTime.Parse(publishTime);
+                                    var availableTime = DateTime.Parse(availabilityStartTime);
+                                    var ts = now - availableTime;
+                                    var updateTs = XmlConvert.ToTimeSpan(minimumUpdatePeriod);
+                                    //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
+                                    startNumber = (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
+                                    totalNumber = (long)(updateTs.TotalSeconds * timescale / duration);
+                                }
+                                for (long index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
                                 {
                                     varDic[DASHTags.TemplateNumber] = index;
                                     var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media), varDic);
