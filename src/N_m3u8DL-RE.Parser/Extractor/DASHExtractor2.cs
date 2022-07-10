@@ -134,8 +134,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         streamSpec.Playlist.MediaParts.Add(new MediaPart());
                         streamSpec.GroupId = representation.Attribute("id")?.Value;
                         streamSpec.Bandwidth = Convert.ToInt32(bandwidth?.Value ?? "0");
-                        streamSpec.Codecs = representation.Attribute("codecs")?.Value;
-                        streamSpec.Language = representation.Attribute("lang")?.Value;
+                        streamSpec.Codecs = representation.Attribute("codecs")?.Value ?? adaptationSet.Attribute("codecs")?.Value;
+                        streamSpec.Language = representation.Attribute("lang")?.Value ?? adaptationSet.Attribute("lang")?.Value;
                         streamSpec.FrameRate = frameRate ?? GetFrameRate(representation);
                         streamSpec.Resolution = representation.Attribute("width")?.Value != null ? $"{representation.Attribute("width")?.Value}x{representation.Attribute("height")?.Value}" : null;
                         streamSpec.Url = MpdUrl;
