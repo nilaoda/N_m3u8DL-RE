@@ -348,6 +348,20 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             }
                         }
 
+                        //如果依旧没被添加分片，直接把BaseUrl塞进去就好
+                        if (streamSpec.Playlist.MediaParts[0].MediaSegments.Count == 0)
+                        {
+                            streamSpec.Playlist.MediaParts[0].MediaSegments.Add
+                                    (
+                                        new MediaSegment()
+                                        {
+                                            Index = 0,
+                                            Url = PreProcessUrl(segBaseUrl),
+                                            Duration = XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds
+                                        }
+                                    );
+                        }
+
                         //判断加密情况
                         if (adaptationSet.Elements().Any(e => e.Name.LocalName == "ContentProtection"))
                         {
