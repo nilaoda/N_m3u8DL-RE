@@ -60,6 +60,7 @@ namespace N_m3u8DL_RE.Common.Util
                     return await DoGetAsync(redirectedUrl, headers);
                 }
             }
+            webResponse.EnsureSuccessStatusCode();
             return webResponse;
         }
 
