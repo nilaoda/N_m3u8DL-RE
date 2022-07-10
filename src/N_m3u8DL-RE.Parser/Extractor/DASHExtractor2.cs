@@ -153,7 +153,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         //读取声道数量
-                        var audioChannelConfiguration = adaptationSet.Elements().Where(e => e.Name.LocalName == "AudioChannelConfiguration");
+                        var audioChannelConfiguration = adaptationSet.Elements().Concat(representation.Elements()).Where(e => e.Name.LocalName == "AudioChannelConfiguration");
                         if (audioChannelConfiguration.Any())
                         {
                             streamSpec.Channels = audioChannelConfiguration.First().Attribute("value")?.Value;
@@ -321,15 +321,18 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var startNumber = Convert.ToInt64(startNumberStr);
                                 var duration = Convert.ToInt32(durationStr);
                                 var totalNumber = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / duration);
-                                //直播的情况，需要自己计算startNumber
+                                //直播的情况，需要自己计算totalNumber
                                 if (totalNumber == 0 && isLive)
                                 {
                                     var now = publishTime == null ? DateTime.Now : DateTime.Parse(publishTime);
                                     var availableTime = DateTime.Parse(availabilityStartTime);
                                     var ts = now - availableTime;
                                     var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth);
-                                    //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
-                                    startNumber = (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
+                                    if (startNumberStr == null)
+                                    {
+                                        //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
+                                        startNumber = (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
+                                    }
                                     totalNumber = (long)(updateTs.TotalSeconds * timescale / duration);
                                 }
                                 for (long index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
@@ -358,19 +361,29 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             }
                         }
 
-                        //处理同一ID分散在不同Period的情况 这种情况作为新的part出现
+                        //处理同一ID分散在不同Period的情况
                         var _index = streamList.FindIndex(_f => _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType);
                         if (_index > -1) 
                         {
-                            var startIndex = streamList[_index].Playlist?.MediaParts.Last().MediaSegments.Last().Index + 1;
-                            foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
+                            if (isLive)
                             {
-                                item.Index = item.Index + startIndex.Value;
+                                //直播，这种情况直接略过新的
+                                continue;
                             }
-                            streamList[_index].Playlist?.MediaParts.Add(new MediaPart()
+                            else
                             {
-                                MediaSegments = streamSpec.Playlist.MediaParts[0].MediaSegments
-                            });
+                                //点播，这种情况作为新的part出现
+                                var startIndex = streamList[_index].Playlist?.MediaParts.Last().MediaSegments.Last().Index + 1;
+                                foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
+                                {
+                                    item.Index = item.Index + startIndex.Value;
+                                }
+                                streamList[_index].Playlist?.MediaParts.Add(new MediaPart()
+                                {
+                                    MediaSegments = streamSpec.Playlist.MediaParts[0].MediaSegments
+                                });
+
+                            }
                         }
                         else
                         {
