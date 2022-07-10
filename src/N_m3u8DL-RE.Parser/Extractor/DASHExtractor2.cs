@@ -365,7 +365,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         //判断加密情况
-                        if (adaptationSet.Elements().Any(e => e.Name.LocalName == "ContentProtection"))
+                        if (adaptationSet.Elements().Concat(representation.Elements()).Any(e => e.Name.LocalName == "ContentProtection")) 
                         {
                             if (streamSpec.Playlist.MediaInit != null)
                             {
