@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Common.Util
 
         public static readonly HttpClient AppHttpClient = new(new HttpClientHandler
         {
-            AllowAutoRedirect = true,
+            AllowAutoRedirect = false,
             AutomaticDecompression = DecompressionMethods.All,
             ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
         })
@@ -49,7 +49,17 @@ namespace N_m3u8DL_RE.Common.Util
                 }
             }
             Logger.Debug(webRequest.Headers.ToString());
-            var webResponse = (await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
+            var webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
+            if (webResponse.StatusCode == HttpStatusCode.Found || webResponse.StatusCode == HttpStatusCode.Moved)
+            {
+                HttpResponseHeaders respHeaders = webResponse.Headers;
+                Logger.Debug(respHeaders.ToString());
+                if (respHeaders != null && respHeaders.Location != null)
+                {
+                    var redirectedUrl = respHeaders.Location.AbsoluteUri;
+                    return await DoGetAsync(redirectedUrl, headers);
+                }
+            }
             return webResponse;
         }
 
