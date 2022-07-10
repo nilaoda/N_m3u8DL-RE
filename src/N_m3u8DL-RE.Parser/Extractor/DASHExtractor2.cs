@@ -146,10 +146,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             _ => null
                         };
                         streamSpec.Playlist.IsLive = isLive;
-                        //设置刷新间隔
+                        //设置刷新间隔 timeShiftBufferDepth / 2
                         if (timeShiftBufferDepth != null)
                         {
-                            streamSpec.Playlist.RefreshIntervalMs = XmlConvert.ToTimeSpan(timeShiftBufferDepth).TotalMilliseconds;
+                            streamSpec.Playlist.RefreshIntervalMs = XmlConvert.ToTimeSpan(timeShiftBufferDepth).TotalMilliseconds / 2;
                         }
 
                         //读取声道数量
