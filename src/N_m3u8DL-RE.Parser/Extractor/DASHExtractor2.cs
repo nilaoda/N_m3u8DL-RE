@@ -145,6 +145,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             "audio" => MediaType.AUDIO,
                             _ => null
                         };
+                        //优化字幕场景识别
+                        if (streamSpec.Codecs == "stpp" || streamSpec.Codecs == "wvtt")
+                        {
+                            streamSpec.MediaType = MediaType.SUBTITLES;
+                        }
                         streamSpec.Playlist.IsLive = isLive;
                         //设置刷新间隔 timeShiftBufferDepth / 2
                         if (timeShiftBufferDepth != null)
@@ -328,11 +333,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var availableTime = DateTime.Parse(availabilityStartTime);
                                     var ts = now - availableTime;
                                     var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth);
-                                    if (startNumberStr == null)
-                                    {
-                                        //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
-                                        startNumber = (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
-                                    }
+                                    //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
+                                    startNumber += (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
                                     totalNumber = (long)(updateTs.TotalSeconds * timescale / duration);
                                 }
                                 for (long index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
@@ -341,7 +343,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media), varDic);
                                     MediaSegment mediaSegment = new();
                                     mediaSegment.Url = PreProcessUrl(mediaUrl);
-                                    mediaSegment.Index = segIndex;
+                                    mediaSegment.Index = isLive ? index : segIndex; //直播直接用startNumber
                                     mediaSegment.Duration = duration / (double)timescale;
                                     streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
                                 }
