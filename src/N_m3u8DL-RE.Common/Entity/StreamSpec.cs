@@ -50,13 +50,13 @@ namespace N_m3u8DL_RE.Common.Entity
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
                 returnStr = d.EscapeMarkup();
             }
             else
