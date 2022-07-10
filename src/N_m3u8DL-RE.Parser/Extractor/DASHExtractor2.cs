@@ -115,7 +115,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     //处理baseurl嵌套
                     segBaseUrl = ExtendBaseUrl(adaptationSet, segBaseUrl);
 
-                    var mimeType = adaptationSet.Attribute("mimeType")?.Value;
+                    var mimeType = adaptationSet.Attribute("contentType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value;
                     var frameRate = GetFrameRate(adaptationSet);
                     //本AdaptationSet中的全部Representation
                     var representations = adaptationSet.Elements().Where(e => e.Name.LocalName == "Representation");
@@ -126,7 +126,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                         if (mimeType == null)
                         {
-                            mimeType = representation.Attribute("mimeType")?.Value ?? "";
+                            mimeType = representation.Attribute("contentType")?.Value ?? representation.Attribute("mimeType")?.Value ?? "";
                         }
                         var bandwidth = representation.Attribute("bandwidth");
                         StreamSpec streamSpec = new();
