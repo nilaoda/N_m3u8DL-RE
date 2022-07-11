@@ -47,6 +47,7 @@ namespace N_m3u8DL_RE.Parser
             }
             else if (File.Exists(url))
             {
+                url = Path.GetFullPath(url);
                 this.rawText = File.ReadAllText(url);
                 parserConfig.Url = new Uri(url).AbsoluteUri;
             }
