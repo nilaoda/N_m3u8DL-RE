@@ -33,10 +33,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private string ExtendBaseUrl(XElement element, string oriBaseUrl)
         {
-            var target = element.Elements().Where(e => e.Name.LocalName == "BaseURL");
-            if (target.Any())
+            var target = element.Elements().Where(e => e.Name.LocalName == "BaseURL").FirstOrDefault();
+            if (target != null)
             {
-                oriBaseUrl = ParserUtil.CombineURL(oriBaseUrl, target.First().Value);
+                oriBaseUrl = ParserUtil.CombineURL(oriBaseUrl, target.Value);
             }
 
             return oriBaseUrl;
@@ -83,10 +83,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
             var mediaPresentationDuration = mpdElement.Attribute("mediaPresentationDuration")?.Value;
 
             //读取在MPD开头定义的<BaseURL>，并替换本身的URL
-            var baseUrlElements = mpdElement.Elements().Where(e => e.Name.LocalName == "BaseURL");
-            if (baseUrlElements.Any())
+            var baseUrlElement = mpdElement.Elements().Where(e => e.Name.LocalName == "BaseURL").FirstOrDefault();
+            if (baseUrlElement != null)
             {
-                var baseUrl = baseUrlElements.First().Value;
+                var baseUrl = baseUrlElement.Value;
                 if (baseUrl.Contains("kkbox.com.tw/")) baseUrl = baseUrl.Replace("//https:%2F%2F", "//");
                 this.BaseUrl = ParserUtil.CombineURL(this.MpdUrl, baseUrl);
             }
@@ -158,22 +158,21 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         //读取声道数量
-                        var audioChannelConfiguration = adaptationSet.Elements().Concat(representation.Elements()).Where(e => e.Name.LocalName == "AudioChannelConfiguration");
-                        if (audioChannelConfiguration.Any())
+                        var audioChannelConfiguration = adaptationSet.Elements().Concat(representation.Elements()).Where(e => e.Name.LocalName == "AudioChannelConfiguration").FirstOrDefault();
+                        if (audioChannelConfiguration != null)
                         {
-                            streamSpec.Channels = audioChannelConfiguration.First().Attribute("value")?.Value;
+                            streamSpec.Channels = audioChannelConfiguration.Attribute("value")?.Value;
                         }
                         
 
                         //第一种形式 SegmentBase
-                        var segmentBaseElements = representation.Elements().Where(e => e.Name.LocalName == "SegmentBase");
-                        if (segmentBaseElements.Any())
+                        var segmentBaseElement = representation.Elements().Where(e => e.Name.LocalName == "SegmentBase").FirstOrDefault();
+                        if (segmentBaseElement != null)
                         {
                             //处理init url
-                            var initializationElements = segmentBaseElements.First().Elements().Where(e => e.Name.LocalName == "Initialization");
-                            if (initializationElements.Any())
+                            var initialization = segmentBaseElement.Elements().Where(e => e.Name.LocalName == "Initialization").FirstOrDefault();
+                            if (initialization != null)
                             {
-                                var initialization = initializationElements.First();
                                 var sourceURL = initialization.Attribute("sourceURL")?.Value;
                                 if (sourceURL == null)
                                 {
@@ -204,16 +203,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         //第二种形式 SegmentList.SegmentList
-                        var segmentListElements = representation.Elements().Where(e => e.Name.LocalName == "SegmentList");
-                        if (segmentListElements.Any())
+                        var segmentList = representation.Elements().Where(e => e.Name.LocalName == "SegmentList").FirstOrDefault();
+                        if (segmentList != null)
                         {
-                            var segmentList = segmentListElements.First();
                             var duration = segmentList.Attribute("duration")?.Value;
                             //处理init url
-                            var initializationElements = segmentList.Elements().Where(e => e.Name.LocalName == "Initialization");
-                            if (initializationElements.Any())
+                            var initialization = segmentList.Elements().Where(e => e.Name.LocalName == "Initialization").FirstOrDefault();
+                            if (initialization != null)
                             {
-                                var initialization = initializationElements.First();
                                 var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value);
                                 var initRange = initialization.Attribute("range")?.Value;
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
@@ -255,6 +252,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         var segmentTemplateElements = representation.Elements().Where(e => e.Name.LocalName == "SegmentTemplate");
                         if (segmentTemplateElements.Any() || segmentTemplateElementsOuter.Any())
                         {
+                            //优先使用最近的元素
                             var segmentTemplate = segmentTemplateElements.FirstOrDefault() ?? segmentTemplateElementsOuter.FirstOrDefault();
                             var segmentTemplateOuter = segmentTemplateElementsOuter.FirstOrDefault() ?? segmentTemplateElements.FirstOrDefault();
                             var varDic = new Dictionary<string, object?>();
@@ -271,11 +269,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
                             //处理分片
                             var media = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
-                            var segmentTimelineElements = segmentTemplate.Elements().Where(e => e.Name.LocalName == "SegmentTimeline");
-                            if (segmentTimelineElements.Any())
+                            var segmentTimeline = segmentTemplate.Elements().Where(e => e.Name.LocalName == "SegmentTimeline").FirstOrDefault();
+                            if (segmentTimeline != null)
                             {
                                 //使用了SegmentTimeline 结果精确
-                                var segmentTimeline = segmentTimelineElements.First();
                                 var segNumber = Convert.ToInt32(startNumberStr);
                                 var Ss = segmentTimeline.Elements().Where(e => e.Name.LocalName == "S");
                                 var currentTime = 0L;
