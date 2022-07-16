@@ -512,7 +512,17 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //重新加载m3u8
                 await LoadM3u8FromUrlAsync(lists[i].Url!);
                 lists[i].Playlist = await ParseListAsync();
-                lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "mp4" : "ts";
+                if (lists[i].MediaType == MediaType.SUBTITLES)
+                {
+                    var a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));
+                    var b = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".vtt") || m.Url.Contains(".webvtt")));
+                    if (a) lists[i].Extension = "ttml";
+                    if (b) lists[i].Extension = "vtt";
+                }
+                else
+                {
+                    lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "mp4" : "ts";
+                }
             }
         }
     }
