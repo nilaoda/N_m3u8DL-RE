@@ -114,7 +114,7 @@ namespace N_m3u8DL_RE.Common.Entity
                 returnStr += " | ~" + GlobalUtil.FormatTime((int)total);
             }
 
-            return returnStr;
+            return returnStr.TrimEnd().TrimEnd('|').TrimEnd();
         }
     }
 }
