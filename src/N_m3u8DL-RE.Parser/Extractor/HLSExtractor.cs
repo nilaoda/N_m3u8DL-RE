@@ -377,8 +377,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         {
                             var p = ParserUtil.GetAttribute(line, "BYTERANGE");
                             var (n, o) = ParserUtil.GetRange(p);
-                            segment.ExpectLength = n;
-                            segment.StartRange = o ?? 0L;
+                            playlist.MediaInit.ExpectLength = n;
+                            playlist.MediaInit.StartRange = o ?? 0L;
                         }
                     }
                     //遇到了其他的map，说明已经不是一个视频了，全部丢弃即可
