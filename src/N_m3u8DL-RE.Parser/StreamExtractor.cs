@@ -72,7 +72,7 @@ namespace N_m3u8DL_RE.Parser
             }
             else
             {
-                throw new Exception(ResString.notSupported);
+                throw new NotSupportedException(ResString.notSupported);
             }
         }
 

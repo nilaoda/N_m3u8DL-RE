@@ -9,26 +9,19 @@ namespace N_m3u8DL_RE.Crypto
 {
     internal class AESUtil
     {
-        public static byte[] AES128Decrypt(string filePath, byte[] keyByte, byte[] ivByte, CipherMode mode = CipherMode.CBC, PaddingMode padding = PaddingMode.PKCS7)
+        /// <summary>
+        /// AES-128解密，解密后原地替换文件
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="keyByte"></param>
+        /// <param name="ivByte"></param>
+        /// <param name="mode"></param>
+        /// <param name="padding"></param>
+        public static void AES128Decrypt(string filePath, byte[] keyByte, byte[] ivByte, CipherMode mode = CipherMode.CBC, PaddingMode padding = PaddingMode.PKCS7)
         {
-            FileStream fs = new FileStream(filePath, FileMode.Open);
-            //获取文件大小
-            long size = fs.Length;
-            byte[] inBuff = new byte[size];
-            fs.Read(inBuff, 0, inBuff.Length);
-            fs.Close();
-
-            Aes dcpt = Aes.Create();
-            dcpt.BlockSize = 128;
-            dcpt.KeySize = 128;
-            dcpt.Key = keyByte;
-            dcpt.IV = ivByte;
-            dcpt.Mode = mode;
-            dcpt.Padding = padding;
-
-            ICryptoTransform cTransform = dcpt.CreateDecryptor();
-            byte[] resultArray = cTransform.TransformFinalBlock(inBuff, 0, inBuff.Length);
-            return resultArray;
+            var fileBytes = File.ReadAllBytes(filePath);
+            var decrypted = AES128Decrypt(fileBytes, keyByte, ivByte, mode, padding);
+            File.WriteAllBytes(filePath, decrypted);
         }
 
         public static byte[] AES128Decrypt(byte[] encryptedBuff, byte[] keyByte, byte[] ivByte, CipherMode mode = CipherMode.CBC, PaddingMode padding = PaddingMode.PKCS7)

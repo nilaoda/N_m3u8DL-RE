@@ -12,6 +12,6 @@ namespace N_m3u8DL_RE.Parser.Processor
     public abstract class KeyProcessor
     {
         public abstract bool CanProcess(ExtractorType extractorType, string method, string uriText, ParserConfig parserConfig);
-        public abstract byte[] Process(string method, string uriText, ParserConfig parserConfig);
+        public abstract byte[]? Process(string method, string uriText, ParserConfig parserConfig);
     }
 }

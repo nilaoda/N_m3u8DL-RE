@@ -131,7 +131,7 @@
     <value>Live stream found</value>
   </data>
   <data name="selectedStream" xml:space="preserve">
-    <value>Selected Streams:</value>
+    <value>Selected streams:</value>
   </data>
   <data name="writeJson" xml:space="preserve">
     <value>Writing meta.json</value>
@@ -147,5 +147,26 @@
   </data>
   <data name="keyProcessorNotFound" xml:space="preserve">
     <value>No Processor matched</value>
+  </data>
+  <data name="startDownloading" xml:space="preserve">
+    <value>Start downloading...</value>
+  </data>
+  <data name="segmentCountCheckNotPass" xml:space="preserve">
+    <value>Segment count check not pass, total: {}, downloaded: {}.</value>
+  </data>
+  <data name="fixingVTT" xml:space="preserve">
+    <value>Extracting VTT(raw) subtitle...</value>
+  </data>
+  <data name="fixingVTTmp4" xml:space="preserve">
+    <value>Extracting VTT(mp4) subtitle...</value>
+  </data>
+  <data name="binaryMerge" xml:space="preserve">
+    <value>Binary merging...</value>
+  </data>
+  <data name="fixingTTMLmp4" xml:space="preserve">
+    <value>Extracting TTML(mp4) subtitle...</value>
+  </data>
+  <data name="fixingTTML" xml:space="preserve">
+    <value>Extracting TTML(raw) subtitle...</value>
   </data>
 </root>

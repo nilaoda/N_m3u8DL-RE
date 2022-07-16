@@ -10,8 +10,10 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Parser.Processor
 {
-    public class DefaultUrlProcessor : UrlProcessor
+    public partial class DefaultUrlProcessor : UrlProcessor
     {
+        [RegexGenerator("\\?.*")]
+        private static partial Regex ParaRegex();
 
         public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig paserConfig) => true;
 
@@ -20,7 +22,7 @@ namespace N_m3u8DL_RE.Parser.Processor
             if (paserConfig.AppendUrlParams)
             {
                 Logger.Debug("Before: " + oriUrl);
-                oriUrl += new Regex("\\?.*").Match(paserConfig.Url).Value;
+                oriUrl += ParaRegex().Match(paserConfig.Url).Value;
                 Logger.Debug("After: " + oriUrl);
             }
 

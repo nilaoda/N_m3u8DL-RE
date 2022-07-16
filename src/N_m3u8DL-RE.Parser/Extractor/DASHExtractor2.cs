@@ -126,7 +126,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                         if (mimeType == null)
                         {
-                            mimeType = representation.Attribute("contentType")?.Value ?? representation.Attribute("mimeType")?.Value ?? "";
+                            mimeType = representation.Attribute("contentType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value ?? "";
                         }
                         var bandwidth = representation.Attribute("bandwidth");
                         StreamSpec streamSpec = new();
@@ -139,16 +139,33 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         streamSpec.FrameRate = frameRate ?? GetFrameRate(representation);
                         streamSpec.Resolution = representation.Attribute("width")?.Value != null ? $"{representation.Attribute("width")?.Value}x{representation.Attribute("height")?.Value}" : null;
                         streamSpec.Url = MpdUrl;
-                        streamSpec.MediaType = mimeType.Split("/")[0] switch
+                        streamSpec.MediaType = mimeType.Split('/')[0] switch
                         {
                             "text" => MediaType.SUBTITLES,
                             "audio" => MediaType.AUDIO,
                             _ => null
                         };
+                        //推测后缀名
+                        var mType = representation.Attribute("mimeType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value;
+                        if (mType != null)
+                        {
+                            var mTypeSplit = mType.Split('/');
+                            streamSpec.Extension = mTypeSplit.Length == 2 ? mTypeSplit[1] : null;
+                        }
                         //优化字幕场景识别
                         if (streamSpec.Codecs == "stpp" || streamSpec.Codecs == "wvtt")
                         {
                             streamSpec.MediaType = MediaType.SUBTITLES;
+                        }
+                        //优化字幕场景识别
+                        var role = representation.Elements().Where(e => e.Name.LocalName == "Role").FirstOrDefault() ?? adaptationSet.Elements().Where(e => e.Name.LocalName == "Role").FirstOrDefault();
+                        if (role != null)
+                        {
+                            var v = role.Attribute("value")?.Value;
+                            if (v == "subtitle")
+                                streamSpec.MediaType = MediaType.SUBTITLES;
+                            if (mType != null && mType.Contains("ttml"))
+                                streamSpec.Extension = "ttml";
                         }
                         streamSpec.Playlist.IsLive = isLive;
                         //设置刷新间隔 timeShiftBufferDepth / 2
@@ -188,7 +205,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 }
                                 else
                                 {
-                                    var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value);
+                                    var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                     var initRange = initialization.Attribute("range")?.Value;
                                     streamSpec.Playlist.MediaInit = new MediaSegment();
                                     streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
@@ -211,7 +228,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             var initialization = segmentList.Elements().Where(e => e.Name.LocalName == "Initialization").FirstOrDefault();
                             if (initialization != null)
                             {
-                                var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value);
+                                var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                 var initRange = initialization.Attribute("range")?.Value;
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
                                 streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
@@ -227,7 +244,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             for (int segmentIndex = 0; segmentIndex < segmentURLs.Count(); segmentIndex++)
                             {
                                 var segmentURL = segmentURLs.ElementAt(segmentIndex);
-                                var mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value);
+                                var mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value!);
                                 var mediaRange = segmentURL.Attribute("range")?.Value;
                                 MediaSegment mediaSegment = new();
                                 mediaSegment.Duration = Convert.ToDouble(duration);
@@ -253,20 +270,23 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         if (segmentTemplateElements.Any() || segmentTemplateElementsOuter.Any())
                         {
                             //优先使用最近的元素
-                            var segmentTemplate = segmentTemplateElements.FirstOrDefault() ?? segmentTemplateElementsOuter.FirstOrDefault();
-                            var segmentTemplateOuter = segmentTemplateElementsOuter.FirstOrDefault() ?? segmentTemplateElements.FirstOrDefault();
+                            var segmentTemplate = (segmentTemplateElements.FirstOrDefault() ?? segmentTemplateElementsOuter.FirstOrDefault())!;
+                            var segmentTemplateOuter = (segmentTemplateElementsOuter.FirstOrDefault() ?? segmentTemplateElements.FirstOrDefault())!;
                             var varDic = new Dictionary<string, object?>();
                             varDic[DASHTags.TemplateRepresentationID] = streamSpec.GroupId;
                             varDic[DASHTags.TemplateBandwidth] = bandwidth?.Value;
                             //timesacle
                             var timescaleStr = segmentTemplate.Attribute("timescale")?.Value ?? segmentTemplateOuter.Attribute("timescale")?.Value ?? "1";
                             var durationStr = segmentTemplate.Attribute("duration")?.Value ?? segmentTemplateOuter.Attribute("duration")?.Value;
-                            var startNumberStr = segmentTemplate.Attribute("startNumber")?.Value ?? segmentTemplateOuter.Attribute("startNumber")?.Value ?? "0";
+                            var startNumberStr = segmentTemplate.Attribute("startNumber")?.Value ?? segmentTemplateOuter.Attribute("startNumber")?.Value ?? "1";
                             //处理init url
                             var initialization = segmentTemplate.Attribute("initialization")?.Value ?? segmentTemplateOuter.Attribute("initialization")?.Value;
-                            var initUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, initialization), varDic);
-                            streamSpec.Playlist.MediaInit = new MediaSegment();
-                            streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                            if (initialization != null)
+                            {
+                                var initUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, initialization), varDic);
+                                streamSpec.Playlist.MediaInit = new MediaSegment();
+                                streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                            }
                             //处理分片
                             var media = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
                             var segmentTimeline = segmentTemplate.Elements().Where(e => e.Name.LocalName == "SegmentTimeline").FirstOrDefault();
@@ -290,7 +310,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var _repeatCount = Convert.ToInt64(_repeatCountStr);
                                     varDic[DASHTags.TemplateTime] = currentTime;
                                     varDic[DASHTags.TemplateNumber] = segNumber++;
-                                    var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media), varDic);
+                                    var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media!), varDic);
                                     MediaSegment mediaSegment = new();
                                     mediaSegment.Url = PreProcessUrl(mediaUrl);
                                     mediaSegment.Duration = _duration / (double)timescale;
@@ -307,7 +327,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                         MediaSegment _mediaSegment = new();
                                         varDic[DASHTags.TemplateTime] = currentTime;
                                         varDic[DASHTags.TemplateNumber] = segNumber++;
-                                        var _mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media), varDic);
+                                        var _mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media!), varDic);
                                         _mediaSegment.Url = PreProcessUrl(_mediaUrl);
                                         _mediaSegment.Index = segIndex++;
                                         _mediaSegment.Duration = _duration / (double)timescale;
@@ -327,9 +347,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 if (totalNumber == 0 && isLive)
                                 {
                                     var now = publishTime == null ? DateTime.Now : DateTime.Parse(publishTime);
-                                    var availableTime = DateTime.Parse(availabilityStartTime);
+                                    var availableTime = DateTime.Parse(availabilityStartTime!);
                                     var ts = now - availableTime;
-                                    var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth);
+                                    var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth!);
                                     //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
                                     startNumber += (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
                                     totalNumber = (long)(updateTs.TotalSeconds * timescale / duration);
@@ -337,7 +357,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 for (long index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
                                 {
                                     varDic[DASHTags.TemplateNumber] = index;
-                                    var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media), varDic);
+                                    var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media!), varDic);
                                     MediaSegment mediaSegment = new();
                                     mediaSegment.Url = PreProcessUrl(mediaUrl);
                                     mediaSegment.Index = isLive ? index : segIndex; //直播直接用startNumber
@@ -389,7 +409,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var startIndex = streamList[_index].Playlist?.MediaParts.Last().MediaSegments.Last().Index + 1;
                                 foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
                                 {
-                                    item.Index = item.Index + startIndex.Value;
+                                    item.Index = item.Index + startIndex!.Value;
                                 }
                                 streamList[_index].Playlist?.MediaParts.Add(new MediaPart()
                                 {
@@ -400,6 +420,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
                         else
                         {
+                            //分片默认后缀m4s
+                            if (streamSpec.Extension == null || streamSpec.Playlist.MediaParts.Sum(x => x.MediaSegments.Count) > 1)
+                            {
+                                streamSpec.Extension = "m4s";
+                            }
                             streamList.Add(streamSpec);
                             //将segBaseUrl恢复 （重要）
                             segBaseUrl = this.BaseUrl;

@@ -23,6 +23,7 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? Resolution { get; set; }
         public double? FrameRate { get; set; }
         public string? Channels { get; set; }
+        public string? Extension { get; set; }
 
 
         //外部轨道GroupId (后续寻找对应轨道信息)
@@ -33,6 +34,40 @@ namespace N_m3u8DL_RE.Common.Entity
         public string Url { get; set; }
 
         public Playlist? Playlist { get; set; }
+
+        public string ToShortString()
+        {
+            var prefixStr = "";
+            var returnStr = "";
+            var encStr = string.Empty;
+
+            if (MediaType == Enum.MediaType.AUDIO)
+            {
+                prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
+                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")}";
+                returnStr = d.EscapeMarkup();
+            }
+            else if (MediaType == Enum.MediaType.SUBTITLES)
+            {
+                prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
+                var d = $"{GroupId} | {Language} | {Name} | {Codecs}";
+                returnStr = d.EscapeMarkup();
+            }
+            else
+            {
+                prefixStr = $"[aqua]Vid[/] {encStr}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs}";
+                returnStr = d.EscapeMarkup();
+            }
+
+            returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
+            while (returnStr.Contains("|  |"))
+            {
+                returnStr = returnStr.Replace("|  |", "|");
+            }
+
+            return returnStr.TrimEnd().TrimEnd('|').TrimEnd();
+        }
 
         public override string ToString()
         {

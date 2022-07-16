@@ -148,4 +148,25 @@
   <data name="keyProcessorNotFound" xml:space="preserve">
     <value>找不到支持的Processor</value>
   </data>
+  <data name="startDownloading" xml:space="preserve">
+    <value>開始下載...</value>
+  </data>
+  <data name="segmentCountCheckNotPass" xml:space="preserve">
+    <value>分片數量校驗不通過, 共{}個,已下載{}.</value>
+  </data>
+  <data name="fixingVTT" xml:space="preserve">
+    <value>正在提取VTT(raw)字幕...</value>
+  </data>
+  <data name="fixingVTTmp4" xml:space="preserve">
+    <value>正在提取VTT(mp4)字幕...</value>
+  </data>
+  <data name="binaryMerge" xml:space="preserve">
+    <value>二進製合併中...</value>
+  </data>
+  <data name="fixingTTMLmp4" xml:space="preserve">
+    <value>正在提取TTML(mp4)字幕...</value>
+  </data>
+  <data name="fixingTTML" xml:space="preserve">
+    <value>正在提取TTML(raw)字幕...</value>
+  </data>
 </root>

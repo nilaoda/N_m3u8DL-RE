@@ -10,8 +10,17 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
-    public class DefaultHLSContentProcessor : ContentProcessor
+    public partial class DefaultHLSContentProcessor : ContentProcessor
     {
+        [RegexGenerator("#EXT-X-DISCONTINUITY\\s+#EXT-X-MAP:URI=\\\"(.*?)\\\",BYTERANGE=\\\"(.*?)\\\"")]
+        private static partial Regex YkDVRegex();
+        [RegexGenerator("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY")]
+        private static partial Regex DNSPRegex();
+        [RegexGenerator("(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)")]
+        private static partial Regex OrderFixRegex();
+        [RegexGenerator("#EXT-X-MAP.*\\.apple\\.com/")]
+        private static partial Regex ATVRegex();
+
         public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig) => extractorType == ExtractorType.HLS;
 
         public override string Process(string m3u8Content, ParserConfig parserConfig)
@@ -38,7 +47,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             //针对优酷#EXT-X-VERSION:7杜比视界片源修正
             if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Content.Contains("ott.cibntv.net") && m3u8Content.Contains("ccode="))
             {
-                Regex ykmap = new Regex("#EXT-X-DISCONTINUITY\\s+#EXT-X-MAP:URI=\\\"(.*?)\\\",BYTERANGE=\\\"(.*?)\\\"");
+                Regex ykmap = YkDVRegex();
                 foreach (Match m in ykmap.Matches(m3u8Content))
                 {
                     m3u8Content = m3u8Content.Replace(m.Value, $"#EXTINF:0.000000,\n#EXT-X-BYTERANGE:{m.Groups[2].Value}\n{m.Groups[1].Value}");
@@ -48,7 +57,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             //针对Disney+修正
             if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Url.Contains("media.dssott.com/"))
             {
-                Regex ykmap = new Regex("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY");
+                Regex ykmap = DNSPRegex();
                 if (ykmap.IsMatch(m3u8Content))
                 {
                     m3u8Content = m3u8Content.Replace(ykmap.Match(m3u8Content).Value, "#XXX");
@@ -56,10 +65,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             }
 
             //针对AppleTv修正
-            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && (m3u8Url.Contains(".apple.com/") || Regex.IsMatch(m3u8Content, "#EXT-X-MAP.*\\.apple\\.com/")))
+            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && (m3u8Url.Contains(".apple.com/") || ATVRegex().IsMatch(m3u8Content)))
             {
                 //只取加密部分即可
-                Regex ykmap = new Regex("(#EXT-X-KEY:[\\s\\S]*?)(#EXT-X-DISCONTINUITY|#EXT-X-ENDLIST)");
+                Regex ykmap = DNSPRegex();
                 if (ykmap.IsMatch(m3u8Content))
                 {
                     m3u8Content = "#EXTM3U\r\n" + ykmap.Match(m3u8Content).Groups[1].Value + "\r\n#EXT-X-ENDLIST";
@@ -67,9 +76,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             }
 
             //修复#EXT-X-KEY与#EXTINF出现次序异常问题
-            if (Regex.IsMatch(m3u8Content, "(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)"))
+            var regex = OrderFixRegex();
+            if (regex.IsMatch(m3u8Content))
             {
-                m3u8Content = Regex.Replace(m3u8Content, "(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)", "$3$2$1");
+                m3u8Content = regex.Replace(m3u8Content, "$3$2$1");
             }
 
             return m3u8Content;

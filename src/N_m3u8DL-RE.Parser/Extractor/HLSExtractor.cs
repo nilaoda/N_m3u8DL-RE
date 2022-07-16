@@ -87,7 +87,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             List<StreamSpec> streams = new List<StreamSpec>();
 
             using StringReader sr = new StringReader(M3u8Content);
-            string line;
+            string? line;
             bool expectPlaylist = false;
             StreamSpec streamSpec = new();
 
@@ -205,7 +205,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             bool hasAd = false;
 
             using StringReader sr = new StringReader(M3u8Content);
-            string line;
+            string? line;
             bool expectSegment = false;
             bool isEndlist = false;
             long segIndex = 0;
@@ -449,7 +449,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return playlist;
         }
 
-        private byte[] ParseKey(string method, string uriText)
+        private byte[]? ParseKey(string method, string uriText)
         {
             foreach (var p in ParserConfig.KeyProcessors)
             {
@@ -476,12 +476,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
             else
             {
+                var playlist = await ParseListAsync();
                 return new List<StreamSpec>()
                 {
                     new StreamSpec()
                     {
                         Url = ParserConfig.Url,
-                        Playlist = await ParseListAsync()
+                        Playlist = playlist,
+                        Extension = playlist.MediaInit != null ? "mp4" : "ts"
                     }
                 };
             }
@@ -508,8 +510,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
             for (int i = 0; i < lists.Count; i++)
             {
                 //重新加载m3u8
-                await LoadM3u8FromUrlAsync(lists[i].Url);
+                await LoadM3u8FromUrlAsync(lists[i].Url!);
                 lists[i].Playlist = await ParseListAsync();
+                lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "mp4" : "ts";
             }
         }
     }

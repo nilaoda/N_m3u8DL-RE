@@ -70,6 +70,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 二进制合并中... 的本地化字符串。
+        /// </summary>
+        public static string binaryMerge {
+            get {
+                return ResourceManager.GetString("binaryMerge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 验证最后一个分片有效性 的本地化字符串。
         /// </summary>
         public static string checkingLast {
@@ -84,6 +93,42 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string fetch {
             get {
                 return ResourceManager.GetString("fetch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 正在提取TTML(raw)字幕... 的本地化字符串。
+        /// </summary>
+        public static string fixingTTML {
+            get {
+                return ResourceManager.GetString("fixingTTML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 正在提取TTML(mp4)字幕... 的本地化字符串。
+        /// </summary>
+        public static string fixingTTMLmp4 {
+            get {
+                return ResourceManager.GetString("fixingTTMLmp4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 正在提取VTT(raw)字幕... 的本地化字符串。
+        /// </summary>
+        public static string fixingVTT {
+            get {
+                return ResourceManager.GetString("fixingVTT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 正在提取VTT(mp4)字幕... 的本地化字符串。
+        /// </summary>
+        public static string fixingVTTmp4 {
+            get {
+                return ResourceManager.GetString("fixingVTTmp4", resourceCulture);
             }
         }
         
@@ -187,11 +232,29 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 分片数量校验不通过, 共{}个,已下载{}. 的本地化字符串。
+        /// </summary>
+        public static string segmentCountCheckNotPass {
+            get {
+                return ResourceManager.GetString("segmentCountCheckNotPass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 已选择的流: 的本地化字符串。
         /// </summary>
         public static string selectedStream {
             get {
                 return ResourceManager.GetString("selectedStream", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 开始下载... 的本地化字符串。
+        /// </summary>
+        public static string startDownloading {
+            get {
+                return ResourceManager.GetString("startDownloading", resourceCulture);
             }
         }
         

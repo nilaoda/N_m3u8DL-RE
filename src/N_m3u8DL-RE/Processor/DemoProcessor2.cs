@@ -20,11 +20,11 @@ namespace N_m3u8DL_RE.Processor
             return extractorType == ExtractorType.HLS  && parserConfig.Url.Contains("playertest.longtailvideo.com");
         }
 
-        public override byte[] Process(string method, string uriText, ParserConfig parserConfig)
+        public override byte[]? Process(string method, string uriText, ParserConfig parserConfig)
         {
             Logger.InfoMarkUp($"[white on green]My Key Processor => {uriText}[/]");
             var key = new DefaultHLSKeyProcessor().Process(method, uriText, parserConfig);
-            Logger.InfoMarkUp("[red]" + HexUtil.BytesToHex(key, " ") + "[/]");
+            Logger.InfoMarkUp("[red]" + HexUtil.BytesToHex(key!, " ") + "[/]");
             return key;
         }
     }

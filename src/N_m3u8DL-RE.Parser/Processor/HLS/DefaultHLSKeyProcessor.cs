@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         public override bool CanProcess(ExtractorType extractorType, string method, string uriText, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
 
-        public override byte[] Process(string method, string uriText, ParserConfig parserConfig)
+        public override byte[]? Process(string method, string uriText, ParserConfig parserConfig)
         {
             var encryptInfo = new EncryptInfo();
 

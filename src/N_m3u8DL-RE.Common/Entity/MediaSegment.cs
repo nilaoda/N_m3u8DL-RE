@@ -19,5 +19,23 @@ namespace N_m3u8DL_RE.Common.Entity
         public EncryptInfo EncryptInfo { get; set; } = new EncryptInfo();
 
         public string Url { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is MediaSegment segment &&
+                   Index == segment.Index &&
+                   Duration == segment.Duration &&
+                   Title == segment.Title &&
+                   StartRange == segment.StartRange &&
+                   StopRange == segment.StopRange &&
+                   ExpectLength == segment.ExpectLength &&
+                   EqualityComparer<EncryptInfo>.Default.Equals(EncryptInfo, segment.EncryptInfo) &&
+                   Url == segment.Url;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Index, Duration, Title, StartRange, StopRange, ExpectLength, EncryptInfo, Url);
+        }
     }
 }

@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Parser.Util
 {
-    internal class ParserUtil
+    internal partial class ParserUtil
     {
+        [RegexGenerator("\\$Number%([^$]+)d\\$")]
+        private static partial Regex VarsNumberRegex();
+
         /// <summary>
         /// 从以下文本中获取参数
         /// #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2149280,CODECS="mp4a.40.2,avc1.64001f",RESOLUTION=1280x720,NAME="720"
@@ -21,18 +24,25 @@ namespace N_m3u8DL_RE.Parser.Util
         {
             line = line.Trim();
             if (key == "")
-                return line.Substring(line.IndexOf(':') + 1);
+                return line[(line.IndexOf(':') + 1)..];
 
-            if (line.Contains(key + "=\""))
+            var index = -1;
+            var result = string.Empty;
+            if ((index = line.IndexOf(key + "=\"")) > -1)
             {
-                return Regex.Match(line, key + "=\"([^\"]*)\"").Groups[1].Value;
+                var startIndex = index + (key + "=\"").Length;
+                var endIndex = startIndex + line[startIndex..].IndexOf('\"');
+                result = line[startIndex..endIndex];
             }
-            else if (line.Contains(key + "="))
+            else if ((index = line.IndexOf(key + "=")) > -1)
             {
-                return Regex.Match(line, key + "=([^,]*)").Groups[1].Value;
+                var startIndex = index + (key + "=").Length;
+                var endIndex = startIndex + line[startIndex..].IndexOf(',');
+                if (endIndex >= startIndex) result = line[startIndex..endIndex];
+                else result = line[startIndex..];
             }
 
-            return string.Empty;
+            return result;
         }
 
         /// <summary>
@@ -80,10 +90,10 @@ namespace N_m3u8DL_RE.Parser.Util
         {
             foreach (var item in keyValuePairs)
                 if (text.Contains(item.Key))
-                    text = text.Replace(item.Key, item.Value.ToString());
+                    text = text.Replace(item.Key, item.Value!.ToString());
 
             //处理特殊形式数字 如 $Number%05d$
-            var regex = new Regex("\\$Number%([^$]+)d\\$");
+            var regex = VarsNumberRegex();
             if (regex.IsMatch(text) && keyValuePairs.ContainsKey(DASHTags.TemplateNumber)) 
             {
                 foreach (Match m in regex.Matches(text))

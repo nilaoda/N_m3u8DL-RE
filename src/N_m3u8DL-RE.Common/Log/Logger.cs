@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Common.Log
 {
-    public class Logger
+    public partial class Logger
     {
+        [RegexGenerator("{}")]
+        private static partial Regex VarsRepRegex();
+
         /// <summary>
         /// 日志级别，默认为INFO
         /// </summary>
@@ -46,7 +49,7 @@ namespace N_m3u8DL_RE.Common.Log
         {
             for (int i = 0; i < ps.Length; i++)
             {
-                data = new Regex("{}").Replace(data, $"{ps[i]}", 1);
+                data = VarsRepRegex().Replace(data, $"{ps[i]}", 1);
             }
             return data;
         }
