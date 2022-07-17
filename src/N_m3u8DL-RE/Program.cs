@@ -76,9 +76,9 @@ namespace N_m3u8DL_RE
                 var streams = await extractor.ExtractStreamsAsync();
 
                 //全部媒体
-                var lists = streams.OrderByDescending(p => p.Bandwidth);
+                var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth);
                 //基本流
-                var basicStreams = lists.Where(x => x.MediaType == null);
+                var basicStreams = lists.Where(x => x.MediaType == null || x.MediaType == MediaType.VIDEO);
                 //可选音频轨道
                 var audios = lists.Where(x => x.MediaType == MediaType.AUDIO);
                 //可选字幕轨道
