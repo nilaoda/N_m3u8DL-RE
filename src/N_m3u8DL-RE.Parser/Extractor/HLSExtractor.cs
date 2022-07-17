@@ -99,7 +99,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 if (line.StartsWith(HLSTags.ext_x_stream_inf))
                 {
                     streamSpec = new();
-                    var bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "BANDWIDTH")) ? ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH") : ParserUtil.GetAttribute(line, "BANDWIDTH");
+                    var bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH")) ? ParserUtil.GetAttribute(line, "BANDWIDTH") : ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH");
                     streamSpec.Bandwidth = Convert.ToInt32(bandwidth);
                     streamSpec.Codecs = ParserUtil.GetAttribute(line, "CODECS");
                     streamSpec.Resolution = ParserUtil.GetAttribute(line, "RESOLUTION");
@@ -521,7 +521,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
                 else
                 {
-                    lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "mp4" : "ts";
+                    lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "m4s" : "ts";
                 }
             }
         }
