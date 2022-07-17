@@ -23,11 +23,13 @@ namespace N_m3u8DL_RE.DownloadManager
     {
         IDownloader Downloader;
         DownloaderConfig DownloaderConfig;
+        DateTime NowDateTime;
 
         public SimpleDownloadManager(DownloaderConfig downloaderConfig) 
         { 
             this.DownloaderConfig = downloaderConfig;
             Downloader = new SimpleDownloader(DownloaderConfig);
+            NowDateTime = DateTime.Now;
         }
 
         private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task)
@@ -37,7 +39,7 @@ namespace N_m3u8DL_RE.DownloadManager
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
             if (segments == null) return false;
 
-            var dirName = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Language}";
+            var dirName = $"{NowDateTime:yyyy-MM-dd_HH-mm-ss}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Language}";
             var tmpDir = DownloaderConfig.TmpDir ?? Path.Combine(Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
             var saveName = DownloaderConfig.SaveName ?? dirName;
