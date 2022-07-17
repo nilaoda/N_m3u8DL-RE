@@ -30,7 +30,7 @@ namespace Mp4SubtitleParser
 
     public partial class MP4TtmlUtil
     {
-        [RegexGenerator(">(.+?)<\\/p>")]
+        [RegexGenerator("<p.*?>(.+?)<\\/p>")]
         private static partial Regex LabelFixRegex();
 
         public static bool CheckInit(byte[] data)
@@ -184,8 +184,14 @@ namespace Mp4SubtitleParser
                 {
                     foreach (Match m in regex.Matches(xmlContentFix))
                     {
-                        if (!m.Groups[1].Value.StartsWith("<span"))
+                        try
+                        {
+                            new XmlDocument().LoadXml($"<p>{m.Groups[1].Value}</p>");
+                        }
+                        catch (Exception)
+                        {
                             xmlContentFix = xmlContentFix.Replace(m.Groups[1].Value, System.Web.HttpUtility.HtmlEncode(m.Groups[1].Value));
+                        }
                     }
                 }
                 xmlDoc.LoadXml(xmlContentFix);
