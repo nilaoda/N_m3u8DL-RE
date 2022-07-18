@@ -423,12 +423,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
                         else
                         {
+                            //修复mp4类型字幕
                             if (streamSpec.MediaType == MediaType.SUBTITLES && streamSpec.Extension == "mp4")
                             {
                                 streamSpec.Extension = "m4s";
                             }
                             //分片默认后缀m4s
-                            if (streamSpec.Extension == null || streamSpec.Playlist.MediaParts.Sum(x => x.MediaSegments.Count) > 1)
+                            if (streamSpec.MediaType != MediaType.SUBTITLES && (streamSpec.Extension == null || streamSpec.Playlist.MediaParts.Sum(x => x.MediaSegments.Count) > 1))
                             {
                                 streamSpec.Extension = "m4s";
                             }
