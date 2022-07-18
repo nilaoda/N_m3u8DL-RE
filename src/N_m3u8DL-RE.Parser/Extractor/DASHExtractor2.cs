@@ -130,7 +130,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                         if (mimeType == null)
                         {
-                            mimeType = representation.Attribute("contentType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value ?? "";
+                            mimeType = representation.Attribute("contentType")?.Value ?? representation.Attribute("mimeType")?.Value ?? "";
                         }
                         var bandwidth = representation.Attribute("bandwidth");
                         StreamSpec streamSpec = new();
