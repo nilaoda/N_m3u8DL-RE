@@ -74,6 +74,14 @@ namespace N_m3u8DL_RE.DownloadManager
                 task.Increment(1);
                 //修改输出后缀
                 output = Path.ChangeExtension(output, ".mp4");
+                if (result != null && result.Success) 
+                {
+                    var data = File.ReadAllBytes(result.ActualFilePath);
+                    var pssh = MP4InitUtil.ReadWVPssh(data);
+                    var kid = MP4InitUtil.ReadWVKid(data);
+                    if (pssh != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {pssh}[/]");
+                    if (kid != null) Logger.WarnMarkUp($"[grey]KID: {kid}[/]");
+                }
             }
 
             //开始下载
