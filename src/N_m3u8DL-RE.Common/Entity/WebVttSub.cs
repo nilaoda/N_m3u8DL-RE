@@ -111,24 +111,40 @@ namespace N_m3u8DL_RE.Common.Entity
             FixTimestamp(webSub, this.MpegtsTimestamp);
             foreach (var item in webSub.Cues)
             {
-                if (!this.Cues.Contains(item)) this.Cues.Add(item);
+                if (!this.Cues.Contains(item))
+                {
+                    //如果相差只有1ms，且payload相同，则拼接
+                    var last = this.Cues.LastOrDefault();
+                    if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload) 
+                    {
+                        last.EndTime = item.EndTime;
+                    }
+                    else
+                    {
+                        this.Cues.Add(item);
+                    }
+                }
             }
             return this;
         }
 
-        public static void FixTimestamp(WebVttSub sub, long baseTimestamp)
+        private void FixTimestamp(WebVttSub sub, long baseTimestamp)
         {
-            if (baseTimestamp == 0 || sub.MpegtsTimestamp == 0)
+            if (sub.MpegtsTimestamp == 0)
             {
                 return;
             }
 
-            //The MPEG2 transport stream clocks (PCR, PTS, DTS) all have units of 1/90000 second
-            var seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
-            for (int i = 0; i < sub.Cues.Count; i++)
+            //确实存在时间轴错误的情况，才修复
+            if ((this.Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < this.Cues.Last().EndTime) || this.Cues.Count == 0)
             {
-                sub.Cues[i].StartTime += TimeSpan.FromSeconds(seconds);
-                sub.Cues[i].EndTime += TimeSpan.FromSeconds(seconds);
+                //The MPEG2 transport stream clocks (PCR, PTS, DTS) all have units of 1/90000 second
+                var seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
+                for (int i = 0; i < sub.Cues.Count; i++)
+                {
+                    sub.Cues[i].StartTime += TimeSpan.FromSeconds(seconds);
+                    sub.Cues[i].EndTime += TimeSpan.FromSeconds(seconds);
+                }
             }
         }
 

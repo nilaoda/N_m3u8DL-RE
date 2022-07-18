@@ -132,6 +132,11 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     var vttContent = File.ReadAllText(FileDic[seg]!.ActualFilePath);
                     var vtt = WebVttSub.Parse(vttContent);
+                    //手动计算MPEGTS
+                    if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                    {
+                        vtt.MpegtsTimestamp = 90 * (long)(seg.Duration * 1000) * seg.Index;
+                    }
                     if (first)
                     {
                         finalVtt = vtt;
