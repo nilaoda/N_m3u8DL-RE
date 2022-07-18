@@ -108,12 +108,16 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //处理baseurl嵌套
                 segBaseUrl = ExtendBaseUrl(period, segBaseUrl);
 
+                var adaptationSetsBaseUrl = segBaseUrl;
+
                 //本Period中的全部AdaptationSet
                 var adaptationSets = period.Elements().Where(e => e.Name.LocalName == "AdaptationSet");
                 foreach (var adaptationSet in adaptationSets)
                 {
                     //处理baseurl嵌套
                     segBaseUrl = ExtendBaseUrl(adaptationSet, segBaseUrl);
+
+                    var representationsBaseUrl = segBaseUrl;
 
                     var mimeType = adaptationSet.Attribute("contentType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value;
                     var frameRate = GetFrameRate(adaptationSet);
@@ -401,35 +405,40 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             if (isLive)
                             {
                                 //直播，这种情况直接略过新的
-                                continue;
                             }
                             else
                             {
                                 //点播，这种情况作为新的part出现
-                                var startIndex = streamList[_index].Playlist?.MediaParts.Last().MediaSegments.Last().Index + 1;
-                                foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
+                                var startIndex = streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Index + 1;
+                                var enumerator = streamSpec.Playlist.MediaParts[0].MediaSegments.GetEnumerator();
+                                while (enumerator.MoveNext())
                                 {
-                                    item.Index = item.Index + startIndex!.Value;
+                                    enumerator.Current.Index += startIndex;
                                 }
-                                streamList[_index].Playlist?.MediaParts.Add(new MediaPart()
+                                streamList[_index].Playlist!.MediaParts.Add(new MediaPart()
                                 {
                                     MediaSegments = streamSpec.Playlist.MediaParts[0].MediaSegments
                                 });
-
                             }
                         }
                         else
                         {
+                            if (streamSpec.MediaType == MediaType.SUBTITLES && streamSpec.Extension == "mp4")
+                            {
+                                streamSpec.Extension = "m4s";
+                            }
                             //分片默认后缀m4s
                             if (streamSpec.Extension == null || streamSpec.Playlist.MediaParts.Sum(x => x.MediaSegments.Count) > 1)
                             {
                                 streamSpec.Extension = "m4s";
                             }
                             streamList.Add(streamSpec);
-                            //将segBaseUrl恢复 （重要）
-                            segBaseUrl = this.BaseUrl;
                         }
+                        //恢复BaseURL相对位置
+                        segBaseUrl = representationsBaseUrl;
                     }
+                    //恢复BaseURL相对位置
+                    segBaseUrl = adaptationSetsBaseUrl;
                 }
             }
 
