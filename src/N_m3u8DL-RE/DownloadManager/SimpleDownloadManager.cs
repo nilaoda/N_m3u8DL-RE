@@ -74,7 +74,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic[streamSpec.Playlist.MediaInit] = result;
                 task.Increment(1);
                 //修改输出后缀
-                output = Path.ChangeExtension(output, ".mp4");
+                if (streamSpec.MediaType == Common.Enum.MediaType.AUDIO)
+                    output = Path.ChangeExtension(output, ".m4a");
+                else
+                    output = Path.ChangeExtension(output, ".mp4");
                 if (result != null && result.Success) 
                 {
                     var data = File.ReadAllBytes(result.ActualFilePath);
