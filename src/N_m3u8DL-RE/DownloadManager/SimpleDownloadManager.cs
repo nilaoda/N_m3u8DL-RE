@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (segments == null) return false;
 
             var dirName = $"{NowDateTime:yyyy-MM-dd_HH-mm-ss}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Language}";
-            var tmpDir = DownloaderConfig.TmpDir ?? Path.Combine(Environment.CurrentDirectory, dirName);
+            var tmpDir = Path.Combine(DownloaderConfig.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
             var saveName = DownloaderConfig.SaveName ?? dirName;
             var headers = DownloaderConfig.Headers;
@@ -152,12 +152,19 @@ namespace N_m3u8DL_RE.DownloadManager
                 foreach (var item in files) File.Delete(item);
                 FileDic.Clear();
                 var index = 0;
-                var path = Path.Combine(tmpDir, index.ToString(pad) + $".fix.{streamSpec.Extension ?? "clip"}");
-                var vttContentFixed = finalVtt.ToStringWithHeader();
-                await File.WriteAllTextAsync(path, vttContentFixed, new UTF8Encoding(false));
+                var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
+                var subContentFixed = finalVtt.ToStringWithHeader();
+                //转换字幕格式
+                if (DownloaderConfig.SubtitleFormat != Enum.SubtitleFormat.VTT)
+                {
+                    path = Path.ChangeExtension(path, ".srt");
+                    subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.SubtitleFormat);
+                    output = Path.ChangeExtension(output, ".srt");
+                }
+                await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
                 FileDic[keys.First()] = new DownloadResult()
                 {
-                    ActualContentLength = vttContentFixed.Length,
+                    ActualContentLength = subContentFixed.Length,
                     ActualFilePath = path
                 };
             }
@@ -181,15 +188,22 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic.Clear();
                     var index = 0;
                     var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                    var vttContentFixed = finalVtt.ToStringWithHeader();
-                    await File.WriteAllTextAsync(path, vttContentFixed, new UTF8Encoding(false));
+                    var subContentFixed = finalVtt.ToStringWithHeader();
+                    //转换字幕格式
+                    if (DownloaderConfig.SubtitleFormat != Enum.SubtitleFormat.VTT)
+                    {
+                        path = Path.ChangeExtension(path, ".srt");
+                        subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.SubtitleFormat);
+                        output = Path.ChangeExtension(output, ".srt");
+                    }
+                    await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
                     FileDic[firstKey] = new DownloadResult()
                     {
-                        ActualContentLength = vttContentFixed.Length,
+                        ActualContentLength = subContentFixed.Length,
                         ActualFilePath = path
                     };
                     //修改输出后缀
-                    output = Path.ChangeExtension(output, ".vtt");
+                    output = Path.ChangeExtension(output, Path.GetExtension(path));
                 }
             }
 
@@ -207,15 +221,22 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic.Clear();
                 var index = 0;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                var vttContentFixed = finalVtt.ToStringWithHeader();
-                await File.WriteAllTextAsync(path, vttContentFixed, new UTF8Encoding(false));
+                var subContentFixed = finalVtt.ToStringWithHeader();
+                //转换字幕格式
+                if (DownloaderConfig.SubtitleFormat != Enum.SubtitleFormat.VTT)
+                {
+                    path = Path.ChangeExtension(path, ".srt");
+                    subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.SubtitleFormat);
+                    output = Path.ChangeExtension(output, ".srt");
+                }
+                await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
                 FileDic[firstKey] = new DownloadResult()
                 {
-                    ActualContentLength = vttContentFixed.Length,
+                    ActualContentLength = subContentFixed.Length,
                     ActualFilePath = path
                 };
                 //修改输出后缀
-                output = Path.ChangeExtension(output, ".vtt");
+                output = Path.ChangeExtension(output, Path.GetExtension(path));
             }
 
             //自动修复TTML mp4字幕
@@ -237,15 +258,22 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic.Clear();
                 var index = 0;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                var vttContentFixed = finalVtt.ToStringWithHeader();
-                await File.WriteAllTextAsync(path, vttContentFixed, new UTF8Encoding(false));
+                var subContentFixed = finalVtt.ToStringWithHeader();
+                //转换字幕格式
+                if (DownloaderConfig.SubtitleFormat != Enum.SubtitleFormat.VTT)
+                {
+                    path = Path.ChangeExtension(path, ".srt");
+                    subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.SubtitleFormat);
+                    output = Path.ChangeExtension(output, ".srt");
+                }
+                await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
                 FileDic[firstKey] = new DownloadResult()
                 {
-                    ActualContentLength = vttContentFixed.Length,
+                    ActualContentLength = subContentFixed.Length,
                     ActualFilePath = path
                 };
                 //修改输出后缀
-                output = Path.ChangeExtension(output, ".vtt");
+                output = Path.ChangeExtension(output, Path.GetExtension(path));
             }
 
             //合并
@@ -262,6 +290,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     throw new NotImplementedException();
                 }
             }
+
             //删除临时文件夹
             if (DownloaderConfig.DelAfterDone)
             {

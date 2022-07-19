@@ -1,7 +1,7 @@
 <Directives>
     <Application>
-		<Assembly Name="N_m3u8DL-RE" Dynamic="Required All"/>
+		<!--<Assembly Name="N_m3u8DL-RE" Dynamic="Required All"/>
 		<Assembly Name="N_m3u8DL-RE.Common" Dynamic="Required All"/>
-		<Assembly Name="N_m3u8DL-RE.Parser" Dynamic="Required All"/>
-    </Application>
+		<Assembly Name="N_m3u8DL-RE.Parser" Dynamic="Required All"/>-->
+	</Application>
 </Directives>

@@ -98,75 +98,127 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="badM3u8" xml:space="preserve">
-    <value>错误的m3u8</value>
+    <value>Bad m3u8</value>
   </data>
   <data name="notSupported" xml:space="preserve">
-    <value>当前输入不受支持: </value>
+    <value>Input not supported: </value>
   </data>
   <data name="loadingUrl" xml:space="preserve">
-    <value>加载URL: </value>
+    <value>Loading URL: </value>
   </data>
   <data name="matchHLS" xml:space="preserve">
-    <value>内容匹配: [white on deepskyblue1]HTTP Live Streaming[/]</value>
+    <value>Content Matched: [white on deepskyblue1]HTTP Live Streaming[/]</value>
   </data>
   <data name="masterM3u8Found" xml:space="preserve">
-    <value>检测到Master列表，开始解析全部流信息</value>
+    <value>Master List detected, try parse all streams</value>
   </data>
   <data name="fetch" xml:space="preserve">
-    <value>获取: </value>
+    <value>Fetch: </value>
   </data>
   <data name="promptTitle" xml:space="preserve">
-    <value>请选择 [green]你要下载的内容[/]:</value>
+    <value>Please select [green]what you want to download[/]:</value>
   </data>
   <data name="promptChoiceText" xml:space="preserve">
-    <value>[grey](按键盘上下键以浏览更多内容)[/]</value>
+    <value>[grey](Move up and down to reveal more streams)[/]</value>
   </data>
   <data name="promptInfo" xml:space="preserve">
-    <value>(按 [blue]空格键[/] 选择流, [green]回车键[/] 完成选择)</value>
+    <value>(Press [blue]&lt;space&gt;[/] to toggle a stream, [green]&lt;enter&gt;[/] to accept)</value>
   </data>
   <data name="streamsInfo" xml:space="preserve">
-    <value>已解析, 共计 {} 条媒体流, 基本流 {} 条, 可选音频流 {} 条, 可选字幕流 {} 条</value>
+    <value>Extracted, there are {} streams, with {} basic streams, {} audio streams, {} subtitle streams</value>
   </data>
   <data name="liveFound" xml:space="preserve">
-    <value>检测到直播流</value>
+    <value>Live stream found</value>
   </data>
   <data name="selectedStream" xml:space="preserve">
-    <value>已选择的流:</value>
+    <value>Selected streams:</value>
   </data>
   <data name="writeJson" xml:space="preserve">
-    <value>写出meta.json</value>
+    <value>Writing meta.json</value>
   </data>
   <data name="matchDASH" xml:space="preserve">
-    <value>内容匹配: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]</value>
+    <value>Content Matched: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]</value>
   </data>
   <data name="checkingLast" xml:space="preserve">
-    <value>验证最后一个分片有效性</value>
+    <value>Verifying the validity of the last segment</value>
   </data>
   <data name="parsingStream" xml:space="preserve">
-    <value>正在解析媒体信息...</value>
+    <value>Parsing streams...</value>
   </data>
   <data name="keyProcessorNotFound" xml:space="preserve">
-    <value>找不到支持的Processor</value>
+    <value>No Processor matched</value>
   </data>
   <data name="startDownloading" xml:space="preserve">
-    <value>开始下载...</value>
+    <value>Start downloading...</value>
   </data>
   <data name="segmentCountCheckNotPass" xml:space="preserve">
-    <value>分片数量校验不通过, 共{}个,已下载{}.</value>
+    <value>Segment count check not pass, total: {}, downloaded: {}.</value>
   </data>
   <data name="fixingVTT" xml:space="preserve">
-    <value>正在提取VTT(raw)字幕...</value>
+    <value>Extracting VTT(raw) subtitle...</value>
   </data>
   <data name="fixingVTTmp4" xml:space="preserve">
-    <value>正在提取VTT(mp4)字幕...</value>
+    <value>Extracting VTT(mp4) subtitle...</value>
   </data>
   <data name="binaryMerge" xml:space="preserve">
-    <value>二进制合并中...</value>
+    <value>Binary merging...</value>
   </data>
   <data name="fixingTTMLmp4" xml:space="preserve">
-    <value>正在提取TTML(mp4)字幕...</value>
+    <value>Extracting TTML(mp4) subtitle...</value>
   </data>
   <data name="fixingTTML" xml:space="preserve">
-    <value>正在提取TTML(raw)字幕...</value>
+    <value>Extracting TTML(raw) subtitle...</value>
+  </data>
+  <data name="cmd_Input" xml:space="preserve">
+    <value>Input Url or File</value>
+  </data>
+  <data name="cmd_header" xml:space="preserve">
+    <value>Pass custom header(s) to server, Example:
+ -H "Cookie: mycookie" -H "User-Agent: iOS"</value>
+  </data>
+  <data name="cmd_logLevel" xml:space="preserve">
+    <value>Set log level</value>
+  </data>
+  <data name="cmd_autoSelect" xml:space="preserve">
+    <value>Automatically selects the best tracks of all types</value>
+  </data>
+  <data name="cmd_subOnly" xml:space="preserve">
+    <value>Select only subtitle tracks</value>
+  </data>
+  <data name="cmd_threadCount" xml:space="preserve">
+    <value>Set download thread count</value>
+  </data>
+  <data name="cmd_skipMerge" xml:space="preserve">
+    <value>Skip segments merge</value>
+  </data>
+  <data name="cmd_binaryMerge" xml:space="preserve">
+    <value>Binary merge</value>
+  </data>
+  <data name="cmd_delAfterDone" xml:space="preserve">
+    <value>Delete temporary files when done</value>
+  </data>
+  <data name="cmd_subtitleFix" xml:space="preserve">
+    <value>Automatically fix subtitles</value>
+  </data>
+  <data name="cmd_checkSegmentsCount" xml:space="preserve">
+    <value>Check if the actual number of segments downloaded matches the expected number</value>
+  </data>
+  <data name="cmd_subFormat" xml:space="preserve">
+    <value>Subtitle output format</value>
+  </data>
+  <data name="cmd_tmpDir" xml:space="preserve">
+    <value>Set temporary file directory</value>
+  </data>
+  <data name="cmd_saveDir" xml:space="preserve">
+    <value>Set output directory</value>
+  </data>
+  <data name="cmd_saveName" xml:space="preserve">
+    <value>Set output filename</value>
+  </data>
+  <data name="cmd_uiLanguage" xml:space="preserve">
+    <value>Set UI language</value>
+  </data>
+  <data name="cmd_skipDownload" xml:space="preserve">
+    <value>Skip download</value>
   </data>
 </root>

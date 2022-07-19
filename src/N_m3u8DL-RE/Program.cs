@@ -19,26 +19,32 @@ using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Util;
 using System.Diagnostics;
 using N_m3u8DL_RE.DownloadManager;
+using N_m3u8DL_RE.CommandLine;
+using System.Reflection;
 
 namespace N_m3u8DL_RE
 {
     internal class Program
     {
-
         static async Task Main(string[] args)
         {
-            string loc = "en-US";
-            string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
-            if (currLoc == "zh-TW" || currLoc == "zh-HK" || currLoc == "zh-MO") loc = "zh-TW";
-            else if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
-            //设置语言
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
-            //Logger.LogLevel = LogLevel.DEBUG;
+            await CommandInvoker.InvokeArgs(args, DoWorkAsync);
+        }
+
+        static async Task DoWorkAsync(MyOption option)
+        {
+            Logger.LogLevel = option.LogLevel;
 
             try
             {
                 var parserConfig = new ParserConfig();
+
+                //设置Headers
+                foreach (var item in ConvertUtil.SplitHeaderArrayToDic(option.Headers))
+                {
+                    parserConfig.Headers[item.Key] = item.Value;
+                }
+
                 //demo1
                 parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
                 //demo2
@@ -53,19 +59,29 @@ namespace N_m3u8DL_RE
                 //url = "https://rest-as.ott.kaltura.com/api_v3/service/assetFile/action/playManifest/partnerId/147/assetId/1304099/assetType/media/assetFileId/16136929/contextType/PLAYBACK/isAltUrl/False/ks/djJ8MTQ3fMusTFH6PCZpcrfKLQwI-pPm9ex6b6r49wioe32WH2udXeM4reyWIkSDpi7HhvhxBHAHAKiHrcnkmIJQpyAt4MuDBG0ywGQ-jOeqQFcTRQ8BGJGw6g-smSBLwSbo4CCx9M9vWNJX3GkOfhoMAY4yRU-ur3okHiVq1mUJ82XBd_iVqLuzodnc9sJEtcHH0zc5CoPiTq2xor-dq3yDURnZm3isfSN3t9uLIJEW09oE-SJ84DM5GUuFUdbnIV8bdcWUsPicUg-Top1G2D3WcWXq4EvPnwvD8jrC_vsiOpLHf5akAwtdGsJ6__cXUmT7a-QlfjdvaZ5T8UhDLnttHmsxYs2E5c0lh4uOvvJou8dD8iYxUexlPI2j4QUkBRxqOEVLSNV3Y82-5TTRqgnK_uGYXHwk7EAmDws7hbLj2-DJ1heXDcye3OJYdunJgAS-9ma5zmQQNiY_HYh6wj2N1HpCTNAtWWga6R9fC0VgBTZbidW-YwMSGzIvMQfIfWKe15X7Oc_hCs-zGfW9XeRJZrutcWKK_D_HlzpQVBF2vIF3XgaI/a.mpd";
                 //url = "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd";
                 //url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
-                //url = "https://cmaf.lln.latam.hbomaxcdn.com/videos/GYPGKMQjoDkVLBQEAAAAo/1/1b5ad5/1_single_J8sExA_1080hi.mpd";
+                url = "https://cmaf.lln.latam.hbomaxcdn.com/videos/GYPGKMQjoDkVLBQEAAAAo/1/1b5ad5/1_single_J8sExA_1080hi.mpd";
                 //url = "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"; //ttml + mp4
                 //url = "http://media.axprod.net/TestVectors/v6-Clear/Manifest_1080p.mpd"; //vtt + mp4
-                url = "https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd"; //ttml
+                //url = "https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd"; //ttml
+                //url = "https://storage.googleapis.com/shaka-demo-assets/angel-one-hls/hls.m3u8"; //HLS vtt
+                //url = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8"; //高级HLS fMP4+VTT
+                //url = "https://events-delivery.apple.com/0205eyyhwbbqexozkwmgccegwnjyrktg/m3u8/vod_index-dpyfrsVksFWjneFiptbXnAMYBtGYbXeZ.m3u8"; //高级HLS fMP4+VTT
+                //url = "https://apionvod5.seezntv.com/ktmain1/cold/CP/55521/202207/media/MIAM61RPSGL150000100_DRM/MIAM61RPSGL150000100_H.m3u8?sid=0000000F50000040000A700000020000";
+                //url = "https://ewcdn12.nowe.com/session/16-5-72579e3-2103014898783810281/Content/DASH_VOS3/VOD/6908/19585/d2afa5fe-e9c8-40f0-8d18-648aaaf292b6/f677841a-9d8f-2ff5-3517-674ba49ef192/manifest.mpd?token=894db5d69931835f82dd8e393974ef9f_1658146180";
+                //url = "https://ols-ww100-cp.akamaized.net/manifest/master/06ee6f68-ee80-11ea-9bc5-02b68fb543c4/65794a72596d6c30496a6f7a4e6a67324e4441774d444173496e42735958526d62334a74496a6f695a47567a6133527663434973496d526c646d6c6a5a565235634755694f694a335a5749694c434a746232526c62434936496e6470626d527664334d694c434a7663315235634755694f694a6a61484a76625755694c434a7663794936496a45774d6934774c6a41694c434a68634841694f69497a4c6a416966513d3d/dash.mpd?cpatoken=exp=1658223027~acl=/manifest/master/06ee6f68-ee80-11ea-9bc5-02b68fb543c4/*~hmac=644c608aac361f688e9b24b0f345c801d0f2d335819431d1873ff7aeac46d6b2&access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZpY2VfaWQiOm51bGwsIndhdGNoX3R5cGUiOiJQUkVNSVVNIiwicHJvZ3JhbV9pZCI6ImUwMWRmYjAyLTM1YmItMTFlOS1hNDI3LTA2YTA0MTdjMWQxZSIsImFkX3RhZyI6ZmFsc2UsInBhcmVudF9wcm9ncmFtX2lkIjoiZmJmMDc2MDYtMzNmYi0xMWU5LWE0MjctMDZhMDQxN2MxZDFlIiwiY2xpZW50X2lkIjoiNGQ3MDViZTQtYTQ5ZS0xMWVhLWJiMzctMDI0MmFjMTMwMDAyIiwidmlkZW9fdHlwZSI6InZvZCIsImdyYW50X3R5cGUiOiJwbGF5X3ZpZGVvIiwidXNlcl9pZCI6ImFhNTMxZWQ2LWM2NTMtNDliYS04NGI1LWFkZDRmNGIzNGMyNyIsImN1cnJlbnRfc2Vjb25kIjowLCJyZXBvcnRfaWQiOiJOU1RHIiwic2NvcGUiOlsicHVibGljOi4qIiwibWU6LioiXSwiZXhwIjoxNjU4Mzk1ODI2LCJkZXRlY3Rpb25faWQiOm51bGwsInZpZGVvX2lkIjoiODc0Yjk0ZDItNzZiYi00YzliLTgzODQtNzJlMTA0NWVjOGMxIiwiaXNzIjoiQXNpYXBsYXktT0F1dGgtU2VydmVyIiwiaWF0IjoxNjU4MTM2NjI2LCJ0ZXJyaXRvcnkiOiJUVyJ9.1juciYIyMNzykXKu-nGLR_cYWvPMEAE9ub-ny7RzFnM";
+                //url = "https://a38avoddashs3ww-a.akamaihd.net/ondemand/iad_2/8e91/f2f2/ec5a/430f-bd7a-0779f4a0189d/685cda75-609c-41c1-86bb-688f4cdb5521_corrected.mpd";
+                url = "https://dcs-vod.mp.lura.live/vod/p/session/manifest.mpd?i=i177610817-nb45239a2-e962-4137-bc70-1790359619e6";
+                //url = "https://theater.kktv.com.tw/98/04000198010001_584b26392f7f7f11fc62299214a55fb7/16113081449d8d5e9960_sub_dash.mpd"; //MPD+VTT
+                //url = "";
 
-                if (args.Length > 0)
+                if (!string.IsNullOrEmpty(option.Input))
                 {
-                    url = args[0];
+                    url = option.Input;
                 }
 
                 if (string.IsNullOrEmpty(url))
                 {
-                    url = AnsiConsole.Ask<string>("请输入 [green]URL[/]: ");
+                    url = AnsiConsole.Ask<string>("Input [green]URL[/]: ");
                 }
 
                 //流提取器配置
@@ -95,7 +111,27 @@ namespace N_m3u8DL_RE
                 }
 
                 //展示交互式选择框
-                var selectedStreams = PromptUtil.SelectStreams(lists);
+                //var selectedStreams = PromptUtil.SelectStreams(lists);
+                var selectedStreams = new List<StreamSpec>();
+                if (option.AutoSelect)
+                {
+                    if (basicStreams.Any())
+                        selectedStreams.Add(basicStreams.First());
+                    var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
+                    foreach (var lang in langs)
+                    {
+                        selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).First());
+                    }
+                    selectedStreams.AddRange(subs);
+                }
+                else if (option.SubOnly)
+                {
+                    selectedStreams.AddRange(subs);
+                }
+                else
+                {
+                    selectedStreams = PromptUtil.SelectStreams(lists);
+                }
                 //一个以上的话，需要手动重新加载playlist
                 if (lists.Count() > 1)
                     await extractor.FetchPlayListAsync(selectedStreams);
@@ -107,29 +143,33 @@ namespace N_m3u8DL_RE
                     Logger.InfoMarkUp(item.ToString());
                 }
 
+                if (option.SkipDownload)
+                {
+                    return;
+                }
+
+#if DEBUG
                 Console.ReadKey();
+#endif
 
                 //下载配置
-                var downloadConfig = new DownloaderConfig()
+                var downloadConfig = new DownloaderConfig(option)
                 {
                     Headers = parserConfig.Headers,
-                    BinaryMerge = true,
-                    DelAfterDone = true,
-                    CheckSegmentsCount = true
                 };
                 //开始下载
                 var sdm = new SimpleDownloadManager(downloadConfig);
                 var result = await sdm.StartDownloadAsync(selectedStreams);
                 if (result)
-                    Logger.InfoMarkUp("[white on green]成功[/]");
+                    Logger.InfoMarkUp("[white on green]Done[/]");
                 else
-                    Logger.ErrorMarkUp("[white on red]失败[/]");
+                    Logger.ErrorMarkUp("[white on red]Faild[/]");
             }
             catch (Exception ex)
             {
                 Logger.Error(ex.ToString());
+                await Task.Delay(3000);
             }
-            //Console.ReadKey();
         }
     }
 }

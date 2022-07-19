@@ -61,7 +61,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 错误的m3u8 的本地化字符串。
+        ///   查找类似 Bad m3u8 的本地化字符串。
         /// </summary>
         public static string badM3u8 {
             get {
@@ -70,7 +70,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 二进制合并中... 的本地化字符串。
+        ///   查找类似 Binary merging... 的本地化字符串。
         /// </summary>
         public static string binaryMerge {
             get {
@@ -79,7 +79,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 验证最后一个分片有效性 的本地化字符串。
+        ///   查找类似 Verifying the validity of the last segment 的本地化字符串。
         /// </summary>
         public static string checkingLast {
             get {
@@ -88,7 +88,161 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 获取:  的本地化字符串。
+        ///   查找类似 Automatically selects the best tracks of all types 的本地化字符串。
+        /// </summary>
+        public static string cmd_autoSelect {
+            get {
+                return ResourceManager.GetString("cmd_autoSelect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Binary merge 的本地化字符串。
+        /// </summary>
+        public static string cmd_binaryMerge {
+            get {
+                return ResourceManager.GetString("cmd_binaryMerge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Check if the actual number of segments downloaded matches the expected number 的本地化字符串。
+        /// </summary>
+        public static string cmd_checkSegmentsCount {
+            get {
+                return ResourceManager.GetString("cmd_checkSegmentsCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Delete temporary files when done 的本地化字符串。
+        /// </summary>
+        public static string cmd_delAfterDone {
+            get {
+                return ResourceManager.GetString("cmd_delAfterDone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Pass custom header(s) to server, Example:
+        /// -H &quot;Cookie: mycookie&quot; -H &quot;User-Agent: iOS&quot; 的本地化字符串。
+        /// </summary>
+        public static string cmd_header {
+            get {
+                return ResourceManager.GetString("cmd_header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Input Url or File 的本地化字符串。
+        /// </summary>
+        public static string cmd_Input {
+            get {
+                return ResourceManager.GetString("cmd_Input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Set log level 的本地化字符串。
+        /// </summary>
+        public static string cmd_logLevel {
+            get {
+                return ResourceManager.GetString("cmd_logLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Set output directory 的本地化字符串。
+        /// </summary>
+        public static string cmd_saveDir {
+            get {
+                return ResourceManager.GetString("cmd_saveDir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Set output filename 的本地化字符串。
+        /// </summary>
+        public static string cmd_saveName {
+            get {
+                return ResourceManager.GetString("cmd_saveName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Skip download 的本地化字符串。
+        /// </summary>
+        public static string cmd_skipDownload {
+            get {
+                return ResourceManager.GetString("cmd_skipDownload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Skip segments merge 的本地化字符串。
+        /// </summary>
+        public static string cmd_skipMerge {
+            get {
+                return ResourceManager.GetString("cmd_skipMerge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Subtitle output format 的本地化字符串。
+        /// </summary>
+        public static string cmd_subFormat {
+            get {
+                return ResourceManager.GetString("cmd_subFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Select only subtitle tracks 的本地化字符串。
+        /// </summary>
+        public static string cmd_subOnly {
+            get {
+                return ResourceManager.GetString("cmd_subOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Automatically fix subtitles 的本地化字符串。
+        /// </summary>
+        public static string cmd_subtitleFix {
+            get {
+                return ResourceManager.GetString("cmd_subtitleFix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Set download thread count 的本地化字符串。
+        /// </summary>
+        public static string cmd_threadCount {
+            get {
+                return ResourceManager.GetString("cmd_threadCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Set temporary file directory 的本地化字符串。
+        /// </summary>
+        public static string cmd_tmpDir {
+            get {
+                return ResourceManager.GetString("cmd_tmpDir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Set UI language 的本地化字符串。
+        /// </summary>
+        public static string cmd_uiLanguage {
+            get {
+                return ResourceManager.GetString("cmd_uiLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Fetch:  的本地化字符串。
         /// </summary>
         public static string fetch {
             get {
@@ -97,7 +251,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 正在提取TTML(raw)字幕... 的本地化字符串。
+        ///   查找类似 Extracting TTML(raw) subtitle... 的本地化字符串。
         /// </summary>
         public static string fixingTTML {
             get {
@@ -106,7 +260,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 正在提取TTML(mp4)字幕... 的本地化字符串。
+        ///   查找类似 Extracting TTML(mp4) subtitle... 的本地化字符串。
         /// </summary>
         public static string fixingTTMLmp4 {
             get {
@@ -115,7 +269,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 正在提取VTT(raw)字幕... 的本地化字符串。
+        ///   查找类似 Extracting VTT(raw) subtitle... 的本地化字符串。
         /// </summary>
         public static string fixingVTT {
             get {
@@ -124,7 +278,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 正在提取VTT(mp4)字幕... 的本地化字符串。
+        ///   查找类似 Extracting VTT(mp4) subtitle... 的本地化字符串。
         /// </summary>
         public static string fixingVTTmp4 {
             get {
@@ -133,7 +287,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 找不到支持的Processor 的本地化字符串。
+        ///   查找类似 No Processor matched 的本地化字符串。
         /// </summary>
         public static string keyProcessorNotFound {
             get {
@@ -142,7 +296,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 检测到直播流 的本地化字符串。
+        ///   查找类似 Live stream found 的本地化字符串。
         /// </summary>
         public static string liveFound {
             get {
@@ -151,7 +305,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 加载URL:  的本地化字符串。
+        ///   查找类似 Loading URL:  的本地化字符串。
         /// </summary>
         public static string loadingUrl {
             get {
@@ -160,7 +314,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 检测到Master列表，开始解析全部流信息 的本地化字符串。
+        ///   查找类似 Master List detected, try parse all streams 的本地化字符串。
         /// </summary>
         public static string masterM3u8Found {
             get {
@@ -169,7 +323,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 内容匹配: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/] 的本地化字符串。
+        ///   查找类似 Content Matched: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/] 的本地化字符串。
         /// </summary>
         public static string matchDASH {
             get {
@@ -178,7 +332,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 内容匹配: [white on deepskyblue1]HTTP Live Streaming[/] 的本地化字符串。
+        ///   查找类似 Content Matched: [white on deepskyblue1]HTTP Live Streaming[/] 的本地化字符串。
         /// </summary>
         public static string matchHLS {
             get {
@@ -187,7 +341,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 当前输入不受支持:  的本地化字符串。
+        ///   查找类似 Input not supported:  的本地化字符串。
         /// </summary>
         public static string notSupported {
             get {
@@ -196,7 +350,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 正在解析媒体信息... 的本地化字符串。
+        ///   查找类似 Parsing streams... 的本地化字符串。
         /// </summary>
         public static string parsingStream {
             get {
@@ -205,7 +359,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 [grey](按键盘上下键以浏览更多内容)[/] 的本地化字符串。
+        ///   查找类似 [grey](Move up and down to reveal more streams)[/] 的本地化字符串。
         /// </summary>
         public static string promptChoiceText {
             get {
@@ -214,7 +368,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 (按 [blue]空格键[/] 选择流, [green]回车键[/] 完成选择) 的本地化字符串。
+        ///   查找类似 (Press [blue]&lt;space&gt;[/] to toggle a stream, [green]&lt;enter&gt;[/] to accept) 的本地化字符串。
         /// </summary>
         public static string promptInfo {
             get {
@@ -223,7 +377,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 请选择 [green]你要下载的内容[/]: 的本地化字符串。
+        ///   查找类似 Please select [green]what you want to download[/]: 的本地化字符串。
         /// </summary>
         public static string promptTitle {
             get {
@@ -232,7 +386,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 分片数量校验不通过, 共{}个,已下载{}. 的本地化字符串。
+        ///   查找类似 Segment count check not pass, total: {}, downloaded: {}. 的本地化字符串。
         /// </summary>
         public static string segmentCountCheckNotPass {
             get {
@@ -241,7 +395,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 已选择的流: 的本地化字符串。
+        ///   查找类似 Selected streams: 的本地化字符串。
         /// </summary>
         public static string selectedStream {
             get {
@@ -250,7 +404,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 开始下载... 的本地化字符串。
+        ///   查找类似 Start downloading... 的本地化字符串。
         /// </summary>
         public static string startDownloading {
             get {
@@ -259,7 +413,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 已解析, 共计 {} 条媒体流, 基本流 {} 条, 可选音频流 {} 条, 可选字幕流 {} 条 的本地化字符串。
+        ///   查找类似 Extracted, there are {} streams, with {} basic streams, {} audio streams, {} subtitle streams 的本地化字符串。
         /// </summary>
         public static string streamsInfo {
             get {
@@ -268,7 +422,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 写出meta.json 的本地化字符串。
+        ///   查找类似 Writing meta.json 的本地化字符串。
         /// </summary>
         public static string writeJson {
             get {

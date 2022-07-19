@@ -22,16 +22,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resource\ResString.en-US.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
     <EmbeddedResource Update="Resource\ResString.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>ResString.Designer.cs</LastGenOutput>
+		<PublicClass>true</PublicClass>
+		<LastGenOutput>ResString.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resource\ResString.zh-TW.resx">
+    <EmbeddedResource Update="Resource\ResString.zh-Hans.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
+		<PublicClass>true</PublicClass>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resource\ResString.zh-Hant.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+		<PublicClass>true</PublicClass>
     </EmbeddedResource>
   </ItemGroup>
-
+	
 </Project>

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using N_m3u8DL_RE.CommandLine;
+using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Parser.Config;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +11,22 @@ namespace N_m3u8DL_RE.Config
 {
     internal class DownloaderConfig
     {
+        public DownloaderConfig() { }
+
+        public DownloaderConfig(MyOption option)
+        {
+            AutoSubtitleFix = option.AutoSubtitleFix;
+            SkipMerge = option.SkipMerge;
+            BinaryMerge = option.BinaryMerge;
+            DelAfterDone = option.DelAfterDone;
+            CheckSegmentsCount = option.CheckSegmentsCount;
+            SubtitleFormat = option.SubtitleFormat;
+            TmpDir = option.TmpDir;
+            SaveName = option.SaveName;
+            SaveDir = option.SaveDir;
+            ThreadCount = option.ThreadCount;
+        }
+
         /// <summary>
         /// 临时文件存储目录
         /// </summary>
@@ -48,6 +67,10 @@ namespace N_m3u8DL_RE.Config
         /// 自动修复字幕
         /// </summary>
         public bool AutoSubtitleFix { get; set; } = true;
+        /// <summary>
+        /// 字幕格式
+        /// </summary>
+        public SubtitleFormat SubtitleFormat { get; set; } = SubtitleFormat.VTT;
         /// <summary>
         /// 请求头
         /// </summary>
