@@ -39,10 +39,11 @@ namespace N_m3u8DL_RE.DownloadManager
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
             if (segments == null) return false;
 
+            var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
             var dirName = $"{NowDateTime:yyyy-MM-dd_HH-mm-ss}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Language}";
             var tmpDir = Path.Combine(DownloaderConfig.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
-            var saveName = DownloaderConfig.SaveName ?? dirName;
+            var saveName = DownloaderConfig.SaveName != null ? $"{DownloaderConfig.SaveName}.{type}.{streamSpec.Language}" : dirName;
             var headers = DownloaderConfig.Headers;
             var output = Path.Combine(saveDir, saveName + $".{streamSpec.Extension ?? "ts"}");
 
