@@ -249,7 +249,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 var segmentURL = segmentURLs.ElementAt(segmentIndex);
                                 var mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value!);
-                                var mediaRange = segmentURL.Attribute("range")?.Value;
+                                var mediaRange = segmentURL.Attribute("mediaRange")?.Value;
                                 MediaSegment mediaSegment = new();
                                 mediaSegment.Duration = Convert.ToDouble(duration);
                                 mediaSegment.Url = PreProcessUrl(mediaUrl);
