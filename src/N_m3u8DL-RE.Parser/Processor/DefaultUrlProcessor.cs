@@ -10,19 +10,19 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Parser.Processor
 {
-    public partial class DefaultUrlProcessor : UrlProcessor
+    public class DefaultUrlProcessor : UrlProcessor
     {
-        [RegexGenerator("\\?.*")]
-        private static partial Regex ParaRegex();
-
         public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig paserConfig) => true;
 
         public override string Process(string oriUrl, ParserConfig paserConfig)
         {
             if (paserConfig.AppendUrlParams)
             {
+                var uriFromConfig = new Uri(paserConfig.Url);
+                var newUri = new Uri(oriUrl);
+                var newQuery = (newUri.Query.TrimStart('?') + "&" + uriFromConfig.Query.TrimStart('?')).Trim('&');
                 Logger.Debug("Before: " + oriUrl);
-                oriUrl += ParaRegex().Match(paserConfig.Url).Value;
+                oriUrl = (newUri.GetLeftPart(UriPartial.Path) + "?" + newQuery).TrimEnd('?');
                 Logger.Debug("After: " + oriUrl);
             }
 
