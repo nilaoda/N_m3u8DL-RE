@@ -221,4 +221,10 @@
   <data name="cmd_skipDownload" xml:space="preserve">
     <value>跳過下載</value>
   </data>
+  <data name="cmd_writeMetaJson" xml:space="preserve">
+    <value>解析後的信息是否輸出json文件</value>
+  </data>
+  <data name="cmd_appendUrlParams" xml:space="preserve">
+    <value>將輸入Url的Params添加至分片, 對某些網站很有用, 例如 kakao.com</value>
+  </data>
 </root>

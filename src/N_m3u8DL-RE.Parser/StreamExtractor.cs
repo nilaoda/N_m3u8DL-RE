@@ -42,7 +42,7 @@ namespace N_m3u8DL_RE.Parser
             }
             else if (url.StartsWith("http"))
             {
-                this.rawText = HTTPUtil.GetWebSourceAsync(url, parserConfig.Headers).Result;
+                (this.rawText, url) = HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers).Result;
                 parserConfig.Url = url;
             }
             else if (File.Exists(url))

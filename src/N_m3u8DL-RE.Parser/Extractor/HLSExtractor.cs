@@ -31,13 +31,18 @@ namespace N_m3u8DL_RE.Parser.Extractor
         {
             this.ParserConfig = parserConfig;
             this.M3u8Url = parserConfig.Url ?? string.Empty;
-            if (!string.IsNullOrEmpty(parserConfig.BaseUrl))
+            this.SetBaseUrl();
+        }
+
+        private void SetBaseUrl()
+        {
+            if (!string.IsNullOrEmpty(ParserConfig.BaseUrl))
             {
-                this.BaseUrl = parserConfig.BaseUrl;
+                this.BaseUrl = ParserConfig.BaseUrl;
             }
             else
             {
-                this.BaseUrl = parserConfig.BaseUrl = this.M3u8Url;
+                this.BaseUrl = ParserConfig.BaseUrl = this.M3u8Url;
             }
         }
 
@@ -499,9 +504,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
             else if (url.StartsWith("http"))
             {
-                this.M3u8Content = await HTTPUtil.GetWebSourceAsync(url, ParserConfig.Headers);
+                (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
             }
-            this.M3u8Url = this.BaseUrl = url;
+
+            this.M3u8Url = url;
+            this.SetBaseUrl();
             this.PreProcessContent();
         }
 

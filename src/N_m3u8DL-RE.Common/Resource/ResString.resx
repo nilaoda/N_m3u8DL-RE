@@ -221,4 +221,10 @@
   <data name="cmd_skipDownload" xml:space="preserve">
     <value>Skip download</value>
   </data>
+  <data name="cmd_writeMetaJson" xml:space="preserve">
+    <value>Write meta json after parsed</value>
+  </data>
+  <data name="cmd_appendUrlParams" xml:space="preserve">
+    <value>Add Params of input Url to segments, useful for some websites, such as kakao.com</value>
+  </data>
 </root>

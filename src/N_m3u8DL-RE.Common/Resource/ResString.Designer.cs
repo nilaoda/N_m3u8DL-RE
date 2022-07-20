@@ -88,6 +88,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Add Params of input Url to segments, useful for some websites, such as kakao.com 的本地化字符串。
+        /// </summary>
+        public static string cmd_appendUrlParams {
+            get {
+                return ResourceManager.GetString("cmd_appendUrlParams", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Automatically selects the best tracks of all types 的本地化字符串。
         /// </summary>
         public static string cmd_autoSelect {
@@ -238,6 +247,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string cmd_uiLanguage {
             get {
                 return ResourceManager.GetString("cmd_uiLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Write meta json after parsed 的本地化字符串。
+        /// </summary>
+        public static string cmd_writeMetaJson {
+            get {
+                return ResourceManager.GetString("cmd_writeMetaJson", resourceCulture);
             }
         }
         

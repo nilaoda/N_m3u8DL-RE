@@ -49,56 +49,22 @@ namespace N_m3u8DL_RE.Common.Util
                 }
             }
             Logger.Debug(webRequest.Headers.ToString());
+            //手动处理跳转，以免自定义Headers丢失
             var webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
             if (webResponse.StatusCode == HttpStatusCode.Found || webResponse.StatusCode == HttpStatusCode.Moved)
             {
                 HttpResponseHeaders respHeaders = webResponse.Headers;
                 Logger.Debug(respHeaders.ToString());
-                if (respHeaders != null && respHeaders.Location != null)
+                if (respHeaders != null && respHeaders.Location != null && respHeaders.Location.AbsoluteUri != url)
                 {
                     var redirectedUrl = respHeaders.Location.AbsoluteUri;
                     return await DoGetAsync(redirectedUrl, headers);
                 }
             }
+            //手动将跳转后的URL设置进去, 用于后续取用
+            webResponse.Headers.Location = new Uri(url);
             webResponse.EnsureSuccessStatusCode();
             return webResponse;
-        }
-
-        //重定向
-        public static async Task<string> Get302Async(string url, Dictionary<string, string>? headers = null)
-        {
-            Logger.Debug(ResString.fetch + url);
-            var handler = new HttpClientHandler()
-            {
-                AllowAutoRedirect = false
-            };
-            string redirectedUrl = url;
-
-            using (HttpClient client = new HttpClient(handler))
-            {
-                if (headers != null)
-                {
-                    foreach (var item in headers)
-                    {
-                        client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
-                    }
-                }
-                using (HttpResponseMessage response = await client.GetAsync(url))
-                using (HttpContent content = response.Content)
-                {
-                    Logger.Debug(ResString.fetch + response.Headers);
-                    if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved)
-                    {
-                        HttpResponseHeaders respHeaders = response.Headers;
-                        if (respHeaders != null && respHeaders.Location != null)
-                        {
-                            redirectedUrl = respHeaders.Location.AbsoluteUri;
-                        }
-                    }
-                }
-            }
-
-            return redirectedUrl;
         }
 
         public static async Task<byte[]> GetBytesAsync(string url, Dictionary<string, string>? headers = null)
@@ -110,6 +76,12 @@ namespace N_m3u8DL_RE.Common.Util
             return bytes;
         }
 
+        /// <summary>
+        /// 获取网页源码
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="headers"></param>
+        /// <returns></returns>
         public static async Task<string> GetWebSourceAsync(string url, Dictionary<string, string>? headers = null)
         {
             string htmlCode = string.Empty;
@@ -117,6 +89,21 @@ namespace N_m3u8DL_RE.Common.Util
             htmlCode = await webResponse.Content.ReadAsStringAsync();
             Logger.Debug(htmlCode);
             return htmlCode;
+        }
+
+        /// <summary>
+        /// 获取网页源码和跳转后的URL
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="headers"></param>
+        /// <returns>(Source Code, RedirectedUrl)</returns>
+        public static async Task<(string, string)> GetWebSourceAndNewUrlAsync(string url, Dictionary<string, string>? headers = null)
+        {
+            string htmlCode = string.Empty;
+            var webResponse = await DoGetAsync(url, headers);
+            htmlCode = await webResponse.Content.ReadAsStringAsync();
+            Logger.Debug(htmlCode);
+            return (htmlCode, webResponse.Headers.Location != null ? webResponse.Headers.Location.AbsoluteUri : url);
         }
 
         public static async Task<string> GetPostResponseAsync(string Url, byte[] postData)
