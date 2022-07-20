@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.DownloadManager
             dirName = ConvertUtil.GetValidFileName(dirName, filterSlash: true);
             var tmpDir = Path.Combine(DownloaderConfig.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
-            var saveName = DownloaderConfig.SaveName != null ? $"{DownloaderConfig.SaveName}.{type}.{streamSpec.Language}" : dirName;
+            var saveName = DownloaderConfig.SaveName != null ? $"{DownloaderConfig.SaveName}.{type}.{streamSpec.Language}".TrimEnd('.') : dirName;
             //去除非法字符
             dirName = ConvertUtil.GetValidFileName(dirName, filterSlash: true);
             var headers = DownloaderConfig.Headers;
@@ -310,6 +310,37 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (!Directory.EnumerateFiles(tmpDir).Any())
                 {
                     Directory.Delete(tmpDir);
+                }
+            }
+
+            if (DownloaderConfig.Keys != null) 
+            {
+                var APP_DIR = Path.GetDirectoryName(Environment.ProcessPath)!;
+                var fileName = "mp4decrypt";
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                    fileName += ".exe";
+                var mp4decrypt = Path.Combine(APP_DIR, fileName);
+                if (!File.Exists(mp4decrypt)) mp4decrypt = fileName;
+                if (streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo != null
+                    && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
+                {
+                    var enc = output;
+                    var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec.mp4");
+                    var cmd = string.Join(" ", DownloaderConfig.Keys.Select(k => $"--key {k}")) + $" \"{enc}\" \"{dec}\"";
+                    Logger.InfoMarkUp($"[grey]Decrypting...[/]");
+                    await Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = mp4decrypt,
+                        Arguments = cmd,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    })!.WaitForExitAsync();
+                    if (File.Exists(dec))
+                    {
+                        File.Delete(enc);
+                        output = dec;
+                    }
                 }
             }
 
