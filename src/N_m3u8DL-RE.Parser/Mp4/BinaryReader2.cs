@@ -59,5 +59,12 @@ namespace Mp4SubtitleParser
             return BitConverter.ToUInt32(data, 0);
         }
 
+        public override ulong ReadUInt64()
+        {
+            var data = base.ReadBytes(8);
+            if (BitConverter.IsLittleEndian)
+                Array.Reverse(data);
+            return BitConverter.ToUInt64(data, 0);
+        }
     }
 }
