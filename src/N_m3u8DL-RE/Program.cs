@@ -28,6 +28,7 @@ namespace N_m3u8DL_RE
     {
         static async Task Main(string[] args)
         {
+
             await CommandInvoker.InvokeArgs(args, DoWorkAsync);
         }
 
@@ -37,7 +38,10 @@ namespace N_m3u8DL_RE
 
             try
             {
-                var parserConfig = new ParserConfig();
+                var parserConfig = new ParserConfig()
+                {
+                    AppendUrlParams = option.AppendUrlParams
+                };
 
                 //设置Headers
                 foreach (var item in ConvertUtil.SplitHeaderArrayToDic(option.Headers))
@@ -70,8 +74,9 @@ namespace N_m3u8DL_RE
                 //url = "https://ewcdn12.nowe.com/session/16-5-72579e3-2103014898783810281/Content/DASH_VOS3/VOD/6908/19585/d2afa5fe-e9c8-40f0-8d18-648aaaf292b6/f677841a-9d8f-2ff5-3517-674ba49ef192/manifest.mpd?token=894db5d69931835f82dd8e393974ef9f_1658146180";
                 //url = "https://ols-ww100-cp.akamaized.net/manifest/master/06ee6f68-ee80-11ea-9bc5-02b68fb543c4/65794a72596d6c30496a6f7a4e6a67324e4441774d444173496e42735958526d62334a74496a6f695a47567a6133527663434973496d526c646d6c6a5a565235634755694f694a335a5749694c434a746232526c62434936496e6470626d527664334d694c434a7663315235634755694f694a6a61484a76625755694c434a7663794936496a45774d6934774c6a41694c434a68634841694f69497a4c6a416966513d3d/dash.mpd?cpatoken=exp=1658223027~acl=/manifest/master/06ee6f68-ee80-11ea-9bc5-02b68fb543c4/*~hmac=644c608aac361f688e9b24b0f345c801d0f2d335819431d1873ff7aeac46d6b2&access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZXZpY2VfaWQiOm51bGwsIndhdGNoX3R5cGUiOiJQUkVNSVVNIiwicHJvZ3JhbV9pZCI6ImUwMWRmYjAyLTM1YmItMTFlOS1hNDI3LTA2YTA0MTdjMWQxZSIsImFkX3RhZyI6ZmFsc2UsInBhcmVudF9wcm9ncmFtX2lkIjoiZmJmMDc2MDYtMzNmYi0xMWU5LWE0MjctMDZhMDQxN2MxZDFlIiwiY2xpZW50X2lkIjoiNGQ3MDViZTQtYTQ5ZS0xMWVhLWJiMzctMDI0MmFjMTMwMDAyIiwidmlkZW9fdHlwZSI6InZvZCIsImdyYW50X3R5cGUiOiJwbGF5X3ZpZGVvIiwidXNlcl9pZCI6ImFhNTMxZWQ2LWM2NTMtNDliYS04NGI1LWFkZDRmNGIzNGMyNyIsImN1cnJlbnRfc2Vjb25kIjowLCJyZXBvcnRfaWQiOiJOU1RHIiwic2NvcGUiOlsicHVibGljOi4qIiwibWU6LioiXSwiZXhwIjoxNjU4Mzk1ODI2LCJkZXRlY3Rpb25faWQiOm51bGwsInZpZGVvX2lkIjoiODc0Yjk0ZDItNzZiYi00YzliLTgzODQtNzJlMTA0NWVjOGMxIiwiaXNzIjoiQXNpYXBsYXktT0F1dGgtU2VydmVyIiwiaWF0IjoxNjU4MTM2NjI2LCJ0ZXJyaXRvcnkiOiJUVyJ9.1juciYIyMNzykXKu-nGLR_cYWvPMEAE9ub-ny7RzFnM";
                 //url = "https://a38avoddashs3ww-a.akamaihd.net/ondemand/iad_2/8e91/f2f2/ec5a/430f-bd7a-0779f4a0189d/685cda75-609c-41c1-86bb-688f4cdb5521_corrected.mpd";
-                url = "https://dcs-vod.mp.lura.live/vod/p/session/manifest.mpd?i=i177610817-nb45239a2-e962-4137-bc70-1790359619e6";
+                //url = "https://dcs-vod.mp.lura.live/vod/p/session/manifest.mpd?i=i177610817-nb45239a2-e962-4137-bc70-1790359619e6";
                 //url = "https://theater.kktv.com.tw/98/04000198010001_584b26392f7f7f11fc62299214a55fb7/16113081449d8d5e9960_sub_dash.mpd"; //MPD+VTT
+                //url = "https://vsl.play.kakao.com/vod/rvty90n7btua6u9oebr97i8zl/dash/vhs/cenc/adaptive.mpd?e=1658297362&p=71&h=53766bdde112d59da2b2514e8ab41e81"; //需要补params
                 //url = "";
 
                 if (!string.IsNullOrEmpty(option.Input))
@@ -100,8 +105,11 @@ namespace N_m3u8DL_RE
                 //可选字幕轨道
                 var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
 
-                Logger.Warn(ResString.writeJson);
-                await File.WriteAllTextAsync("meta.json", GlobalUtil.ConvertToJson(lists), Encoding.UTF8);
+                if (option.WriteMetaJson)
+                {
+                    Logger.Warn(ResString.writeJson);
+                    await File.WriteAllTextAsync("meta.json", GlobalUtil.ConvertToJson(lists), Encoding.UTF8);
+                }
 
                 Logger.Info(ResString.streamsInfo, lists.Count(), basicStreams.Count(), audios.Count(), subs.Count());
 
@@ -135,8 +143,13 @@ namespace N_m3u8DL_RE
                 //一个以上的话，需要手动重新加载playlist
                 if (lists.Count() > 1)
                     await extractor.FetchPlayListAsync(selectedStreams);
-                Logger.Warn(ResString.writeJson);
-                await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
+
+                if (option.WriteMetaJson)
+                {
+                    Logger.Warn(ResString.writeJson);
+                    await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
+                }
+
                 Logger.Info(ResString.selectedStream);
                 foreach (var item in selectedStreams)
                 {

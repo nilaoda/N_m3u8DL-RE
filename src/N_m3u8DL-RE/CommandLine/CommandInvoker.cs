@@ -12,8 +12,8 @@ namespace N_m3u8DL_RE.CommandLine
     {
         private readonly static Argument<string> Input = new(name: "input", description: ResString.cmd_Input);
         private readonly static Option<string?> TmpDir = new(new string[] { "--tmp-dir" }, description: ResString.cmd_tmpDir);
-        private readonly static Option<string?> SaveDir = new(new string[] { "--save-dir" }, description: ResString.cmd_saveDir);
-        private readonly static Option<string?> SaveName = new(new string[] { "--save-name" }, description: ResString.cmd_saveName);
+        private readonly static Option<string?> SaveDir = new(new string[] { "--save-dir", "-o" }, description: ResString.cmd_saveDir);
+        private readonly static Option<string?> SaveName = new(new string[] { "--save-name", "-O" }, description: ResString.cmd_saveName);
         private readonly static Option<string?> UILanguage = new(new string[] { "--ui-language" }, description: ResString.cmd_uiLanguage);
         private readonly static Option<string[]?> Headers = new(new string[] { "--header", "-H" }, description: ResString.cmd_header) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
@@ -27,6 +27,8 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> DelAfterDone = new(new string[] { "--del-after-done" }, description: ResString.cmd_delAfterDone, getDefaultValue: () => true);
         private readonly static Option<bool> AutoSubtitleFix = new(new string[] { "--auto-subtitle-fix" }, description: ResString.cmd_subtitleFix, getDefaultValue: () => true);
         private readonly static Option<bool> CheckSegmentsCount = new(new string[] { "--check-segments-count" }, description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
+        private readonly static Option<bool> WriteMetaJson = new(new string[] { "--write-meta-json" }, description: ResString.cmd_writeMetaJson, getDefaultValue: () => true);
+        private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
 
         class MyOptionBinder : BinderBase<MyOption>
         {
@@ -51,6 +53,8 @@ namespace N_m3u8DL_RE.CommandLine
                     ThreadCount = bindingContext.ParseResult.GetValueForOption(ThreadCount),
                     UILanguage = bindingContext.ParseResult.GetValueForOption(UILanguage),
                     SkipDownload = bindingContext.ParseResult.GetValueForOption(SkipDownload),
+                    WriteMetaJson = bindingContext.ParseResult.GetValueForOption(WriteMetaJson),
+                    AppendUrlParams = bindingContext.ParseResult.GetValueForOption(AppendUrlParams),
                 };
 
                 //在这里设置语言
@@ -78,7 +82,8 @@ namespace N_m3u8DL_RE.CommandLine
             var rootCommand = new RootCommand("N_m3u8DL-RE Beta version: 20220719")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix, LogLevel, UILanguage
+                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
+                LogLevel, UILanguage
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

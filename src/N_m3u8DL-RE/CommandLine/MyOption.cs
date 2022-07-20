@@ -54,6 +54,14 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool SkipDownload { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.WriteMetaJson"/>.
+        /// </summary>
+        public bool WriteMetaJson { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.AppendUrlParams"/>.
+        /// </summary>
+        public bool AppendUrlParams { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>
         public SubtitleFormat SubtitleFormat { get; set; }
