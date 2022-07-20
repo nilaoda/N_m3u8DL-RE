@@ -51,5 +51,20 @@ namespace N_m3u8DL_RE.Util
                 _ => throw new NotSupportedException($"{toFormat} not supported!")
             };
         }
+
+        public static string GetValidFileName(string input, string re = ".", bool filterSlash = false)
+        {
+            string title = input;
+            foreach (char invalidChar in Path.GetInvalidFileNameChars())
+            {
+                title = title.Replace(invalidChar.ToString(), re);
+            }
+            if (filterSlash)
+            {
+                title = title.Replace("/", re);
+                title = title.Replace("\\", re);
+            }
+            return title.Trim('.');
+        }
     }
 }
