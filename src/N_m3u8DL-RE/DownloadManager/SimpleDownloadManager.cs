@@ -336,7 +336,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         RedirectStandardError = true,
                         UseShellExecute = false
                     })!.WaitForExitAsync();
-                    if (File.Exists(dec))
+                    if (File.Exists(dec) && new FileInfo(dec).Length > 0) 
                     {
                         File.Delete(enc);
                         output = dec;
