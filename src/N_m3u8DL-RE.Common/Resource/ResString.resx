@@ -174,7 +174,7 @@
   </data>
   <data name="cmd_header" xml:space="preserve">
     <value>Pass custom header(s) to server, Example:
- -H "Cookie: mycookie" -H "User-Agent: iOS"</value>
+-H "Cookie: mycookie" -H "User-Agent: iOS"</value>
   </data>
   <data name="cmd_logLevel" xml:space="preserve">
     <value>Set log level</value>
@@ -226,5 +226,12 @@
   </data>
   <data name="cmd_appendUrlParams" xml:space="preserve">
     <value>Add Params of input Url to segments, useful for some websites, such as kakao.com</value>
+  </data>
+  <data name="cmd_savePattern" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="cmd_keys" xml:space="preserve">
+    <value>Pass decryption key(s) to mp4decrypt. format:
+--key KID1:KEY1 --key KID2:KEY2</value>
   </data>
 </root>

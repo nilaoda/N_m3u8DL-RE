@@ -77,6 +77,7 @@ namespace N_m3u8DL_RE
                 //url = "https://dcs-vod.mp.lura.live/vod/p/session/manifest.mpd?i=i177610817-nb45239a2-e962-4137-bc70-1790359619e6";
                 //url = "https://theater.kktv.com.tw/98/04000198010001_584b26392f7f7f11fc62299214a55fb7/16113081449d8d5e9960_sub_dash.mpd"; //MPD+VTT
                 //url = "https://vsl.play.kakao.com/vod/rvty90n7btua6u9oebr97i8zl/dash/vhs/cenc/adaptive.mpd?e=1658297362&p=71&h=53766bdde112d59da2b2514e8ab41e81"; //需要补params
+                //url = "https://a38avoddashs3ww-a.akamaihd.net/ondemand/iad_2/8e91/f2f2/ec5a/430f-bd7a-0779f4a0189d/685cda75-609c-41c1-86bb-688f4cdb5521_corrected.mpd";
                 //url = "";
 
                 if (!string.IsNullOrEmpty(option.Input))
@@ -95,6 +96,13 @@ namespace N_m3u8DL_RE
 
                 //解析流信息
                 var streams = await extractor.ExtractStreamsAsync();
+
+                //直播检测
+                var livingFlag = streams.Any(s => s.Playlist?.IsLive == true);
+                if (livingFlag)
+                {
+                    Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
+                }
 
                 //全部媒体
                 var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth);

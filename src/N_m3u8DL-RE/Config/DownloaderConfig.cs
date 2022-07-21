@@ -25,6 +25,8 @@ namespace N_m3u8DL_RE.Config
             SaveName = option.SaveName;
             SaveDir = option.SaveDir;
             ThreadCount = option.ThreadCount;
+            SavePattern = option.SavePattern;
+            Keys = option.Keys;
         }
 
         /// <summary>
@@ -39,6 +41,10 @@ namespace N_m3u8DL_RE.Config
         /// 文件名
         /// </summary>
         public string? SaveName { get; set; }
+        /// <summary>
+        /// 文件名模板
+        /// </summary>
+        public string? SavePattern { get; set; }
         /// <summary>
         /// 线程数
         /// </summary>
@@ -78,5 +84,9 @@ namespace N_m3u8DL_RE.Config
         {
             ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
         };
+        /// <summary>
+        /// 解密KEYs
+        /// </summary>
+        public string[]? Keys { get; set; }
     }
 }

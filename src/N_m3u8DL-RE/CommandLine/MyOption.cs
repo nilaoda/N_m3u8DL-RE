@@ -14,6 +14,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public string[]? Headers { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.Keys"/>.
+        /// </summary>
+        public string[]? Keys { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.LogLevel"/>.
         /// </summary>
         public LogLevel LogLevel { get; set; }
@@ -77,6 +81,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.SaveName"/>.
         /// </summary>
         public string? SaveName { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.SavePattern"/>.
+        /// </summary>
+        public string? SavePattern { get; set; }
         /// <summary>
         /// See: <see cref="CommandInvoker.UILanguage"/>.
         /// </summary>

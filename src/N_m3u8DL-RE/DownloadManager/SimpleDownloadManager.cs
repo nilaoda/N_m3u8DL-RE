@@ -313,7 +313,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             }
 
-            if (DownloaderConfig.Keys != null) 
+            if (DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
             {
                 var APP_DIR = Path.GetDirectoryName(Environment.ProcessPath)!;
                 var fileName = "mp4decrypt";
@@ -325,7 +325,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
                 {
                     var enc = output;
-                    var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec.mp4");
+                    var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                     var cmd = string.Join(" ", DownloaderConfig.Keys.Select(k => $"--key {k}")) + $" \"{enc}\" \"{dec}\"";
                     Logger.InfoMarkUp($"[grey]Decrypting...[/]");
                     await Process.Start(new ProcessStartInfo()

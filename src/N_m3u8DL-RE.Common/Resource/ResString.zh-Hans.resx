@@ -194,7 +194,7 @@
   </data>
   <data name="cmd_header" xml:space="preserve">
     <value>为HTTP请求设置特定的请求头, 例如:
- -H "Cookie: mycookie" -H "User-Agent: iOS"</value>
+-H "Cookie: mycookie" -H "User-Agent: iOS"</value>
   </data>
   <data name="cmd_logLevel" xml:space="preserve">
     <value>设置日志级别</value>
@@ -246,5 +246,12 @@
   </data>
   <data name="cmd_appendUrlParams" xml:space="preserve">
     <value>将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com</value>
+  </data>
+  <data name="cmd_savePattern" xml:space="preserve">
+    <value>设置保存文件命名模板, 支持使用变量</value>
+  </data>
+  <data name="cmd_keys" xml:space="preserve">
+    <value>设置解密密钥, 程序调用mp4decrpyt进行解密. 格式:
+--key KID1:KEY1 --key KID2:KEY2</value>
   </data>
 </root>

@@ -134,7 +134,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         
         /// <summary>
         ///   查找类似 Pass custom header(s) to server, Example:
-        /// -H &quot;Cookie: mycookie&quot; -H &quot;User-Agent: iOS&quot; 的本地化字符串。
+        ///-H &quot;Cookie: mycookie&quot; -H &quot;User-Agent: iOS&quot; 的本地化字符串。
         /// </summary>
         public static string cmd_header {
             get {
@@ -148,6 +148,16 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string cmd_Input {
             get {
                 return ResourceManager.GetString("cmd_Input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Pass decryption key(s) to mp4decrypt. format:
+        ///--key KID1:KEY1 --key KID2:KEY2 的本地化字符串。
+        /// </summary>
+        public static string cmd_keys {
+            get {
+                return ResourceManager.GetString("cmd_keys", resourceCulture);
             }
         }
         
@@ -175,6 +185,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string cmd_saveName {
             get {
                 return ResourceManager.GetString("cmd_saveName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似  的本地化字符串。
+        /// </summary>
+        public static string cmd_savePattern {
+            get {
+                return ResourceManager.GetString("cmd_savePattern", resourceCulture);
             }
         }
         
