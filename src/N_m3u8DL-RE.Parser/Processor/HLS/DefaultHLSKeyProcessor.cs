@@ -13,30 +13,29 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string method, string uriText, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
+        public override bool CanProcess(ExtractorType extractorType, string method, string keyUriText, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
 
-        public override byte[]? Process(string method, string uriText, ParserConfig parserConfig)
+        public override EncryptInfo Process(string method, string keyUriText, string m3u8Content, ParserConfig parserConfig)
         {
-            var encryptInfo = new EncryptInfo();
+            var encryptInfo = new EncryptInfo(method);
 
-
-            if (uriText.ToLower().StartsWith("base64:"))
+            if (keyUriText.ToLower().StartsWith("base64:"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uriText.Substring(7));
+                encryptInfo.Key = Convert.FromBase64String(keyUriText[7..]);
             }
-            else if (uriText.ToLower().StartsWith("data:text/plain;base64,"))
+            else if (keyUriText.ToLower().StartsWith("data:text/plain;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uriText.Substring(23));
+                encryptInfo.Key = Convert.FromBase64String(keyUriText[23..]);
             }
-            else if (!string.IsNullOrEmpty(uriText)) 
+            else if (!string.IsNullOrEmpty(keyUriText)) 
             {
-                var segUrl = PreProcessUrl(ParserUtil.CombineURL(parserConfig.BaseUrl, uriText), parserConfig);
+                var segUrl = PreProcessUrl(ParserUtil.CombineURL(parserConfig.BaseUrl, keyUriText), parserConfig);
                 var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
                 encryptInfo.Key = bytes;
             }
 
-            return encryptInfo.Key;
+            return encryptInfo;
         }
 
         /// <summary>

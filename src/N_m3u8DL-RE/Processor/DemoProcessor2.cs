@@ -15,17 +15,17 @@ namespace N_m3u8DL_RE.Processor
 {
     internal class DemoProcessor2 : KeyProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string method, string uriText, ParserConfig parserConfig)
+        public override bool CanProcess(ExtractorType extractorType, string method, string uriText, string m3u8Content, ParserConfig parserConfig)
         {
             return extractorType == ExtractorType.HLS  && parserConfig.Url.Contains("playertest.longtailvideo.com");
         }
 
-        public override byte[]? Process(string method, string uriText, ParserConfig parserConfig)
+        public override EncryptInfo Process(string method, string uriText, string m3u8Content, ParserConfig parserConfig)
         {
             Logger.InfoMarkUp($"[white on green]My Key Processor => {uriText}[/]");
-            var key = new DefaultHLSKeyProcessor().Process(method, uriText, parserConfig);
-            Logger.InfoMarkUp("[red]" + HexUtil.BytesToHex(key!, " ") + "[/]");
-            return key;
+            var info = new DefaultHLSKeyProcessor().Process(method, uriText, m3u8Content, parserConfig);
+            Logger.InfoMarkUp("[red]" + HexUtil.BytesToHex(info.Key!, " ") + "[/]");
+            return info;
         }
     }
 }

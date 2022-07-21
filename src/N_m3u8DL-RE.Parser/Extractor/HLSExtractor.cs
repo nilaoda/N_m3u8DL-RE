@@ -322,21 +322,20 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     if (uri != uri_last)
                     {
                         //加密方式
-                        if (Enum.TryParse(method.Replace("-", "_"), out EncryptMethod m))
-                        {
-                            currentEncryptInfo.Method = m;
-                        }
-                        else
-                        {
-                            currentEncryptInfo.Method = EncryptMethod.UNKNOWN;
-                        }
+                        currentEncryptInfo.Method = EncryptInfo.ParseMethod(method);
                         //IV
                         if (!string.IsNullOrEmpty(iv))
                         {
                             currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
                         }
                         //KEY
-                        currentEncryptInfo.Key = ParseKey(method, uri);
+                        var parsedInfo = ParseKey(method, uri);
+                        currentEncryptInfo.Key = parsedInfo.Key;
+                        //加密方式被处理器更改
+                        if (currentEncryptInfo.Method != parsedInfo.Method)
+                        {
+                            currentEncryptInfo.Method = parsedInfo.Method;
+                        }
                     }
                     lastKeyLine = line;
                 }
@@ -454,14 +453,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return playlist;
         }
 
-        private byte[]? ParseKey(string method, string uriText)
+        private EncryptInfo ParseKey(string method, string uriText)
         {
             foreach (var p in ParserConfig.KeyProcessors)
             {
-                if (p.CanProcess(ExtractorType, method, uriText, ParserConfig))
+                if (p.CanProcess(ExtractorType, method, uriText, M3u8Content, ParserConfig))
                 {
                     //匹配到对应处理器后不再继续
-                    return p.Process(method, uriText, ParserConfig);
+                    return p.Process(method, uriText, M3u8Content, ParserConfig);
                 }
             }
 
