@@ -16,6 +16,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> SaveName = new(new string[] { "--save-name", "-O" }, description: ResString.cmd_saveName);
         private readonly static Option<string?> SavePattern = new(new string[] { "--save-pattern" }, description: ResString.cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
         private readonly static Option<string?> UILanguage = new(new string[] { "--ui-language" }, description: ResString.cmd_uiLanguage);
+        private readonly static Option<string?> UrlProcessorArgs = new(new string[] { "--urlprocessor-args" }, description: ResString.cmd_urlProcessorArgs);
         private readonly static Option<string[]?> Keys = new(new string[] { "--key" }, description: ResString.cmd_keys) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<string[]?> Headers = new(new string[] { "--header", "-H" }, description: ResString.cmd_header) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
@@ -59,6 +60,7 @@ namespace N_m3u8DL_RE.CommandLine
                     AppendUrlParams = bindingContext.ParseResult.GetValueForOption(AppendUrlParams),
                     SavePattern = bindingContext.ParseResult.GetValueForOption(SavePattern),
                     Keys = bindingContext.ParseResult.GetValueForOption(Keys),
+                    UrlProcessorArgs = bindingContext.ParseResult.GetValueForOption(UrlProcessorArgs),
                 };
 
                 //在这里设置语言
@@ -87,7 +89,7 @@ namespace N_m3u8DL_RE.CommandLine
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Keys, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
-                LogLevel, UILanguage
+                LogLevel, UILanguage, UrlProcessorArgs
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

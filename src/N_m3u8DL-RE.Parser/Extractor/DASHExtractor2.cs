@@ -16,6 +16,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
     //https://blog.csdn.net/leek5533/article/details/117750191
     internal class DASHExtractor2 : IExtractor
     {
+        private static EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
+
         public ExtractorType ExtractorType => ExtractorType.MPEG_DASH;
 
         private string MpdUrl = string.Empty;
@@ -202,7 +204,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                         new MediaSegment()
                                         {
                                             Index = 0,
-                                            Url = PreProcessUrl(segBaseUrl),
+                                            Url = segBaseUrl,
                                             Duration = XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds
                                         }
                                     );
@@ -212,7 +214,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                     var initRange = initialization.Attribute("range")?.Value;
                                     streamSpec.Playlist.MediaInit = new MediaSegment();
-                                    streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                                    streamSpec.Playlist.MediaInit.Url = initUrl;
                                     if (initRange != null)
                                     {
                                         var (start, expect) = ParserUtil.ParseRange(initRange);
@@ -235,7 +237,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                 var initRange = initialization.Attribute("range")?.Value;
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
-                                streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                                streamSpec.Playlist.MediaInit.Url = initUrl;
                                 if (initRange != null)
                                 {
                                     var (start, expect) = ParserUtil.ParseRange(initRange);
@@ -252,7 +254,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var mediaRange = segmentURL.Attribute("mediaRange")?.Value;
                                 MediaSegment mediaSegment = new();
                                 mediaSegment.Duration = Convert.ToDouble(duration);
-                                mediaSegment.Url = PreProcessUrl(mediaUrl);
+                                mediaSegment.Url = mediaUrl;
                                 mediaSegment.Index = segmentIndex;
                                 if (mediaRange != null)
                                 {
@@ -289,7 +291,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 var initUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, initialization), varDic);
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
-                                streamSpec.Playlist.MediaInit.Url = PreProcessUrl(initUrl);
+                                streamSpec.Playlist.MediaInit.Url = initUrl;
                             }
                             //处理分片
                             var media = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
@@ -316,7 +318,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     varDic[DASHTags.TemplateNumber] = segNumber++;
                                     var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media!), varDic);
                                     MediaSegment mediaSegment = new();
-                                    mediaSegment.Url = PreProcessUrl(mediaUrl);
+                                    mediaSegment.Url = mediaUrl;
                                     mediaSegment.Duration = _duration / (double)timescale;
                                     mediaSegment.Index = segIndex++;
                                     streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
@@ -332,7 +334,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                         varDic[DASHTags.TemplateTime] = currentTime;
                                         varDic[DASHTags.TemplateNumber] = segNumber++;
                                         var _mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media!), varDic);
-                                        _mediaSegment.Url = PreProcessUrl(_mediaUrl);
+                                        _mediaSegment.Url = _mediaUrl;
                                         _mediaSegment.Index = segIndex++;
                                         _mediaSegment.Duration = _duration / (double)timescale;
                                         streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
@@ -363,7 +365,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     varDic[DASHTags.TemplateNumber] = index;
                                     var mediaUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, media!), varDic);
                                     MediaSegment mediaSegment = new();
-                                    mediaSegment.Url = PreProcessUrl(mediaUrl);
+                                    mediaSegment.Url = mediaUrl;
                                     mediaSegment.Index = isLive ? index : segIndex; //直播直接用startNumber
                                     mediaSegment.Duration = duration / (double)timescale;
                                     streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
@@ -379,7 +381,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                         new MediaSegment()
                                         {
                                             Index = 0,
-                                            Url = PreProcessUrl(segBaseUrl),
+                                            Url = segBaseUrl,
                                             Duration = XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds
                                         }
                                     );
@@ -390,11 +392,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         {
                             if (streamSpec.Playlist.MediaInit != null)
                             {
-                                streamSpec.Playlist.MediaInit.EncryptInfo.Method = EncryptMethod.UNKNOWN;
+                                streamSpec.Playlist.MediaInit.EncryptInfo.Method = DEFAULT_METHOD;
                             }
                             foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
                             {
-                                item.EncryptInfo.Method = EncryptMethod.UNKNOWN;
+                                item.EncryptInfo.Method = DEFAULT_METHOD;
                             }
                         }
 
@@ -467,7 +469,26 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
         {
-            return;
+            //这里才调用URL预处理器，节省开销
+            for (int i = 0; i < streamSpecs.Count; i++)
+            {
+                var playlist = streamSpecs[i].Playlist;
+                if (playlist != null)
+                {
+                    if (playlist.MediaInit != null)
+                    {
+                        playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
+                    }
+                    for (int ii = 0; ii < playlist!.MediaParts.Count; ii++)
+                    {
+                        var part = playlist.MediaParts[ii];
+                        for (int iii = 0; iii < part.MediaSegments.Count; iii++)
+                        {
+                            part.MediaSegments[iii].Url = PreProcessUrl(part.MediaSegments[iii].Url);
+                        }
+                    }
+                }
+            }
         }
 
         public string PreProcessUrl(string url)

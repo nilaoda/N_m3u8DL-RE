@@ -270,6 +270,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Give these arguments to the URL Processors. 的本地化字符串。
+        /// </summary>
+        public static string cmd_urlProcessorArgs {
+            get {
+                return ResourceManager.GetString("cmd_urlProcessorArgs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Write meta json after parsed 的本地化字符串。
         /// </summary>
         public static string cmd_writeMetaJson {

@@ -254,4 +254,7 @@
     <value>设置解密密钥, 程序调用mp4decrpyt进行解密. 格式:
 --key KID1:KEY1 --key KID2:KEY2</value>
   </data>
+  <data name="cmd_urlProcessorArgs" xml:space="preserve">
+    <value>此字符串将直接传递给URL Processor</value>
+  </data>
 </root>

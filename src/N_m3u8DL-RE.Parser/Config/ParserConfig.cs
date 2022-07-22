@@ -55,5 +55,10 @@ namespace N_m3u8DL_RE.Parser.Config
         /// 如果 AppendUrlParams=true，得 http://xxx.com/clip_01.ts?hmac=xxx&token=xxx
         /// </summary>
         public bool AppendUrlParams { get; set; } = false;
+
+        /// <summary>
+        /// 此参数将会传递给URL Processor中
+        /// </summary>
+        public string? UrlProcessorArgs { get; set; }
     }
 }

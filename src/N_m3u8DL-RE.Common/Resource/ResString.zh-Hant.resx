@@ -231,4 +231,7 @@
     <value>設置解密密鑰, 程序調用mp4decrpyt進行解密. 格式:
 --key KID1:KEY1 --key KID2:KEY2</value>
   </data>
+  <data name="cmd_urlProcessorArgs" xml:space="preserve">
+    <value>此字符串將直接傳遞給URL Processor</value>
+  </data>
 </root>

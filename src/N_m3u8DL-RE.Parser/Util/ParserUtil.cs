@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Parser.Util
 {
-    internal partial class ParserUtil
+    public partial class ParserUtil
     {
         [RegexGenerator("\\$Number%([^$]+)d\\$")]
         private static partial Regex VarsNumberRegex();

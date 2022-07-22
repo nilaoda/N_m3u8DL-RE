@@ -234,4 +234,7 @@
     <value>Pass decryption key(s) to mp4decrypt. format:
 --key KID1:KEY1 --key KID2:KEY2</value>
   </data>
+  <data name="cmd_urlProcessorArgs" xml:space="preserve">
+    <value>Give these arguments to the URL Processors.</value>
+  </data>
 </root>

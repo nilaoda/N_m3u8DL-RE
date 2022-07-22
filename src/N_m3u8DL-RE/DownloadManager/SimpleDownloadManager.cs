@@ -85,10 +85,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (result != null && result.Success) 
                 {
                     var data = File.ReadAllBytes(result.ActualFilePath);
-                    var pssh = MP4InitUtil.ReadWVPssh(data);
-                    var kid = MP4InitUtil.ReadWVKid(data);
-                    if (pssh != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {pssh}[/]");
-                    if (kid != null) Logger.WarnMarkUp($"[grey]KID: {kid}[/]");
+                    var info = MP4InitUtil.ReadInit(data);
+                    if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
+                    if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
+                    if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
                 }
             }
 

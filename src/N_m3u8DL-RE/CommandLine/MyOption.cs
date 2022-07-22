@@ -18,6 +18,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public string[]? Keys { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.UrlProcessorArgs"/>.
+        /// </summary>
+        public string? UrlProcessorArgs { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.LogLevel"/>.
         /// </summary>
         public LogLevel LogLevel { get; set; }

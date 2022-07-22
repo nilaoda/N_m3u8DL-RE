@@ -40,7 +40,8 @@ namespace N_m3u8DL_RE
             {
                 var parserConfig = new ParserConfig()
                 {
-                    AppendUrlParams = option.AppendUrlParams
+                    AppendUrlParams = option.AppendUrlParams,
+                    UrlProcessorArgs = option.UrlProcessorArgs,
                 };
 
                 //设置Headers
@@ -53,6 +54,8 @@ namespace N_m3u8DL_RE
                 parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
                 //demo2
                 parserConfig.KeyProcessors.Insert(0, new DemoProcessor2());
+                //for www.nowehoryzonty.pl
+                parserConfig.UrlProcessors.Insert(0, new NowehoryzontyUrlProcessor());
 
                 var url = string.Empty;
                 //url = "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"; //直播
