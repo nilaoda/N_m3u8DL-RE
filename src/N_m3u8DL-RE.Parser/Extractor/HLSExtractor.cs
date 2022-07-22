@@ -308,6 +308,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     //对于IV，没自定义且当前行有IV的话 就用
                     if (ParserConfig.CustomeKey != null)
                     {
+                        currentEncryptInfo.Key = ParserConfig.CustomeKey;
                         if (ParserConfig.CustomeIV == null && line.Contains("IV=0x"))
                             currentEncryptInfo.IV = HexUtil.HexToBytes(ParserUtil.GetAttribute(line, "IV"));
                         continue;
@@ -321,21 +322,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     //如果KEY URL相同，不进行重复解析
                     if (uri != uri_last)
                     {
-                        //加密方式
-                        currentEncryptInfo.Method = EncryptInfo.ParseMethod(method);
-                        //IV
-                        if (!string.IsNullOrEmpty(iv))
-                        {
-                            currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
-                        }
-                        //KEY
-                        var parsedInfo = ParseKey(method, uri);
+                        //调用处理器进行解析
+                        var parsedInfo = ParseKey(line);
+                        currentEncryptInfo.Method = parsedInfo.Method;
                         currentEncryptInfo.Key = parsedInfo.Key;
-                        //加密方式被处理器更改
-                        if (currentEncryptInfo.Method != parsedInfo.Method)
-                        {
-                            currentEncryptInfo.Method = parsedInfo.Method;
-                        }
+                        currentEncryptInfo.IV = parsedInfo.IV;
                     }
                     lastKeyLine = line;
                 }
@@ -453,14 +444,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return playlist;
         }
 
-        private EncryptInfo ParseKey(string method, string uriText)
+        private EncryptInfo ParseKey(string keyLine)
         {
             foreach (var p in ParserConfig.KeyProcessors)
             {
-                if (p.CanProcess(ExtractorType, method, uriText, M3u8Content, ParserConfig))
+                if (p.CanProcess(ExtractorType, keyLine, M3u8Content, ParserConfig))
                 {
                     //匹配到对应处理器后不再继续
-                    return p.Process(method, uriText, M3u8Content, ParserConfig);
+                    return p.Process(keyLine, M3u8Content, ParserConfig);
                 }
             }
 

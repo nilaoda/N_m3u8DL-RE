@@ -13,24 +13,34 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string method, string keyUriText, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
+        public override bool CanProcess(ExtractorType extractorType, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
 
-        public override EncryptInfo Process(string method, string keyUriText, string m3u8Content, ParserConfig parserConfig)
+        public override EncryptInfo Process(string keyLine, string m3u8Content, ParserConfig parserConfig)
         {
-            var encryptInfo = new EncryptInfo(method);
+            var iv = ParserUtil.GetAttribute(keyLine, "IV");
+            var method = ParserUtil.GetAttribute(keyLine, "METHOD");
+            var uri = ParserUtil.GetAttribute(keyLine, "URI");
 
-            if (keyUriText.ToLower().StartsWith("base64:"))
+            var encryptInfo = new EncryptInfo(method);
+            //IV
+            if (!string.IsNullOrEmpty(iv))
             {
-                encryptInfo.Key = Convert.FromBase64String(keyUriText[7..]);
+                encryptInfo.IV = HexUtil.HexToBytes(iv);
             }
-            else if (keyUriText.ToLower().StartsWith("data:text/plain;base64,"))
+
+            //KEY
+            if (uri.ToLower().StartsWith("base64:"))
             {
-                encryptInfo.Key = Convert.FromBase64String(keyUriText[23..]);
+                encryptInfo.Key = Convert.FromBase64String(uri[7..]);
             }
-            else if (!string.IsNullOrEmpty(keyUriText)) 
+            else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
             {
-                var segUrl = PreProcessUrl(ParserUtil.CombineURL(parserConfig.BaseUrl, keyUriText), parserConfig);
+                encryptInfo.Key = Convert.FromBase64String(uri[23..]);
+            }
+            else if (!string.IsNullOrEmpty(uri)) 
+            {
+                var segUrl = PreProcessUrl(ParserUtil.CombineURL(parserConfig.BaseUrl, uri), parserConfig);
                 var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
                 encryptInfo.Key = bytes;
             }
