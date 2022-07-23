@@ -257,4 +257,7 @@
   <data name="cmd_urlProcessorArgs" xml:space="preserve">
     <value>此字符串将直接传递给URL Processor</value>
   </data>
+  <data name="cmd_MP4RealTimeDecryption" xml:space="preserve">
+    <value>实时解密MP4分片</value>
+  </data>
 </root>

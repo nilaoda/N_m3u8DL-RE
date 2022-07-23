@@ -12,8 +12,8 @@ namespace N_m3u8DL_RE.CommandLine
     {
         private readonly static Argument<string> Input = new(name: "input", description: ResString.cmd_Input);
         private readonly static Option<string?> TmpDir = new(new string[] { "--tmp-dir" }, description: ResString.cmd_tmpDir);
-        private readonly static Option<string?> SaveDir = new(new string[] { "--save-dir", "-o" }, description: ResString.cmd_saveDir);
-        private readonly static Option<string?> SaveName = new(new string[] { "--save-name", "-O" }, description: ResString.cmd_saveName);
+        private readonly static Option<string?> SaveDir = new(new string[] { "--save-dir" }, description: ResString.cmd_saveDir);
+        private readonly static Option<string?> SaveName = new(new string[] { "--save-name" }, description: ResString.cmd_saveName);
         private readonly static Option<string?> SavePattern = new(new string[] { "--save-pattern" }, description: ResString.cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
         private readonly static Option<string?> UILanguage = new(new string[] { "--ui-language" }, description: ResString.cmd_uiLanguage);
         private readonly static Option<string?> UrlProcessorArgs = new(new string[] { "--urlprocessor-args" }, description: ResString.cmd_urlProcessorArgs);
@@ -32,6 +32,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> CheckSegmentsCount = new(new string[] { "--check-segments-count" }, description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
         private readonly static Option<bool> WriteMetaJson = new(new string[] { "--write-meta-json" }, description: ResString.cmd_writeMetaJson, getDefaultValue: () => true);
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
+        private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
 
         class MyOptionBinder : BinderBase<MyOption>
         {
@@ -61,6 +62,7 @@ namespace N_m3u8DL_RE.CommandLine
                     SavePattern = bindingContext.ParseResult.GetValueForOption(SavePattern),
                     Keys = bindingContext.ParseResult.GetValueForOption(Keys),
                     UrlProcessorArgs = bindingContext.ParseResult.GetValueForOption(UrlProcessorArgs),
+                    MP4RealTimeDecryption = bindingContext.ParseResult.GetValueForOption(MP4RealTimeDecryption),
                 };
 
                 //在这里设置语言
@@ -85,11 +87,11 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220721")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220723")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Keys, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
-                LogLevel, UILanguage, UrlProcessorArgs
+                LogLevel, UILanguage, UrlProcessorArgs, MP4RealTimeDecryption
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

@@ -27,6 +27,7 @@ namespace N_m3u8DL_RE.Config
             ThreadCount = option.ThreadCount;
             SavePattern = option.SavePattern;
             Keys = option.Keys;
+            MP4RealTimeDecryption = option.MP4RealTimeDecryption;
         }
 
         /// <summary>
@@ -73,6 +74,10 @@ namespace N_m3u8DL_RE.Config
         /// 自动修复字幕
         /// </summary>
         public bool AutoSubtitleFix { get; set; } = true;
+        /// <summary>
+        /// MP4实时解密
+        /// </summary>
+        public bool MP4RealTimeDecryption { get; set; } = true;
         /// <summary>
         /// 字幕格式
         /// </summary>

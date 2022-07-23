@@ -171,6 +171,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Decrypt MP4 segments in real time 的本地化字符串。
+        /// </summary>
+        public static string cmd_MP4RealTimeDecryption {
+            get {
+                return ResourceManager.GetString("cmd_MP4RealTimeDecryption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Set output directory 的本地化字符串。
         /// </summary>
         public static string cmd_saveDir {

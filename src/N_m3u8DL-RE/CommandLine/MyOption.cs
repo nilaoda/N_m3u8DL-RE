@@ -70,6 +70,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool AppendUrlParams { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.MP4RealTimeDecryption"/>.
+        /// </summary>
+        public bool MP4RealTimeDecryption { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>
         public SubtitleFormat SubtitleFormat { get; set; }

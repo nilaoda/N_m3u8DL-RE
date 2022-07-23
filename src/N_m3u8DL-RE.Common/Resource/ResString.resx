@@ -237,4 +237,7 @@
   <data name="cmd_urlProcessorArgs" xml:space="preserve">
     <value>Give these arguments to the URL Processors.</value>
   </data>
+  <data name="cmd_MP4RealTimeDecryption" xml:space="preserve">
+    <value>Decrypt MP4 segments in real time</value>
+  </data>
 </root>
