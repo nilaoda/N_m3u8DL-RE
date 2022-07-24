@@ -54,7 +54,6 @@ namespace N_m3u8DL_RE.DownloadManager
             //mp4decrypt
             var mp4decrypt = DownloaderConfig.DecryptionBinaryPath!;
             var mp4InitFile = "";
-            var mp4InitFileDec = "";
             var currentKID = "";
 
             Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}; output: {output}");
@@ -112,9 +111,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID);
                         if (dResult)
                         {
-                            //实时解密不需要init文件用于合并
-                            FileDic!.Remove(streamSpec.Playlist.MediaInit, out _);
-                            mp4InitFileDec = dec;
+                            FileDic[streamSpec.Playlist.MediaInit]!.ActualFilePath = dec;
                         }
                     }
                 }
@@ -147,11 +144,14 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             });
 
-            if (DownloaderConfig.MP4RealTimeDecryption && mp4InitFile != "") 
+            if (DownloaderConfig.MP4RealTimeDecryption && mp4InitFile != "")
             {
                 File.Delete(mp4InitFile);
-                if (mp4InitFileDec != "")
-                    File.Delete(mp4InitFileDec);
+                //shaka实时解密不需要init文件用于合并
+                if (DownloaderConfig.UseShakaPackager)
+                {
+                    FileDic!.Remove(streamSpec.Playlist!.MediaInit, out _);
+                }
             }
 
             //校验分片数量
