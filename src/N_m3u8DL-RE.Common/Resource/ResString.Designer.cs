@@ -124,6 +124,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Full path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe 的本地化字符串。
+        /// </summary>
+        public static string cmd_decryptionBinaryPath {
+            get {
+                return ResourceManager.GetString("cmd_decryptionBinaryPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Delete temporary files when done 的本地化字符串。
         /// </summary>
         public static string cmd_delAfterDone {
@@ -152,7 +161,7 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
-        ///   查找类似 Pass decryption key(s) to mp4decrypt. format:
+        ///   查找类似 Pass decryption key(s) to mp4decrypt/shaka-packager. format:
         ///--key KID1:KEY1 --key KID2:KEY2 的本地化字符串。
         /// </summary>
         public static string cmd_keys {
@@ -284,6 +293,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string cmd_urlProcessorArgs {
             get {
                 return ResourceManager.GetString("cmd_urlProcessorArgs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Use shaka-packager instead of mp4decrypt 的本地化字符串。
+        /// </summary>
+        public static string cmd_useShakaPackager {
+            get {
+                return ResourceManager.GetString("cmd_useShakaPackager", resourceCulture);
             }
         }
         

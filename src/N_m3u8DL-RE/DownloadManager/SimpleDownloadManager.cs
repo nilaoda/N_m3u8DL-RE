@@ -52,13 +52,10 @@ namespace N_m3u8DL_RE.DownloadManager
             var output = Path.Combine(saveDir, saveName + $".{streamSpec.Extension ?? "ts"}");
 
             //mp4decrypt
-            var APP_DIR = Path.GetDirectoryName(Environment.ProcessPath)!;
-            var fileName = "mp4decrypt";
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                fileName += ".exe";
-            var mp4decrypt = Path.Combine(APP_DIR, fileName);
-            if (!File.Exists(mp4decrypt)) mp4decrypt = fileName;
+            var mp4decrypt = DownloaderConfig.DecryptionBinaryPath!;
             var mp4InitFile = "";
+            var mp4InitFileDec = "";
+            var currentKID = "";
 
             Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}; output: {output}");
 
@@ -106,15 +103,18 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
                     if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
                     if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
+                    currentKID = info.KID;
                     //实时解密
                     if (DownloaderConfig.MP4RealTimeDecryption && streamSpec.Playlist.MediaInit.EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
                     {
                         var enc = result.ActualFilePath;
                         var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
-                        var dResult = await MP4DecryptUtil.DecryptAsync(mp4decrypt, DownloaderConfig.Keys, enc, dec);
+                        var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID);
                         if (dResult)
                         {
-                            result.ActualFilePath = dec;
+                            //实时解密不需要init文件用于合并
+                            FileDic!.Remove(streamSpec.Playlist.MediaInit, out _);
+                            mp4InitFileDec = dec;
                         }
                     }
                 }
@@ -138,7 +138,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     var enc = result.ActualFilePath;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
-                    var dResult = await MP4DecryptUtil.DecryptAsync(mp4decrypt, DownloaderConfig.Keys, enc, dec, mp4InitFile);
+                    var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID, mp4InitFile);
                     if (dResult)
                     {
                         File.Delete(enc);
@@ -147,9 +147,11 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             });
 
-            if (DownloaderConfig.MP4RealTimeDecryption && mp4InitFile != "")
+            if (DownloaderConfig.MP4RealTimeDecryption && mp4InitFile != "") 
             {
                 File.Delete(mp4InitFile);
+                if (mp4InitFileDec != "")
+                    File.Delete(mp4InitFileDec);
             }
 
             //校验分片数量
@@ -345,7 +347,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             //删除临时文件夹
-            if (DownloaderConfig.DelAfterDone)
+            if (!DownloaderConfig.SkipMerge && DownloaderConfig.DelAfterDone)
             {
                 var files = FileDic.Values.Select(v => v!.ActualFilePath);
                 foreach (var file in files)
@@ -359,14 +361,14 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             //调用mp4decrypt解密
-            if (!DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
+            if (File.Exists(output) && !DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
             {
                 if (totalCount > 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE) 
                 {
                     var enc = output;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                     Logger.InfoMarkUp($"[grey]Decrypting...[/]");
-                    var result = await MP4DecryptUtil.DecryptAsync(mp4decrypt, DownloaderConfig.Keys, enc, dec);
+                    var result = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID);
                     if (result) 
                     {
                         File.Delete(enc);

@@ -251,7 +251,7 @@
     <value>设置保存文件命名模板, 支持使用变量</value>
   </data>
   <data name="cmd_keys" xml:space="preserve">
-    <value>设置解密密钥, 程序调用mp4decrpyt进行解密. 格式:
+    <value>设置解密密钥, 程序调用mp4decrpyt/shaka-packager进行解密. 格式:
 --key KID1:KEY1 --key KID2:KEY2</value>
   </data>
   <data name="cmd_urlProcessorArgs" xml:space="preserve">
@@ -259,5 +259,11 @@
   </data>
   <data name="cmd_MP4RealTimeDecryption" xml:space="preserve">
     <value>实时解密MP4分片</value>
+  </data>
+  <data name="cmd_useShakaPackager" xml:space="preserve">
+    <value>使用shaka-packager替代mp4decrypt</value>
+  </data>
+  <data name="cmd_decryptionBinaryPath" xml:space="preserve">
+    <value>MP4解密所用工具的全路径, 例如 C:\Tools\mp4decrypt.exe</value>
   </data>
 </root>

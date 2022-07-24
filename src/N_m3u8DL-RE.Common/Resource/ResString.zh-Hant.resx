@@ -228,7 +228,7 @@
     <value>將輸入Url的Params添加至分片, 對某些網站很有用, 例如 kakao.com</value>
   </data>
   <data name="cmd_keys" xml:space="preserve">
-    <value>設置解密密鑰, 程序調用mp4decrpyt進行解密. 格式:
+    <value>設置解密密鑰, 程序調用mp4decrpyt/shaka-packager進行解密. 格式:
 --key KID1:KEY1 --key KID2:KEY2</value>
   </data>
   <data name="cmd_urlProcessorArgs" xml:space="preserve">
@@ -236,5 +236,11 @@
   </data>
   <data name="cmd_MP4RealTimeDecryption" xml:space="preserve">
     <value>實時解密MP4分片</value>
+  </data>
+  <data name="cmd_useShakaPackager" xml:space="preserve">
+    <value>使用shaka-packager替代mp4decrypt</value>
+  </data>
+  <data name="cmd_decryptionBinaryPath" xml:space="preserve">
+    <value>MP4解密所用工具的全路徑, 例如 C:\Tools\mp4decrypt.exe</value>
   </data>
 </root>

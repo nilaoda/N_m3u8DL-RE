@@ -33,6 +33,8 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> WriteMetaJson = new(new string[] { "--write-meta-json" }, description: ResString.cmd_writeMetaJson, getDefaultValue: () => true);
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
+        private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
+        private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
 
         class MyOptionBinder : BinderBase<MyOption>
         {
@@ -63,6 +65,8 @@ namespace N_m3u8DL_RE.CommandLine
                     Keys = bindingContext.ParseResult.GetValueForOption(Keys),
                     UrlProcessorArgs = bindingContext.ParseResult.GetValueForOption(UrlProcessorArgs),
                     MP4RealTimeDecryption = bindingContext.ParseResult.GetValueForOption(MP4RealTimeDecryption),
+                    UseShakaPackager = bindingContext.ParseResult.GetValueForOption(UseShakaPackager),
+                    DecryptionBinaryPath = bindingContext.ParseResult.GetValueForOption(DecryptionBinaryPath),
                 };
 
                 //在这里设置语言
@@ -87,11 +91,11 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220723")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220724")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Keys, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
-                LogLevel, UILanguage, UrlProcessorArgs, MP4RealTimeDecryption
+                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                LogLevel, UILanguage, UrlProcessorArgs, Keys, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

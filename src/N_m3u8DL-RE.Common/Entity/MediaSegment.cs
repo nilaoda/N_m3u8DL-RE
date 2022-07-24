@@ -29,13 +29,12 @@ namespace N_m3u8DL_RE.Common.Entity
                    StartRange == segment.StartRange &&
                    StopRange == segment.StopRange &&
                    ExpectLength == segment.ExpectLength &&
-                   EqualityComparer<EncryptInfo>.Default.Equals(EncryptInfo, segment.EncryptInfo) &&
                    Url == segment.Url;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Index, Duration, Title, StartRange, StopRange, ExpectLength, EncryptInfo, Url);
+            return HashCode.Combine(Index, Duration, Title, StartRange, StopRange, ExpectLength, Url);
         }
     }
 }

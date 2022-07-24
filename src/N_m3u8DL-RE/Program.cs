@@ -38,6 +38,33 @@ namespace N_m3u8DL_RE
 
             try
             {
+                //预先检查
+                if (option.Keys != null && option.Keys.Length > 0)
+                {
+                    if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
+                    {
+                        if (option.UseShakaPackager)
+                        {
+                            var file = GlobalUtil.FindExecutable("shaka-packager");
+                            var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
+                            var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
+                            var file4 = GlobalUtil.FindExecutable("packager-win-x64");
+                            if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException("shaka-packager not found!");
+                            option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
+                        }
+                        else
+                        {
+                            var file = GlobalUtil.FindExecutable("mp4decrypt");
+                            if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
+                            option.DecryptionBinaryPath = file;
+                        }
+                    }
+                    else if (!File.Exists(option.DecryptionBinaryPath))
+                    {
+                        throw new FileNotFoundException(option.DecryptionBinaryPath);
+                    }
+                }
+
                 var parserConfig = new ParserConfig()
                 {
                     AppendUrlParams = option.AppendUrlParams,

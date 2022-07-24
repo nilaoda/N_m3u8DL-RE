@@ -28,6 +28,8 @@ namespace N_m3u8DL_RE.Config
             SavePattern = option.SavePattern;
             Keys = option.Keys;
             MP4RealTimeDecryption = option.MP4RealTimeDecryption;
+            UseShakaPackager = option.UseShakaPackager;
+            DecryptionBinaryPath = option.DecryptionBinaryPath;
         }
 
         /// <summary>
@@ -78,6 +80,14 @@ namespace N_m3u8DL_RE.Config
         /// MP4实时解密
         /// </summary>
         public bool MP4RealTimeDecryption { get; set; } = true;
+        /// <summary>
+        /// 使用shaka-packager替代mp4decrypt
+        /// </summary>
+        public bool UseShakaPackager { get; set; }
+        /// <summary>
+        /// MP4解密所用工具的全路径
+        /// </summary>
+        public string? DecryptionBinaryPath { get; set; }
         /// <summary>
         /// 字幕格式
         /// </summary>

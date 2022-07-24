@@ -46,5 +46,19 @@ namespace N_m3u8DL_RE.Common.Util
             str = (ts.Hours.ToString("00") == "00" ? "" : ts.Hours.ToString("00") + "h") + ts.Minutes.ToString("00") + "m" + ts.Seconds.ToString("00") + "s";
             return str;
         }
+
+        /// <summary>
+        /// 寻找可执行程序
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static string? FindExecutable(string name)
+        {
+            var fileExt = OperatingSystem.IsWindows() ? ".exe" : "";
+            var searchPath = new[] { Environment.CurrentDirectory, Environment.ProcessPath };
+            var envPath = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ??
+                          Array.Empty<string>();
+            return searchPath.Concat(envPath).Select(p => Path.Combine(p, name + fileExt)).FirstOrDefault(File.Exists);
+        }
     }
 }

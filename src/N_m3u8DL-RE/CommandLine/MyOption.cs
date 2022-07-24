@@ -74,6 +74,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool MP4RealTimeDecryption { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.UseShakaPackager"/>.
+        /// </summary>
+        public bool UseShakaPackager { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>
         public SubtitleFormat SubtitleFormat { get; set; }
@@ -97,5 +101,9 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.UILanguage"/>.
         /// </summary>
         public string? UILanguage { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.DecryptionBinaryPath"/>.
+        /// </summary>
+        public string? DecryptionBinaryPath { get; set; }
     }
 }
