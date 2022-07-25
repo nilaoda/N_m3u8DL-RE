@@ -2,20 +2,13 @@
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
-using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
@@ -34,6 +27,15 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task)
         {
+            string? ReadInit(byte[] data)
+            {
+                var info = MP4InitUtil.ReadInit(data);
+                if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
+                if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
+                if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
+                return info.KID;
+            }
+
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
 
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
@@ -98,11 +100,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (result != null && result.Success) 
                 {
                     var data = File.ReadAllBytes(result.ActualFilePath);
-                    var info = MP4InitUtil.ReadInit(data);
-                    if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
-                    if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
-                    if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
-                    currentKID = info.KID;
+                    currentKID = ReadInit(data);
                     //实时解密
                     if (DownloaderConfig.MP4RealTimeDecryption && streamSpec.Playlist.MediaInit.EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
                     {
@@ -363,8 +361,17 @@ namespace N_m3u8DL_RE.DownloadManager
             //调用mp4decrypt解密
             if (File.Exists(output) && !DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
             {
-                if (totalCount > 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE) 
+                if (totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE) 
                 {
+                    if (string.IsNullOrEmpty(currentKID))
+                    {
+                        using (var fs = File.OpenRead(output))
+                        {
+                            var header = new byte[4096]; //4KB
+                            fs.Read(header);
+                            currentKID = ReadInit(header);
+                        }
+                    }
                     var enc = output;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                     Logger.InfoMarkUp($"[grey]Decrypting...[/]");
