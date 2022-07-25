@@ -42,7 +42,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
             else
             {
-                this.BaseUrl = ParserConfig.BaseUrl = this.M3u8Url;
+                this.BaseUrl = this.M3u8Url;
             }
         }
 
