@@ -1,5 +1,7 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Util;
@@ -22,6 +24,8 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             var method = ParserUtil.GetAttribute(keyLine, "METHOD");
             var uri = ParserUtil.GetAttribute(keyLine, "URI");
 
+            Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
+
             var encryptInfo = new EncryptInfo(method);
             //IV
             if (!string.IsNullOrEmpty(iv))
@@ -30,19 +34,30 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             }
 
             //KEY
-            if (uri.ToLower().StartsWith("base64:"))
+            try
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                if (uri.ToLower().StartsWith("base64:"))
+                {
+                    encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                }
+                else if (uri.ToLower().StartsWith("data:;base64,"))
+                {
+                    encryptInfo.Key = Convert.FromBase64String(uri[13..]);
+                }
+                else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
+                {
+                    encryptInfo.Key = Convert.FromBase64String(uri[23..]);
+                }
+                else if (!string.IsNullOrEmpty(uri))
+                {
+                    var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
+                    var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
+                    encryptInfo.Key = bytes;
+                }
             }
-            else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
+            catch (Exception ex)
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[23..]);
-            }
-            else if (!string.IsNullOrEmpty(uri)) 
-            {
-                var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
-                var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
-                encryptInfo.Key = bytes;
+                Logger.Error(ResString.cmd_loadKeyFailed + ": " + ex.ToString());
             }
 
             return encryptInfo;
