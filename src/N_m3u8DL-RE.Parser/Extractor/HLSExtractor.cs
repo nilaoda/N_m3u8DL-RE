@@ -448,10 +448,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
         {
             foreach (var p in ParserConfig.KeyProcessors)
             {
-                if (p.CanProcess(ExtractorType, keyLine, M3u8Content, ParserConfig))
+                if (p.CanProcess(ExtractorType, keyLine, M3u8Url, M3u8Content, ParserConfig))
                 {
                     //匹配到对应处理器后不再继续
-                    return p.Process(keyLine, M3u8Content, ParserConfig);
+                    return p.Process(keyLine, M3u8Url, M3u8Content, ParserConfig);
                 }
             }
 

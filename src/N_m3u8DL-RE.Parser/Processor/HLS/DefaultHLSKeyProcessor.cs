@@ -13,10 +13,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
+        public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
 
-        public override EncryptInfo Process(string keyLine, string m3u8Content, ParserConfig parserConfig)
+        public override EncryptInfo Process(string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
         {
             var iv = ParserUtil.GetAttribute(keyLine, "IV");
             var method = ParserUtil.GetAttribute(keyLine, "METHOD");
@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             }
             else if (!string.IsNullOrEmpty(uri)) 
             {
-                var segUrl = PreProcessUrl(ParserUtil.CombineURL(parserConfig.BaseUrl, uri), parserConfig);
+                var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
                 var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
                 encryptInfo.Key = bytes;
             }

@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> UILanguage = new(new string[] { "--ui-language" }, description: ResString.cmd_uiLanguage);
         private readonly static Option<string?> UrlProcessorArgs = new(new string[] { "--urlprocessor-args" }, description: ResString.cmd_urlProcessorArgs);
         private readonly static Option<string[]?> Keys = new(new string[] { "--key" }, description: ResString.cmd_keys) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
-        private readonly static Option<string[]?> Headers = new(new string[] { "--header", "-H" }, description: ResString.cmd_header) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
+        private readonly static Option<string[]?> Headers = new(new string[] { "-H", "--header" }, description: ResString.cmd_header) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
         private readonly static Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enum.SubtitleFormat.VTT);
         private readonly static Option<bool> AutoSelect = new(new string[] { "--auto-select" }, description: ResString.cmd_autoSelect, getDefaultValue: () => false);
@@ -91,7 +91,7 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220724")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220726")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
