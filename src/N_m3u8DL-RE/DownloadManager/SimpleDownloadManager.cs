@@ -52,6 +52,11 @@ namespace N_m3u8DL_RE.DownloadManager
             dirName = ConvertUtil.GetValidFileName(dirName, filterSlash: true);
             var headers = DownloaderConfig.Headers;
             var output = Path.Combine(saveDir, saveName + $".{streamSpec.Extension ?? "ts"}");
+            //检测目标文件是否存在
+            while (File.Exists(output))
+            {
+                Logger.WarnMarkUp($"{output} => {output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output))}");
+            }
 
             //mp4decrypt
             var mp4decrypt = DownloaderConfig.DecryptionBinaryPath!;
