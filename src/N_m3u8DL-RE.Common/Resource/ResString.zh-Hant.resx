@@ -101,16 +101,16 @@
     <value>錯誤的m3u8</value>
   </data>
   <data name="notSupported" xml:space="preserve">
-    <value>當前輸入不受支持: </value>
+    <value>當前輸入不受支援: </value>
   </data>
   <data name="loadingUrl" xml:space="preserve">
-    <value>加載URL: </value>
+    <value>載入URL: </value>
   </data>
   <data name="matchHLS" xml:space="preserve">
     <value>內容匹配: [white on deepskyblue1]HTTP Live Streaming[/]</value>
   </data>
   <data name="masterM3u8Found" xml:space="preserve">
-    <value>檢測到Master列表，開始解析全部流信息</value>
+    <value>檢測到Master列表，開始解析全部流訊息</value>
   </data>
   <data name="fetch" xml:space="preserve">
     <value>獲取: </value>
@@ -122,7 +122,7 @@
     <value>[grey](按鍵盤上下鍵以瀏覽更多內容)[/]</value>
   </data>
   <data name="promptInfo" xml:space="preserve">
-    <value>(按 [blue]空格鍵[/] 選擇流, [green]回車鍵[/] 完成選擇)</value>
+    <value>(按 [blue]空格鍵[/] 選擇流, [green]確認鍵[/] 完成選擇)</value>
   </data>
   <data name="streamsInfo" xml:space="preserve">
     <value>已解析, 共計 {} 條媒體流, 基本流 {} 條, 可選音頻流 {} 條, 可選字幕流 {} 條</value>
@@ -161,7 +161,7 @@
     <value>正在提取VTT(mp4)字幕...</value>
   </data>
   <data name="binaryMerge" xml:space="preserve">
-    <value>二進製合併中...</value>
+    <value>二進位制合併中...</value>
   </data>
   <data name="fixingTTMLmp4" xml:space="preserve">
     <value>正在提取TTML(mp4)字幕...</value>
@@ -170,7 +170,7 @@
     <value>正在提取TTML(raw)字幕...</value>
   </data>
   <data name="cmd_Input" xml:space="preserve">
-    <value>鏈接或文件</value>
+    <value>連結或文件</value>
   </data>
   <data name="cmd_header" xml:space="preserve">
     <value>為HTTP請求設置特定的請求頭, 例如:
@@ -186,13 +186,13 @@
     <value>只選取字幕軌道</value>
   </data>
   <data name="cmd_threadCount" xml:space="preserve">
-    <value>設置下載線程數</value>
+    <value>設置下載執行緒數</value>
   </data>
   <data name="cmd_skipMerge" xml:space="preserve">
     <value>跳過合併分片</value>
   </data>
   <data name="cmd_binaryMerge" xml:space="preserve">
-    <value>二進制合併</value>
+    <value>二進位制合併</value>
   </data>
   <data name="cmd_delAfterDone" xml:space="preserve">
     <value>完成後刪除臨時文件</value>
@@ -207,13 +207,13 @@
     <value>字幕輸出類型</value>
   </data>
   <data name="cmd_tmpDir" xml:space="preserve">
-    <value>設置臨時文件存儲目錄</value>
+    <value>設置臨時文件儲存目錄</value>
   </data>
   <data name="cmd_saveDir" xml:space="preserve">
     <value>設置輸出目錄</value>
   </data>
   <data name="cmd_saveName" xml:space="preserve">
-    <value>設置保存文件名</value>
+    <value>設置保存檔案名</value>
   </data>
   <data name="cmd_uiLanguage" xml:space="preserve">
     <value>設置UI語言</value>
@@ -222,7 +222,7 @@
     <value>跳過下載</value>
   </data>
   <data name="cmd_writeMetaJson" xml:space="preserve">
-    <value>解析後的信息是否輸出json文件</value>
+    <value>解析後的訊息是否輸出json文件</value>
   </data>
   <data name="cmd_appendUrlParams" xml:space="preserve">
     <value>將輸入Url的Params添加至分片, 對某些網站很有用, 例如 kakao.com</value>
@@ -235,12 +235,15 @@
     <value>此字符串將直接傳遞給URL Processor</value>
   </data>
   <data name="cmd_MP4RealTimeDecryption" xml:space="preserve">
-    <value>實時解密MP4分片</value>
+    <value>即時解密MP4分片</value>
   </data>
   <data name="cmd_useShakaPackager" xml:space="preserve">
     <value>使用shaka-packager替代mp4decrypt</value>
   </data>
   <data name="cmd_decryptionBinaryPath" xml:space="preserve">
     <value>MP4解密所用工具的全路徑, 例如 C:\Tools\mp4decrypt.exe</value>
+  </data>
+  <data name="cmd_loadKeyFailed" xml:space="preserve">
+    <value>獲取KEY失敗，忽略讀取.</value>
   </data>
 </root>

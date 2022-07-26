@@ -266,4 +266,7 @@
   <data name="cmd_decryptionBinaryPath" xml:space="preserve">
     <value>MP4解密所用工具的全路径, 例如 C:\Tools\mp4decrypt.exe</value>
   </data>
+  <data name="cmd_loadKeyFailed" xml:space="preserve">
+    <value>获取KEY失败，忽略读取.</value>
+  </data>
 </root>

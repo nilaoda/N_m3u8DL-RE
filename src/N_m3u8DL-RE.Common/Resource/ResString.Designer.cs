@@ -171,6 +171,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Failed to get KEY, ignore. 的本地化字符串。
+        /// </summary>
+        public static string cmd_loadKeyFailed {
+            get {
+                return ResourceManager.GetString("cmd_loadKeyFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Set log level 的本地化字符串。
         /// </summary>
         public static string cmd_logLevel {

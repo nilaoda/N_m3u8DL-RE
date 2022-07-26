@@ -246,4 +246,7 @@
   <data name="cmd_decryptionBinaryPath" xml:space="preserve">
     <value>Full path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe</value>
   </data>
+  <data name="cmd_loadKeyFailed" xml:space="preserve">
+    <value>Failed to get KEY, ignore.</value>
+  </data>
 </root>
