@@ -384,6 +384,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (result) 
                     {
                         File.Delete(enc);
+                        File.Move(dec, enc);
                         output = dec;
                     }
                 }
