@@ -48,8 +48,6 @@ namespace N_m3u8DL_RE.DownloadManager
             var tmpDir = Path.Combine(DownloaderConfig.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
             var saveName = DownloaderConfig.SaveName != null ? $"{DownloaderConfig.SaveName}.{type}.{streamSpec.Language}".TrimEnd('.') : dirName;
-            //去除非法字符
-            dirName = ConvertUtil.GetValidFileName(dirName, filterSlash: true);
             var headers = DownloaderConfig.Headers;
             var output = Path.Combine(saveDir, saveName + $".{streamSpec.Extension ?? "ts"}");
             //检测目标文件是否存在
