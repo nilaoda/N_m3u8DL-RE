@@ -105,5 +105,9 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.DecryptionBinaryPath"/>.
         /// </summary>
         public string? DecryptionBinaryPath { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.FFmpegBinaryPath"/>.
+        /// </summary>
+        public string? FFmpegBinaryPath { get; set; }
     }
 }

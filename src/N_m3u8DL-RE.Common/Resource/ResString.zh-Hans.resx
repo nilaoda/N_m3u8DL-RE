@@ -269,4 +269,13 @@
   <data name="cmd_loadKeyFailed" xml:space="preserve">
     <value>获取KEY失败，忽略读取.</value>
   </data>
+  <data name="autoBinaryMerge" xml:space="preserve">
+    <value>检测到fMP4，自动开启二进制合并</value>
+  </data>
+  <data name="cmd_ffmpegBinaryPath" xml:space="preserve">
+    <value>ffmpeg可执行程序全路径, 例如 C:\Tools\ffmpeg.exe</value>
+  </data>
+  <data name="ffmpegMerge" xml:space="preserve">
+    <value>调用ffmpeg合并中...</value>
+  </data>
 </root>

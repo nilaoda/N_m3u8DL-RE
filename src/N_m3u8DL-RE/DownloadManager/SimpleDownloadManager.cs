@@ -1,5 +1,6 @@
 ﻿using Mp4SubtitleParser;
 using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Config;
@@ -335,15 +336,24 @@ namespace N_m3u8DL_RE.DownloadManager
             //合并
             if (!DownloaderConfig.SkipMerge)
             {
+                //对于fMP4，自动开启二进制合并
+                if (mp4InitFile != "")
+                {
+                    DownloaderConfig.BinaryMerge = true;
+                    Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.autoBinaryMerge}[/]");
+                }
+
                 if (DownloaderConfig.BinaryMerge)
                 {
                     Logger.InfoMarkUp(ResString.binaryMerge);
                     var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
-                    DownloadUtil.CombineMultipleFilesIntoSingleFile(files, output);
+                    MergeUtil.CombineMultipleFilesIntoSingleFile(files, output);
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
+                    Logger.InfoMarkUp(ResString.ffmpegMerge);
+                    MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), "mp4");
                 }
             }
 

@@ -249,4 +249,13 @@
   <data name="cmd_loadKeyFailed" xml:space="preserve">
     <value>Failed to get KEY, ignore.</value>
   </data>
+  <data name="autoBinaryMerge" xml:space="preserve">
+    <value>fMP4 is detected, binary merging is automatically enabled</value>
+  </data>
+  <data name="cmd_ffmpegBinaryPath" xml:space="preserve">
+    <value>Full path to the ffmpeg binary, like C:\Tools\ffmpeg.exe</value>
+  </data>
+  <data name="ffmpegMerge" xml:space="preserve">
+    <value>ffmpeg merging...</value>
+  </data>
 </root>

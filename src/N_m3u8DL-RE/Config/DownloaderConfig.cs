@@ -30,6 +30,7 @@ namespace N_m3u8DL_RE.Config
             MP4RealTimeDecryption = option.MP4RealTimeDecryption;
             UseShakaPackager = option.UseShakaPackager;
             DecryptionBinaryPath = option.DecryptionBinaryPath;
+            FFmpegBinaryPath = option.FFmpegBinaryPath;
         }
 
         /// <summary>
@@ -103,5 +104,9 @@ namespace N_m3u8DL_RE.Config
         /// 解密KEYs
         /// </summary>
         public string[]? Keys { get; set; }
+        /// <summary>
+        /// ffmpeg路径
+        /// </summary>
+        public string? FFmpegBinaryPath { get; set; }
     }
 }

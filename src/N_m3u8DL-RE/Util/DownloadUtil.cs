@@ -67,38 +67,5 @@ namespace N_m3u8DL_RE.Util
                 ActualFilePath = path
             };
         }
-
-        /// <summary>
-        /// 输入一堆已存在的文件，合并到新文件
-        /// </summary>
-        /// <param name="files"></param>
-        /// <param name="outputFilePath"></param>
-        public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath)
-        {
-            if (files.Length == 0) return;
-            if (files.Length == 1)
-            {
-                FileInfo fi = new FileInfo(files[0]);
-                fi.CopyTo(outputFilePath, true);
-                return;
-            }
-
-            if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
-                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
-
-            string[] inputFilePaths = files;
-            using (var outputStream = File.Create(outputFilePath))
-            {
-                foreach (var inputFilePath in inputFilePaths)
-                {
-                    if (inputFilePath == "")
-                        continue;
-                    using (var inputStream = File.OpenRead(inputFilePath))
-                    {
-                        inputStream.CopyTo(outputStream);
-                    }
-                }
-            }
-        }
     }
 }

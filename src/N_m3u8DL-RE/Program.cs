@@ -38,6 +38,16 @@ namespace N_m3u8DL_RE
 
             try
             {
+                //预先检查ffmpeg
+                if (!option.BinaryMerge)
+                {
+                    option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
+                    if (string.IsNullOrEmpty(option.FFmpegBinaryPath))
+                    {
+                        throw new FileNotFoundException(option.FFmpegBinaryPath);
+                    }
+                }
+
                 //预先检查
                 if (option.Keys != null && option.Keys.Length > 0)
                 {

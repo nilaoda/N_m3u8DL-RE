@@ -30,7 +30,7 @@ namespace N_m3u8DL_RE.Util
                 if (init != "")
                 {
                     tmpFile = Path.ChangeExtension(source, ".itmp");
-                    DownloadUtil.CombineMultipleFilesIntoSingleFile(new string[] { init, source }, tmpFile);
+                    MergeUtil.CombineMultipleFilesIntoSingleFile(new string[] { init, source }, tmpFile);
                     enc = tmpFile;
                 }
 

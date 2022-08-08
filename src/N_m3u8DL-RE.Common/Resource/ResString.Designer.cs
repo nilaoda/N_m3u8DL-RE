@@ -61,6 +61,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 fMP4 is detected, binary merging is automatically enabled 的本地化字符串。
+        /// </summary>
+        public static string autoBinaryMerge {
+            get {
+                return ResourceManager.GetString("autoBinaryMerge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Bad m3u8 的本地化字符串。
         /// </summary>
         public static string badM3u8 {
@@ -138,6 +147,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string cmd_delAfterDone {
             get {
                 return ResourceManager.GetString("cmd_delAfterDone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Full path to the ffmpeg binary, like C:\Tools\ffmpeg.exe 的本地化字符串。
+        /// </summary>
+        public static string cmd_ffmpegBinaryPath {
+            get {
+                return ResourceManager.GetString("cmd_ffmpegBinaryPath", resourceCulture);
             }
         }
         
@@ -329,6 +347,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string fetch {
             get {
                 return ResourceManager.GetString("fetch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ffmpeg merging... 的本地化字符串。
+        /// </summary>
+        public static string ffmpegMerge {
+            get {
+                return ResourceManager.GetString("ffmpegMerge", resourceCulture);
             }
         }
         
