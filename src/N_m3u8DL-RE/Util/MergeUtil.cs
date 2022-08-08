@@ -44,7 +44,7 @@ namespace N_m3u8DL_RE.Util
             }
         }
 
-        public static void MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, 
+        public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, 
             bool fastStart = false,
             bool writeDate = true, string poster = "", string audioName = "", string title = "",
             string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
@@ -111,6 +111,11 @@ namespace N_m3u8DL_RE.Util
                 RedirectStandardError = true,
                 UseShellExecute = false
             })!.WaitForExit();
+
+            if (File.Exists(outputPath) && new FileInfo(outputPath).Length > 0)
+                return true;
+
+            return false;
         }
     }
 }

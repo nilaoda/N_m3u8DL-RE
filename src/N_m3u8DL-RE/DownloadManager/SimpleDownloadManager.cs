@@ -333,32 +333,35 @@ namespace N_m3u8DL_RE.DownloadManager
                 output = Path.ChangeExtension(output, Path.GetExtension(path));
             }
 
+            bool mergeSuccess = false;
             //合并
             if (!DownloaderConfig.SkipMerge)
             {
                 //对于fMP4，自动开启二进制合并
-                if (!DownloaderConfig.BinaryMerge && mp4InitFile != "")
+                if (!DownloaderConfig.BinaryMerge && streamSpec.MediaType != MediaType.SUBTITLES && mp4InitFile != "")
                 {
                     DownloaderConfig.BinaryMerge = true;
                     Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.autoBinaryMerge}[/]");
                 }
 
-                if (DownloaderConfig.BinaryMerge)
+                //字幕也使用二进制合并
+                if (DownloaderConfig.BinaryMerge || streamSpec.MediaType == MediaType.SUBTITLES)
                 {
                     Logger.InfoMarkUp(ResString.binaryMerge);
                     var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
                     MergeUtil.CombineMultipleFilesIntoSingleFile(files, output);
+                    mergeSuccess = true;
                 }
                 else
                 {
                     var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
                     Logger.InfoMarkUp(ResString.ffmpegMerge);
-                    MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), "mp4");
+                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), "mp4");
                 }
             }
 
             //删除临时文件夹
-            if (!DownloaderConfig.SkipMerge && DownloaderConfig.DelAfterDone)
+            if (!DownloaderConfig.SkipMerge && DownloaderConfig.DelAfterDone && mergeSuccess)
             {
                 var files = FileDic.Values.Select(v => v!.ActualFilePath);
                 foreach (var file in files)
@@ -372,7 +375,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             //调用mp4decrypt解密
-            if (File.Exists(output) && !DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
+            if (mergeSuccess && File.Exists(output) && !DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
             {
                 if (totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE) 
                 {
