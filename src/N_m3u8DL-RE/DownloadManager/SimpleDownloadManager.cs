@@ -356,7 +356,8 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
                     Logger.InfoMarkUp(ResString.ffmpegMerge);
-                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), "mp4");
+                    var ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
+                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), ext);
                 }
             }
 
