@@ -88,9 +88,6 @@ namespace N_m3u8DL_RE.Util
                 case ("TS"):
                     command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
                     break;
-                case ("VTT"):
-                    command.Append("\" -map 0  -y \"" + outputPath + ".srt\"");  //Convert To Srt
-                    break;
                 case ("EAC3"):
                     command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
                     break;
@@ -112,7 +109,7 @@ namespace N_m3u8DL_RE.Util
                 UseShellExecute = false
             })!.WaitForExit();
 
-            if (File.Exists(outputPath) && new FileInfo(outputPath).Length > 0)
+            if (File.Exists($"{outputPath}.{muxFormat}") && new FileInfo($"{outputPath}.{muxFormat}").Length > 0)
                 return true;
 
             return false;
