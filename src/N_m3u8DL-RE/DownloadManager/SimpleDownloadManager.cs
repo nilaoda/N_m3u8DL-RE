@@ -337,7 +337,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (!DownloaderConfig.SkipMerge)
             {
                 //对于fMP4，自动开启二进制合并
-                if (mp4InitFile != "")
+                if (!DownloaderConfig.BinaryMerge && mp4InitFile != "")
                 {
                     DownloaderConfig.BinaryMerge = true;
                     Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.autoBinaryMerge}[/]");
