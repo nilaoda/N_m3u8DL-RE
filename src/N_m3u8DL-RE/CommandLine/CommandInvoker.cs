@@ -18,6 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> UILanguage = new(new string[] { "--ui-language" }, description: ResString.cmd_uiLanguage);
         private readonly static Option<string?> UrlProcessorArgs = new(new string[] { "--urlprocessor-args" }, description: ResString.cmd_urlProcessorArgs);
         private readonly static Option<string[]?> Keys = new(new string[] { "--key" }, description: ResString.cmd_keys) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
+        private readonly static Option<string> KeyTextFile = new(new string[] { "--key-text-file" }, description: ResString.cmd_keyText);
         private readonly static Option<string[]?> Headers = new(new string[] { "-H", "--header" }, description: ResString.cmd_header) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
         private readonly static Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enum.SubtitleFormat.VTT);
@@ -69,6 +70,7 @@ namespace N_m3u8DL_RE.CommandLine
                     UseShakaPackager = bindingContext.ParseResult.GetValueForOption(UseShakaPackager),
                     DecryptionBinaryPath = bindingContext.ParseResult.GetValueForOption(DecryptionBinaryPath),
                     FFmpegBinaryPath = bindingContext.ParseResult.GetValueForOption(FFmpegBinaryPath),
+                    KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                 };
 
                 //在这里设置语言
@@ -93,12 +95,12 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220808")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220811")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
-                LogLevel, UILanguage, UrlProcessorArgs, Keys, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption
+                LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

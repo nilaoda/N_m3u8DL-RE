@@ -31,6 +31,7 @@ namespace N_m3u8DL_RE.Config
             UseShakaPackager = option.UseShakaPackager;
             DecryptionBinaryPath = option.DecryptionBinaryPath;
             FFmpegBinaryPath = option.FFmpegBinaryPath;
+            KeyTextFile = option.KeyTextFile;
         }
 
         /// <summary>
@@ -104,6 +105,10 @@ namespace N_m3u8DL_RE.Config
         /// 解密KEYs
         /// </summary>
         public string[]? Keys { get; set; }
+        /// <summary>
+        /// KID-KEY文件
+        /// </summary>
+        public string? KeyTextFile { get; set; }
         /// <summary>
         /// ffmpeg路径
         /// </summary>

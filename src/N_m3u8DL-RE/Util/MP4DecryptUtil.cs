@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Config;
+using System.Diagnostics;
 
 namespace N_m3u8DL_RE.Util
 {
@@ -60,6 +63,8 @@ namespace N_m3u8DL_RE.Util
 
         private static async Task RunCommandAsync(string name, string arg)
         {
+            Logger.DebugMarkUp($"FileName: {name}");
+            Logger.DebugMarkUp($"Arguments: {arg}");
             await Process.Start(new ProcessStartInfo()
             {
                 FileName = name,
@@ -68,6 +73,33 @@ namespace N_m3u8DL_RE.Util
                 RedirectStandardError = true,
                 UseShellExecute = false
             })!.WaitForExitAsync();
+        }
+
+        public static async Task<string?> SearchKeyFromFile(string? file, string? kid)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(file) || !File.Exists(file) || string.IsNullOrEmpty(kid)) 
+                    return null;
+
+                Logger.InfoMarkUp(ResString.searchKey);
+                using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using var reader = new StreamReader(stream);
+                var line = "";
+                while (!string.IsNullOrEmpty(line = await reader.ReadLineAsync()))
+                {
+                    if (line.Trim().StartsWith(kid))
+                    {
+                        Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
+                        return line.Trim();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorMarkUp(ex.Message);
+            }
+            return null;
         }
     }
 }

@@ -258,4 +258,10 @@
   <data name="ffmpegMerge" xml:space="preserve">
     <value>ffmpeg merging...</value>
   </data>
+  <data name="cmd_keyText" xml:space="preserve">
+    <value>Set the kid-key file, the program will search the KEY with KID from the file.(Very large file are not recommended)</value>
+  </data>
+  <data name="searchKey" xml:space="preserve">
+    <value>Trying to search for KEY from text file...</value>
+  </data>
 </root>

@@ -49,7 +49,7 @@ namespace N_m3u8DL_RE
                 }
 
                 //预先检查
-                if (option.Keys != null && option.Keys.Length > 0)
+                if ((option.Keys != null && option.Keys.Length > 0) || option.KeyTextFile != null)
                 {
                     if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
                     {

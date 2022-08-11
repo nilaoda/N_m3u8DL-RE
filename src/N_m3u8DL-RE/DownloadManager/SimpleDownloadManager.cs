@@ -105,6 +105,15 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     var data = File.ReadAllBytes(result.ActualFilePath);
                     currentKID = ReadInit(data);
+                    //从文件读取KEY
+                    var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
+                    if (_key != null)
+                    {
+                        if (DownloaderConfig.Keys == null)
+                            DownloaderConfig.Keys = new string[] { _key };
+                        else
+                            DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
+                    }
                     //实时解密
                     if (DownloaderConfig.MP4RealTimeDecryption && streamSpec.Playlist.MediaInit.EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
                     {
@@ -387,6 +396,15 @@ namespace N_m3u8DL_RE.DownloadManager
                             var header = new byte[4096]; //4KB
                             fs.Read(header);
                             currentKID = ReadInit(header);
+                            //从文件读取KEY
+                            var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
+                            if (_key != null)
+                            {
+                                if (DownloaderConfig.Keys == null)
+                                    DownloaderConfig.Keys = new string[] { _key };
+                                else
+                                    DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
+                            }
                         }
                     }
                     var enc = output;

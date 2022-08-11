@@ -189,6 +189,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Set the kid-key file, the program will search the KEY with KID from the file.(Very large file are not recommended) 的本地化字符串。
+        /// </summary>
+        public static string cmd_keyText {
+            get {
+                return ResourceManager.GetString("cmd_keyText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Failed to get KEY, ignore. 的本地化字符串。
         /// </summary>
         public static string cmd_loadKeyFailed {
@@ -491,6 +500,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string promptTitle {
             get {
                 return ResourceManager.GetString("promptTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Trying to search for KEY from text file... 的本地化字符串。
+        /// </summary>
+        public static string searchKey {
+            get {
+                return ResourceManager.GetString("searchKey", resourceCulture);
             }
         }
         

@@ -255,4 +255,10 @@
   <data name="ffmpegMerge" xml:space="preserve">
     <value>調用ffmpeg合併中...</value>
   </data>
+  <data name="cmd_keyText" xml:space="preserve">
+    <value>設置密鑰文件,程序將從文件中按KID搜尋KEY以解密.(不建議使用特大文件)</value>
+  </data>
+  <data name="searchKey" xml:space="preserve">
+    <value>正在嘗試從文本文件搜尋KEY...</value>
+  </data>
 </root>
