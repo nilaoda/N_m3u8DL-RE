@@ -86,7 +86,7 @@ namespace N_m3u8DL_RE.Util
                 using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
                 using var reader = new StreamReader(stream);
                 var line = "";
-                while (!string.IsNullOrEmpty(line = await reader.ReadLineAsync()))
+                while ((line = await reader.ReadLineAsync()) != null)
                 {
                     if (line.Trim().StartsWith(kid))
                     {
