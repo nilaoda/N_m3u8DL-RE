@@ -44,7 +44,7 @@ namespace N_m3u8DL_RE
                     option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
                     if (string.IsNullOrEmpty(option.FFmpegBinaryPath))
                     {
-                        throw new FileNotFoundException(option.FFmpegBinaryPath);
+                        throw new FileNotFoundException("ffmpeg not found!");
                     }
                 }
 
