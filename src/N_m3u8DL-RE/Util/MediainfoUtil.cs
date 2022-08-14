@@ -61,6 +61,7 @@ namespace N_m3u8DL_RE.Util
                 info.Fps = FpsRegex().Match(info.Text).Value;
                 info.BaseInfo = BaseInfoRegex().Match(info.Text).Groups[1].Value;
                 info.BaseInfo = ReplaceRegex().Replace(info.BaseInfo, "");
+                info.HDR = info.Text.Contains("/bt2020/");
 
                 if (info.BaseInfo.Contains("dvhe")
                     || info.BaseInfo.Contains("dvh1")

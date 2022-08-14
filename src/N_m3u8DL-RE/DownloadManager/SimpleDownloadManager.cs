@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (!DownloaderConfig.BinaryMerge && mediainfos.Any(m => m.DolbyVison == true))
             {
                 DownloaderConfig.BinaryMerge = true;
-                Logger.WarnMarkUp(ResString.autoBinaryMerge2);
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
             }
 
             if (mediainfos.All(m => m.Type == "Audio"))

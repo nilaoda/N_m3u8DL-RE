@@ -17,6 +17,7 @@ namespace N_m3u8DL_RE.Entity
         public string Fps { get; set; }
         public string Type { get; set; }
         public bool DolbyVison { get; set; }
+        public bool HDR { get; set; }
 
         public override string? ToString()
         {
@@ -25,7 +26,7 @@ namespace N_m3u8DL_RE.Entity
 
         public string ToStringMarkUp()
         {
-            return "[steelblue]" + ToString().EscapeMarkup() + (DolbyVison ? " [darkorange3_1][[DOVI]][/]" : "") + "[/]";
+            return "[steelblue]" + ToString().EscapeMarkup() + ((HDR && !DolbyVison) ? " [darkorange3_1][[HDR]][/]" : "") + (DolbyVison ? " [darkorange3_1][[DOVI]][/]" : "") + "[/]";
         }
     }
 }
