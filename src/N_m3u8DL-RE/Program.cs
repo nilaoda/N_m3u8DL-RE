@@ -39,13 +39,12 @@ namespace N_m3u8DL_RE
             try
             {
                 //预先检查ffmpeg
-                if (!option.BinaryMerge)
-                {
+                if (option.FFmpegBinaryPath == null)
                     option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
-                    if (string.IsNullOrEmpty(option.FFmpegBinaryPath))
-                    {
-                        throw new FileNotFoundException("ffmpeg not found!");
-                    }
+
+                if (string.IsNullOrEmpty(option.FFmpegBinaryPath))
+                {
+                    throw new FileNotFoundException(ResString.ffmpegNotFound);
                 }
 
                 //预先检查
@@ -192,6 +191,12 @@ namespace N_m3u8DL_RE
                 if (lists.Count() > 1)
                     await extractor.FetchPlayListAsync(selectedStreams);
 
+                //无法识别的加密方式，自动开启二进制合并
+                if (selectedStreams.Any(s => s.Playlist.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
+                {
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge3}[/]");
+                }
+
                 if (option.WriteMetaJson)
                 {
                     Logger.Warn(ResString.writeJson);
@@ -228,7 +233,11 @@ namespace N_m3u8DL_RE
             }
             catch (Exception ex)
             {
-                Logger.Error(ex.ToString());
+                string msg = ex.Message;
+#if DEBUG
+                msg = ex.ToString();
+#endif
+                Logger.Error(msg);
                 await Task.Delay(3000);
             }
         }

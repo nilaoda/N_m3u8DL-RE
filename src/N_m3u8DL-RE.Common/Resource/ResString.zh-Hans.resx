@@ -284,4 +284,16 @@
   <data name="searchKey" xml:space="preserve">
     <value>正在尝试从文本文件搜索KEY...</value>
   </data>
+  <data name="ffmpegNotFound" xml:space="preserve">
+    <value>找不到ffmpeg，请自行下载：https://ffmpeg.org/download.html</value>
+  </data>
+  <data name="readingInfo" xml:space="preserve">
+    <value>读取媒体信息...</value>
+  </data>
+  <data name="autoBinaryMerge2" xml:space="preserve">
+    <value>检测到杜比视界内容，自动开启二进制合并</value>
+  </data>
+  <data name="autoBinaryMerge3" xml:space="preserve">
+    <value>检测到无法识别的加密方式，自动开启二进制合并</value>
+  </data>
 </root>

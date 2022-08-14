@@ -51,6 +51,13 @@ namespace N_m3u8DL_RE.Util
         {
             string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
 
+            //同名文件已存在的共存策略
+            if (File.Exists($"{outputPath}.{muxFormat.ToLower()}"))
+            {
+                outputPath = Path.Combine(Path.GetDirectoryName(outputPath)!,
+                    Path.GetFileName(outputPath) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
+            }
+
             bool useAACFilter = true;
             StringBuilder command = new StringBuilder("-loglevel warning -i concat:\"");
             string ddpAudio = string.Empty;

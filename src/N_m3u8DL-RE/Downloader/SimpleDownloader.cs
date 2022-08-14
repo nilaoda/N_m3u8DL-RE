@@ -47,7 +47,7 @@ namespace N_m3u8DL_RE.Downloader
                 }
                 else if (segment.EncryptInfo.Method == EncryptMethod.SAMPLE_AES_CTR)
                 {
-                    throw new NotSupportedException("SAMPLE-AES-CTR");
+                    //throw new NotSupportedException("SAMPLE-AES-CTR");
                 }
             }
             return dResult;

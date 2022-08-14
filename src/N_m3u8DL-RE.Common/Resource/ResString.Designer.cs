@@ -70,6 +70,24 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 Dolby Vision content is detected, binary merging is automatically enabled 的本地化字符串。
+        /// </summary>
+        public static string autoBinaryMerge2 {
+            get {
+                return ResourceManager.GetString("autoBinaryMerge2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 An unrecognized encryption method is detected, binary merging is automatically enabled 的本地化字符串。
+        /// </summary>
+        public static string autoBinaryMerge3 {
+            get {
+                return ResourceManager.GetString("autoBinaryMerge3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Bad m3u8 的本地化字符串。
         /// </summary>
         public static string badM3u8 {
@@ -369,6 +387,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         }
         
         /// <summary>
+        ///   查找类似 ffmpeg not found, please download at: https://ffmpeg.org/download.html 的本地化字符串。
+        /// </summary>
+        public static string ffmpegNotFound {
+            get {
+                return ResourceManager.GetString("ffmpegNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Extracting TTML(raw) subtitle... 的本地化字符串。
         /// </summary>
         public static string fixingTTML {
@@ -500,6 +527,15 @@ namespace N_m3u8DL_RE.Common.Resource {
         public static string promptTitle {
             get {
                 return ResourceManager.GetString("promptTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Reading media info... 的本地化字符串。
+        /// </summary>
+        public static string readingInfo {
+            get {
+                return ResourceManager.GetString("readingInfo", resourceCulture);
             }
         }
         
