@@ -74,6 +74,8 @@ namespace N_m3u8DL_RE.Common.Entity
             var prefixStr = "";
             var returnStr = "";
             var encStr = string.Empty;
+            var segmentsCount = Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) : 0;
+            var segmentsCountStr = segmentsCount == 0 ? "" : (segmentsCount > 1 ? $"{segmentsCount} Segments" : $"{segmentsCount} Segment");
 
             //增加加密标志
             if (Playlist != null && Playlist.MediaParts.Any(m => m.MediaSegments.Any(s => s.EncryptInfo.Method != EncryptMethod.NONE)))
@@ -85,19 +87,19 @@ namespace N_m3u8DL_RE.Common.Entity
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {segmentsCountStr}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {(Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) + " Segments" : "")}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {segmentsCountStr}";
                 returnStr = d.EscapeMarkup();
             }
 
