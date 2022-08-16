@@ -35,7 +35,7 @@ namespace N_m3u8DL_RE.Common.Util
             {
                 return JsonSerializer.Serialize(sList, Context.ListStreamSpec);
             }
-            return JsonSerializer.Serialize(o, Options);
+            return "{NOT SUPPORTED}";
         }
 
         //此函数用于格式化输出时长  

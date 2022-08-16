@@ -8,8 +8,7 @@
 	<TrimmerDefaultAction>link</TrimmerDefaultAction>
 	<IlcTrimMetadata>true</IlcTrimMetadata>
 	<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-	<UseSystemResourceKeys>true</UseSystemResourceKeys>
-	<SatelliteResourceLanguages>zh-Hans;zh-Hant;en-US</SatelliteResourceLanguages>
+	<SatelliteResourceLanguages>zh-CN;zh-TW;en-US</SatelliteResourceLanguages>
     <NativeAotCompilerVersion>7.0.0-*</NativeAotCompilerVersion>
   </PropertyGroup>
 

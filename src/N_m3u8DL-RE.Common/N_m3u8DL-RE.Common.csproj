@@ -12,29 +12,5 @@
   <ItemGroup>
 	  <PackageReference Include="Spectre.Console" Version="0.44.1-preview.0.17" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resource\ResString.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ResString.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resource\ResString.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-		<PublicClass>true</PublicClass>
-		<LastGenOutput>ResString.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resource\ResString.zh-Hans.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-		<PublicClass>true</PublicClass>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resource\ResString.zh-Hant.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-		<PublicClass>true</PublicClass>
-    </EmbeddedResource>
-  </ItemGroup>
 	
 </Project>

@@ -1,26 +1,18 @@
 ﻿using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
-using N_m3u8DL_RE.Parser.Util;
 using N_m3u8DL_RE.Parser;
 using Spectre.Console;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Processor;
-using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Util;
-using System.Diagnostics;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
-using System.Reflection;
 
 namespace N_m3u8DL_RE
 {
@@ -28,6 +20,24 @@ namespace N_m3u8DL_RE
     {
         static async Task Main(string[] args)
         {
+            string loc = "en-US";
+            string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
+            if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
+            else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
+
+            //处理用户-h等请求
+            var index = -1;
+            var list = new List<string>(args);
+            if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
+            {
+                Console.WriteLine(111);
+                loc = list[index + 1];
+            }
+
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
+
 
             await CommandInvoker.InvokeArgs(args, DoWorkAsync);
         }

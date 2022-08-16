@@ -4,10 +4,10 @@ using N_m3u8DL_RE.Enum;
 using System.CommandLine;
 using System.CommandLine.Binding;
 using System.Globalization;
+using System.Linq;
 
 namespace N_m3u8DL_RE.CommandLine
 {
-
     internal class CommandInvoker
     {
         private readonly static Argument<string> Input = new(name: "input", description: ResString.cmd_Input);
@@ -73,20 +73,14 @@ namespace N_m3u8DL_RE.CommandLine
                     KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                 };
 
-                //在这里设置语言
 
-                string loc = "en-US";
-                string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
-                if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-Hans";
-                else if (currLoc.StartsWith("zh-")) loc = "zh-Hant";
-
-                //以用户选择优先
-                loc = option.UILanguage ?? loc;
-
-                CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
-                Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
-                Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
-                ResString.Culture = CultureInfo.GetCultureInfo(loc);
+                //以用户选择语言为准优先
+                if (option.UILanguage != null && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(option.UILanguage))
+                {
+                    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(option.UILanguage);
+                    Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(option.UILanguage);
+                    Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(option.UILanguage);
+                }
 
                 return option;
             }
