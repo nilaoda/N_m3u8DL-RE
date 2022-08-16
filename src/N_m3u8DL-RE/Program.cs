@@ -30,7 +30,6 @@ namespace N_m3u8DL_RE
             var list = new List<string>(args);
             if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
             {
-                Console.WriteLine(111);
                 loc = list[index + 1];
             }
 
