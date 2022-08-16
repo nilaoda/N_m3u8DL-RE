@@ -35,6 +35,29 @@ namespace N_m3u8DL_RE.DownloadManager
             return info.KID;
         }
 
+        private string? ReadInit(string output)
+        {
+            using (var fs = File.OpenRead(output))
+            {
+                var header = new byte[4096]; //4KB
+                fs.Read(header);
+                return ReadInit(header);
+            }
+        }
+
+        //从文件读取KEY
+        private async Task SearchKeyAsync(string? currentKID)
+        {
+            var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
+            if (_key != null)
+            {
+                if (DownloaderConfig.Keys == null)
+                    DownloaderConfig.Keys = new string[] { _key };
+                else
+                    DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
+            }
+        }
+
         private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos)
         {
             if (!DownloaderConfig.BinaryMerge && mediainfos.Any(m => m.DolbyVison == true))
@@ -128,16 +151,9 @@ namespace N_m3u8DL_RE.DownloadManager
                     var data = File.ReadAllBytes(result.ActualFilePath);
                     currentKID = ReadInit(data);
                     //从文件读取KEY
-                    var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
-                    if (_key != null)
-                    {
-                        if (DownloaderConfig.Keys == null)
-                            DownloaderConfig.Keys = new string[] { _key };
-                        else
-                            DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
-                    }
+                    await SearchKeyAsync(currentKID);
                     //实时解密
-                    if (DownloaderConfig.MP4RealTimeDecryption && streamSpec.Playlist.MediaInit.EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
+                    if (DownloaderConfig.MP4RealTimeDecryption && streamSpec.Playlist.MediaInit.EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
                     {
                         var enc = result.ActualFilePath;
                         var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -174,8 +190,15 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic[seg] = result;
                 task.Increment(1);
                 //实时解密
-                if (DownloaderConfig.MP4RealTimeDecryption && seg.EncryptInfo.Method != Common.Enum.EncryptMethod.NONE && result != null)
+                if (DownloaderConfig.MP4RealTimeDecryption && seg.EncryptInfo.Method == Common.Enum.EncryptMethod.CENC && result != null)
                 {
+                    //读取init信息
+                    if (string.IsNullOrEmpty(currentKID))
+                    {
+                        currentKID = ReadInit(result.ActualFilePath);
+                    }
+                    //从文件读取KEY
+                    await SearchKeyAsync(currentKID);
                     var enc = result.ActualFilePath;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                     var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID, mp4InitFile);
@@ -206,7 +229,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic[seg] = result;
                 task.Increment(1);
                 //实时解密
-                if (DownloaderConfig.MP4RealTimeDecryption && seg.EncryptInfo.Method != Common.Enum.EncryptMethod.NONE && result != null) 
+                if (DownloaderConfig.MP4RealTimeDecryption && seg.EncryptInfo.Method == Common.Enum.EncryptMethod.CENC && result != null) 
                 {
                     var enc = result.ActualFilePath;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -457,21 +480,9 @@ namespace N_m3u8DL_RE.DownloadManager
             //重新读取init信息
             if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
             {
-                using (var fs = File.OpenRead(output))
-                {
-                    var header = new byte[4096]; //4KB
-                    fs.Read(header);
-                    currentKID = ReadInit(header);
-                    //从文件读取KEY
-                    var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
-                    if (_key != null)
-                    {
-                        if (DownloaderConfig.Keys == null)
-                            DownloaderConfig.Keys = new string[] { _key };
-                        else
-                            DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
-                    }
-                }
+                currentKID = ReadInit(output);
+                //从文件读取KEY
+                await SearchKeyAsync(currentKID);
             }
 
             //调用mp4decrypt解密

@@ -89,7 +89,7 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220815")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220817")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
