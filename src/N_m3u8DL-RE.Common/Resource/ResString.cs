@@ -12,6 +12,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
         public static string autoBinaryMerge3 { get => GetText("autoBinaryMerge3"); }
+        public static string autoBinaryMerge4 { get => GetText("autoBinaryMerge4"); }
         public static string badM3u8 { get => GetText("badM3u8"); }
         public static string binaryMerge { get => GetText("binaryMerge"); }
         public static string checkingLast { get => GetText("checkingLast"); }

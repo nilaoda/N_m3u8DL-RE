@@ -95,6 +95,13 @@ namespace N_m3u8DL_RE.DownloadManager
             //开始下载
             Logger.InfoMarkUp(ResString.startDownloading + streamSpec.ToShortString());
 
+            //对于CENC，全部自动开启二进制合并
+            if (!DownloaderConfig.BinaryMerge && totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
+            {
+                DownloaderConfig.BinaryMerge = true;
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge4}[/]");
+            }
+
             //下载init
             if (streamSpec.Playlist?.MediaInit != null)
             {
@@ -447,39 +454,38 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             }
 
-            //调用mp4decrypt解密
-            if (mergeSuccess && File.Exists(output) && !DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0) 
+            //重新读取init信息
+            if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
             {
-                if (totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE) 
+                using (var fs = File.OpenRead(output))
                 {
-                    if (string.IsNullOrEmpty(currentKID))
+                    var header = new byte[4096]; //4KB
+                    fs.Read(header);
+                    currentKID = ReadInit(header);
+                    //从文件读取KEY
+                    var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
+                    if (_key != null)
                     {
-                        using (var fs = File.OpenRead(output))
-                        {
-                            var header = new byte[4096]; //4KB
-                            fs.Read(header);
-                            currentKID = ReadInit(header);
-                            //从文件读取KEY
-                            var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.KeyTextFile, currentKID);
-                            if (_key != null)
-                            {
-                                if (DownloaderConfig.Keys == null)
-                                    DownloaderConfig.Keys = new string[] { _key };
-                                else
-                                    DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
-                            }
-                        }
+                        if (DownloaderConfig.Keys == null)
+                            DownloaderConfig.Keys = new string[] { _key };
+                        else
+                            DownloaderConfig.Keys = DownloaderConfig.Keys.Concat(new string[] { _key }).ToArray();
                     }
-                    var enc = output;
-                    var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
-                    Logger.InfoMarkUp($"[grey]Decrypting...[/]");
-                    var result = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID);
-                    if (result) 
-                    {
-                        File.Delete(enc);
-                        File.Move(dec, enc);
-                        output = dec;
-                    }
+                }
+            }
+
+            //调用mp4decrypt解密
+            if (mergeSuccess && File.Exists(output) && !string.IsNullOrEmpty(currentKID) && !DownloaderConfig.MP4RealTimeDecryption && DownloaderConfig.Keys != null && DownloaderConfig.Keys.Length > 0)
+            {
+                var enc = output;
+                var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+                Logger.InfoMarkUp($"[grey]Decrypting...[/]");
+                var result = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.UseShakaPackager, mp4decrypt, DownloaderConfig.Keys, enc, dec, currentKID);
+                if (result)
+                {
+                    File.Delete(enc);
+                    File.Move(dec, enc);
+                    output = dec;
                 }
             }
 

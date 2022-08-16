@@ -28,6 +28,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到無法識別的加密方式，自動開啟二進位制合併",
                 enUS: "An unrecognized encryption method is detected, binary merging is automatically enabled"
             ),
+            ["autoBinaryMerge4"] = new TextContainer
+            (
+                zhCN: "检测到CENC加密方式，自动开启二进制合并",
+                zhTW: "檢測到CENC加密方式，自動開啟二進位制合併",
+                enUS: "When CENC encryption is detected, binary merging is automatically enabled"
+            ),
             ["badM3u8"] = new TextContainer
             (
                 zhCN: "错误的m3u8",
