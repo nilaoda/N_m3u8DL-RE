@@ -1,4 +1,6 @@
-﻿using System;
+﻿using N_m3u8DL_RE.Common.Log;
+using Spectre.Console;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -44,7 +46,7 @@ namespace N_m3u8DL_RE.Util
             }
         }
 
-        public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, 
+        public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
             bool fastStart = false,
             bool writeDate = true, string poster = "", string audioName = "", string title = "",
             string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
@@ -58,7 +60,6 @@ namespace N_m3u8DL_RE.Util
                     Path.GetFileName(outputPath) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
             }
 
-            bool useAACFilter = true;
             StringBuilder command = new StringBuilder("-loglevel warning -i concat:\"");
             string ddpAudio = string.Empty;
             string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
@@ -109,7 +110,10 @@ namespace N_m3u8DL_RE.Util
                     break;
             }
 
-            Process.Start(new ProcessStartInfo()
+            Logger.DebugMarkUp($"{binary}: {command}");
+
+            using var p = new Process();
+            p.StartInfo = new ProcessStartInfo()
             {
                 WorkingDirectory = Path.GetDirectoryName(files[0]),
                 FileName = binary,
@@ -117,7 +121,17 @@ namespace N_m3u8DL_RE.Util
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false
-            })!.WaitForExit();
+            };
+            p.ErrorDataReceived += (sendProcess, output) =>
+            {
+                if (!string.IsNullOrEmpty(output.Data))
+                {
+                    Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
+                }
+            };
+            p.Start();
+            p.BeginErrorReadLine();
+            p.WaitForExit();
 
             if (File.Exists($"{outputPath}.{muxFormat}") && new FileInfo($"{outputPath}.{muxFormat}").Length > 0)
                 return true;

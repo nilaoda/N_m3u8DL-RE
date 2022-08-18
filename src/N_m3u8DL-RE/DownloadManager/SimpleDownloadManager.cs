@@ -8,6 +8,7 @@ using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 using System.Collections.Concurrent;
 using System.Text;
 
@@ -58,12 +59,17 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
-        private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos)
+        private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
         {
             if (!DownloaderConfig.BinaryMerge && mediainfos.Any(m => m.DolbyVison == true))
             {
                 DownloaderConfig.BinaryMerge = true;
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
+            }
+
+            if (mediainfos.Where(m => m.Type == "Audio").All(m => m.BaseInfo.Contains("aac")))
+            {
+                useAACFilter = true;
             }
 
             if (mediainfos.All(m => m.Type == "Audio"))
@@ -80,6 +86,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task)
         {
+            bool useAACFilter = false; //ffmpeg合并flag
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
 
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
@@ -169,7 +176,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         Logger.WarnMarkUp(ResString.readingInfo);
                         var mediainfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.FFmpegBinaryPath!, result.ActualFilePath);
                         mediainfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                        ChangeSpecInfo(streamSpec, mediainfos);
+                        ChangeSpecInfo(streamSpec, mediainfos, ref useAACFilter);
                         readInfo = true;
                     }
                 }
@@ -212,7 +219,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp(ResString.readingInfo);
                 var mediainfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.FFmpegBinaryPath!, result!.ActualFilePath);
                 mediainfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                ChangeSpecInfo(streamSpec, mediainfos);
+                ChangeSpecInfo(streamSpec, mediainfos, ref useAACFilter);
                 readInfo = true;
             }
 
@@ -459,7 +466,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
                     Logger.InfoMarkUp(ResString.ffmpegMerge);
                     var ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
-                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), ext);
+                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), ext, useAACFilter);
                 }
             }
 
