@@ -32,6 +32,7 @@ namespace N_m3u8DL_RE.Config
             DecryptionBinaryPath = option.DecryptionBinaryPath;
             FFmpegBinaryPath = option.FFmpegBinaryPath;
             KeyTextFile = option.KeyTextFile;
+            DownloadRetryCount = option.DownloadRetryCount;
         }
 
         /// <summary>
@@ -54,6 +55,10 @@ namespace N_m3u8DL_RE.Config
         /// 线程数
         /// </summary>
         public int ThreadCount { get; set; } = 8;
+        /// <summary>
+        /// 每个分片的重试次数
+        /// </summary>
+        public int DownloadRetryCount { get; set; } = 3;
         /// <summary>
         /// 跳过合并
         /// </summary>

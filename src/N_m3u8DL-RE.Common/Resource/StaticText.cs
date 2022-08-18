@@ -76,6 +76,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測實際下載的分片數量和預期數量是否匹配",
                 enUS: "Check if the actual number of segments downloaded matches the expected number"
             ),
+            ["cmd_downloadRetryCount"] = new TextContainer
+            (
+                zhCN: "每个分片下载异常时的重试次数",
+                zhTW: "每個分片下載異常時的重試次數",
+                enUS: "The number of retries when download segment error"
+            ),
             ["cmd_decryptionBinaryPath"] = new TextContainer
             (
                 zhCN: "MP4解密所用工具的全路径, 例如 C:\\Tools\\mp4decrypt.exe",

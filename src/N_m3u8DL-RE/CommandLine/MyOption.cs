@@ -42,6 +42,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public int ThreadCount { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.DownloadRetryCount"/>.
+        /// </summary>
+        public int DownloadRetryCount { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SkipMerge"/>.
         /// </summary>
         public bool SkipMerge { get; set; }
