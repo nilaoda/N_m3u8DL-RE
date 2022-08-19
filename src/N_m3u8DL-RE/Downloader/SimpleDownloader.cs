@@ -27,10 +27,10 @@ namespace N_m3u8DL_RE.Downloader
             DownloaderConfig = config;
         }
 
-        public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, Dictionary<string, string>? headers = null)
+        public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null)
         {
             var url = segment.Url;
-            var dResult = await DownClipAsync(url, savePath, segment.StartRange, segment.StopRange, headers, DownloaderConfig.DownloadRetryCount);
+            var dResult = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.DownloadRetryCount);
             if (dResult != null && dResult.Success && segment.EncryptInfo != null)
             {
                 if (segment.EncryptInfo.Method == EncryptMethod.AES_128)
@@ -53,7 +53,7 @@ namespace N_m3u8DL_RE.Downloader
             return dResult;
         }
 
-        private async Task<DownloadResult?> DownClipAsync(string url, string path, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
+        private async Task<DownloadResult?> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
         {
         retry:
             try
@@ -64,7 +64,7 @@ namespace N_m3u8DL_RE.Downloader
                 {
                     return new DownloadResult() { ActualContentLength = 0, ActualFilePath = des };
                 }
-                var result = await DownloadUtil.DownloadToFileAsync(url, path, headers, fromPosition, toPosition);
+                var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, headers, fromPosition, toPosition);
                 //下载完成后改名
                 if (result.Success || !DownloaderConfig.CheckContentLength)
                 {

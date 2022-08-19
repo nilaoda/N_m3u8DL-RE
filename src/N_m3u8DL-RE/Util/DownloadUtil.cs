@@ -24,7 +24,7 @@ namespace N_m3u8DL_RE.Util
             Timeout = TimeSpan.FromMinutes(2)
         };
 
-        public static async Task<DownloadResult> DownloadToFileAsync(string url, string path, Dictionary<string, string>? headers = null, long? fromPosition = null, long? toPosition = null)
+        public static async Task<DownloadResult> DownloadToFileAsync(string url, string path, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, long? fromPosition = null, long? toPosition = null)
         {
             Logger.Debug(ResString.fetch + url);
             using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
@@ -46,7 +46,7 @@ namespace N_m3u8DL_RE.Util
                 if (respHeaders != null && respHeaders.Location != null)
                 {
                     var redirectedUrl = respHeaders.Location.AbsoluteUri;
-                    return await DownloadToFileAsync(redirectedUrl, path, headers);
+                    return await DownloadToFileAsync(redirectedUrl, path, speedContainer, headers, fromPosition, toPosition);
                 }
             }
             response.EnsureSuccessStatusCode();
@@ -57,6 +57,7 @@ namespace N_m3u8DL_RE.Util
             var size = 0;
             while ((size = await responseStream.ReadAsync(buffer)) > 0)
             {
+                speedContainer.Add(size);
                 await stream.WriteAsync(buffer, 0, size);
             }
 

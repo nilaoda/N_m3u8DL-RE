@@ -1,4 +1,5 @@
 ﻿using Mp4SubtitleParser;
+using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
@@ -84,7 +85,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
-        private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task)
+        private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer)
         {
             bool useAACFilter = false; //ffmpeg合并flag
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
@@ -143,7 +144,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 var path = Path.Combine(tmpDir, "_init.mp4.tmp");
-                var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, headers);
+                var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
                 FileDic[streamSpec.Playlist.MediaInit] = result;
                 if (result == null)
                 {
@@ -193,7 +194,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 var index = seg.Index;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
-                var result = await Downloader.DownloadSegmentAsync(seg, path, headers);
+                var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
                 task.Increment(1);
                 //实时解密
@@ -232,7 +233,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 var index = seg.Index;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
-                var result = await Downloader.DownloadSegmentAsync(seg, path, headers);
+                var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
                 task.Increment(1);
                 //实时解密
@@ -512,6 +513,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         public async Task<bool> StartDownloadAsync(IEnumerable<StreamSpec> streamSpecs)
         {
+            SpeedContainer speedContainer = new SpeedContainer(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
 
             var progress = AnsiConsole.Progress().AutoClear(true);
@@ -522,6 +524,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new ProgressBarColumn(),
                 new PercentageColumn(),
+                new DownloadSpeedColumn(speedContainer), //速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
             });
@@ -538,7 +541,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 foreach (var kp in dic)
                 {
                     var task = kp.Value;
-                    var result = await DownloadStreamAsync(kp.Key, task);
+                    var result = await DownloadStreamAsync(kp.Key, task, speedContainer);
                     Results[kp.Key] = result;
                 }
             });
