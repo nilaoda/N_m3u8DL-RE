@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Entity;
+﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Entity;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using System;
@@ -11,7 +12,7 @@ namespace N_m3u8DL_RE.Column
 {
     internal sealed class DownloadSpeedColumn : ProgressColumn
     {
-        private TimeSpan CalcTimeSpan = TimeSpan.FromSeconds(0);
+        private string DateTimeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         private string Speed = "0Bps";
         protected override bool NoWrap => true;
         public SpeedContainer SpeedContainer { get; set; }
@@ -25,13 +26,13 @@ namespace N_m3u8DL_RE.Column
 
         public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
         {
-            CalcTimeSpan = CalcTimeSpan.Add(deltaTime);
+            var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             //一秒汇报一次即可
-            if (CalcTimeSpan.TotalSeconds > 1)
+            if (DateTimeString != now)
             {
-                Speed = FormatFileSize(SpeedContainer.Downloaded / CalcTimeSpan.TotalSeconds);
+                Speed = FormatFileSize(SpeedContainer.Downloaded);
                 SpeedContainer.Reset();
-                CalcTimeSpan = TimeSpan.FromSeconds(0);
+                DateTimeString = now;
             }
             var percentage = (int)task.Percentage;
             var flag = percentage == 100 || percentage == 0;
@@ -47,7 +48,7 @@ namespace N_m3u8DL_RE.Column
                 >= 1024 * 1024 * 1024 => string.Format("{0:########0.00}GBps", (double)fileSize / (1024 * 1024 * 1024)),
                 >= 1024 * 1024 => string.Format("{0:####0.00}MBps", (double)fileSize / (1024 * 1024)),
                 >= 1024 => string.Format("{0:####0.00}KBps", (double)fileSize / 1024),
-                _ => string.Format("{0}Bps", fileSize)
+                _ => string.Format("{0:####0.00}Bps", fileSize)
             };
         }
     }
