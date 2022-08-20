@@ -242,7 +242,7 @@ namespace N_m3u8DL_RE
             }
             catch (Exception ex)
             {
-                string msg = ex.Message;
+                string msg = Logger.LogLevel == LogLevel.DEBUG ? ex.ToString() : ex.Message;
 #if DEBUG
                 msg = ex.ToString();
 #endif

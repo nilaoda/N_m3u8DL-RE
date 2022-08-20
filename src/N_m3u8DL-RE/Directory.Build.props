@@ -7,7 +7,7 @@
     <TrimMode>full</TrimMode>
 	<TrimmerDefaultAction>link</TrimmerDefaultAction>
 	<IlcTrimMetadata>true</IlcTrimMetadata>
-	<IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+	<IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>
 	<SatelliteResourceLanguages>zh-CN;zh-TW;en-US</SatelliteResourceLanguages>
     <NativeAotCompilerVersion>7.0.0-*</NativeAotCompilerVersion>
   </PropertyGroup>
