@@ -68,7 +68,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
             }
 
-            if (mediainfos.Where(m => m.Type == "Audio").All(m => m.BaseInfo.Contains("aac")))
+            if (mediainfos.Where(m => m.Type == "Audio").All(m => m.BaseInfo!.Contains("aac")))
             {
                 useAACFilter = true;
             }
