@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOTNET_SDK_VERSION: '7.0.x'
+  DOTNET_SDK_VERSION: '7.0.100-preview.6.22352.1'
 
 jobs:
 
