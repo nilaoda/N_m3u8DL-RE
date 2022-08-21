@@ -32,6 +32,8 @@ namespace Mp4SubtitleParser
     {
         [RegexGenerator("<p.*?>(.+?)<\\/p>")]
         private static partial Regex LabelFixRegex();
+        [RegexGenerator("\\<tt[\\s\\S]*?\\<\\/tt\\>")]
+        private static partial Regex MultiElementsFixRegex();
 
         public static bool CheckInit(byte[] data)
         {
@@ -110,6 +112,12 @@ namespace Mp4SubtitleParser
             return sb.ToString();
         }
 
+        public static List<string> SplitMultipleRootElements(string xml)
+        {
+            if (!MultiElementsFixRegex().IsMatch(xml)) return new List<string>();
+            return MultiElementsFixRegex().Matches(xml).Select(m => m.Value).ToList();
+        }
+
         public static WebVttSub ExtractFromMp4s(IEnumerable<string> items, long segTimeMs)
         {
             //read ttmls
@@ -129,11 +137,19 @@ namespace Mp4SubtitleParser
                         // mdats.
                         if (segTimeMs != 0)
                         {
-                            xmls.Add(ShiftTime(Encoding.UTF8.GetString(data), segTimeMs, segIndex));
+                            var datas = SplitMultipleRootElements(Encoding.UTF8.GetString(data));
+                            foreach (var item in datas)
+                            {
+                                xmls.Add(ShiftTime(item, segTimeMs, segIndex));
+                            }
                         }
                         else
                         {
-                            xmls.Add(Encoding.UTF8.GetString(data));
+                            var datas = SplitMultipleRootElements(Encoding.UTF8.GetString(data));
+                            foreach (var item in datas)
+                            {
+                                xmls.Add(item);
+                            }
                         }
                     }))
                     .Parse(dataSeg,/* partialOkay= */ false);
