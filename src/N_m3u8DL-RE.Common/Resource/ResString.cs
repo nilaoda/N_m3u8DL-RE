@@ -24,6 +24,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_delAfterDone { get => GetText("cmd_delAfterDone"); }
         public static string cmd_ffmpegBinaryPath { get => GetText("cmd_ffmpegBinaryPath"); }
         public static string cmd_mkvmergeBinaryPath { get => GetText("cmd_mkvmergeBinaryPath"); }
+        public static string cmd_baseUrl { get => GetText("cmd_baseUrl"); }
         public static string cmd_header { get => GetText("cmd_header"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }

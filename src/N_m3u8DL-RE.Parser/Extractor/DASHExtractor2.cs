@@ -31,6 +31,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
             this.MpdUrl = parserConfig.Url ?? string.Empty;
             if (!string.IsNullOrEmpty(parserConfig.BaseUrl))
                 this.BaseUrl = parserConfig.BaseUrl;
+            else
+                this.BaseUrl = this.MpdUrl;
         }
 
         private string ExtendBaseUrl(XElement element, string oriBaseUrl)
@@ -91,10 +93,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 var baseUrl = baseUrlElement.Value;
                 if (baseUrl.Contains("kkbox.com.tw/")) baseUrl = baseUrl.Replace("//https:%2F%2F", "//");
                 this.BaseUrl = ParserUtil.CombineURL(this.MpdUrl, baseUrl);
-            }
-            else
-            {
-                this.BaseUrl = this.MpdUrl;
             }
 
             //全部Period

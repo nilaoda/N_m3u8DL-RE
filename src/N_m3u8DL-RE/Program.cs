@@ -98,6 +98,7 @@ namespace N_m3u8DL_RE
                 {
                     AppendUrlParams = option.AppendUrlParams,
                     UrlProcessorArgs = option.UrlProcessorArgs,
+                    BaseUrl = option.BaseUrl!
                 };
 
                 //设置Headers

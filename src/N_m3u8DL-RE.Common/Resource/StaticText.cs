@@ -52,6 +52,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "驗證最後一個分片有效性",
                 enUS: "Verifying the validity of the last segment"
             ),
+            ["cmd_baseUrl"] = new TextContainer
+            (
+                zhCN: "设置BaseURL",
+                zhTW: "設置BaseURL",
+                enUS: "Set BaseURL"
+            ),
             ["cmd_appendUrlParams"] = new TextContainer
             (
                 zhCN: "将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com",

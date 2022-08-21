@@ -41,6 +41,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath);
         private readonly static Option<string?> MkvmergeBinaryPath = new(new string[] { "--mkvmerge-binary-path" }, description: ResString.cmd_mkvmergeBinaryPath);
+        private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
 
         class MyOptionBinder : BinderBase<MyOption>
         {
@@ -77,7 +78,8 @@ namespace N_m3u8DL_RE.CommandLine
                     KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                     DownloadRetryCount = bindingContext.ParseResult.GetValueForOption(DownloadRetryCount),
                     MuxAfterDone = bindingContext.ParseResult.GetValueForOption(MuxAfterDone),
-                    UseMkvmerge = bindingContext.ParseResult.GetValueForOption(UseMkvmerge),    
+                    UseMkvmerge = bindingContext.ParseResult.GetValueForOption(UseMkvmerge),
+                    BaseUrl = bindingContext.ParseResult.GetValueForOption(BaseUrl),
                 };
 
 
@@ -96,9 +98,9 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220821")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220822")
             {
-                Input, TmpDir, SaveDir, SaveName, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+                Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, MuxAfterDone, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath, MkvmergeBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, UseMkvmerge, MP4RealTimeDecryption
