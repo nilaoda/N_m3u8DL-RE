@@ -188,7 +188,7 @@ namespace N_m3u8DL_RE.Util
             {
                 command.Append($" --language 0:{files[i].LangCode ?? "und"} ");
                 if (!string.IsNullOrEmpty(files[i].Description))
-                    command.Append($" --track-name {i}:\"{files[i].Description}\" ");
+                    command.Append($" --track-name 0:\"{files[i].Description}\" ");
                 command.Append($" \"{files[i].FilePath}\" ");
             }
 
