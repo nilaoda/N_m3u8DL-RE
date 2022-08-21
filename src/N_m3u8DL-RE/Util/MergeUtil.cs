@@ -50,6 +50,8 @@ namespace N_m3u8DL_RE.Util
 
         private static void InvokeFFmpeg(string binary, string command, string workingDirectory)
         {
+            Logger.DebugMarkUp($"{binary}: {command}");
+
             using var p = new Process();
             p.StartInfo = new ProcessStartInfo()
             {
@@ -129,8 +131,6 @@ namespace N_m3u8DL_RE.Util
                     break;
             }
 
-            Logger.DebugMarkUp($"{binary}: {command}");
-
             InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
 
             if (File.Exists($"{outputPath}.{muxFormat}") && new FileInfo($"{outputPath}.{muxFormat}").Length > 0)
@@ -162,13 +162,35 @@ namespace N_m3u8DL_RE.Util
             //LANG and NAME
             for (int i = 0; i < files.Length; i++)
             {
-                if (!string.IsNullOrEmpty(files[i].LangCode))
-                    command.Append($" -metadata:s:{i} language={files[i].LangCode} ");
+                command.Append($" -metadata:s:{i} language={files[i].LangCode ?? "und"} ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                     command.Append($" -metadata:s:{i} title={files[i].Description} ");
             }
 
             command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown -c copy \"{outputPath}.mkv\"");
+
+            InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+
+            if (File.Exists($"{outputPath}.mkv") && new FileInfo($"{outputPath}.mkv").Length > 1024)
+                return true;
+
+            return false;
+        }
+
+        public static bool MuxInputsByMkvmerge(string binary, OutputFile[] files, string outputPath)
+        {
+            StringBuilder command = new StringBuilder($"-q --output \"{outputPath}.mkv\" ");
+
+            command.Append(" --no-chapters ");
+
+            //LANG and NAME
+            for (int i = 0; i < files.Length; i++)
+            {
+                command.Append($" --language 0:{files[i].LangCode ?? "und"} ");
+                if (!string.IsNullOrEmpty(files[i].Description))
+                    command.Append($" --track-name {i}:\"{files[i].Description}\" ");
+                command.Append($" \"{files[i].FilePath}\" ");
+            }
 
             InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 

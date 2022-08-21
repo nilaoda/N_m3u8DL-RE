@@ -23,6 +23,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_decryptionBinaryPath { get => GetText("cmd_decryptionBinaryPath"); }
         public static string cmd_delAfterDone { get => GetText("cmd_delAfterDone"); }
         public static string cmd_ffmpegBinaryPath { get => GetText("cmd_ffmpegBinaryPath"); }
+        public static string cmd_mkvmergeBinaryPath { get => GetText("cmd_mkvmergeBinaryPath"); }
         public static string cmd_header { get => GetText("cmd_header"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }
@@ -44,6 +45,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_uiLanguage { get => GetText("cmd_uiLanguage"); }
         public static string cmd_urlProcessorArgs { get => GetText("cmd_urlProcessorArgs"); }
         public static string cmd_useShakaPackager { get => GetText("cmd_useShakaPackager"); }
+        public static string cmd_useMkvmerge { get => GetText("cmd_useMkvmerge"); }
         public static string cmd_muxAfterDone { get => GetText("cmd_muxAfterDone"); }
         public static string cmd_writeMetaJson { get => GetText("cmd_writeMetaJson"); }
         public static string fetch { get => GetText("fetch"); }

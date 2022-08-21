@@ -51,9 +51,20 @@ namespace N_m3u8DL_RE
                 if (option.FFmpegBinaryPath == null)
                     option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
 
-                if (string.IsNullOrEmpty(option.FFmpegBinaryPath))
+                if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
                 {
                     throw new FileNotFoundException(ResString.ffmpegNotFound);
+                }
+
+                //预先检查mkvmerge
+                if (option.UseMkvmerge && option.MuxAfterDone)
+                {
+                    if (option.MkvmergeBinaryPath == null)
+                        option.MkvmergeBinaryPath = GlobalUtil.FindExecutable("mkvmerge");
+                    if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
+                    {
+                        throw new FileNotFoundException("mkvmerge not found");
+                    }
                 }
 
                 //预先检查

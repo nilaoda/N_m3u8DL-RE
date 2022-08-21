@@ -31,6 +31,8 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? VideoId { get; set; }
         public string? SubtitleId { get; set; }
 
+        public string? PeriodId { get; set; }
+
         public string Url { get; set; }
 
         public Playlist? Playlist { get; set; }

@@ -37,8 +37,10 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
         private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
         private readonly static Option<bool> MuxAfterDone = new (new string[] { "--mux-after-done" }, description: ResString.cmd_muxAfterDone, getDefaultValue: () => false);
+        private readonly static Option<bool> UseMkvmerge = new(new string[] { "--use-mkvmerge" }, description: ResString.cmd_useMkvmerge, getDefaultValue: () => false);
         private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath);
+        private readonly static Option<string?> MkvmergeBinaryPath = new(new string[] { "--mkvmerge-binary-path" }, description: ResString.cmd_mkvmergeBinaryPath);
 
         class MyOptionBinder : BinderBase<MyOption>
         {
@@ -75,6 +77,7 @@ namespace N_m3u8DL_RE.CommandLine
                     KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                     DownloadRetryCount = bindingContext.ParseResult.GetValueForOption(DownloadRetryCount),
                     MuxAfterDone = bindingContext.ParseResult.GetValueForOption(MuxAfterDone),
+                    UseMkvmerge = bindingContext.ParseResult.GetValueForOption(UseMkvmerge),    
                 };
 
 
@@ -97,8 +100,8 @@ namespace N_m3u8DL_RE.CommandLine
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, MuxAfterDone, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
-                FFmpegBinaryPath,
-                LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption
+                FFmpegBinaryPath, MkvmergeBinaryPath,
+                LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, UseMkvmerge, MP4RealTimeDecryption
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

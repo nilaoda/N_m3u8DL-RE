@@ -100,6 +100,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "ffmpeg可執行程序全路徑, 例如 C:\\Tools\\ffmpeg.exe",
                 enUS: "Full path to the ffmpeg binary, like C:\\Tools\\ffmpeg.exe"
             ),
+            ["cmd_mkvmergeBinaryPath"] = new TextContainer
+            (
+                zhCN: "mkvmerge可执行程序全路径, 例如 C:\\Tools\\mkvmerge.exe",
+                zhTW: "mkvmerge可執行程序全路徑, 例如 C:\\Tools\\mkvmerge.exe",
+                enUS: "Full path to the mkvmerge binary, like C:\\Tools\\mkvmerge.exe"
+            ),
             ["cmd_header"] = new TextContainer
             (
                 zhCN: "为HTTP请求设置特定的请求头, 例如:\r\n-H \"Cookie: mycookie\" -H \"User-Agent: iOS\"",
@@ -216,9 +222,15 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_useShakaPackager"] = new TextContainer
             (
-                zhCN: "使用shaka-packager替代mp4decrypt",
-                zhTW: "使用shaka-packager替代mp4decrypt",
-                enUS: "Use shaka-packager instead of mp4decrypt"
+                zhCN: "解密时使用shaka-packager替代mp4decrypt",
+                zhTW: "解密时使用shaka-packager替代mp4decrypt",
+                enUS: "Use shaka-packager instead of mp4decrypt to decrypt"
+            ),
+            ["cmd_useMkvmerge"] = new TextContainer
+            (
+                zhCN: "混流时使用mkvmerge替代ffmpeg",
+                zhTW: "混流时使用mkvmerge替代ffmpeg",
+                enUS: "Use mkvmerge instead of ffmpeg to mux"
             ),
             ["cmd_muxAfterDone"] = new TextContainer
             (

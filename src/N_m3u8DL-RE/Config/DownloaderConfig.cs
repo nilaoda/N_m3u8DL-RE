@@ -34,6 +34,8 @@ namespace N_m3u8DL_RE.Config
             KeyTextFile = option.KeyTextFile;
             DownloadRetryCount = option.DownloadRetryCount;
             MuxAfterDone = option.MuxAfterDone;
+            UseMkvmerge = option.UseMkvmerge;
+            MkvmergeBinaryPath = option.MkvmergeBinaryPath;
         }
 
         /// <summary>
@@ -97,6 +99,10 @@ namespace N_m3u8DL_RE.Config
         /// </summary>
         public bool MuxAfterDone { get; set; }
         /// <summary>
+        /// 使用mkvmerge混流
+        /// </summary>
+        public bool UseMkvmerge { get; set; }
+        /// <summary>
         /// MP4解密所用工具的全路径
         /// </summary>
         public string? DecryptionBinaryPath { get; set; }
@@ -123,5 +129,9 @@ namespace N_m3u8DL_RE.Config
         /// ffmpeg路径
         /// </summary>
         public string? FFmpegBinaryPath { get; set; }
+        /// <summary>
+        /// mkvmerge路径
+        /// </summary>
+        public string? MkvmergeBinaryPath { get; set; }
     }
 }

@@ -90,6 +90,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool MuxAfterDone { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.UseMkvmerge"/>.
+        /// </summary>
+        public bool UseMkvmerge { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>
         public SubtitleFormat SubtitleFormat { get; set; }
@@ -121,5 +125,9 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.FFmpegBinaryPath"/>.
         /// </summary>
         public string? FFmpegBinaryPath { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.MkvmergeBinaryPath"/>.
+        /// </summary>
+        public string? MkvmergeBinaryPath { get; set; }
     }
 }
