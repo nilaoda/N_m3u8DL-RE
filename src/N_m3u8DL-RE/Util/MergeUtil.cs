@@ -79,6 +79,9 @@ namespace N_m3u8DL_RE.Util
             bool writeDate = true, string poster = "", string audioName = "", string title = "",
             string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
         {
+            //改为绝对路径
+            outputPath = Path.GetFullPath(outputPath);
+
             string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
 
             StringBuilder command = new StringBuilder("-loglevel warning -i concat:\"");

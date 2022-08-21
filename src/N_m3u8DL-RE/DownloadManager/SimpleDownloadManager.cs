@@ -48,6 +48,24 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
+        //若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录
+        private void SafeDeleteDir(string dirPath)
+        {
+            if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))
+                return;
+
+            var parent = Path.GetDirectoryName(dirPath)!;
+            if (!Directory.EnumerateFileSystemEntries(dirPath).Any())
+            {
+                Directory.Delete(dirPath);
+            }
+            else
+            {
+                return;
+            }
+            SafeDeleteDir(parent);
+        }
+
         //从文件读取KEY
         private async Task SearchKeyAsync(string? currentKID)
         {
@@ -254,8 +272,8 @@ namespace N_m3u8DL_RE.DownloadManager
             //修改输出后缀
             var outputExt = "." + streamSpec.Extension;
             if (streamSpec.Extension == null) outputExt = ".ts";
-            else if (streamSpec.MediaType == MediaType.AUDIO) outputExt = ".m4a";
-            else if (streamSpec.MediaType != MediaType.SUBTITLES) outputExt = ".mp4";
+            else if (streamSpec.MediaType == MediaType.AUDIO && streamSpec.Extension == "m4s") outputExt = ".m4a";
+            else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
 
             var output = Path.Combine(saveDir, saveName + outputExt);
 
@@ -489,10 +507,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     File.Delete(file);
                 }
-                if (!Directory.EnumerateFiles(tmpDir).Any())
-                {
-                    Directory.Delete(tmpDir);
-                }
+                SafeDeleteDir(tmpDir);
             }
 
             //重新读取init信息
@@ -576,10 +591,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     OutputFiles.ForEach(f => File.Delete(f.FilePath));
                     var tmpDir = DownloaderConfig.TmpDir ?? Environment.CurrentDirectory;
-                    if (!Directory.EnumerateFiles(tmpDir).Any())
-                    {
-                        Directory.Delete(tmpDir);
-                    }
+                    SafeDeleteDir(tmpDir);  
                 }
                 else Logger.ErrorMarkUp($"Mux failed");
             }
