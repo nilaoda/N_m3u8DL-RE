@@ -104,6 +104,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //本Period时长
                 var periodDuration = period.Attribute("duration")?.Value;
 
+                //本Period ID
+                var periodId = period.Attribute("id")?.Value;
+
                 //最终分片会使用的baseurl
                 var segBaseUrl = this.BaseUrl;
 
@@ -136,6 +139,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
                         var bandwidth = representation.Attribute("bandwidth");
                         StreamSpec streamSpec = new();
+                        streamSpec.PeriodId = periodId;
                         streamSpec.Playlist = new Playlist();
                         streamSpec.Playlist.MediaParts.Add(new MediaPart());
                         streamSpec.GroupId = representation.Attribute("id")?.Value;
@@ -229,7 +233,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         var segmentList = representation.Elements().Where(e => e.Name.LocalName == "SegmentList").FirstOrDefault();
                         if (segmentList != null)
                         {
-                            var duration = segmentList.Attribute("duration")?.Value;
+                            var durationStr = segmentList.Attribute("duration")?.Value;
                             //处理init url
                             var initialization = segmentList.Elements().Where(e => e.Name.LocalName == "Initialization").FirstOrDefault();
                             if (initialization != null)
@@ -247,13 +251,16 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             }
                             //处理分片
                             var segmentURLs = segmentList.Elements().Where(e => e.Name.LocalName == "SegmentURL");
+                            var timescaleStr = segmentList.Attribute("timescale")?.Value ?? "1";
                             for (int segmentIndex = 0; segmentIndex < segmentURLs.Count(); segmentIndex++)
                             {
                                 var segmentURL = segmentURLs.ElementAt(segmentIndex);
                                 var mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value!);
                                 var mediaRange = segmentURL.Attribute("mediaRange")?.Value;
+                                var timesacle = Convert.ToInt32(timescaleStr);
+                                var duration = Convert.ToInt64(durationStr);
                                 MediaSegment mediaSegment = new();
-                                mediaSegment.Duration = Convert.ToDouble(duration);
+                                mediaSegment.Duration = duration / (double)timesacle;
                                 mediaSegment.Url = mediaUrl;
                                 mediaSegment.Index = segmentIndex;
                                 if (mediaRange != null)
@@ -401,7 +408,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         //处理同一ID分散在不同Period的情况
-                        var _index = streamList.FindIndex(_f => _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType);
+                        var _index = streamList.FindIndex(_f => _f.PeriodId != streamSpec.PeriodId && _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType);
                         if (_index > -1) 
                         {
                             if (isLive)
