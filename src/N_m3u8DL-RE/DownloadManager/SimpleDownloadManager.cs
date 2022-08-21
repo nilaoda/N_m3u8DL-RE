@@ -562,7 +562,7 @@ namespace N_m3u8DL_RE.DownloadManager
             var success = Results.Values.All(v => v == true);
 
             //混流
-            if (success && OutputFiles.Count > 0) 
+            if (success && DownloaderConfig.MuxAfterDone && OutputFiles.Count > 0) 
             {
                 var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
                 var outName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}";
