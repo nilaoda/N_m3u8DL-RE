@@ -564,11 +564,21 @@ namespace N_m3u8DL_RE.DownloadManager
             //混流
             if (success && OutputFiles.Count > 0) 
             {
+                var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
                 var outName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}";
+                var outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}.mkv[/]");
-                var result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, OutputFiles.ToArray(), outName);
+                var result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath);
                 //完成后删除各轨道文件
-                if (result) OutputFiles.ForEach(f => File.Delete(f.FilePath));
+                if (result)
+                {
+                    OutputFiles.ForEach(f => File.Delete(f.FilePath));
+                    var tmpDir = DownloaderConfig.TmpDir ?? Environment.CurrentDirectory;
+                    if (!Directory.EnumerateFiles(tmpDir).Any())
+                    {
+                        Directory.Delete(tmpDir);
+                    }
+                }
                 else Logger.ErrorMarkUp($"Mux failed");
             }
 
