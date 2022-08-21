@@ -170,7 +170,7 @@ namespace N_m3u8DL_RE.Util
 
             command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown -c copy \"{outputPath}.mkv\"");
 
-            InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0].FilePath)!);
+            InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
             if (File.Exists($"{outputPath}.mkv") && new FileInfo($"{outputPath}.mkv").Length > 1024)
                 return true;
