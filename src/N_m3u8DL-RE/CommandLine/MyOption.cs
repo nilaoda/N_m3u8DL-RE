@@ -86,6 +86,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool UseShakaPackager { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.MuxAfterDone"/>.
+        /// </summary>
+        public bool MuxAfterDone { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>
         public SubtitleFormat SubtitleFormat { get; set; }

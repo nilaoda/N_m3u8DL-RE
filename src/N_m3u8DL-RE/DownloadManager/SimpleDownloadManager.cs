@@ -20,6 +20,7 @@ namespace N_m3u8DL_RE.DownloadManager
         IDownloader Downloader;
         DownloaderConfig DownloaderConfig;
         DateTime NowDateTime;
+        List<OutputFile> OutputFiles = new();
 
         public SimpleDownloadManager(DownloaderConfig downloaderConfig) 
         { 
@@ -94,7 +95,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (segments == null) return false;
 
             var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
-            var dirName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Language}";
+            var dirName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
             //去除非法字符
             dirName = ConvertUtil.GetValidFileName(dirName, filterSlash: true);
             var tmpDir = Path.Combine(DownloaderConfig.TmpDir ?? Environment.CurrentDirectory, dirName);
@@ -250,18 +251,19 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             });
 
-            var output = Path.Combine(saveDir, saveName + $".{streamSpec.Extension ?? "ts"}");
+            //修改输出后缀
+            var outputExt = "." + streamSpec.Extension;
+            if (streamSpec.Extension == null) outputExt = ".ts";
+            else if (streamSpec.MediaType == MediaType.AUDIO) outputExt = ".m4a";
+            else if (streamSpec.MediaType != MediaType.SUBTITLES) outputExt = ".mp4";
+
+            var output = Path.Combine(saveDir, saveName + outputExt);
+
             //检测目标文件是否存在
             while (File.Exists(output))
             {
                 Logger.WarnMarkUp($"{output} => {output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output))}");
             }
-
-            //修改输出后缀
-            if (streamSpec.MediaType == Common.Enum.MediaType.AUDIO)
-                output = Path.ChangeExtension(output, ".m4a");
-            else if (streamSpec.MediaType != Common.Enum.MediaType.SUBTITLES)
-                output = Path.ChangeExtension(output, ".mp4");
 
             if (DownloaderConfig.MP4RealTimeDecryption && mp4InitFile != "")
             {
@@ -464,10 +466,18 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
                 else
                 {
+                    //ffmpeg合并
                     var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
                     Logger.InfoMarkUp(ResString.ffmpegMerge);
                     var ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
-                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(output, null), ext, useAACFilter);
+                    var ffOut = Path.Combine(Path.GetDirectoryName(output)!, Path.GetFileNameWithoutExtension(output) + $".{ext}");
+                    //检测目标文件是否存在
+                    while (File.Exists(ffOut))
+                    {
+                        Logger.WarnMarkUp($"{ffOut} => {ffOut = Path.ChangeExtension(ffOut, $"copy" + Path.GetExtension(ffOut))}");
+                    }
+                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter);
+                    if (mergeSuccess) output = ffOut;
                 }
             }
 
@@ -504,9 +514,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     File.Delete(enc);
                     File.Move(dec, enc);
-                    output = dec;
                 }
             }
+
+            //记录所有文件信息
+            if (File.Exists(output))
+                OutputFiles.Add(new OutputFile() { FilePath = output, LangCode = streamSpec.Language, Description = streamSpec.Name });
 
             return true;
         }
@@ -546,7 +559,20 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             });
 
-            return Results.Values.All(v => v == true);
+            var success = Results.Values.All(v => v == true);
+
+            //混流
+            if (success && OutputFiles.Count > 0) 
+            {
+                var outName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}";
+                Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}.mkv[/]");
+                var result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, OutputFiles.ToArray(), outName);
+                //完成后删除各轨道文件
+                if (result) OutputFiles.ForEach(f => File.Delete(f.FilePath));
+                else Logger.ErrorMarkUp($"Mux failed");
+            }
+
+            return success;
         }
     }
 }

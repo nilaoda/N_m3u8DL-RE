@@ -36,6 +36,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
         private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
+        private readonly static Option<bool> MuxAfterDone = new (new string[] { "--mux-after-done" }, description: ResString.cmd_muxAfterDone, getDefaultValue: () => false);
         private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath);
 
@@ -73,6 +74,7 @@ namespace N_m3u8DL_RE.CommandLine
                     FFmpegBinaryPath = bindingContext.ParseResult.GetValueForOption(FFmpegBinaryPath),
                     KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                     DownloadRetryCount = bindingContext.ParseResult.GetValueForOption(DownloadRetryCount),
+                    MuxAfterDone = bindingContext.ParseResult.GetValueForOption(MuxAfterDone),
                 };
 
 
@@ -91,10 +93,10 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220819")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220821")
             {
                 Input, TmpDir, SaveDir, SaveName, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                BinaryMerge, DelAfterDone, WriteMetaJson, MuxAfterDone, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption
             };

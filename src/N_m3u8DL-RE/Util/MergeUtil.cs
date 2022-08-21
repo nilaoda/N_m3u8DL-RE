@@ -1,7 +1,9 @@
 ﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Entity;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -46,19 +48,36 @@ namespace N_m3u8DL_RE.Util
             }
         }
 
+        private static void InvokeFFmpeg(string binary, string command, string workingDirectory)
+        {
+            using var p = new Process();
+            p.StartInfo = new ProcessStartInfo()
+            {
+                WorkingDirectory = workingDirectory,
+                FileName = binary,
+                Arguments = command,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            p.ErrorDataReceived += (sendProcess, output) =>
+            {
+                if (!string.IsNullOrEmpty(output.Data))
+                {
+                    Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
+                }
+            };
+            p.Start();
+            p.BeginErrorReadLine();
+            p.WaitForExit();
+        }
+
         public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
             bool fastStart = false,
             bool writeDate = true, string poster = "", string audioName = "", string title = "",
             string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
         {
             string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
-
-            //同名文件已存在的共存策略
-            if (File.Exists($"{outputPath}.{muxFormat.ToLower()}"))
-            {
-                outputPath = Path.Combine(Path.GetDirectoryName(outputPath)!,
-                    Path.GetFileName(outputPath) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
-            }
 
             StringBuilder command = new StringBuilder("-loglevel warning -i concat:\"");
             string ddpAudio = string.Empty;
@@ -112,28 +131,48 @@ namespace N_m3u8DL_RE.Util
 
             Logger.DebugMarkUp($"{binary}: {command}");
 
-            using var p = new Process();
-            p.StartInfo = new ProcessStartInfo()
-            {
-                WorkingDirectory = Path.GetDirectoryName(files[0]),
-                FileName = binary,
-                Arguments = command.ToString(),
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-            p.ErrorDataReceived += (sendProcess, output) =>
-            {
-                if (!string.IsNullOrEmpty(output.Data))
-                {
-                    Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
-                }
-            };
-            p.Start();
-            p.BeginErrorReadLine();
-            p.WaitForExit();
+            InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
 
             if (File.Exists($"{outputPath}.{muxFormat}") && new FileInfo($"{outputPath}.{muxFormat}").Length > 0)
+                return true;
+
+            return false;
+        }
+
+        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath)
+        {
+            string dateString = DateTime.Now.ToString("o");
+            StringBuilder command = new StringBuilder("-loglevel warning -y ");
+
+            //INPUT
+            foreach (var item in files)
+            {
+                command.Append($" -i \"{item.FilePath}\" ");
+            }
+
+            //MAP
+            for (int i = 0; i < files.Length; i++)
+            {
+                command.Append($" -map {i} ");
+            }
+
+            //CLEAN
+            command.Append(" -map_metadata -1 ");
+
+            //LANG and NAME
+            for (int i = 0; i < files.Length; i++)
+            {
+                if (!string.IsNullOrEmpty(files[i].LangCode))
+                    command.Append($" -metadata:s:{i} language={files[i].LangCode} ");
+                if (!string.IsNullOrEmpty(files[i].Description))
+                    command.Append($" -metadata:s:{i} title={files[i].Description} ");
+            }
+
+            command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown -c copy \"{outputPath}.mkv\"");
+
+            InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0].FilePath)!);
+
+            if (File.Exists($"{outputPath}.mkv") && new FileInfo($"{outputPath}.mkv").Length > 1024)
                 return true;
 
             return false;

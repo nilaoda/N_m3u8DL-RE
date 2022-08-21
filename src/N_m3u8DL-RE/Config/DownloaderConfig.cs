@@ -33,6 +33,7 @@ namespace N_m3u8DL_RE.Config
             FFmpegBinaryPath = option.FFmpegBinaryPath;
             KeyTextFile = option.KeyTextFile;
             DownloadRetryCount = option.DownloadRetryCount;
+            MuxAfterDone = option.MuxAfterDone;
         }
 
         /// <summary>
@@ -91,6 +92,10 @@ namespace N_m3u8DL_RE.Config
         /// 使用shaka-packager替代mp4decrypt
         /// </summary>
         public bool UseShakaPackager { get; set; }
+        /// <summary>
+        /// 自动混流音视频
+        /// </summary>
+        public bool MuxAfterDone { get; set; }
         /// <summary>
         /// MP4解密所用工具的全路径
         /// </summary>

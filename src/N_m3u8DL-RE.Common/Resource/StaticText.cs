@@ -220,6 +220,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "使用shaka-packager替代mp4decrypt",
                 enUS: "Use shaka-packager instead of mp4decrypt"
             ),
+            ["cmd_muxAfterDone"] = new TextContainer
+            (
+                zhCN: "所有工作完成时尝试使用ffmpeg混流分离的音视频(mkv)",
+                zhTW: "所有工作完成時嘗試使用ffmpeg混流分離的影音(mkv)",
+                enUS: "When all works is done, try to use ffmpeg to mux the separated audio(s) and video.(mkv)"
+            ),
             ["cmd_writeMetaJson"] = new TextContainer
             (
                 zhCN: "解析后的信息是否输出json文件",
