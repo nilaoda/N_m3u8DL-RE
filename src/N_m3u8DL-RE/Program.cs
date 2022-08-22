@@ -55,6 +55,11 @@ namespace N_m3u8DL_RE
                     throw new ArgumentException("Can't use mkvmerge to make mp4!");
                 }
 
+                if (option.MuxToMp4 && !option.MuxAfterDone)
+                {
+                    throw new ArgumentException("Can't enable MuxToMp4 when MuxAfterDone is false!");
+                }
+
                 //预先检查ffmpeg
                 if (option.FFmpegBinaryPath == null)
                     option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");

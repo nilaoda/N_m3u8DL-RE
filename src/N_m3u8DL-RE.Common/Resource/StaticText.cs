@@ -242,7 +242,7 @@ namespace N_m3u8DL_RE.Common.Resource
             (
                 zhCN: "所有工作完成时尝试使用ffmpeg混流分离的音视频(默认容器: mkv)",
                 zhTW: "所有工作完成時嘗試使用ffmpeg混流分離的影音(默認容器: mkv)",
-                enUS: "When all works is done, try to use ffmpeg to mux the separated streams.(Default: mkv)"
+                enUS: "When all works is done, try to use ffmpeg to mux the separated streams.(Default container: mkv)"
             ),
             ["cmd_muxToMp4"] = new TextContainer
             (
