@@ -94,6 +94,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool MuxAfterDone { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.MuxToMp4"/>.
+        /// </summary>
+        public bool MuxToMp4 { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.UseMkvmerge"/>.
         /// </summary>
         public bool UseMkvmerge { get; set; }

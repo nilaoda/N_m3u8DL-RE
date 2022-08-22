@@ -240,9 +240,15 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_muxAfterDone"] = new TextContainer
             (
-                zhCN: "所有工作完成时尝试使用ffmpeg混流分离的音视频(mkv)",
-                zhTW: "所有工作完成時嘗試使用ffmpeg混流分離的影音(mkv)",
-                enUS: "When all works is done, try to use ffmpeg to mux the separated audio(s) and video.(mkv)"
+                zhCN: "所有工作完成时尝试使用ffmpeg混流分离的音视频(默认容器: mkv)",
+                zhTW: "所有工作完成時嘗試使用ffmpeg混流分離的影音(默認容器: mkv)",
+                enUS: "When all works is done, try to use ffmpeg to mux the separated streams.(Default: mkv)"
+            ),
+            ["cmd_muxToMp4"] = new TextContainer
+            (
+                zhCN: "混流时使用mp4容器而非mkv",
+                zhTW: "混流時使用mp4容器而非mkv",
+                enUS: "Use mp4 container instead of mkv when muxing"
             ),
             ["cmd_writeMetaJson"] = new TextContainer
             (

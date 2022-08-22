@@ -36,6 +36,7 @@ namespace N_m3u8DL_RE.Config
             MuxAfterDone = option.MuxAfterDone;
             UseMkvmerge = option.UseMkvmerge;
             MkvmergeBinaryPath = option.MkvmergeBinaryPath;
+            MuxToMp4 = option.MuxToMp4;
         }
 
         /// <summary>
@@ -98,6 +99,10 @@ namespace N_m3u8DL_RE.Config
         /// 自动混流音视频
         /// </summary>
         public bool MuxAfterDone { get; set; }
+        /// <summary>
+        /// 自动混流音视频容器使用mp4
+        /// </summary>
+        public bool MuxToMp4 { get; set; }
         /// <summary>
         /// 使用mkvmerge混流
         /// </summary>

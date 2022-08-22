@@ -280,7 +280,7 @@ namespace N_m3u8DL_RE.DownloadManager
             //检测目标文件是否存在
             while (File.Exists(output))
             {
-                Logger.WarnMarkUp($"{output} => {output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output))}");
+                Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
             }
 
             if (DownloaderConfig.MP4RealTimeDecryption && mp4InitFile != "")
@@ -492,7 +492,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     //检测目标文件是否存在
                     while (File.Exists(ffOut))
                     {
-                        Logger.WarnMarkUp($"{ffOut} => {ffOut = Path.ChangeExtension(ffOut, $"copy" + Path.GetExtension(ffOut))}");
+                        Logger.WarnMarkUp($"{Path.GetFileName(ffOut)} => {Path.GetFileName(ffOut = Path.ChangeExtension(ffOut, $"copy" + Path.GetExtension(ffOut)))}");
                     }
                     mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter);
                     if (mergeSuccess) output = ffOut;
@@ -582,10 +582,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 var saveDir = DownloaderConfig.SaveDir ?? Environment.CurrentDirectory;
                 var outName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}";
                 var outPath = Path.Combine(saveDir, outName);
-                Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}.mkv[/]");
+                Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}.{(DownloaderConfig.MuxToMp4 ? "mp4" : "mkv")}[/]");
                 var result = false;
                 if (DownloaderConfig.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
-                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath);
+                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MuxToMp4);
                 //完成后删除各轨道文件
                 if (result)
                 {

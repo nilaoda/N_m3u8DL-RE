@@ -13,6 +13,7 @@ using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
+using N_m3u8DL_RE.Entity;
 
 namespace N_m3u8DL_RE
 {
@@ -20,6 +21,7 @@ namespace N_m3u8DL_RE
     {
         static async Task Main(string[] args)
         {
+            Console.CursorVisible = true;
             string loc = "en-US";
             string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
             if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
@@ -47,6 +49,12 @@ namespace N_m3u8DL_RE
 
             try
             {
+                //检查互斥的选项
+                if (option.UseMkvmerge && option.MuxToMp4)
+                {
+                    throw new ArgumentException("Can't use mkvmerge to make mp4!");
+                }
+
                 //预先检查ffmpeg
                 if (option.FFmpegBinaryPath == null)
                     option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -142,8 +143,9 @@ namespace N_m3u8DL_RE.Util
             return false;
         }
 
-        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath)
+        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, bool mp4)
         {
+            var ext = mp4 ? "mp4" : "mkv";
             string dateString = DateTime.Now.ToString("o");
             StringBuilder command = new StringBuilder("-loglevel warning -y ");
 
@@ -159,22 +161,35 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" -map {i} ");
             }
 
+            if (mp4)
+                command.Append($" -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
+            else
+                command.Append($" -c copy ");
+
             //CLEAN
             command.Append(" -map_metadata -1 ");
 
             //LANG and NAME
             for (int i = 0; i < files.Length; i++)
             {
-                command.Append($" -metadata:s:{i} language={files[i].LangCode ?? "und"} ");
+                //转换语言代码
+                ConvertLangCodeAndDisplayName(files[i]);
+                command.Append($" -metadata:s:{i} language=\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
-                    command.Append($" -metadata:s:{i} title={files[i].Description} ");
+                {
+                    if(mp4)
+                        command.Append($" -metadata:s:{i} handler_name=\"{files[i].Description}\" -metadata:s:{i} handler=\"{files[i].Description}\" ");
+                    else
+                        command.Append($" -metadata:s:{i} title=\"{files[i].Description}\" ");
+                }
             }
 
-            command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown -c copy \"{outputPath}.mkv\"");
-
+            command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown ");
+            command.Append($" \"{outputPath}.{ext}\"");
+            
             InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
-            if (File.Exists($"{outputPath}.mkv") && new FileInfo($"{outputPath}.mkv").Length > 1024)
+            if (File.Exists($"{outputPath}.{ext}") && new FileInfo($"{outputPath}.{ext}").Length > 1024)
                 return true;
 
             return false;
@@ -189,7 +204,9 @@ namespace N_m3u8DL_RE.Util
             //LANG and NAME
             for (int i = 0; i < files.Length; i++)
             {
-                command.Append($" --language 0:{files[i].LangCode ?? "und"} ");
+                //转换语言代码
+                ConvertLangCodeAndDisplayName(files[i]);
+                command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                     command.Append($" --track-name 0:\"{files[i].Description}\" ");
                 command.Append($" \"{files[i].FilePath}\" ");
@@ -201,6 +218,29 @@ namespace N_m3u8DL_RE.Util
                 return true;
 
             return false;
+        }
+
+        /// <summary>
+        /// 转换 ISO 639-1 => ISO 639-2
+        /// 且当Description为空时将DisplayName写入
+        /// </summary>
+        /// <param name="outputFile"></param>
+        private static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
+        {
+            if (string.IsNullOrEmpty(outputFile.LangCode)) return;
+            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+            foreach (var c in cultures)
+            {
+                if (outputFile.LangCode.Split('-')[0] == c.TwoLetterISOLanguageName)
+                {
+                    outputFile.LangCode = c.ThreeLetterISOLanguageName;
+                    if (string.IsNullOrEmpty(outputFile.Description))
+                    {
+                        outputFile.Description = c.DisplayName;
+                    }
+                    break;
+                }
+            }
         }
     }
 }

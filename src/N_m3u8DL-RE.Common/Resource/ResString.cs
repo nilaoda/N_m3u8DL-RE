@@ -48,6 +48,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_useShakaPackager { get => GetText("cmd_useShakaPackager"); }
         public static string cmd_useMkvmerge { get => GetText("cmd_useMkvmerge"); }
         public static string cmd_muxAfterDone { get => GetText("cmd_muxAfterDone"); }
+        public static string cmd_muxToMp4 { get => GetText("cmd_muxToMp4"); }
         public static string cmd_writeMetaJson { get => GetText("cmd_writeMetaJson"); }
         public static string fetch { get => GetText("fetch"); }
         public static string ffmpegMerge { get => GetText("ffmpegMerge"); }
