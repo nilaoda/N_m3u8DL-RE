@@ -177,10 +177,7 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" -metadata:s:{i} language=\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
-                    if(mp4)
-                        command.Append($" -metadata:s:{i} handler_name=\"{files[i].Description}\" -metadata:s:{i} handler=\"{files[i].Description}\" ");
-                    else
-                        command.Append($" -metadata:s:{i} title=\"{files[i].Description}\" ");
+                    command.Append($" -metadata:s:{i} title=\"{files[i].Description}\" ");
                 }
             }
 
