@@ -106,8 +106,8 @@ namespace N_m3u8DL_RE.Util
                         + (writeDate ? " -metadata date=\"" + dateString + "\"" : "") +
                         " -metadata encoding_tool=\"" + encodingTool + "\" -metadata title=\"" + title +
                         "\" -metadata copyright=\"" + copyright + "\" -metadata comment=\"" + comment +
-                        $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler_name=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
-                    command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 handler_name=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
+                        $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} title=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
+                    command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
                     if (fastStart)
                         command.Append("-movflags +faststart");
                     command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
