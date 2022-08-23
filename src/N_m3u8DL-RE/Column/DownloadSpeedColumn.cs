@@ -34,8 +34,7 @@ namespace N_m3u8DL_RE.Column
                 SpeedContainer.Reset();
                 DateTimeString = now;
             }
-            var percentage = (int)task.Percentage;
-            var flag = percentage == 100 || percentage == 0;
+            var flag = task.IsFinished || !task.IsStarted;
             var style = flag ? Style.Plain : MyStyle;
             return flag ? new Text("-", style).Centered() : new Text(Speed, style).Centered();
         }
