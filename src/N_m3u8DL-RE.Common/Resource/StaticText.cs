@@ -34,6 +34,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到CENC加密方式，自動開啟二進位制合併",
                 enUS: "When CENC encryption is detected, binary merging is automatically enabled"
             ),
+            ["autoBinaryMerge5"] = new TextContainer
+            (
+                zhCN: "检测到杜比视界内容，混流功能已禁用",
+                zhTW: "檢測到杜比視界內容，混流功能已禁用",
+                enUS: "Dolby Vision content is detected, mux after done is automatically disabled"
+            ),
             ["badM3u8"] = new TextContainer
             (
                 zhCN: "错误的m3u8",
@@ -216,9 +222,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_uiLanguage"] = new TextContainer
             (
-                zhCN: "设置UI语言 (zh-CN, zh-TW, en-US)",
-                zhTW: "設置UI語言 (zh-CN, zh-TW, en-US)",
-                enUS: "Set UI language (zh-CN, zh-TW, en-US)"
+                zhCN: "设置UI语言",
+                zhTW: "設置UI語言",
+                enUS: "Set UI language"
             ),
             ["cmd_urlProcessorArgs"] = new TextContainer
             (

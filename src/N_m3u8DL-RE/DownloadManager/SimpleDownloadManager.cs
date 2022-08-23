@@ -87,6 +87,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
             }
 
+            if (!DownloaderConfig.MuxAfterDone && mediainfos.Any(m => m.DolbyVison == true))
+            {
+                DownloaderConfig.MuxAfterDone = false;
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]");
+            }
+
             if (mediainfos.Where(m => m.Type == "Audio").All(m => m.BaseInfo!.Contains("aac")))
             {
                 useAACFilter = true;
