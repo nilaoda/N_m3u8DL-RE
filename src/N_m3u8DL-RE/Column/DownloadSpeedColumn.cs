@@ -27,6 +27,13 @@ namespace N_m3u8DL_RE.Column
         public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
         {
             var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            var flag = task.IsFinished || !task.IsStarted;
+            //单文件下载汇报进度
+            if (!flag && SpeedContainer.SingleSegment && SpeedContainer.ResponseLength != null)
+            {
+                task.MaxValue = (double)SpeedContainer.ResponseLength;
+                task.Value = SpeedContainer.RDownloaded;
+            }
             //一秒汇报一次即可
             if (DateTimeString != now)
             {
@@ -34,7 +41,6 @@ namespace N_m3u8DL_RE.Column
                 SpeedContainer.Reset();
                 DateTimeString = now;
             }
-            var flag = task.IsFinished || !task.IsStarted;
             var style = flag ? Style.Plain : MyStyle;
             return flag ? new Text("-", style).Centered() : new Text(Speed, style).Centered();
         }

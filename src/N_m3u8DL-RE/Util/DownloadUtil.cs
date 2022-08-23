@@ -51,6 +51,8 @@ namespace N_m3u8DL_RE.Util
             }
             response.EnsureSuccessStatusCode();
             var contentLength = response.Content.Headers.ContentLength;
+            if (speedContainer.SingleSegment) speedContainer.ResponseLength = contentLength;
+
             using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             using var responseStream = await response.Content.ReadAsStreamAsync();
             var buffer = new byte[16 * 1024];

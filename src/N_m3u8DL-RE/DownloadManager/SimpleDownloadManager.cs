@@ -112,11 +112,13 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer)
         {
+            speedContainer.ResetVars();
             bool useAACFilter = false; //ffmpeg合并flag
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
 
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
             if (segments == null) return false;
+            if (segments.Count() == 1) speedContainer.SingleSegment = true;
 
             var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
             var dirName = $"{DownloaderConfig.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
