@@ -22,22 +22,20 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           include-prerelease: true
 
-      - run: |
-          cd src
-          dotnet publish N_m3u8DL-RE -r win-x64 -c Release -o artifact-x64
-          dotnet publish N_m3u8DL-RE -r win-arm64 -c Release -o artifact-arm64
+      - run: dotnet publish src/N_m3u8DL-RE -r win-x64 -c Release -o artifact-x64
+      - run: dotnet publish src/N_m3u8DL-RE -r win-arm64 -c Release -o artifact-arm64
 
       - name: Upload Artifact[win-x64]
         uses: actions/upload-artifact@v1.0.0
         with:
           name: N_m3u8DL-RE_Beta_win-x64
-          path: src/artifact-x64\N_m3u8DL-RE.exe
+          path: artifact-x64\N_m3u8DL-RE.exe
 
       - name: Upload Artifact[win-arm64]
         uses: actions/upload-artifact@v1.0.0
         with:
           name: N_m3u8DL-RE_Beta_win-arm64
-          path: src/artifact-arm64\N_m3u8DL-RE.exe
+          path: artifact-arm64\N_m3u8DL-RE.exe
   
 
   build-linux-x64:
@@ -56,16 +54,14 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           include-prerelease: true
       - run: apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
-      - run: |
-          cd src
-          dotnet publish N_m3u8DL-RE -r linux-x64 -c Release -o artifact
-          strip artifact/N_m3u8DL-RE
+      - run: dotnet publish src/N_m3u8DL-RE -r linux-x64 -c Release -o artifact
+      - run: strip artifact/N_m3u8DL-RE
       
       - name: Upload Artifact[linux-x64]
         uses: actions/upload-artifact@v1.0.0
         with:
           name: N_m3u8DL-RE_Beta_linux-x64
-          path: src/artifact/N_m3u8DL-RE
+          path: artifact/N_m3u8DL-RE
 
   build-linux-arm64:
     
@@ -80,16 +76,14 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           include-prerelease: true
-      - run: | 
-          cd src
-          dotnet publish N_m3u8DL-RE -r linux-arm64 -c Release -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o artifact
-          aarch64-linux-gnu-strip artifact/N_m3u8DL-RE
+      - run: dotnet publish src/N_m3u8DL-RE -r linux-arm64 -c Release -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o artifact
+      - run: aarch64-linux-gnu-strip artifact/N_m3u8DL-RE
       
       - name: Upload Artifact[linux-arm64]
         uses: actions/upload-artifact@v1.0.0
         with:
           name: N_m3u8DL-RE_Beta_linux-arm64
-          path: src/artifact/N_m3u8DL-RE
+          path: artifact/N_m3u8DL-RE
 
   build-mac-x64:
     
@@ -103,16 +97,14 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           include-prerelease: true
-      - run: |
-          cd src
-          dotnet publish N_m3u8DL-RE -r osx-x64 -c Release -o artifact
-          strip artifact/N_m3u8DL-RE
+      - run: dotnet publish src/N_m3u8DL-RE -r osx-x64 -c Release -o artifact
+      - run: strip artifact/N_m3u8DL-RE
       
       - name: Upload Artifact[osx-x64]
         uses: actions/upload-artifact@v1.0.0
         with:
           name: N_m3u8DL-RE_Beta_osx-x64
-          path: src/artifact/N_m3u8DL-RE
+          path: artifact/N_m3u8DL-RE
           
   build-mac-arm64:
     
@@ -128,12 +120,10 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           include-prerelease: true
-      - run: |
-          cd src
-          dotnet publish N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 -p:PublishTrimmed=true -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
+      - run: dotnet publish src/N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 -p:PublishTrimmed=true -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
       
       - name: Upload Artifact[osx-x64]
         uses: actions/upload-artifact@v1.0.0
         with:
           name: N_m3u8DL-RE_Beta_osx-arm64
-          path: src/artifact-arm64/N_m3u8DL-RE
+          path: artifact-arm64/N_m3u8DL-RE
