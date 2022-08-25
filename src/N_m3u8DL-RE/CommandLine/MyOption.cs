@@ -1,4 +1,5 @@
 ﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.CommandLine
@@ -12,7 +13,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <summary>
         /// See: <see cref="CommandInvoker.Headers"/>.
         /// </summary>
-        public string[]? Headers { get; set; }
+        public Dictionary<string,string> Headers { get; set; } = new Dictionary<string,string>();
         /// <summary>
         /// See: <see cref="CommandInvoker.Keys"/>.
         /// </summary>
@@ -137,5 +138,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.MkvmergeBinaryPath"/>.
         /// </summary>
         public string? MkvmergeBinaryPath { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.MuxImports"/>.
+        /// </summary>
+        public List<OutputFile>? MuxImports { get; set; }
+        public bool MuxKeepFiles { get; set; }
     }
 }

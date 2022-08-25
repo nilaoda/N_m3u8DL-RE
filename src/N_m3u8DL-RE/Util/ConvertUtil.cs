@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.Util
                     var index = header.IndexOf(':');
                     if (index != -1)
                     {
-                        dic[header[..index].Trim()] = header[(index + 1)..].Trim();
+                        dic[header[..index].Trim().ToLower()] = header[(index + 1)..].Trim();
                     }
                 }
             }

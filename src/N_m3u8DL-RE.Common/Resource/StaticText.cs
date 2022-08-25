@@ -246,9 +246,72 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_muxAfterDone"] = new TextContainer
             (
-                zhCN: "所有工作完成时尝试使用ffmpeg混流分离的音视频(默认容器: mkv)",
-                zhTW: "所有工作完成時嘗試使用ffmpeg混流分離的影音(默認容器: mkv)",
-                enUS: "When all works is done, try to use ffmpeg to mux the separated streams.(Default container: mkv)"
+                zhCN: "所有工作完成时尝试混流分离的音视频. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
+                      "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
+                      "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)\r\n" +
+                      "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
+                      "* keep=BOOL: 混流完成是否删除文件 true, false (默认: true)\r\n\r\n" +
+                      "例如: \r\n" +
+                      "\r\n#混流为mp4容器\r\n" +
+                      "-M format=mp4\r\n" +
+                      "\r\n#使用mkvmerge, 自动寻找程序\r\n" +
+                      "-M format=mkv:muxer=mkvmerge\r\n" +
+                      "\r\n#使用mkvmerge, 自定义程序路径\r\n" +
+                      "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
+                zhTW: "所有工作完成時嘗試混流分離的影音. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
+                      "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
+                      "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默認: ffmpeg)\r\n" +
+                      "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
+                      "* keep=BOOL: 混流完成是否刪除文件 true, false (默認: true)\r\n\r\n" +
+                      "例如: \r\n" +
+                      "\r\n#混流為mp4容器\r\n" +
+                      "-M format=mp4\r\n" +
+                      "\r\n#使用mkvmerge, 自動尋找程序\r\n" +
+                      "-M format=mkv:muxer=mkvmerge\r\n" +
+                      "\r\n#使用mkvmerge, 自訂程序路徑\r\n" +
+                      "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
+                enUS: "When all works is done, try to mux the downloaded streams. OPTIONS is a colon separated list of:\r\n\r\n" +
+                      "* format=FORMAT: set container. mkv, mp4\r\n" +
+                      "* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)\r\n" +
+                      "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
+                      "* keep=BOOL: set whether or not delete files. true, false (Default: true)\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "\r\n#mux to mp4\r\n" +
+                      "-M format=mp4\r\n" +
+                      "\r\n#use mkvmerge, auto detect bin path\r\n" +
+                      "-M format=mkv:muxer=mkvmerge\r\n" +
+                      "\r\n#use mkvmerge, set bin path\r\n" +
+                      "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n"
+            ),
+            ["cmd_muxImport"] = new TextContainer
+            (
+                zhCN: "混流时引入外部媒体文件. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
+                      "* path=PATH: 指定媒体文件路径\r\n" +
+                      "* lang=CODE: 指定媒体文件语言代码 (非必须)\r\n" +
+                      "* name=NAME: 指定媒体文件描述信息 (非必须)\r\n\r\n" +
+                      "例如: \r\n" +
+                      "\r\n#引入外部字幕\r\n" +
+                      "--mux-import path=zh-Hans.srt:lang=chi:name=\"中文 (简体)\"\r\n" +
+                      "\r\n#引入外部音轨+字幕\r\n" +
+                      "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\"",
+                zhTW: "混流時引入外部媒體檔案. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
+                      "* path=PATH: 指定媒體檔案路徑\r\n" +
+                      "* lang=CODE: 指定媒體檔案語言代碼 (非必須)\r\n" +
+                      "* name=NAME: 指定媒體檔案描述訊息 (非必須)\r\n\r\n" +
+                      "例如: \r\n" +
+                      "\r\n#引入外部字幕\r\n" +
+                      "--mux-import path=zh-Hant.srt:lang=chi:name=\"中文 (繁體)\"\r\n" +
+                      "\r\n#引入外部音軌+字幕\r\n" +
+                      "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\"",
+                enUS: "When MuxAfterDone enabled, allow to import local media files. OPTIONS is a colon separated list of:\r\n\r\n" +
+                      "* path=PATH: set file path\r\n" +
+                      "* lang=CODE: set media language code (not required)\r\n" +
+                      "* name=NAME: set description (not required)\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "\r\n#import subtitle\r\n" +
+                      "--mux-import path=en-US.srt:lang=eng:name=\"English (Original)\"\r\n" +
+                      "\r\n#import audio and subtitle\r\n" +
+                      "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\""
             ),
             ["cmd_muxToMp4"] = new TextContainer
             (

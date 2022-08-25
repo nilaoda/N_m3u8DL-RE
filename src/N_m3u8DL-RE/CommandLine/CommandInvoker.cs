@@ -1,8 +1,11 @@
 ﻿using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Util;
 using System.CommandLine;
 using System.CommandLine.Binding;
+using System.CommandLine.Parsing;
 using System.Globalization;
 using System.Linq;
 
@@ -17,9 +20,9 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> SavePattern = new(new string[] { "--save-pattern" }, description: ResString.cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
         private readonly static Option<string?> UILanguage = new Option<string?>(new string[] { "--ui-language" }, description: ResString.cmd_uiLanguage).FromAmong("en-US", "zh-CN", "zh-TW");
         private readonly static Option<string?> UrlProcessorArgs = new(new string[] { "--urlprocessor-args" }, description: ResString.cmd_urlProcessorArgs);
-        private readonly static Option<string[]?> Keys = new(new string[] { "--key" }, description: ResString.cmd_keys) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
+        private readonly static Option<string[]?> Keys = new(new string[] { "--key" }, description: ResString.cmd_keys) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<string> KeyTextFile = new(new string[] { "--key-text-file" }, description: ResString.cmd_keyText);
-        private readonly static Option<string[]?> Headers = new(new string[] { "-H", "--header" }, description: ResString.cmd_header) { Arity = ArgumentArity.ZeroOrMore, AllowMultipleArgumentsPerToken = false };
+        private readonly static Option<Dictionary<string, string>> Headers = new(new string[] { "-H", "--header" }, description: ResString.cmd_header, parseArgument: ParseHeaders) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
         private readonly static Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
         private readonly static Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enum.SubtitleFormat.VTT);
         private readonly static Option<bool> AutoSelect = new(new string[] { "--auto-select" }, description: ResString.cmd_autoSelect, getDefaultValue: () => false);
@@ -36,13 +39,117 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
         private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
-        private readonly static Option<bool> MuxAfterDone = new (new string[] { "--mux-after-done" }, description: ResString.cmd_muxAfterDone, getDefaultValue: () => false);
-        private readonly static Option<bool> MuxToMp4 = new (new string[] { "--mux-to-mp4" }, description: ResString.cmd_muxToMp4, getDefaultValue: () => false);
-        private readonly static Option<bool> UseMkvmerge = new(new string[] { "--use-mkvmerge" }, description: ResString.cmd_useMkvmerge, getDefaultValue: () => false);
         private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath);
-        private readonly static Option<string?> MkvmergeBinaryPath = new(new string[] { "--mkvmerge-binary-path" }, description: ResString.cmd_mkvmergeBinaryPath);
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
+
+        //复杂命令行如下
+        private readonly static Option<MuxOptions?> MuxAfterDone = new(new string[] { "-M", "--mux-after-done" }, description: ResString.cmd_muxAfterDone, parseArgument: ParseMuxAfterDone) { ArgumentHelpName = "OPTIONS" };
+        private readonly static Option<List<OutputFile>> MuxImports = new("--mux-import", description: ResString.cmd_muxImport, parseArgument: ParseImports) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, ArgumentHelpName = "OPTIONS" };
+
+
+        /// <summary>
+        /// 分割Header
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static Dictionary<string, string> ParseHeaders(ArgumentResult result)
+        {
+            //默认的Headers
+            var headers = new Dictionary<string, string>()
+            {
+                ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
+            };
+            var array = result.Tokens.Select(t => t.Value).ToArray();
+            var otherHeaders = ConvertUtil.SplitHeaderArrayToDic(array);
+            foreach (var h in otherHeaders)
+            {
+                headers[h.Key] = h.Value;
+            }
+            return headers;
+        }
+
+        /// <summary>
+        /// 解析混流引入的外部文件
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static List<OutputFile> ParseImports(ArgumentResult result)
+        {
+            var imports = new List<OutputFile>();
+
+            foreach (var item in result.Tokens)
+            {
+                var p = new ComplexParamParser(item.Value);
+                var path = p.GetValue("path");
+                var lang = p.GetValue("lang") ?? "und";
+                var name = p.GetValue("name");
+                if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                {
+                    result.ErrorMessage = "path empty or file not exists!";
+                    return imports;
+                }
+                imports.Add(new OutputFile()
+                {
+                    FilePath = path,
+                    LangCode = lang,
+                    Description = name
+                });
+            }
+
+            return imports;
+        }
+
+        /// <summary>
+        /// 解析混流选项
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static MuxOptions? ParseMuxAfterDone(ArgumentResult result)
+        {
+            var p = new ComplexParamParser(result.Tokens.First().Value);
+            //混流格式
+            var format = p.GetValue("format");
+            if (format != "mp4" && format != "mkv")
+            {
+                result.ErrorMessage = $"format={format} not valid";
+                return null;
+            }
+            //混流器
+            var muxer = p.GetValue("muxer") ?? "ffmpeg";
+            if (muxer != "ffmpeg" && muxer != "mkvmerge")
+            {
+                result.ErrorMessage = $"muxer={muxer} not valid";
+                return null;
+            }
+            //混流器路径
+            var bin_path = p.GetValue("bin_path") ?? "auto";
+            if (string.IsNullOrEmpty(bin_path))
+            {
+                result.ErrorMessage = $"bin_path={bin_path} not valid";
+                return null;
+            }
+            //是否删除
+            var keep = p.GetValue("keep") ?? "false";
+            if (keep != "true" && keep != "false")
+            {
+                result.ErrorMessage = $"keep={keep} not valid";
+                return null;
+            }
+            //冲突检测
+            if (muxer == "mkvmerge" && format == "mp4")
+            {
+                result.ErrorMessage = $"mkvmerge can not do mp4";
+                return null;
+            }
+            return new MuxOptions()
+            {
+                UseMkvmerge = muxer == "mkvmerge",
+                MuxToMp4 = format == "mp4",
+                KeepFiles = keep == "true",
+                BinPath = bin_path == "auto" ? null : bin_path
+            };
+        }
 
         class MyOptionBinder : BinderBase<MyOption>
         {
@@ -51,7 +158,7 @@ namespace N_m3u8DL_RE.CommandLine
                 var option = new MyOption
                 {
                     Input = bindingContext.ParseResult.GetValueForArgument(Input),
-                    Headers = bindingContext.ParseResult.GetValueForOption(Headers),
+                    Headers = bindingContext.ParseResult.GetValueForOption(Headers)!,
                     LogLevel = bindingContext.ParseResult.GetValueForOption(LogLevel),
                     AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
                     SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
@@ -78,10 +185,8 @@ namespace N_m3u8DL_RE.CommandLine
                     FFmpegBinaryPath = bindingContext.ParseResult.GetValueForOption(FFmpegBinaryPath),
                     KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                     DownloadRetryCount = bindingContext.ParseResult.GetValueForOption(DownloadRetryCount),
-                    MuxAfterDone = bindingContext.ParseResult.GetValueForOption(MuxAfterDone),
-                    UseMkvmerge = bindingContext.ParseResult.GetValueForOption(UseMkvmerge),
                     BaseUrl = bindingContext.ParseResult.GetValueForOption(BaseUrl),
-                    MuxToMp4 = bindingContext.ParseResult.GetValueForOption(MuxToMp4),
+                    MuxImports = bindingContext.ParseResult.GetValueForOption(MuxImports),
                 };
 
 
@@ -93,6 +198,19 @@ namespace N_m3u8DL_RE.CommandLine
                     Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(option.UILanguage);
                 }
 
+                //混流设置
+                var muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
+                if (muxAfterDoneValue != null) 
+                {
+                    option.MuxAfterDone = true;
+                    option.MuxKeepFiles = muxAfterDoneValue.KeepFiles;
+                    option.MuxToMp4 = muxAfterDoneValue.MuxToMp4;
+                    option.UseMkvmerge = muxAfterDoneValue.UseMkvmerge;
+                    if (option.UseMkvmerge) option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;
+                    else option.FFmpegBinaryPath = muxAfterDoneValue.BinPath;
+                }
+
+
                 return option;
             }
         }
@@ -100,12 +218,13 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220823")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220825")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, WriteMetaJson, MuxAfterDone, MuxToMp4, UseMkvmerge, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
-                FFmpegBinaryPath, MkvmergeBinaryPath,
-                LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption
+                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                FFmpegBinaryPath,
+                LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
+                MuxAfterDone, MuxImports
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

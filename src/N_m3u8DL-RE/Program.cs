@@ -50,14 +50,10 @@ namespace N_m3u8DL_RE
             try
             {
                 //检查互斥的选项
-                if (option.UseMkvmerge && option.MuxToMp4)
-                {
-                    throw new ArgumentException("Can't use mkvmerge to make mp4!");
-                }
 
-                if (option.MuxToMp4 && !option.MuxAfterDone)
+                if (!option.MuxAfterDone && option.MuxImports != null && option.MuxImports.Count > 0)
                 {
-                    throw new ArgumentException("Can't enable MuxToMp4 when MuxAfterDone is false!");
+                    throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
                 }
 
                 //预先检查ffmpeg
@@ -111,14 +107,9 @@ namespace N_m3u8DL_RE
                 {
                     AppendUrlParams = option.AppendUrlParams,
                     UrlProcessorArgs = option.UrlProcessorArgs,
-                    BaseUrl = option.BaseUrl!
+                    BaseUrl = option.BaseUrl!,
+                    Headers = option.Headers
                 };
-
-                //设置Headers
-                foreach (var item in ConvertUtil.SplitHeaderArrayToDic(option.Headers))
-                {
-                    parserConfig.Headers[item.Key] = item.Value;
-                }
 
                 //demo1
                 parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
@@ -254,9 +245,10 @@ namespace N_m3u8DL_RE
 #endif
 
                 //下载配置
-                var downloadConfig = new DownloaderConfig(option)
+                var downloadConfig = new DownloaderConfig()
                 {
-                    Headers = parserConfig.Headers,
+                    MyOptions = option,
+                    Headers = parserConfig.Headers, //使用命令行解析得到的Headers
                 };
                 //开始下载
                 var sdm = new SimpleDownloadManager(downloadConfig);

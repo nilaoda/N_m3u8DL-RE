@@ -11,10 +11,7 @@ namespace N_m3u8DL_RE.Parser.Config
 
         public string BaseUrl { get; set; }
 
-        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>()
-        {
-            ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
-        };
+        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// 内容前置处理器. 调用顺序与列表顺序相同
