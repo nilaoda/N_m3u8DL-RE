@@ -25,6 +25,8 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? Channels { get; set; }
         public string? Extension { get; set; }
 
+        //补充信息-色域
+        public string? VideoRange { get; set; }
 
         //外部轨道GroupId (后续寻找对应轨道信息)
         public string? AudioId { get; set; }
@@ -58,7 +60,7 @@ namespace N_m3u8DL_RE.Common.Entity
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange}";
                 returnStr = d.EscapeMarkup();
             }
 
@@ -101,7 +103,7 @@ namespace N_m3u8DL_RE.Common.Entity
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {segmentsCountStr}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr}";
                 returnStr = d.EscapeMarkup();
             }
 

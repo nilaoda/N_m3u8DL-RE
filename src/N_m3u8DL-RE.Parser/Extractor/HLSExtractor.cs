@@ -125,6 +125,16 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     if (!string.IsNullOrEmpty(subtitleId))
                         streamSpec.SubtitleId = subtitleId;
 
+                    var videoRange = ParserUtil.GetAttribute(line, "VIDEO-RANGE");
+                    if (!string.IsNullOrEmpty(videoRange))
+                        streamSpec.VideoRange = videoRange;
+
+                    //清除多余的编码信息 dvh1.05.06,ec-3 => dvh1.05.06
+                    if (!string.IsNullOrEmpty(streamSpec.Codecs) && !string.IsNullOrEmpty(streamSpec.AudioId))
+                    {
+                        streamSpec.Codecs = streamSpec.Codecs.Split(',')[0];
+                    }
+
                     expectPlaylist = true;
                 }
                 else if (line.StartsWith(HLSTags.ext_x_media))
