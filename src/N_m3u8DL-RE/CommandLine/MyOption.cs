@@ -13,7 +13,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <summary>
         /// See: <see cref="CommandInvoker.Headers"/>.
         /// </summary>
-        public Dictionary<string,string> Headers { get; set; } = new Dictionary<string,string>();
+        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
         /// <summary>
         /// See: <see cref="CommandInvoker.Keys"/>.
         /// </summary>

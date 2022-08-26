@@ -56,18 +56,8 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static Dictionary<string, string> ParseHeaders(ArgumentResult result)
         {
-            //默认的Headers
-            var headers = new Dictionary<string, string>()
-            {
-                ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
-            };
             var array = result.Tokens.Select(t => t.Value).ToArray();
-            var otherHeaders = ConvertUtil.SplitHeaderArrayToDic(array);
-            foreach (var h in otherHeaders)
-            {
-                headers[h.Key] = h.Value;
-            }
-            return headers;
+            return ConvertUtil.SplitHeaderArrayToDic(array);
         }
 
         /// <summary>

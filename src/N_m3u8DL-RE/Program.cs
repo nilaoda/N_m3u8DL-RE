@@ -13,7 +13,6 @@ using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
-using N_m3u8DL_RE.Entity;
 
 namespace N_m3u8DL_RE
 {
@@ -103,12 +102,23 @@ namespace N_m3u8DL_RE
                     }
                 }
 
+                //默认的headers
+                var headers = new Dictionary<string, string>()
+                {
+                    ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
+                };
+                //添加或替换用户输入的headers
+                foreach (var item in option.Headers)
+                {
+                    headers[item.Key] = item.Value;
+                }
+
                 var parserConfig = new ParserConfig()
                 {
                     AppendUrlParams = option.AppendUrlParams,
                     UrlProcessorArgs = option.UrlProcessorArgs,
                     BaseUrl = option.BaseUrl!,
-                    Headers = option.Headers
+                    Headers = headers
                 };
 
                 //demo1
