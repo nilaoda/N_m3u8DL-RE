@@ -72,8 +72,8 @@ namespace N_m3u8DL_RE.CommandLine
             foreach (var item in result.Tokens)
             {
                 var p = new ComplexParamParser(item.Value);
-                var path = p.GetValue("path");
-                var lang = p.GetValue("lang") ?? "und";
+                var path = p.GetValue("path") ?? item.Value; //若未获取到，直接整个字符串作为path
+                var lang = p.GetValue("lang");
                 var name = p.GetValue("name");
                 if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 {
@@ -99,9 +99,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static MuxOptions? ParseMuxAfterDone(ArgumentResult result)
         {
-            var p = new ComplexParamParser(result.Tokens.First().Value);
+            var v = result.Tokens.First().Value;
+            var p = new ComplexParamParser(v);
             //混流格式
-            var format = p.GetValue("format");
+            var format = p.GetValue("format") ?? v; //若未获取到，直接整个字符串作为format解析
             if (format != "mp4" && format != "mkv")
             {
                 result.ErrorMessage = $"format={format} not valid";
@@ -150,7 +151,6 @@ namespace N_m3u8DL_RE.CommandLine
                 var option = new MyOption
                 {
                     Input = bindingContext.ParseResult.GetValueForArgument(Input),
-                    Headers = bindingContext.ParseResult.GetValueForOption(Headers)!,
                     LogLevel = bindingContext.ParseResult.GetValueForOption(LogLevel),
                     AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
                     SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
@@ -181,6 +181,10 @@ namespace N_m3u8DL_RE.CommandLine
                     MuxImports = bindingContext.ParseResult.GetValueForOption(MuxImports),
                     ConcurrentDownload = bindingContext.ParseResult.GetValueForOption(ConcurrentDownload),
                 };
+
+                var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
+                if (parsedHeaders != null)
+                    option.Headers = parsedHeaders;
 
 
                 //以用户选择语言为准优先
