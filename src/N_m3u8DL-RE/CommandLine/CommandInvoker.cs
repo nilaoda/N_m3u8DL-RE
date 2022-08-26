@@ -92,6 +92,7 @@ namespace N_m3u8DL_RE.CommandLine
                 }
                 imports.Add(new OutputFile()
                 {
+                    Index = 999,
                     FilePath = path,
                     LangCode = lang,
                     Description = name

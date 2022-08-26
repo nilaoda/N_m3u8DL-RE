@@ -119,6 +119,7 @@ namespace N_m3u8DL_RE
                 parserConfig.UrlProcessors.Insert(0, new NowehoryzontyUrlProcessor());
 
                 var url = string.Empty;
+                //url = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/hls/subscription/playlist.m3u8?cc=US&svcId=tvs.vds.4105&a=1580273278&isExternal=true&brandId=tvs.sbd.4000&id=337246031&l=en-US&aec=UHD&xtrick=true&webbrowser=true"; //啥都有
                 //url = "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd"; //多音轨多字幕
                 //url = "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"; //直播
                 //url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
@@ -127,7 +128,6 @@ namespace N_m3u8DL_RE
                 //url = "http://tv-live.ynkmit.com/tv/anning.m3u8?txSecret=7528f35fb4b62bd24d55b891899db68f&txTime=632C8680"; //直播
                 //url = "https://rest-as.ott.kaltura.com/api_v3/service/assetFile/action/playManifest/partnerId/147/assetId/1304099/assetType/media/assetFileId/16136929/contextType/PLAYBACK/isAltUrl/False/ks/djJ8MTQ3fMusTFH6PCZpcrfKLQwI-pPm9ex6b6r49wioe32WH2udXeM4reyWIkSDpi7HhvhxBHAHAKiHrcnkmIJQpyAt4MuDBG0ywGQ-jOeqQFcTRQ8BGJGw6g-smSBLwSbo4CCx9M9vWNJX3GkOfhoMAY4yRU-ur3okHiVq1mUJ82XBd_iVqLuzodnc9sJEtcHH0zc5CoPiTq2xor-dq3yDURnZm3isfSN3t9uLIJEW09oE-SJ84DM5GUuFUdbnIV8bdcWUsPicUg-Top1G2D3WcWXq4EvPnwvD8jrC_vsiOpLHf5akAwtdGsJ6__cXUmT7a-QlfjdvaZ5T8UhDLnttHmsxYs2E5c0lh4uOvvJou8dD8iYxUexlPI2j4QUkBRxqOEVLSNV3Y82-5TTRqgnK_uGYXHwk7EAmDws7hbLj2-DJ1heXDcye3OJYdunJgAS-9ma5zmQQNiY_HYh6wj2N1HpCTNAtWWga6R9fC0VgBTZbidW-YwMSGzIvMQfIfWKe15X7Oc_hCs-zGfW9XeRJZrutcWKK_D_HlzpQVBF2vIF3XgaI/a.mpd";
                 //url = "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd";
-                //url = "http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8";
                 url = "https://cmaf.lln.latam.hbomaxcdn.com/videos/GYPGKMQjoDkVLBQEAAAAo/1/1b5ad5/1_single_J8sExA_1080hi.mpd";
                 //url = "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"; //ttml + mp4
                 //url = "http://media.axprod.net/TestVectors/v6-Clear/Manifest_1080p.mpd"; //vtt + mp4

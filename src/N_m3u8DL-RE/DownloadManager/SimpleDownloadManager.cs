@@ -543,7 +543,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
             //记录所有文件信息
             if (File.Exists(output))
-                OutputFiles.Add(new OutputFile() { FilePath = output, LangCode = streamSpec.Language, Description = streamSpec.Name });
+                OutputFiles.Add(new OutputFile() { Index = task.Id, FilePath = output, LangCode = streamSpec.Language, Description = streamSpec.Name });
 
             return true;
         }
@@ -603,6 +603,7 @@ namespace N_m3u8DL_RE.DownloadManager
             //混流
             if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0) 
             {
+                OutputFiles = OutputFiles.OrderBy(o => o.Index).ToList();
                 if (DownloaderConfig.MyOptions.MuxImports != null)
                 {
                     OutputFiles.AddRange(DownloaderConfig.MyOptions.MuxImports);

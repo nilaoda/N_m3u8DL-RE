@@ -158,7 +158,7 @@ namespace N_m3u8DL_RE.Util
             //MAP
             for (int i = 0; i < files.Length; i++)
             {
-                command.Append($" -map {i} ");
+                command.Append($" -map {i}:0 ");
             }
 
             if (mp4)
@@ -225,10 +225,11 @@ namespace N_m3u8DL_RE.Util
         private static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
         {
             if (string.IsNullOrEmpty(outputFile.LangCode)) return;
+            outputFile.LangCode = outputFile.LangCode.Split('-')[0];
             CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
             foreach (var c in cultures)
             {
-                if (outputFile.LangCode.Split('-')[0] == c.TwoLetterISOLanguageName)
+                if (outputFile.LangCode == c.TwoLetterISOLanguageName)
                 {
                     outputFile.LangCode = c.ThreeLetterISOLanguageName;
                     if (string.IsNullOrEmpty(outputFile.Description))
@@ -240,8 +241,8 @@ namespace N_m3u8DL_RE.Util
             }
             //有的播放器不识别zho，统一转为chi
             if (outputFile.LangCode == "zho") outputFile.LangCode = "chi";
-            if (outputFile.LangCode == "cmn") outputFile.LangCode = "chi";
-            if (outputFile.LangCode == "yue") outputFile.LangCode = "chi";
+            else if (outputFile.LangCode == "cmn") outputFile.LangCode = "chi";
+            else if (outputFile.LangCode == "yue") outputFile.LangCode = "chi";
         }
     }
 }
