@@ -238,6 +238,10 @@ namespace N_m3u8DL_RE.Util
                     break;
                 }
             }
+            //有的播放器不识别zho，统一转为chi
+            if (outputFile.LangCode == "zho") outputFile.LangCode = "chi";
+            if (outputFile.LangCode == "cmn") outputFile.LangCode = "chi";
+            if (outputFile.LangCode == "yue") outputFile.LangCode = "chi";
         }
     }
 }

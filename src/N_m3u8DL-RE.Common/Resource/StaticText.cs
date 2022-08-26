@@ -244,6 +244,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "混流时使用mkvmerge替代ffmpeg",
                 enUS: "Use mkvmerge instead of ffmpeg to mux"
             ),
+            ["cmd_concurrentDownload"] = new TextContainer
+            (
+                zhCN: "并发下载已选择的音频、视频和字幕",
+                zhTW: "並發下載已選擇的音訊、影片和字幕",
+                enUS: "Concurrently download the selected audio, video and subtitles"
+            ),
             ["cmd_muxAfterDone"] = new TextContainer
             (
                 zhCN: "所有工作完成时尝试混流分离的音视频. 你能够以:分隔形式指定如下参数:\r\n\r\n" +

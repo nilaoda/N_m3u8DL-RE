@@ -110,6 +110,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
+
         private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer)
         {
             speedContainer.ResetVars();
@@ -549,7 +550,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         public async Task<bool> StartDownloadAsync(IEnumerable<StreamSpec> streamSpecs)
         {
-            SpeedContainer speedContainer = new SpeedContainer(); //速度计算
+            ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
 
             var progress = AnsiConsole.Progress().AutoClear(true);
@@ -560,7 +561,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new ProgressBarColumn(),
                 new PercentageColumn(),
-                new DownloadSpeedColumn(speedContainer), //速度计算
+                new DownloadSpeedColumn(SpeedContainerDic), //速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
             });
@@ -571,14 +572,29 @@ namespace N_m3u8DL_RE.DownloadManager
                 var dic = streamSpecs.Select(item =>
                 {
                     var task = ctx.AddTask(item.ToShortString(), autoStart: false);
+                    SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算
                     return (item, task);
                 }).ToDictionary(item => item.item, item => item.task);
-                //遍历，顺序下载
-                foreach (var kp in dic)
+
+                if (!DownloaderConfig.MyOptions.ConcurrentDownload)
                 {
-                    var task = kp.Value;
-                    var result = await DownloadStreamAsync(kp.Key, task, speedContainer);
-                    Results[kp.Key] = result;
+                    //遍历，顺序下载
+                    foreach (var kp in dic)
+                    {
+                        var task = kp.Value;
+                        var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
+                        Results[kp.Key] = result;
+                    }
+                }
+                else
+                {
+                    //并发下载
+                    await Parallel.ForEachAsync(dic, async (kp, _) =>
+                    {
+                        var task = kp.Value;
+                        var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
+                        Results[kp.Key] = result;
+                    });
                 }
             });
 

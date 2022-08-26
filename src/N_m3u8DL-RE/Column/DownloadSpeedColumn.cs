@@ -3,6 +3,7 @@ using N_m3u8DL_RE.Entity;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,37 +13,40 @@ namespace N_m3u8DL_RE.Column
 {
     internal sealed class DownloadSpeedColumn : ProgressColumn
     {
-        private string DateTimeString = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        private string Speed = "0Bps";
+        private ConcurrentDictionary<int, string> DateTimeStringDic = new();
+        private ConcurrentDictionary<int, string> SpeedDic = new();
         protected override bool NoWrap => true;
-        public SpeedContainer SpeedContainer { get; set; }
+        public ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; }
 
-        public DownloadSpeedColumn(SpeedContainer SpeedContainer)
+        public DownloadSpeedColumn(ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic)
         {
-            this.SpeedContainer = SpeedContainer;
+            this.SpeedContainerDic = SpeedContainerDic;
         }
 
         public Style MyStyle { get; set; } = new Style(foreground: Color.Green);
 
         public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
         {
+            var taskId = task.Id;
+            var speedContainer = SpeedContainerDic[taskId];
             var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var flag = task.IsFinished || !task.IsStarted;
             //单文件下载汇报进度
-            if (!flag && SpeedContainer.SingleSegment && SpeedContainer.ResponseLength != null)
+            if (!flag && speedContainer.SingleSegment && speedContainer.ResponseLength != null)
             {
-                task.MaxValue = (double)SpeedContainer.ResponseLength;
-                task.Value = SpeedContainer.RDownloaded;
+                task.MaxValue = (double)speedContainer.ResponseLength;
+                task.Value = speedContainer.RDownloaded;
             }
             //一秒汇报一次即可
-            if (DateTimeString != now)
+            if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now) 
             {
-                Speed = FormatFileSize(SpeedContainer.Downloaded);
-                SpeedContainer.Reset();
-                DateTimeString = now;
+                SpeedDic[taskId] = FormatFileSize(speedContainer.Downloaded);
+                speedContainer.Reset();
             }
+            DateTimeStringDic[taskId] = now;
             var style = flag ? Style.Plain : MyStyle;
-            return flag ? new Text("-", style).Centered() : new Text(Speed, style).Centered();
+            SpeedDic.TryGetValue(taskId, out var speed);
+            return flag ? new Text("-", style).Centered() : new Text(speed ?? "0Bps", style).Centered();
         }
 
         private static string FormatFileSize(double fileSize)

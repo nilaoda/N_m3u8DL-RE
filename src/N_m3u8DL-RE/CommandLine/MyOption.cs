@@ -103,6 +103,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool UseMkvmerge { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.ConcurrentDownload"/>.
+        /// </summary>
+        public bool ConcurrentDownload { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>
         public SubtitleFormat SubtitleFormat { get; set; }

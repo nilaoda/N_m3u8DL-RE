@@ -42,6 +42,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath);
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
+        private readonly static Option<bool> ConcurrentDownload = new(new string[] { "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
 
         //复杂命令行如下
         private readonly static Option<MuxOptions?> MuxAfterDone = new(new string[] { "-M", "--mux-after-done" }, description: ResString.cmd_muxAfterDone, parseArgument: ParseMuxAfterDone) { ArgumentHelpName = "OPTIONS" };
@@ -187,6 +188,7 @@ namespace N_m3u8DL_RE.CommandLine
                     DownloadRetryCount = bindingContext.ParseResult.GetValueForOption(DownloadRetryCount),
                     BaseUrl = bindingContext.ParseResult.GetValueForOption(BaseUrl),
                     MuxImports = bindingContext.ParseResult.GetValueForOption(MuxImports),
+                    ConcurrentDownload = bindingContext.ParseResult.GetValueForOption(ConcurrentDownload),
                 };
 
 
@@ -218,10 +220,10 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220825")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220826")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone, MuxImports
