@@ -21,7 +21,7 @@ namespace N_m3u8DL_RE
     {
         static async Task Main(string[] args)
         {
-            Console.CursorVisible = true;
+            try { Console.CursorVisible = true; } catch { }
             string loc = "en-US";
             string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
             if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
