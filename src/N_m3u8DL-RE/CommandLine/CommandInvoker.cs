@@ -102,7 +102,7 @@ namespace N_m3u8DL_RE.CommandLine
             var v = result.Tokens.First().Value;
             var p = new ComplexParamParser(v);
             //混流格式
-            var format = p.GetValue("format") ?? v; //若未获取到，直接整个字符串作为format解析
+            var format = p.GetValue("format") ?? v.Split(':')[0]; //若未获取到，直接:前的字符串作为format解析
             if (format != "mp4" && format != "mkv")
             {
                 result.ErrorMessage = $"format={format} not valid";
