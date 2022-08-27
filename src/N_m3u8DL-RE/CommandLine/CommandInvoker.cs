@@ -75,7 +75,7 @@ namespace N_m3u8DL_RE.CommandLine
             else
             {
                 forStr = p.GetValue("for") ?? "best";
-                if (forStr != ForStrRegex().Match(input).Value)
+                if (forStr != ForStrRegex().Match(forStr).Value)
                 {
                     result.ErrorMessage = $"for={forStr} not valid";
                     return null;
