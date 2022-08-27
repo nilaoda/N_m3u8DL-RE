@@ -21,7 +21,7 @@ namespace N_m3u8DL_RE.CommandLine
             try
             {
                 var index = _arg.IndexOf(key + "=");
-                if (index == -1) return _arg.IndexOf(key) != -1 ? "true" : null;
+                if (index == -1) return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
 
                 var chars = _arg[(index + key.Length + 1)..].ToCharArray();
                 var result = new StringBuilder();

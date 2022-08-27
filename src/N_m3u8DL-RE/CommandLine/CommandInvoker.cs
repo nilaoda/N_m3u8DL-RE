@@ -7,12 +7,15 @@ using System.CommandLine;
 using System.CommandLine.Binding;
 using System.CommandLine.Parsing;
 using System.Globalization;
-using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.CommandLine
 {
-    internal class CommandInvoker
+    internal partial class CommandInvoker
     {
+        [RegexGenerator("((best|worst)\\d*|all)")]
+        private static partial Regex ForStrRegex();
+
         private readonly static Argument<string> Input = new(name: "input", description: ResString.cmd_Input);
         private readonly static Option<string?> TmpDir = new(new string[] { "--tmp-dir" }, description: ResString.cmd_tmpDir);
         private readonly static Option<string?> SaveDir = new(new string[] { "--save-dir" }, description: ResString.cmd_saveDir);
@@ -27,8 +30,8 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enum.SubtitleFormat.VTT);
         private readonly static Option<bool> AutoSelect = new(new string[] { "--auto-select" }, description: ResString.cmd_autoSelect, getDefaultValue: () => false);
         private readonly static Option<bool> SubOnly = new(new string[] { "--sub-only" }, description: ResString.cmd_subOnly, getDefaultValue: () => false);
-        private readonly static Option<int> ThreadCount = new(new string[] { "--thread-count" }, description: ResString.cmd_threadCount, getDefaultValue: () => 8);
-        private readonly static Option<int> DownloadRetryCount = new(new string[] { "--download-retry-count" }, description: ResString.cmd_downloadRetryCount, getDefaultValue: () => 3);
+        private readonly static Option<int> ThreadCount = new(new string[] { "--thread-count" }, description: ResString.cmd_threadCount, getDefaultValue: () => 8) { ArgumentHelpName = "number" };
+        private readonly static Option<int> DownloadRetryCount = new(new string[] { "--download-retry-count" }, description: ResString.cmd_downloadRetryCount, getDefaultValue: () => 3) { ArgumentHelpName = "number" };
         private readonly static Option<bool> SkipMerge = new(new string[] { "--skip-merge" }, description: ResString.cmd_skipMerge, getDefaultValue: () => false);
         private readonly static Option<bool> SkipDownload = new(new string[] { "--skip-download" }, description: ResString.cmd_skipDownload, getDefaultValue: () => false);
         private readonly static Option<bool> BinaryMerge = new(new string[] { "--binary-merge" }, description: ResString.cmd_binaryMerge, getDefaultValue: () => false);
@@ -39,15 +42,85 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
         private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
-        private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath);
-        private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath);
+        private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath) { ArgumentHelpName = "PATH" };
+        private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath) { ArgumentHelpName = "PATH" };
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
-        private readonly static Option<bool> ConcurrentDownload = new(new string[] { "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
+        private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
 
         //复杂命令行如下
         private readonly static Option<MuxOptions?> MuxAfterDone = new(new string[] { "-M", "--mux-after-done" }, description: ResString.cmd_muxAfterDone, parseArgument: ParseMuxAfterDone) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<List<OutputFile>> MuxImports = new("--mux-import", description: ResString.cmd_muxImport, parseArgument: ParseImports) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, ArgumentHelpName = "OPTIONS" };
+        private readonly static Option<StreamFilter?> VideoFilter = new(new string[] { "-sv", "--select-video" }, description: ResString.cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private readonly static Option<StreamFilter?> AudioFilter = new(new string[] { "-sa", "--select-audio" }, description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private readonly static Option<StreamFilter?> SubtitleFilter = new(new string[] { "-ss", "--select-subtitle" }, description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
+        /// <summary>
+        /// 流过滤器
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static StreamFilter? ParseStreamFilter(ArgumentResult result)
+        {
+            var streamFilter = new StreamFilter();
+            var input = result.Tokens.First().Value;
+            var p = new ComplexParamParser(input);
+
+
+            //目标范围
+            var forStr = "";
+            if (input == ForStrRegex().Match(input).Value)
+            {
+                forStr = input;
+            }
+            else
+            {
+                forStr = p.GetValue("for") ?? "best";
+                if (forStr != ForStrRegex().Match(input).Value)
+                {
+                    result.ErrorMessage = $"for={forStr} not valid";
+                    return null;
+                }
+            }
+            streamFilter.For = forStr;
+
+            var id = p.GetValue("id");
+            if (!string.IsNullOrEmpty(id))
+                streamFilter.GroupIdReg = new Regex(id);
+
+            var lang = p.GetValue("lang");
+            if (!string.IsNullOrEmpty(lang))
+                streamFilter.LanguageReg = new Regex(lang);
+
+            var name = p.GetValue("name");
+            if (!string.IsNullOrEmpty(name))
+                streamFilter.NameReg = new Regex(name);
+
+            var codecs = p.GetValue("codecs");
+            if (!string.IsNullOrEmpty(codecs))
+                streamFilter.CodecsReg = new Regex(codecs);
+
+            var res = p.GetValue("res");
+            if (!string.IsNullOrEmpty(res))
+                streamFilter.ResolutionReg = new Regex(res);
+
+            var frame = p.GetValue("frame");
+            if (!string.IsNullOrEmpty(frame))
+                streamFilter.FrameRateReg = new Regex(frame);
+
+            var channel = p.GetValue("channel");
+            if (!string.IsNullOrEmpty(channel))
+                streamFilter.ChannelsReg = new Regex(channel);
+
+            var range = p.GetValue("range");
+            if (!string.IsNullOrEmpty(range))
+                streamFilter.VideoRangeReg = new Regex(range);
+
+            var url = p.GetValue("url");
+            if (!string.IsNullOrEmpty(url))
+                streamFilter.UrlReg = new Regex(url);
+
+            return streamFilter;
+        }
 
         /// <summary>
         /// 分割Header
@@ -180,6 +253,9 @@ namespace N_m3u8DL_RE.CommandLine
                     BaseUrl = bindingContext.ParseResult.GetValueForOption(BaseUrl),
                     MuxImports = bindingContext.ParseResult.GetValueForOption(MuxImports),
                     ConcurrentDownload = bindingContext.ParseResult.GetValueForOption(ConcurrentDownload),
+                    VideoFilter = bindingContext.ParseResult.GetValueForOption(VideoFilter),
+                    AudioFilter = bindingContext.ParseResult.GetValueForOption(AudioFilter),
+                    SubtitleFilter = bindingContext.ParseResult.GetValueForOption(SubtitleFilter),
                 };
 
                 var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
@@ -215,13 +291,13 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220826")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220827")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
-                MuxAfterDone, MuxImports
+                MuxAfterDone, MuxImports, VideoFilter, AudioFilter, SubtitleFilter
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

@@ -28,6 +28,9 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_baseUrl { get => GetText("cmd_baseUrl"); }
         public static string cmd_header { get => GetText("cmd_header"); }
         public static string cmd_muxImport { get => GetText("cmd_muxImport"); }
+        public static string cmd_selectVideo { get => GetText("cmd_selectVideo"); }
+        public static string cmd_selectAudio { get => GetText("cmd_selectAudio"); }
+        public static string cmd_selectSubtitle { get => GetText("cmd_selectSubtitle"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }
         public static string cmd_keyText { get => GetText("cmd_keyText"); }
@@ -49,9 +52,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_urlProcessorArgs { get => GetText("cmd_urlProcessorArgs"); }
         public static string cmd_useShakaPackager { get => GetText("cmd_useShakaPackager"); }
         public static string cmd_concurrentDownload { get => GetText("cmd_concurrentDownload"); }
-        public static string cmd_useMkvmerge { get => GetText("cmd_useMkvmerge"); }
         public static string cmd_muxAfterDone { get => GetText("cmd_muxAfterDone"); }
-        public static string cmd_muxToMp4 { get => GetText("cmd_muxToMp4"); }
         public static string cmd_writeMetaJson { get => GetText("cmd_writeMetaJson"); }
         public static string fetch { get => GetText("fetch"); }
         public static string ffmpegMerge { get => GetText("ffmpegMerge"); }
@@ -78,6 +79,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string startDownloading { get => GetText("startDownloading"); }
         public static string streamsInfo { get => GetText("streamsInfo"); }
         public static string writeJson { get => GetText("writeJson"); }
+        public static string noStreamsToDownload { get => GetText("noStreamsToDownload"); }
 
         private static string GetText(string key)
         {

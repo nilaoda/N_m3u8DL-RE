@@ -146,6 +146,18 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.MuxImports"/>.
         /// </summary>
         public List<OutputFile>? MuxImports { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.VideoFilter"/>.
+        /// </summary>
+        public StreamFilter? VideoFilter { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.AudioFilter"/>.
+        /// </summary>
+        public StreamFilter? AudioFilter { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.SubtitleFilter"/>.
+        /// </summary>
+        public StreamFilter? SubtitleFilter { get; set; }
         public bool MuxKeepFiles { get; set; }
     }
 }

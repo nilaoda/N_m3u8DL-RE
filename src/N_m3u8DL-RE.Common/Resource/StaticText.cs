@@ -238,17 +238,89 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "解密时使用shaka-packager替代mp4decrypt",
                 enUS: "Use shaka-packager instead of mp4decrypt to decrypt"
             ),
-            ["cmd_useMkvmerge"] = new TextContainer
-            (
-                zhCN: "混流时使用mkvmerge替代ffmpeg",
-                zhTW: "混流时使用mkvmerge替代ffmpeg",
-                enUS: "Use mkvmerge instead of ffmpeg to mux"
-            ),
             ["cmd_concurrentDownload"] = new TextContainer
             (
                 zhCN: "并发下载已选择的音频、视频和字幕",
                 zhTW: "並發下載已選擇的音訊、影片和字幕",
                 enUS: "Concurrently download the selected audio, video and subtitles"
+            ),
+            ["cmd_selectVideo"] = new TextContainer
+            (
+                zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
+                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "* for=FOR: 选择方式. best[number], worst[number], all (默认: best)\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 选择最佳视频\r\n" +
+                      "-sv best\r\n" +
+                      "# 选择4K+HEVC视频\r\n" +
+                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n",
+                zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
+                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "* for=FOR: 選擇方式. best[number], worst[number], all (默認: best)\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 選擇最佳影片\r\n" +
+                      "-sv best\r\n" +
+                      "# 選擇4K+HEVC影片\r\n" +
+                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n",
+                enUS: "Select video streams by regular expressions. OPTIONS is a colon separated list of:\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
+                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "* for=FOR: Select type. best[number], worst[number], all (Default: best)\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "# select best video\r\n" +
+                      "-sv best\r\n" +
+                      "# select 4K+HEVC video\r\n" +
+                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n"
+            ),
+            ["cmd_selectAudio"] = new TextContainer
+            (
+                zhCN: "通过正则表达式选择符合要求的音频流. 参考 --select-video\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 选择所有音频\r\n" +
+                      "-sa all\r\n" +
+                      "# 选择最佳英语音轨\r\n" +
+                      "-sa lang=en:for=best\r\n" +
+                      "# 选择最佳的2条英语(或日语)音轨\r\n" +
+                      "-sa lang=\"ja|en\":for=best2\r\n",
+                zhTW: "通過正則表達式選擇符合要求的音軌. 參考 --select-video\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 選擇所有音訊\r\n" +
+                      "-sa all\r\n" +
+                      "# 選擇最佳英語音軌\r\n" +
+                      "-sa lang=en:for=best\r\n" +
+                      "# 選擇最佳的2條英語(或日語)音軌\r\n" +
+                      "-sa lang=\"ja|en\":for=best2\r\n",
+                enUS: "Select audio streams by regular expressions. ref --select-video\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "# select all\r\n" +
+                      "-sa all\r\n" +
+                      "# select best eng audio\r\n" +
+                      "-sa lang=en:for=best\r\n" +
+                      "# select best 2, and language is ja or en\r\n" +
+                      "-sa lang=\"ja|en\":for=best2\r\n"
+            ),
+            ["cmd_selectSubtitle"] = new TextContainer
+            (
+                zhCN: "通过正则表达式选择符合要求的字幕流. 参考 --select-video\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 选择所有字幕\r\n" +
+                      "-ss all\r\n" +
+                      "# 选择所有带有\"中文\"的字幕\r\n" +
+                      "-ss name=\"中文\":for=all\r\n",
+                zhTW: "通過正則表達式選擇符合要求的字幕流. 參考 --select-video\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 選擇所有字幕\r\n" +
+                      "-ss all\r\n" +
+                      "# 選擇所有帶有\"中文\"的字幕\r\n" +
+                      "-ss name=\"中文\":for=all\r\n",
+                enUS: "Select subtitle streams by regular expressions. ref --select-video\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "# select all subs\r\n" +
+                      "-ss all\r\n" +
+                      "# select all subs containing \"English\"\r\n" +
+                      "-ss name=\"English\":for=all\r\n"
             ),
             ["cmd_muxAfterDone"] = new TextContainer
             (
@@ -258,11 +330,11 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
                       "* keep=BOOL: 混流完成是否删除文件 true, false (默认: true)\r\n\r\n" +
                       "例如: \r\n" +
-                      "\r\n#混流为mp4容器\r\n" +
+                      "# 混流为mp4容器\r\n" +
                       "-M format=mp4\r\n" +
-                      "\r\n#使用mkvmerge, 自动寻找程序\r\n" +
+                      "# 使用mkvmerge, 自动寻找程序\r\n" +
                       "-M format=mkv:muxer=mkvmerge\r\n" +
-                      "\r\n#使用mkvmerge, 自定义程序路径\r\n" +
+                      "# 使用mkvmerge, 自定义程序路径\r\n" +
                       "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
                 zhTW: "所有工作完成時嘗試混流分離的影音. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
@@ -270,11 +342,11 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
                       "* keep=BOOL: 混流完成是否刪除文件 true, false (默認: true)\r\n\r\n" +
                       "例如: \r\n" +
-                      "\r\n#混流為mp4容器\r\n" +
+                      "# 混流為mp4容器\r\n" +
                       "-M format=mp4\r\n" +
-                      "\r\n#使用mkvmerge, 自動尋找程序\r\n" +
+                      "# 使用mkvmerge, 自動尋找程序\r\n" +
                       "-M format=mkv:muxer=mkvmerge\r\n" +
-                      "\r\n#使用mkvmerge, 自訂程序路徑\r\n" +
+                      "# 使用mkvmerge, 自訂程序路徑\r\n" +
                       "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
                 enUS: "When all works is done, try to mux the downloaded streams. OPTIONS is a colon separated list of:\r\n\r\n" +
                       "* format=FORMAT: set container. mkv, mp4\r\n" +
@@ -282,11 +354,11 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
                       "* keep=BOOL: set whether or not delete files. true, false (Default: true)\r\n\r\n" +
                       "Examples: \r\n" +
-                      "\r\n#mux to mp4\r\n" +
+                      "# mux to mp4\r\n" +
                       "-M format=mp4\r\n" +
-                      "\r\n#use mkvmerge, auto detect bin path\r\n" +
+                      "# use mkvmerge, auto detect bin path\r\n" +
                       "-M format=mkv:muxer=mkvmerge\r\n" +
-                      "\r\n#use mkvmerge, set bin path\r\n" +
+                      "# use mkvmerge, set bin path\r\n" +
                       "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n"
             ),
             ["cmd_muxImport"] = new TextContainer
@@ -296,34 +368,28 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* lang=CODE: 指定媒体文件语言代码 (非必须)\r\n" +
                       "* name=NAME: 指定媒体文件描述信息 (非必须)\r\n\r\n" +
                       "例如: \r\n" +
-                      "\r\n#引入外部字幕\r\n" +
+                      "# 引入外部字幕\r\n" +
                       "--mux-import path=zh-Hans.srt:lang=chi:name=\"中文 (简体)\"\r\n" +
-                      "\r\n#引入外部音轨+字幕\r\n" +
+                      "# 引入外部音轨+字幕\r\n" +
                       "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\"",
                 zhTW: "混流時引入外部媒體檔案. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
                       "* path=PATH: 指定媒體檔案路徑\r\n" +
                       "* lang=CODE: 指定媒體檔案語言代碼 (非必須)\r\n" +
                       "* name=NAME: 指定媒體檔案描述訊息 (非必須)\r\n\r\n" +
                       "例如: \r\n" +
-                      "\r\n#引入外部字幕\r\n" +
+                      "# 引入外部字幕\r\n" +
                       "--mux-import path=zh-Hant.srt:lang=chi:name=\"中文 (繁體)\"\r\n" +
-                      "\r\n#引入外部音軌+字幕\r\n" +
+                      "# 引入外部音軌+字幕\r\n" +
                       "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\"",
                 enUS: "When MuxAfterDone enabled, allow to import local media files. OPTIONS is a colon separated list of:\r\n\r\n" +
                       "* path=PATH: set file path\r\n" +
                       "* lang=CODE: set media language code (not required)\r\n" +
                       "* name=NAME: set description (not required)\r\n\r\n" +
                       "Examples: \r\n" +
-                      "\r\n#import subtitle\r\n" +
+                      "# import subtitle\r\n" +
                       "--mux-import path=en-US.srt:lang=eng:name=\"English (Original)\"\r\n" +
-                      "\r\n#import audio and subtitle\r\n" +
+                      "# import audio and subtitle\r\n" +
                       "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\""
-            ),
-            ["cmd_muxToMp4"] = new TextContainer
-            (
-                zhCN: "混流时使用mp4容器而非mkv",
-                zhTW: "混流時使用mp4容器而非mkv",
-                enUS: "Use mp4 container instead of mkv when muxing"
             ),
             ["cmd_writeMetaJson"] = new TextContainer
             (
@@ -480,6 +546,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "写出meta json",
                 zhTW: "寫出meta json",
                 enUS: "Writing meta json"
+            ),
+            ["noStreamsToDownload"] = new TextContainer
+            (
+                zhCN: "没有找到需要下载的流",
+                zhTW: "沒有找到需要下載的流",
+                enUS: "No stream found to download"
             ),
 
         };

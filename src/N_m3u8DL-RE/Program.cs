@@ -44,6 +44,16 @@ namespace N_m3u8DL_RE
             await CommandInvoker.InvokeArgs(args, DoWorkAsync);
         }
 
+        static int GetOrder(StreamSpec streamSpec)
+        {
+            if (streamSpec.Channels == null) return 0;
+            else
+            {
+                var str = streamSpec.Channels.Split('/')[0];
+                return int.TryParse(str, out var order) ? order : 0;
+            }
+        }
+
         static async Task DoWorkAsync(MyOption option)
         {
             Logger.LogLevel = option.LogLevel;
@@ -182,7 +192,7 @@ namespace N_m3u8DL_RE
                 }
 
                 //全部媒体
-                var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth);
+                var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder);
                 //基本流
                 var basicStreams = lists.Where(x => x.MediaType == null || x.MediaType == MediaType.VIDEO);
                 //可选音频轨道
@@ -203,8 +213,6 @@ namespace N_m3u8DL_RE
                     Logger.InfoMarkUp(item.ToString());
                 }
 
-                //展示交互式选择框
-                //var selectedStreams = PromptUtil.SelectStreams(lists);
                 var selectedStreams = new List<StreamSpec>();
                 if (option.AutoSelect)
                 {
@@ -213,7 +221,7 @@ namespace N_m3u8DL_RE
                     var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
                     foreach (var lang in langs)
                     {
-                        selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).First());
+                        selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
                     }
                     selectedStreams.AddRange(subs);
                 }
@@ -221,10 +229,22 @@ namespace N_m3u8DL_RE
                 {
                     selectedStreams.AddRange(subs);
                 }
+                else if (option.VideoFilter != null || option.AudioFilter != null || option.SubtitleFilter != null)
+                {
+                    basicStreams = FilterUtil.DoFilter(basicStreams, option.VideoFilter);
+                    audios = FilterUtil.DoFilter(audios, option.AudioFilter);
+                    subs = FilterUtil.DoFilter(subs, option.SubtitleFilter);
+                    selectedStreams = basicStreams.Concat(audios).Concat(subs).ToList();
+                }
                 else
                 {
-                    selectedStreams = PromptUtil.SelectStreams(lists);
+                    //展示交互式选择框
+                    selectedStreams = FilterUtil.SelectStreams(lists);
                 }
+
+                if (!selectedStreams.Any())
+                    throw new Exception(ResString.noStreamsToDownload);
+
                 //一个以上的话，需要手动重新加载playlist
                 if (lists.Count() > 1)
                     await extractor.FetchPlayListAsync(selectedStreams);

@@ -1,6 +1,7 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Entity;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;
@@ -10,8 +11,47 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util
 {
-    public class PromptUtil
+    public class FilterUtil
     {
+        public static List<StreamSpec> DoFilter(IEnumerable<StreamSpec> lists, StreamFilter? filter)
+        {
+            if (filter == null) return new List<StreamSpec>();
+
+            var inputs = lists.Where(_ => true);
+            if (filter.GroupIdReg != null)
+                inputs = inputs.Where(i => i.GroupId != null && filter.GroupIdReg.IsMatch(i.GroupId));
+            if (filter.LanguageReg != null)
+                inputs = inputs.Where(i => i.Language != null && filter.LanguageReg.IsMatch(i.Language));
+            if (filter.NameReg != null)
+                inputs = inputs.Where(i => i.Name != null && filter.NameReg.IsMatch(i.Name));
+            if (filter.CodecsReg != null)
+                inputs = inputs.Where(i => i.Codecs != null && filter.CodecsReg.IsMatch(i.Codecs));
+            if (filter.ResolutionReg != null)
+                inputs = inputs.Where(i => i.Resolution != null && filter.ResolutionReg.IsMatch(i.Resolution));
+            if (filter.FrameRateReg != null)
+                inputs = inputs.Where(i => i.FrameRate != null && filter.FrameRateReg.IsMatch($"{i.FrameRate}"));
+            if (filter.ChannelsReg != null)
+                inputs = inputs.Where(i => i.Channels != null && filter.ChannelsReg.IsMatch(i.Channels));
+            if (filter.VideoRangeReg != null)
+                inputs = inputs.Where(i => i.VideoRange != null && filter.VideoRangeReg.IsMatch(i.VideoRange));
+            if (filter.UrlReg != null)
+                inputs = inputs.Where(i => i.Url != null && filter.UrlReg.IsMatch(i.Url));
+
+            var bestNumberStr = filter.For.Replace("best", "");
+            var worstNumberStr = filter.For.Replace("worst", "");
+
+            if (filter.For == "best" && inputs.Count() > 0)
+                inputs = inputs.Take(1).ToList();
+            else if (filter.For == "worst" && inputs.Count() > 0)
+                inputs = inputs.TakeLast(1).ToList();
+            else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Count() > 0)
+                inputs = inputs.Take(bestNumber).ToList();
+            else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Count() > 0)
+                inputs = inputs.TakeLast(worstNumber).ToList();
+
+            return inputs.ToList();
+        }
+
         public static List<StreamSpec> SelectStreams(IEnumerable<StreamSpec> lists)
         {
             if (lists.Count() == 1)
