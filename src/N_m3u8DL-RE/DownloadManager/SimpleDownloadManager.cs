@@ -115,6 +115,7 @@ namespace N_m3u8DL_RE.DownloadManager
         {
             speedContainer.ResetVars();
             bool useAACFilter = false; //ffmpeg合并flag
+            List<Mediainfo> mediaInfos = new();
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
 
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
@@ -203,9 +204,9 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (!readInfo)
                     {
                         Logger.WarnMarkUp(ResString.readingInfo);
-                        var mediainfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
-                        mediainfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                        ChangeSpecInfo(streamSpec, mediainfos, ref useAACFilter);
+                        mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
+                        mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                        ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                         readInfo = true;
                     }
                 }
@@ -246,9 +247,9 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
                 //ffmpeg读取信息
                 Logger.WarnMarkUp(ResString.readingInfo);
-                var mediainfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
-                mediainfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                ChangeSpecInfo(streamSpec, mediainfos, ref useAACFilter);
+                mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
+                mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                 readInfo = true;
             }
 
@@ -543,7 +544,14 @@ namespace N_m3u8DL_RE.DownloadManager
 
             //记录所有文件信息
             if (File.Exists(output))
-                OutputFiles.Add(new OutputFile() { Index = task.Id, FilePath = output, LangCode = streamSpec.Language, Description = streamSpec.Name });
+                OutputFiles.Add(new OutputFile()
+                {
+                    Index = task.Id,
+                    FilePath = output,
+                    LangCode = streamSpec.Language,
+                    Description = streamSpec.Name,
+                    Mediainfos = mediaInfos
+                });
 
             return true;
         }

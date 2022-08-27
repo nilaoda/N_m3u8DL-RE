@@ -158,7 +158,7 @@ namespace N_m3u8DL_RE.Util
             //MAP
             for (int i = 0; i < files.Length; i++)
             {
-                command.Append($" -map {i}:0 ");
+                command.Append($" -map {i} ");
             }
 
             if (mp4)
@@ -170,15 +170,25 @@ namespace N_m3u8DL_RE.Util
             command.Append(" -map_metadata -1 ");
 
             //LANG and NAME
+            var streamIndex = 0;
             for (int i = 0; i < files.Length; i++)
             {
                 //转换语言代码
                 ConvertLangCodeAndDisplayName(files[i]);
-                command.Append($" -metadata:s:{i} language=\"{files[i].LangCode ?? "und"}\" ");
+                command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
-                    command.Append($" -metadata:s:{i} title=\"{files[i].Description}\" ");
+                    command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
                 }
+                /**
+                 * -metadata:s:xx标记的是 输出的第xx个流的metadata，
+                 * 若输入文件存在不止一个流时，这里单纯使用files的index
+                 * 就有可能出现metadata错位的情况，所以加了如下逻辑
+                 */
+                if (files[i].Mediainfos.Count > 0)
+                    streamIndex += files[i].Mediainfos.Count;
+                else
+                    streamIndex++;
             }
 
             command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown ");
