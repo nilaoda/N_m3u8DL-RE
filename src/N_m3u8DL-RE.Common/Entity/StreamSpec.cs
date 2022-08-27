@@ -27,6 +27,8 @@ namespace N_m3u8DL_RE.Common.Entity
 
         //补充信息-色域
         public string? VideoRange { get; set; }
+        //补充信息-特征
+        public string? Characteristics { get; set; }
 
         //外部轨道GroupId (后续寻找对应轨道信息)
         public string? AudioId { get; set; }
@@ -97,7 +99,7 @@ namespace N_m3u8DL_RE.Common.Entity
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {segmentsCountStr}";
+                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr}";
                 returnStr = d.EscapeMarkup();
             }
             else

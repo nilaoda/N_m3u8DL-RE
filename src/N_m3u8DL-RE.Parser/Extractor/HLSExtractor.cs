@@ -196,6 +196,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     if (!string.IsNullOrEmpty(channels))
                         streamSpec.Channels = channels;
 
+                    var characteristics = ParserUtil.GetAttribute(line, "CHARACTERISTICS");
+                    if (!string.IsNullOrEmpty(characteristics))
+                        streamSpec.Characteristics = characteristics.Split(',').Last().Split('.').Last();
+
                     streams.Add(streamSpec);
                 }
                 else if (line.StartsWith("#"))
