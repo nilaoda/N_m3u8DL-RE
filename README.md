@@ -19,3 +19,8 @@ Find latest binary at [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions)
 运行截图
 
 ![RE1](img/RE.gif)
+
+还可以并行下载+自动混流
+
+
+![RE2](img/RE2.gif)
