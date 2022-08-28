@@ -55,7 +55,7 @@ namespace N_m3u8DL_RE.Common.Util
         public static string? FindExecutable(string name)
         {
             var fileExt = OperatingSystem.IsWindows() ? ".exe" : "";
-            var searchPath = new[] { Environment.CurrentDirectory, Environment.ProcessPath };
+            var searchPath = new[] { Environment.CurrentDirectory, Path.GetDirectoryName(Environment.ProcessPath) };
             var envPath = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ??
                           Array.Empty<string>();
             return searchPath.Concat(envPath).Select(p => Path.Combine(p, name + fileExt)).FirstOrDefault(File.Exists);
