@@ -175,7 +175,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 var path = Path.Combine(tmpDir, "_init.mp4.tmp");
                 var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
                 FileDic[streamSpec.Playlist.MediaInit] = result;
-                if (result == null)
+                if (result == null || !result.Success)
                 {
                     throw new Exception("Download init file failed!");
                 }
@@ -190,7 +190,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     //从文件读取KEY
                     await SearchKeyAsync(currentKID);
                     //实时解密
-                    if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && streamSpec.Playlist.MediaInit.EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
+                    if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
                     {
                         var enc = result.ActualFilePath;
                         var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -225,9 +225,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
                 var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
+                if (result == null || !result.Success)
+                {
+                    throw new Exception("Download first segment failed!");
+                }
                 task.Increment(1);
-                //实时解密
-                if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && seg.EncryptInfo.Method == Common.Enum.EncryptMethod.CENC && result != null)
+                if (result != null && result.Success)
                 {
                     //读取init信息
                     if (string.IsNullOrEmpty(currentKID))
@@ -236,21 +239,25 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                     //从文件读取KEY
                     await SearchKeyAsync(currentKID);
-                    var enc = result.ActualFilePath;
-                    var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
-                    var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.MyOptions.UseShakaPackager, mp4decrypt, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, mp4InitFile);
-                    if (dResult)
+                    //实时解密
+                    if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
                     {
-                        File.Delete(enc);
-                        result.ActualFilePath = dec;
+                        var enc = result.ActualFilePath;
+                        var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+                        var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.MyOptions.UseShakaPackager, mp4decrypt, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, mp4InitFile);
+                        if (dResult)
+                        {
+                            File.Delete(enc);
+                            result.ActualFilePath = dec;
+                        }
                     }
+                    //ffmpeg读取信息
+                    Logger.WarnMarkUp(ResString.readingInfo);
+                    mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
+                    mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                    ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                    readInfo = true;
                 }
-                //ffmpeg读取信息
-                Logger.WarnMarkUp(ResString.readingInfo);
-                mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
-                mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
-                readInfo = true;
             }
 
             //开始下载
@@ -266,7 +273,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic[seg] = result;
                 task.Increment(1);
                 //实时解密
-                if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && seg.EncryptInfo.Method == Common.Enum.EncryptMethod.CENC && result != null) 
+                if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && result != null && result.Success && !string.IsNullOrEmpty(currentKID)) 
                 {
                     var enc = result.ActualFilePath;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -293,7 +300,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
             }
 
-            if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && mp4InitFile != "")
+            if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0 && mp4InitFile != "")
             {
                 File.Delete(mp4InitFile);
                 //shaka实时解密不需要init文件用于合并
@@ -521,7 +528,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             //重新读取init信息
-            if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
+            if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
             {
                 currentKID = ReadInit(output);
                 //从文件读取KEY
