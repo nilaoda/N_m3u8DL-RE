@@ -276,19 +276,43 @@ namespace N_m3u8DL_RE
                 Console.ReadKey();
 #endif
 
+                //尝试从URL或文件读取文件名
+                if (string.IsNullOrEmpty(option.SaveName))
+                {
+                    if (File.Exists(option.Input))
+                    {
+                        option.SaveName = Path.GetFileNameWithoutExtension(option.Input) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                    }
+                    else
+                    {
+                        var uri = new Uri(option.Input);
+                        var name = uri.GetLeftPart(UriPartial.Path).Split('/').Last();
+                        name = string.Join(".", name.Split('.').SkipLast(1)).Trim('.');
+                        option.SaveName = ConvertUtil.GetValidFileName(name) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                    }
+                }
+
                 //下载配置
                 var downloadConfig = new DownloaderConfig()
                 {
                     MyOptions = option,
                     Headers = parserConfig.Headers, //使用命令行解析得到的Headers
                 };
-                //开始下载
-                var sdm = new SimpleDownloadManager(downloadConfig);
-                var result = await sdm.StartDownloadAsync(selectedStreams);
-                if (result)
-                    Logger.InfoMarkUp("[white on green]Done[/]");
+
+                if (!livingFlag)
+                {
+                    //开始下载
+                    var sdm = new SimpleDownloadManager(downloadConfig);
+                    var result = await sdm.StartDownloadAsync(selectedStreams);
+                    if (result)
+                        Logger.InfoMarkUp("[white on green]Done[/]");
+                    else
+                        Logger.ErrorMarkUp("[white on red]Faild[/]");
+                }
                 else
-                    Logger.ErrorMarkUp("[white on red]Faild[/]");
+                {
+                    throw new NotSupportedException("Live not supported yet.");
+                }
             }
             catch (Exception ex)
             {
