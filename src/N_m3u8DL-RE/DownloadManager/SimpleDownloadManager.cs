@@ -124,8 +124,6 @@ namespace N_m3u8DL_RE.DownloadManager
 
             var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
             var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
-            //去除非法字符
-            dirName = ConvertUtil.GetValidFileName(dirName, filterSlash: true);
             var tmpDir = Path.Combine(DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
             var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{type}.{streamSpec.Language}".TrimEnd('.') : dirName;
