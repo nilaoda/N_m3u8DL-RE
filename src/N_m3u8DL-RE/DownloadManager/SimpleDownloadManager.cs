@@ -126,7 +126,7 @@ namespace N_m3u8DL_RE.DownloadManager
             var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
             var tmpDir = Path.Combine(DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-            var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{type}.{streamSpec.Language}".TrimEnd('.') : dirName;
+            var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
             var headers = DownloaderConfig.Headers;
 
             //mp4decrypt
@@ -623,9 +623,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
                 OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
                 var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-                var outName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}";
+                var ext = DownloaderConfig.MyOptions.MuxToMp4 ? ".mp4" : ".mkv";
+                var outName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}.MUX";
                 var outPath = Path.Combine(saveDir, outName);
-                Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}.{(DownloaderConfig.MyOptions.MuxToMp4 ? "mp4" : "mkv")}[/]");
+                Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 var result = false;
                 if (DownloaderConfig.MyOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
                 else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxToMp4);
@@ -638,6 +639,13 @@ namespace N_m3u8DL_RE.DownloadManager
                     SafeDeleteDir(tmpDir);  
                 }
                 else Logger.ErrorMarkUp($"Mux failed");
+                //判断是否要改名
+                var newPath = Path.ChangeExtension(outPath, ext);
+                if (result && !File.Exists(newPath))
+                {
+                    Logger.WarnMarkUp($"Rename to [grey]{Path.GetFileName(newPath).EscapeMarkup()}[/]");
+                    File.Move(outPath + ext, newPath);
+                }
             }
 
             return success;
