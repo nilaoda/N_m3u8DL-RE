@@ -48,6 +48,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 {
                     encryptInfo.Key = Convert.FromBase64String(uri[23..]);
                 }
+                else if (File.Exists(uri))
+                {
+                    encryptInfo.Key = File.ReadAllBytes(uri);
+                }
                 else if (!string.IsNullOrEmpty(uri))
                 {
                     var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
