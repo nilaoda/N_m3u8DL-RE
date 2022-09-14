@@ -16,6 +16,8 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         private static partial Regex YkDVRegex();
         [RegexGenerator("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY")]
         private static partial Regex DNSPRegex();
+        [RegexGenerator("#EXTINF:.*?,\\s+.*BUMPER.*\\s+?#EXT-X-DISCONTINUITY")]
+        private static partial Regex DNSPSubRegex();
         [RegexGenerator("(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)")]
         private static partial Regex OrderFixRegex();
         [RegexGenerator("#EXT-X-MAP.*\\.apple\\.com/")]
@@ -58,6 +60,16 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Url.Contains("media.dssott.com/"))
             {
                 Regex ykmap = DNSPRegex();
+                if (ykmap.IsMatch(m3u8Content))
+                {
+                    m3u8Content = m3u8Content.Replace(ykmap.Match(m3u8Content).Value, "#XXX");
+                }
+            }
+
+            //针对Disney+字幕修正
+            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("seg_00000.vtt") && m3u8Url.Contains("media.dssott.com/"))
+            {
+                Regex ykmap = DNSPSubRegex();
                 if (ykmap.IsMatch(m3u8Content))
                 {
                     m3u8Content = m3u8Content.Replace(ykmap.Match(m3u8Content).Value, "#XXX");
