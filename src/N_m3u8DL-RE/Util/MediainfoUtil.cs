@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Util
         private static partial Regex ResRegex();
         [GeneratedRegex("\\d+ kb\\/s")]
         private static partial Regex BitrateRegex();
-        [GeneratedRegex("\\d+ fps")]
+        [GeneratedRegex("(\\d+(\\.\\d+)?) fps")]
         private static partial Regex FpsRegex();
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
