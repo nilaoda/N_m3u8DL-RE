@@ -141,6 +141,7 @@ namespace N_m3u8DL_RE
                 parserConfig.UrlProcessors.Insert(0, new NowehoryzontyUrlProcessor());
 
                 var url = string.Empty;
+                //url = "https://vod-ftc-eu-west-1.media.dssott.com/ps01/disney/29a73209-b706-4f21-8384-acddccb154d2/ctr-all-6cf6fec6-94dc-4f8b-ae67-5ada60ee1e83-42bd5bca-f9a8-4299-83e3-0fb2b4ec0a62.m3u8"; //迪士尼
                 //url = "https://play.itunes.apple.com/WebObjects/MZPlay.woa/hls/subscription/playlist.m3u8?cc=US&svcId=tvs.vds.4105&a=1580273278&isExternal=true&brandId=tvs.sbd.4000&id=337246031&l=en-US&aec=UHD&xtrick=true&webbrowser=true"; //啥都有
                 //url = "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd"; //多音轨多字幕
                 //url = "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"; //直播

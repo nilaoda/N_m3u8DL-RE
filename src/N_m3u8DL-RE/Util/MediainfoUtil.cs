@@ -12,21 +12,21 @@ namespace N_m3u8DL_RE.Util
 {
     internal partial class MediainfoUtil
     {
-        [RegexGenerator(" Stream #.*")]
+        [GeneratedRegex(" Stream #.*")]
         private static partial Regex TextRegex();
-        [RegexGenerator("#0:\\d(\\[0x\\w+?\\])")]
+        [GeneratedRegex("#0:\\d(\\[0x\\w+?\\])")]
         private static partial Regex IdRegex();
-        [RegexGenerator(": (\\w+): (.*)")]
+        [GeneratedRegex(": (\\w+): (.*)")]
         private static partial Regex TypeRegex();
-        [RegexGenerator("(.*?)(,|$)")]
+        [GeneratedRegex("(.*?)(,|$)")]
         private static partial Regex BaseInfoRegex();
-        [RegexGenerator(" \\/ 0x\\w+")]
+        [GeneratedRegex(" \\/ 0x\\w+")]
         private static partial Regex ReplaceRegex();
-        [RegexGenerator("\\d{2,}x\\d+")]
+        [GeneratedRegex("\\d{2,}x\\d+")]
         private static partial Regex ResRegex();
-        [RegexGenerator("\\d+ kb\\/s")]
+        [GeneratedRegex("\\d+ kb\\/s")]
         private static partial Regex BitrateRegex();
-        [RegexGenerator("\\d+ fps")]
+        [GeneratedRegex("\\d+ fps")]
         private static partial Regex FpsRegex();
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)

@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Common.Log
 {
     public partial class Logger
     {
-        [RegexGenerator("{}")]
+        [GeneratedRegex("{}")]
         private static partial Regex VarsRepRegex();
 
         /// <summary>

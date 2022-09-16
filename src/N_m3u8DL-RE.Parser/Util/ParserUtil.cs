@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Parser.Util
 {
     public partial class ParserUtil
     {
-        [RegexGenerator("\\$Number%([^$]+)d\\$")]
+        [GeneratedRegex("\\$Number%([^$]+)d\\$")]
         private static partial Regex VarsNumberRegex();
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        [RegexGenerator("((best|worst)\\d*|all)")]
+        [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
 
         private readonly static Argument<string> Input = new(name: "input", description: ResString.cmd_Input);

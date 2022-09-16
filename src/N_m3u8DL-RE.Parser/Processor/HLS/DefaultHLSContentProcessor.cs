@@ -12,15 +12,15 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public partial class DefaultHLSContentProcessor : ContentProcessor
     {
-        [RegexGenerator("#EXT-X-DISCONTINUITY\\s+#EXT-X-MAP:URI=\\\"(.*?)\\\",BYTERANGE=\\\"(.*?)\\\"")]
+        [GeneratedRegex("#EXT-X-DISCONTINUITY\\s+#EXT-X-MAP:URI=\\\"(.*?)\\\",BYTERANGE=\\\"(.*?)\\\"")]
         private static partial Regex YkDVRegex();
-        [RegexGenerator("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY")]
+        [GeneratedRegex("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY")]
         private static partial Regex DNSPRegex();
-        [RegexGenerator("#EXTINF:.*?,\\s+.*BUMPER.*\\s+?#EXT-X-DISCONTINUITY")]
+        [GeneratedRegex("#EXTINF:.*?,\\s+.*BUMPER.*\\s+?#EXT-X-DISCONTINUITY")]
         private static partial Regex DNSPSubRegex();
-        [RegexGenerator("(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)")]
+        [GeneratedRegex("(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)")]
         private static partial Regex OrderFixRegex();
-        [RegexGenerator("#EXT-X-MAP.*\\.apple\\.com/")]
+        [GeneratedRegex("#EXT-X-MAP.*\\.apple\\.com/")]
         private static partial Regex ATVRegex();
 
         public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig) => extractorType == ExtractorType.HLS;

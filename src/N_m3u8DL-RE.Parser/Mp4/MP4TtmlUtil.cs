@@ -30,9 +30,9 @@ namespace Mp4SubtitleParser
 
     public partial class MP4TtmlUtil
     {
-        [RegexGenerator("<p.*?>(.+?)<\\/p>")]
+        [GeneratedRegex("<p.*?>(.+?)<\\/p>")]
         private static partial Regex LabelFixRegex();
-        [RegexGenerator("\\<tt[\\s\\S]*?\\<\\/tt\\>")]
+        [GeneratedRegex("\\<tt[\\s\\S]*?\\<\\/tt\\>")]
         private static partial Regex MultiElementsFixRegex();
 
         public static bool CheckInit(byte[] data)

@@ -9,11 +9,11 @@ namespace N_m3u8DL_RE.Common.Entity
 {
     public partial class WebVttSub
     {
-        [RegexGenerator("X-TIMESTAMP-MAP.*")]
+        [GeneratedRegex("X-TIMESTAMP-MAP.*")]
         private static partial Regex TSMapRegex();
-        [RegexGenerator("MPEGTS:(\\d+)")]
+        [GeneratedRegex("MPEGTS:(\\d+)")]
         private static partial Regex TSValueRegex();
-        [RegexGenerator("\\s")]
+        [GeneratedRegex("\\s")]
         private static partial Regex SplitRegex();
 
         public List<SubCue> Cues { get; set; } = new List<SubCue>();
