@@ -21,7 +21,7 @@ namespace N_m3u8DL_RE.Util
             if (keyPair == null) return false;
 
             //shakaPackager 无法单独解密init文件
-            if (source.EndsWith("_init.mp4") && shakaPackager) return true;
+            if (source.EndsWith("_init.mp4") && shakaPackager) return false;
 
             var cmd = "";
 
