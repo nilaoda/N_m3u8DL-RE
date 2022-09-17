@@ -214,7 +214,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var seg = segments.First();
                     segments = segments.Skip(1);
                     //记录最新url
-                    dic[name] = seg.Url;
+                    dic[name] = GetPath(seg.Url);
                     //获取文件名
                     var filename = hls ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
                     var index = seg.Index;
@@ -286,7 +286,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 //记录最新url
                 if (segments.Any())
-                    dic[name] = segments.Last().Url;
+                    dic[name] = GetPath(segments.Last().Url);
 
                 recodingDurDic[task.Id] += (int)segments.Sum(s => s.Duration);
 
@@ -513,11 +513,16 @@ namespace N_m3u8DL_RE.DownloadManager
         {
             if (string.IsNullOrEmpty(lastUrl)) return;
 
-            var index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => s.Url == lastUrl);
+            var index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetPath(s.Url) == lastUrl);
             if (index > -1)
             {
                 streamSpec.Playlist!.MediaParts[0].MediaSegments = streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1).ToList();
             }
+        }
+
+        private string GetPath(string url)
+        {
+            return new Uri(url).GetLeftPart(UriPartial.Path);
         }
 
         public async Task<bool> StartRecordAsync()
