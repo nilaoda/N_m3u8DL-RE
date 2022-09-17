@@ -51,6 +51,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public int DownloadRetryCount { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.LiveRecordLimit"/>.
+        /// </summary>
+        public TimeSpan? LiveRecordLimit { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.SkipMerge"/>.
         /// </summary>
         public bool SkipMerge { get; set; }
@@ -106,6 +110,18 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.ConcurrentDownload"/>.
         /// </summary>
         public bool ConcurrentDownload { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveRealTimeMerge"/>.
+        /// </summary>
+        public bool LiveRealTimeMerge { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveKeepSegments"/>.
+        /// </summary>
+        public bool LiveKeepSegments { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LivePerformAsVod"/>.
+        /// </summary>
+        public bool LivePerformAsVod { get; set; }
         /// <summary>
         /// See: <see cref="CommandInvoker.SubtitleFormat"/>.
         /// </summary>

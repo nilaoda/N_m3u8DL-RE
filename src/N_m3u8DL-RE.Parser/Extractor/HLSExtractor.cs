@@ -536,5 +536,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
             }
         }
+
+        public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+        {
+            await FetchPlayListAsync(streamSpecs);
+        }
     }
 }

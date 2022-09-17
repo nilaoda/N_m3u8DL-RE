@@ -232,6 +232,30 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "此字符串將直接傳遞給URL Processor",
                 enUS: "Give these arguments to the URL Processors."
             ),
+            ["cmd_liveRealTimeMerge"] = new TextContainer
+            (
+                zhCN: "录制直播时实时合并",
+                zhTW: "錄製直播時即時合併",
+                enUS: "Real-time merge into file when recording live"
+            ),
+            ["cmd_livePerformAsVod"] = new TextContainer
+            (
+                zhCN: "以点播方式下载直播流",
+                zhTW: "以點播方式下載直播流",
+                enUS: "Download live streams as vod"
+            ),
+            ["cmd_liveKeepSegments"] = new TextContainer
+            (
+                zhCN: "录制直播并开启实时合并时依然保留分片",
+                zhTW: "錄製直播並開啟即時合併時依然保留分片",
+                enUS: "Keep segments when recording a live broadcast and enable liveRealTimeMerge"
+            ),
+            ["cmd_liveRecordLimit"] = new TextContainer
+            (
+                zhCN: "录制直播时的录制时长限制",
+                zhTW: "錄製直播時的錄製時長限制",
+                enUS: "Recording time limit when recording live"
+            ),
             ["cmd_useShakaPackager"] = new TextContainer
             (
                 zhCN: "解密时使用shaka-packager替代mp4decrypt",
@@ -396,6 +420,24 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "解析后的信息是否输出json文件",
                 zhTW: "解析後的訊息是否輸出json文件",
                 enUS: "Write meta json after parsed"
+            ),
+            ["liveLimit"] = new TextContainer
+            (
+                zhCN: "本次直播录制时长上限: ",
+                zhTW: "本次直播錄製時長上限: ",
+                enUS: "Live recording duration limit: "
+            ),
+            ["liveLimitReached"] = new TextContainer
+            (
+                zhCN: "到达直播录制上限，即将停止录制",
+                zhTW: "到達直播錄製上限，即將停止錄製",
+                enUS: "Live recording limit reached, will stop recording soon"
+            ),
+            ["saveName"] = new TextContainer
+            (
+                zhCN: "保存文件名: ",
+                zhTW: "保存檔案名: ",
+                enUS: "Save Name: "
             ),
             ["fetch"] = new TextContainer
             (

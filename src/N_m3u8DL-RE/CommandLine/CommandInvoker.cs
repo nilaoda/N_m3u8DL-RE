@@ -3,6 +3,7 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Util;
+using NiL.JS.Expressions;
 using System.CommandLine;
 using System.CommandLine.Binding;
 using System.CommandLine.Parsing;
@@ -47,6 +48,13 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
         private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
 
+        //直播相关
+        private readonly static Option<bool> LivePerformAsVod = new(new string[] { "--live-perform-as-vod" }, description: ResString.cmd_livePerformAsVod, getDefaultValue: () => false);
+        private readonly static Option<bool> LiveRealTimeMerge = new(new string[] { "--live-real-time-merge" }, description: ResString.cmd_liveRealTimeMerge, getDefaultValue: () => false);
+        private readonly static Option<bool> LiveKeepSegments = new(new string[] { "--live-keep-segments" }, description: ResString.cmd_liveKeepSegments, getDefaultValue: () => true);
+        private readonly static Option<TimeSpan?> LiveRecordLimit = new(new string[] { "--live-record-limit" }, description: ResString.cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
+
+
         //复杂命令行如下
         private readonly static Option<MuxOptions?> MuxAfterDone = new(new string[] { "-M", "--mux-after-done" }, description: ResString.cmd_muxAfterDone, parseArgument: ParseMuxAfterDone) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<List<OutputFile>> MuxImports = new("--mux-import", description: ResString.cmd_muxImport, parseArgument: ParseImports) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, ArgumentHelpName = "OPTIONS" };
@@ -54,11 +62,29 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> AudioFilter = new(new string[] { "-sa", "--select-audio" }, description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> SubtitleFilter = new(new string[] { "-ss", "--select-subtitle" }, description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
+        /// <summary>
+        /// 解析录制直播时长限制
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static TimeSpan? ParseLiveLimit(ArgumentResult result)
+        {
+            var input = result.Tokens.First().Value;
+            try
+            {
+                return OtherUtil.ParseDur(input);
+            }
+            catch (Exception)
+            {
+                result.ErrorMessage = "error in parse LiveRecordLimit: " + input;
+                return null;
+            }
+        }
 
         private static string? ParseSaveName(ArgumentResult result)
         {
             var input = result.Tokens.First().Value;
-            var newName = ConvertUtil.GetValidFileName(input);
+            var newName = OtherUtil.GetValidFileName(input);
             if (string.IsNullOrEmpty(newName))
             {
                 result.ErrorMessage = "Invalid save name!";
@@ -143,7 +169,7 @@ namespace N_m3u8DL_RE.CommandLine
         private static Dictionary<string, string> ParseHeaders(ArgumentResult result)
         {
             var array = result.Tokens.Select(t => t.Value).ToArray();
-            return ConvertUtil.SplitHeaderArrayToDic(array);
+            return OtherUtil.SplitHeaderArrayToDic(array);
         }
 
         /// <summary>
@@ -269,6 +295,10 @@ namespace N_m3u8DL_RE.CommandLine
                     VideoFilter = bindingContext.ParseResult.GetValueForOption(VideoFilter),
                     AudioFilter = bindingContext.ParseResult.GetValueForOption(AudioFilter),
                     SubtitleFilter = bindingContext.ParseResult.GetValueForOption(SubtitleFilter),
+                    LiveRealTimeMerge = bindingContext.ParseResult.GetValueForOption(LiveRealTimeMerge),
+                    LiveKeepSegments = bindingContext.ParseResult.GetValueForOption(LiveKeepSegments),
+                    LiveRecordLimit = bindingContext.ParseResult.GetValueForOption(LiveRecordLimit),
+                    LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
                 };
 
                 var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
@@ -304,13 +334,15 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220914")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220917")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
-                MuxAfterDone, MuxImports, VideoFilter, AudioFilter, SubtitleFilter
+                MuxAfterDone,
+                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit,
+                MuxImports, VideoFilter, AudioFilter, SubtitleFilter
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

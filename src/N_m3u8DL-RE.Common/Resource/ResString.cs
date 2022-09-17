@@ -52,8 +52,15 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_urlProcessorArgs { get => GetText("cmd_urlProcessorArgs"); }
         public static string cmd_useShakaPackager { get => GetText("cmd_useShakaPackager"); }
         public static string cmd_concurrentDownload { get => GetText("cmd_concurrentDownload"); }
+        public static string cmd_liveKeepSegments { get => GetText("cmd_liveKeepSegments"); }
+        public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }
+        public static string cmd_liveRealTimeMerge { get => GetText("cmd_liveRealTimeMerge"); }
+        public static string cmd_livePerformAsVod { get => GetText("cmd_livePerformAsVod"); }
         public static string cmd_muxAfterDone { get => GetText("cmd_muxAfterDone"); }
         public static string cmd_writeMetaJson { get => GetText("cmd_writeMetaJson"); }
+        public static string liveLimit { get => GetText("liveLimit"); }
+        public static string liveLimitReached { get => GetText("liveLimitReached"); }
+        public static string saveName { get => GetText("saveName"); }
         public static string fetch { get => GetText("fetch"); }
         public static string ffmpegMerge { get => GetText("ffmpegMerge"); }
         public static string ffmpegNotFound { get => GetText("ffmpegNotFound"); }

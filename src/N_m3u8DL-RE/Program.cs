@@ -186,7 +186,7 @@ namespace N_m3u8DL_RE
                 var streams = await extractor.ExtractStreamsAsync();
 
                 //直播检测
-                var livingFlag = streams.Any(s => s.Playlist?.IsLive == true);
+                var livingFlag = streams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
                 if (livingFlag)
                 {
                     Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
@@ -248,7 +248,7 @@ namespace N_m3u8DL_RE
 
                 //HLS: 选中流中若有没加载出playlist的，加载playlist
                 //DASH: 加载playlist (调用url预处理器)
-                if (selectedStreams.Any(s => s.Playlist == null) || extractor.Extractor.ExtractorType == ExtractorType.MPEG_DASH)
+                if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH)
                     await extractor.FetchPlayListAsync(selectedStreams);
 
                 //无法识别的加密方式，自动开启二进制合并
@@ -281,18 +281,10 @@ namespace N_m3u8DL_RE
                 //尝试从URL或文件读取文件名
                 if (string.IsNullOrEmpty(option.SaveName))
                 {
-                    if (File.Exists(option.Input))
-                    {
-                        option.SaveName = Path.GetFileNameWithoutExtension(option.Input) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                    }
-                    else
-                    {
-                        var uri = new Uri(option.Input);
-                        var name = uri.GetLeftPart(UriPartial.Path).Split('/').Last();
-                        name = string.Join(".", name.Split('.').SkipLast(1)).Trim('.');
-                        option.SaveName = ConvertUtil.GetValidFileName(name) + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                    }
+                    option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
                 }
+
+                Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 
                 //下载配置
                 var downloadConfig = new DownloaderConfig()
@@ -313,7 +305,12 @@ namespace N_m3u8DL_RE
                 }
                 else
                 {
-                    throw new NotSupportedException("Live not supported yet.");
+                    var sldm = new SimpleLiveRecordManager(downloadConfig, selectedStreams, extractor);
+                    var result = await sldm.StartRecordAsync();
+                    if (result)
+                        Logger.InfoMarkUp("[white on green]Done[/]");
+                    else
+                        Logger.ErrorMarkUp("[white on red]Faild[/]");
                 }
             }
             catch (Exception ex)

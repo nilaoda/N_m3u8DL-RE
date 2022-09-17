@@ -193,7 +193,7 @@ namespace N_m3u8DL_RE.Util
 
             command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown ");
             command.Append($" \"{outputPath}.{ext}\"");
-            
+
             InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
             if (File.Exists($"{outputPath}.{ext}") && new FileInfo($"{outputPath}.{ext}").Length > 1024)

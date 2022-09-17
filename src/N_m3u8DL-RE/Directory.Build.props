@@ -9,7 +9,6 @@
 	<IlcTrimMetadata>true</IlcTrimMetadata>
 	<IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>
 	<SatelliteResourceLanguages>zh-CN;zh-TW;en-US</SatelliteResourceLanguages>
-    <NativeAotCompilerVersion>7.0.0-*</NativeAotCompilerVersion>
 	  <PublishAot>true</PublishAot>
   </PropertyGroup>
 

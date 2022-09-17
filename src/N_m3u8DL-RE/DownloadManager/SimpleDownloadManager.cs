@@ -367,7 +367,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
-                    subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                    subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                     output = Path.ChangeExtension(output, ".srt");
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
@@ -402,7 +402,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                     {
                         path = Path.ChangeExtension(path, ".srt");
-                        subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                        subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                         output = Path.ChangeExtension(output, ".srt");
                     }
                     await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
@@ -435,7 +435,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
-                    subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                    subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                     output = Path.ChangeExtension(output, ".srt");
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
@@ -472,7 +472,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
-                    subContentFixed = ConvertUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                    subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                     output = Path.ChangeExtension(output, ".srt");
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));

@@ -5,12 +5,14 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Extractor;
 using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Parser
 {
     public class StreamExtractor
     {
-        public IExtractor Extractor { get; private set; }
+        public ExtractorType ExtractorType { get => extractor.ExtractorType; }
+        private IExtractor extractor;
         private ParserConfig parserConfig = new ParserConfig();
         private string rawText;
         private static SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
@@ -56,13 +58,13 @@ namespace N_m3u8DL_RE.Parser
             if (rawText.StartsWith(HLSTags.ext_m3u))
             {
                 Logger.InfoMarkUp(ResString.matchHLS);
-                Extractor = new HLSExtractor(parserConfig);
+                extractor = new HLSExtractor(parserConfig);
             }
             else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
             {
                 Logger.InfoMarkUp(ResString.matchDASH);
                 //extractor = new DASHExtractor(parserConfig);
-                Extractor = new DASHExtractor2(parserConfig);
+                extractor = new DASHExtractor2(parserConfig);
             }
             else
             {
@@ -80,7 +82,7 @@ namespace N_m3u8DL_RE.Parser
             {
                 await semaphore.WaitAsync();
                 Logger.Info(ResString.parsingStream);
-                return await Extractor.ExtractStreamsAsync(rawText);
+                return await extractor.ExtractStreamsAsync(rawText);
             }
             finally
             {
@@ -98,7 +100,20 @@ namespace N_m3u8DL_RE.Parser
             {
                 await semaphore.WaitAsync();
                 Logger.Info(ResString.parsingStream);
-                await Extractor.FetchPlayListAsync(streamSpecs);
+                await extractor.FetchPlayListAsync(streamSpecs);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+        {
+            try
+            {
+                await semaphore.WaitAsync();
+                await extractor.RefreshPlayListAsync(streamSpecs);
             }
             finally
             {

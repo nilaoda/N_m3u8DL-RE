@@ -1,5 +1,6 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Util;
@@ -471,10 +472,23 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return streamList;
         }
 
-
-        public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
+        public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
+            if (streamSpecs.Count == 0) return;
+            var rawText = await HTTPUtil.GetWebSourceAsync(ParserConfig.Url);
+            var newStreams = await ExtractStreamsAsync(rawText);
+            foreach (var streamSpec in streamSpecs)
+            {
+                var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
+                if (match.Any())
+                    streamSpec.Playlist = match.First().Playlist;
+            }
             //这里才调用URL预处理器，节省开销
+            await ProcessUrlAsync(streamSpecs);
+        }
+
+        private async Task ProcessUrlAsync(List<StreamSpec> streamSpecs)
+        {
             for (int i = 0; i < streamSpecs.Count; i++)
             {
                 var playlist = streamSpecs[i].Playlist;
@@ -494,6 +508,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     }
                 }
             }
+        }
+
+        public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
+        {
+            //这里才调用URL预处理器，节省开销
+            await ProcessUrlAsync(streamSpecs);
         }
 
         public string PreProcessUrl(string url)
