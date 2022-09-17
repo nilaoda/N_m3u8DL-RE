@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Parser
 {
     public class StreamExtractor
     {
-        private IExtractor extractor;
+        public IExtractor Extractor { get; private set; }
         private ParserConfig parserConfig = new ParserConfig();
         private string rawText;
         private static SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
@@ -56,13 +56,13 @@ namespace N_m3u8DL_RE.Parser
             if (rawText.StartsWith(HLSTags.ext_m3u))
             {
                 Logger.InfoMarkUp(ResString.matchHLS);
-                extractor = new HLSExtractor(parserConfig);
+                Extractor = new HLSExtractor(parserConfig);
             }
             else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
             {
                 Logger.InfoMarkUp(ResString.matchDASH);
                 //extractor = new DASHExtractor(parserConfig);
-                extractor = new DASHExtractor2(parserConfig);
+                Extractor = new DASHExtractor2(parserConfig);
             }
             else
             {
@@ -80,7 +80,7 @@ namespace N_m3u8DL_RE.Parser
             {
                 await semaphore.WaitAsync();
                 Logger.Info(ResString.parsingStream);
-                return await extractor.ExtractStreamsAsync(rawText);
+                return await Extractor.ExtractStreamsAsync(rawText);
             }
             finally
             {
@@ -98,7 +98,7 @@ namespace N_m3u8DL_RE.Parser
             {
                 await semaphore.WaitAsync();
                 Logger.Info(ResString.parsingStream);
-                await extractor.FetchPlayListAsync(streamSpecs);
+                await Extractor.FetchPlayListAsync(streamSpecs);
             }
             finally
             {

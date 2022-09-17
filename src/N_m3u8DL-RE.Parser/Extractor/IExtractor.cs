@@ -9,7 +9,7 @@ using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Parser.Extractor
 {
-    internal interface IExtractor
+    public interface IExtractor
     {
         ExtractorType ExtractorType { get; }
 

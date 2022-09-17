@@ -246,8 +246,9 @@ namespace N_m3u8DL_RE
                 if (!selectedStreams.Any())
                     throw new Exception(ResString.noStreamsToDownload);
 
-                //选中流中若有没加载出playlist的，加载playlist
-                if (selectedStreams.Any(s => s.Playlist == null))
+                //HLS: 选中流中若有没加载出playlist的，加载playlist
+                //DASH: 加载playlist (调用url预处理器)
+                if (selectedStreams.Any(s => s.Playlist == null) || extractor.Extractor.ExtractorType == ExtractorType.MPEG_DASH)
                     await extractor.FetchPlayListAsync(selectedStreams);
 
                 //无法识别的加密方式，自动开启二进制合并
