@@ -246,8 +246,8 @@ namespace N_m3u8DL_RE
                 if (!selectedStreams.Any())
                     throw new Exception(ResString.noStreamsToDownload);
 
-                //一个以上的话，需要手动重新加载playlist
-                if (lists.Count() > 1)
+                //选中流中若有没加载出playlist的，加载playlist
+                if (selectedStreams.Any(s => s.Playlist == null))
                     await extractor.FetchPlayListAsync(selectedStreams);
 
                 //无法识别的加密方式，自动开启二进制合并
