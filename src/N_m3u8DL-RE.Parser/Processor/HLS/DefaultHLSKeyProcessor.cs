@@ -32,11 +32,19 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             {
                 encryptInfo.IV = HexUtil.HexToBytes(iv);
             }
+            if (parserConfig.CustomeIV != null)
+            {
+                encryptInfo.IV = parserConfig.CustomeIV;
+            }
 
             //KEY
             try
             {
-                if (uri.ToLower().StartsWith("base64:"))
+                if (parserConfig.CustomeKey != null)
+                {
+                    encryptInfo.Key = parserConfig.CustomeKey;
+                }
+                else if (uri.ToLower().StartsWith("base64:"))
                 {
                     encryptInfo.Key = Convert.FromBase64String(uri[7..]);
                 }
