@@ -370,7 +370,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                     output = Path.ChangeExtension(output, ".srt");
                 }
-                await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[keys.First()] = new DownloadResult()
                 {
                     ActualContentLength = subContentFixed.Length,
@@ -405,7 +405,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                         output = Path.ChangeExtension(output, ".srt");
                     }
-                    await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                     FileDic[firstKey] = new DownloadResult()
                     {
                         ActualContentLength = subContentFixed.Length,
@@ -438,7 +438,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                     output = Path.ChangeExtension(output, ".srt");
                 }
-                await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[firstKey] = new DownloadResult()
                 {
                     ActualContentLength = subContentFixed.Length,
@@ -475,7 +475,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
                     output = Path.ChangeExtension(output, ".srt");
                 }
-                await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[firstKey] = new DownloadResult()
                 {
                     ActualContentLength = subContentFixed.Length,

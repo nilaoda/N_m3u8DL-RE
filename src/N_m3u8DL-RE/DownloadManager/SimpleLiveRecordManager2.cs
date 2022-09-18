@@ -313,7 +313,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic.Clear();
                     var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(files.Last()) + ".vtt");
                     var subContentFixed = finalVtt.ToString();
-                    await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                     FileDic[keys.First()] = new DownloadResult()
                     {
                         ActualContentLength = subContentFixed.Length,
@@ -339,7 +339,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         FileDic.Clear();
                         var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(mp4s.Last()) + ".vtt");
                         var subContentFixed = finalVtt.ToString();
-                        await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                        await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                         FileDic[firstKey] = new DownloadResult()
                         {
                             ActualContentLength = subContentFixed.Length,
@@ -361,7 +361,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic.Clear();
                     var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(mp4s.Last()) + ".vtt");
                     var subContentFixed = finalVtt.ToString();
-                    await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                     FileDic[firstKey] = new DownloadResult()
                     {
                         ActualContentLength = subContentFixed.Length,
@@ -387,7 +387,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic.Clear();
                     var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(mp4s.Last()) + ".vtt");
                     var subContentFixed = finalVtt.ToString();
-                    await File.WriteAllTextAsync(path, subContentFixed, new UTF8Encoding(false));
+                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                     FileDic[firstKey] = new DownloadResult()
                     {
                         ActualContentLength = subContentFixed.Length,
