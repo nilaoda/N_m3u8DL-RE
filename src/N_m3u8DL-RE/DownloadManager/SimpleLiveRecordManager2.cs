@@ -126,6 +126,8 @@ namespace N_m3u8DL_RE.DownloadManager
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
             List<Mediainfo> mediaInfos = new();
             FileStream? fileOutputStream = null;
+            WebVttSub currentVtt = new(); //字幕流始终维护一个实例
+            bool firstSub = true;
             task.MaxValue = 0;
             task.StartTask();
 
@@ -283,42 +285,27 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                     && streamSpec.Extension != null && streamSpec.Extension.Contains("vtt"))
                 {
-                    Logger.WarnMarkUp(ResString.fixingVTT);
                     //排序字幕并修正时间戳
-                    bool first = true;
-                    var finalVtt = new WebVttSub();
                     var keys = FileDic.Keys.OrderBy(k => k.Index);
                     foreach (var seg in keys)
                     {
                         var vttContent = File.ReadAllText(FileDic[seg]!.ActualFilePath);
                         var vtt = WebVttSub.Parse(vttContent);
                         //手动计算MPEGTS
-                        if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                        if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                         {
                             vtt.MpegtsTimestamp = 90 * (long)(seg.Duration * 1000) * seg.Index;
                         }
-                        if (first)
+                        if (firstSub)
                         {
-                            finalVtt = vtt;
-                            first = false;
+                            currentVtt = vtt;
+                            firstSub = false;
                         }
                         else
                         {
-                            finalVtt.AddCuesFromOne(vtt);
+                            currentVtt.AddCuesFromOne(vtt);
                         }
                     }
-                    //写出字幕
-                    var files = FileDic.Values.Where(v => !Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
-                    foreach (var item in files) File.Delete(item);
-                    FileDic.Clear();
-                    var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(files.Last()) + ".vtt");
-                    var subContentFixed = finalVtt.ToString();
-                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
-                    FileDic[keys.First()] = new DownloadResult()
-                    {
-                        ActualContentLength = subContentFixed.Length,
-                        ActualFilePath = path
-                    };
                 }
 
                 //自动修复VTT mp4字幕
@@ -330,21 +317,16 @@ namespace N_m3u8DL_RE.DownloadManager
                     var (sawVtt, timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                     if (sawVtt)
                     {
-                        Logger.WarnMarkUp(ResString.fixingVTTmp4);
                         var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).OrderBy(s => s).ToArray();
-                        var finalVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
-                        //写出字幕
-                        var firstKey = FileDic.Keys.First();
-                        foreach (var item in mp4s) File.Delete(item);
-                        FileDic.Clear();
-                        var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(mp4s.Last()) + ".vtt");
-                        var subContentFixed = finalVtt.ToString();
-                        await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
-                        FileDic[firstKey] = new DownloadResult()
+                        if (firstSub)
                         {
-                            ActualContentLength = subContentFixed.Length,
-                            ActualFilePath = path
-                        };
+                            currentVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
+                        }
+                        else
+                        {
+                            var finalVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
+                            currentVtt.AddCuesFromOne(finalVtt);
+                        }
                     }
                 }
 
@@ -352,21 +334,16 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                     && streamSpec.Extension != null && streamSpec.Extension.Contains("ttml"))
                 {
-                    Logger.WarnMarkUp(ResString.fixingTTML);
                     var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".ttml")).OrderBy(s => s).ToArray();
-                    var finalVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0);
-                    //写出字幕
-                    var firstKey = FileDic.Keys.First();
-                    foreach (var item in mp4s) File.Delete(item);
-                    FileDic.Clear();
-                    var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(mp4s.Last()) + ".vtt");
-                    var subContentFixed = finalVtt.ToString();
-                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
-                    FileDic[firstKey] = new DownloadResult()
+                    if (firstSub)
                     {
-                        ActualContentLength = subContentFixed.Length,
-                        ActualFilePath = path
-                    };
+                        currentVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0);
+                    }
+                    else
+                    {
+                        var finalVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0);
+                        currentVtt.AddCuesFromOne(finalVtt);
+                    }
                 }
 
                 //自动修复TTML mp4字幕
@@ -374,25 +351,20 @@ namespace N_m3u8DL_RE.DownloadManager
                     && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s")
                     && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
                 {
-                    Logger.WarnMarkUp(ResString.fixingTTMLmp4);
                     //sawTtml暂时不判断
                     //var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
                     //var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                     //var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
                     var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).OrderBy(s => s).ToArray();
-                    var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0);
-                    //写出字幕
-                    var firstKey = FileDic.Keys.First();
-                    foreach (var item in mp4s) File.Delete(item);
-                    FileDic.Clear();
-                    var path = Path.Combine(tmpDir, Path.GetFileNameWithoutExtension(mp4s.Last()) + ".vtt");
-                    var subContentFixed = finalVtt.ToString();
-                    await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
-                    FileDic[firstKey] = new DownloadResult()
+                    if (firstSub)
                     {
-                        ActualContentLength = subContentFixed.Length,
-                        ActualFilePath = path
-                    };
+                        currentVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0);
+                    }
+                    else
+                    {
+                        var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0);
+                        currentVtt.AddCuesFromOne(finalVtt);
+                    }
                 }
 
                 //合并逻辑
@@ -403,7 +375,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (streamSpec.Extension == null) outputExt = ".ts";
                     else if (streamSpec.MediaType == MediaType.AUDIO && streamSpec.Extension == "m4s") outputExt = ".m4a";
                     else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
-                    else if (streamSpec.MediaType == MediaType.SUBTITLES) outputExt = ".vtt";
+                    else if (streamSpec.MediaType == MediaType.SUBTITLES)
+                    {
+                        if (DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT) outputExt = ".srt";
+                        else outputExt = ".vtt";
+                    }
 
                     var output = Path.Combine(saveDir, saveName + outputExt);
 
@@ -457,17 +433,27 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                     else
                     {
+                        var initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
                         var files = FileDic.Select(f => f.Value).Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
                         foreach (var inputFilePath in files)
                         {
-                            using (var inputStream = File.OpenRead(inputFilePath))
-                            {
-                                inputStream.CopyTo(fileOutputStream);
-                            }
                             if (!DownloaderConfig.MyOptions.LiveKeepSegments && !Path.GetFileName(inputFilePath).StartsWith("_init"))
                             {
                                 File.Delete(inputFilePath);
                             }
+                        }
+                        var subText = currentVtt.ToStringWithHeader();
+                        if (outputExt == ".srt")
+                        {
+                            subText = OtherUtil.WebVtt2Other(currentVtt, Enum.SubtitleFormat.SRT);
+                        }
+                        var subBytes = Encoding.UTF8.GetBytes(subText);
+                        fileOutputStream.Position = 0;
+                        fileOutputStream.Write(subBytes);
+                        FileDic.Clear();
+                        if (initResult != null)
+                        {
+                            FileDic[streamSpec.Playlist!.MediaInit!] = initResult;
                         }
                     }
 
