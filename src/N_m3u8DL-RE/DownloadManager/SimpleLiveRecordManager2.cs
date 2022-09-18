@@ -602,8 +602,13 @@ namespace N_m3u8DL_RE.DownloadManager
                 var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
+                //录制直播时，用户选了几个流就并发录几个
+                var options = new ParallelOptions()
+                {
+                    MaxDegreeOfParallelism = SelectedSteams.Count
+                };
                 //并发下载
-                await Parallel.ForEachAsync(dic, async (kp, _) =>
+                await Parallel.ForEachAsync(dic, options, async (kp, _) =>
                 {
                     var task = kp.Value;
                     var list = new BufferBlock<List<MediaSegment>>();
