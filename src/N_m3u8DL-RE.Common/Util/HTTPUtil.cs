@@ -55,10 +55,24 @@ namespace N_m3u8DL_RE.Common.Util
             {
                 HttpResponseHeaders respHeaders = webResponse.Headers;
                 Logger.Debug(respHeaders.ToString());
-                if (respHeaders != null && respHeaders.Location != null && respHeaders.Location.AbsoluteUri != url)
+                if (respHeaders != null && respHeaders.Location != null)
                 {
-                    var redirectedUrl = respHeaders.Location.AbsoluteUri;
-                    return await DoGetAsync(redirectedUrl, headers);
+                    var redirectedUrl = "";
+                    if (!respHeaders.Location.IsAbsoluteUri)
+                    {
+                        Uri uri1 = new Uri(url);
+                        Uri uri2 = new Uri(uri1, respHeaders.Location);
+                        redirectedUrl = uri2.ToString();
+                    }
+                    else
+                    {
+                        redirectedUrl = respHeaders.Location.AbsoluteUri;
+                    }
+                    
+                    if (redirectedUrl != url)
+                    {
+                        return await DoGetAsync(redirectedUrl, headers);
+                    }
                 }
             }
             //手动将跳转后的URL设置进去, 用于后续取用
