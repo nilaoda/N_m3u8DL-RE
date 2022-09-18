@@ -185,13 +185,6 @@ namespace N_m3u8DL_RE
                 //解析流信息
                 var streams = await extractor.ExtractStreamsAsync();
 
-                //直播检测
-                var livingFlag = streams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
-                if (livingFlag)
-                {
-                    Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
-                }
-
                 //全部媒体
                 var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder);
                 //基本流
@@ -250,6 +243,13 @@ namespace N_m3u8DL_RE
                 //DASH: 加载playlist (调用url预处理器)
                 if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH)
                     await extractor.FetchPlayListAsync(selectedStreams);
+
+                //直播检测
+                var livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
+                if (livingFlag)
+                {
+                    Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
+                }
 
                 //无法识别的加密方式，自动开启二进制合并
                 if (selectedStreams.Any(s => s.Playlist.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
