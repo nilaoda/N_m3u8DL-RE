@@ -305,7 +305,7 @@ namespace N_m3u8DL_RE
                 }
                 else
                 {
-                    var sldm = new SimpleLiveRecordManager(downloadConfig, selectedStreams, extractor);
+                    var sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
                     var result = await sldm.StartRecordAsync();
                     if (result)
                         Logger.InfoMarkUp("[white on green]Done[/]");
