@@ -80,7 +80,7 @@ namespace N_m3u8DL_RE.Downloader
                 Logger.Debug(ex.ToString());
                 if (retryCount-- > 0)
                 {
-                    await Task.Delay(200);
+                    await Task.Delay(1000);
                     goto retry;
                 }
                 //throw new Exception("download failed", ex);
