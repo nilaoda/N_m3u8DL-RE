@@ -24,3 +24,11 @@ Find latest binary at [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions)
 
 
 ![RE2](img/RE2.gif)
+
+录制TS直播源：
+
+[click to show gif](http://pan.iqiyi.com/file/paopao/W0LfmaMRvuA--uCdOpZ1cldM5JCVhMfIm7KFqr4oKCz80jLn0bBb-9PWmeCFZ-qHpAaQydQ1zk-CHYT_UbRLtw.gif)
+
+录制MPD直播源：
+
+[click to show gif](http://pan.iqiyi.com/file/paopao/nmAV5MOh0yIyHhnxdgM_6th_p2nqrFsM4k-o3cUPwUa8Eh8QOU4uyPkLa_BlBrMa3GBnKWSk8rOaUwbsjKN14g.gif)
