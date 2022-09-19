@@ -156,7 +156,7 @@ namespace N_m3u8DL_RE.Common.Entity
             var time = 0L + ms;
             for (int i = 0; i < t.Count(); i++)
             {
-                time += (int)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;
+                time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;
             }
             return TimeSpan.FromMilliseconds(time);
         }
