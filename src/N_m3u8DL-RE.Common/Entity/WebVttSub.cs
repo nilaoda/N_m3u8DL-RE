@@ -24,9 +24,9 @@ namespace N_m3u8DL_RE.Common.Entity
         /// </summary>
         /// <param name="textBytes"></param>
         /// <returns></returns>
-        public static WebVttSub Parse(byte[] textBytes)
+        public static WebVttSub Parse(byte[] textBytes, long BaseTimestamp = 0L)
         {
-            return Parse(Encoding.UTF8.GetString(textBytes));
+            return Parse(Encoding.UTF8.GetString(textBytes), BaseTimestamp);
         }
 
         /// <summary>
@@ -35,9 +35,9 @@ namespace N_m3u8DL_RE.Common.Entity
         /// <param name="textBytes"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static WebVttSub Parse(byte[] textBytes, Encoding encoding)
+        public static WebVttSub Parse(byte[] textBytes, Encoding encoding, long BaseTimestamp = 0L)
         {
-            return Parse(encoding.GetString(textBytes));
+            return Parse(encoding.GetString(textBytes), BaseTimestamp);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.Common.Entity
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static WebVttSub Parse(string text)
+        public static WebVttSub Parse(string text, long BaseTimestamp = 0L)
         {
             if (!text.Trim().StartsWith("WEBVTT"))
                 throw new Exception("Bad vtt!");
@@ -94,6 +94,22 @@ namespace N_m3u8DL_RE.Common.Entity
                     else
                     {
                         payloads.Add(line.Trim());
+                    }
+                }
+            }
+
+            if (BaseTimestamp != 0)
+            {
+                foreach (var item in webSub.Cues)
+                {
+                    if (item.StartTime.TotalMilliseconds - BaseTimestamp >= 0)
+                    {
+                        item.StartTime = TimeSpan.FromMilliseconds(item.StartTime.TotalMilliseconds - BaseTimestamp);
+                        item.EndTime = TimeSpan.FromMilliseconds(item.EndTime.TotalMilliseconds - BaseTimestamp);
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
             }

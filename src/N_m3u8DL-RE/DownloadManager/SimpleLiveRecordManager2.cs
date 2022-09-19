@@ -35,6 +35,7 @@ namespace N_m3u8DL_RE.DownloadManager
         StreamExtractor StreamExtractor;
         List<StreamSpec> SelectedSteams;
         DateTime NowDateTime;
+        DateTime? PublishDateTime;
         bool STOP_FLAG = false;
         int WAIT_SEC = 0; //刷新间隔
         ConcurrentDictionary<int, int> RecordingDurDic = new(); //已录制时长
@@ -46,6 +47,7 @@ namespace N_m3u8DL_RE.DownloadManager
             this.DownloaderConfig = downloaderConfig;
             Downloader = new SimpleDownloader(DownloaderConfig);
             NowDateTime = DateTime.Now;
+            PublishDateTime = selectedSteams.FirstOrDefault()?.PublishTime;
             StreamExtractor = streamExtractor;
             SelectedSteams = selectedSteams;
         }
@@ -115,6 +117,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, ISourceBlock<List<MediaSegment>> source)
         {
+            var baseTimestamp = PublishDateTime == null ? 0L : (long)(PublishDateTime.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalMilliseconds;
             //mp4decrypt
             var mp4decrypt = DownloaderConfig.MyOptions.DecryptionBinaryPath!;
             var mp4InitFile = "";
@@ -321,6 +324,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         if (firstSub)
                         {
                             currentVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
+                            firstSub = false;
                         }
                         else
                         {
@@ -337,11 +341,17 @@ namespace N_m3u8DL_RE.DownloadManager
                     var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".ttml")).OrderBy(s => s).ToArray();
                     if (firstSub)
                     {
-                        currentVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0);
+                        if (baseTimestamp != 0)
+                        {
+                            var total = segments.Sum(s => s.Duration);
+                            baseTimestamp -= (long)TimeSpan.FromSeconds(total).TotalMilliseconds;
+                        }
+                        currentVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0, baseTimestamp);
+                        firstSub = false;
                     }
                     else
                     {
-                        var finalVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0);
+                        var finalVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0, baseTimestamp);
                         currentVtt.AddCuesFromOne(finalVtt);
                     }
                 }
@@ -358,11 +368,17 @@ namespace N_m3u8DL_RE.DownloadManager
                     var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).OrderBy(s => s).ToArray();
                     if (firstSub)
                     {
-                        currentVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0);
+                        if (baseTimestamp != 0)
+                        {
+                            var total = segments.Sum(s => s.Duration);
+                            baseTimestamp -= (long)TimeSpan.FromSeconds(total).TotalMilliseconds;
+                        }
+                        currentVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0, baseTimestamp);
+                        firstSub = false;
                     }
                     else
                     {
-                        var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0);
+                        var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0, baseTimestamp);
                         currentVtt.AddCuesFromOne(finalVtt);
                     }
                 }

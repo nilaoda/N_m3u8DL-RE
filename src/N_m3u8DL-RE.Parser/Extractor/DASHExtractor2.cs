@@ -189,6 +189,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         {
                             streamSpec.Channels = audioChannelConfiguration.Attribute("value")?.Value;
                         }
+
+                        //发布时间
+                        if (!string.IsNullOrEmpty(publishTime))
+                        {
+                            streamSpec.PublishTime = DateTime.Parse(publishTime);
+                        }
                         
 
                         //第一种形式 SegmentBase

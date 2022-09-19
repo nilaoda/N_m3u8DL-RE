@@ -29,6 +29,8 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? VideoRange { get; set; }
         //补充信息-特征
         public string? Characteristics { get; set; }
+        //发布时间（仅MPD需要）
+        public DateTime? PublishTime { get; set; }
 
         //外部轨道GroupId (后续寻找对应轨道信息)
         public string? AudioId { get; set; }

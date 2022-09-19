@@ -118,7 +118,7 @@ namespace Mp4SubtitleParser
             return MultiElementsFixRegex().Matches(xml).Select(m => m.Value).ToList();
         }
 
-        public static WebVttSub ExtractFromMp4s(IEnumerable<string> items, long segTimeMs)
+        public static WebVttSub ExtractFromMp4s(IEnumerable<string> items, long segTimeMs, long baseTimestamp = 0L)
         {
             //read ttmls
             List<string> xmls = new List<string>();
@@ -156,10 +156,10 @@ namespace Mp4SubtitleParser
                 segIndex++;
             }
 
-            return ExtractSub(xmls);
+            return ExtractSub(xmls, baseTimestamp);
         }
 
-        public static WebVttSub ExtractFromTTMLs(IEnumerable<string> items, long segTimeMs)
+        public static WebVttSub ExtractFromTTMLs(IEnumerable<string> items, long segTimeMs, long baseTimestamp = 0L)
         {
             //read ttmls
             List<string> xmls = new List<string>();
@@ -178,10 +178,10 @@ namespace Mp4SubtitleParser
                 segIndex++;
             }
 
-            return ExtractSub(xmls);
+            return ExtractSub(xmls, baseTimestamp);
         }
 
-        private static WebVttSub ExtractSub(List<string> xmls)
+        private static WebVttSub ExtractSub(List<string> xmls, long baseTimestamp)
         {
             //parsing
             var xmlDoc = new XmlDocument();
@@ -306,7 +306,7 @@ namespace Mp4SubtitleParser
                 vtt.AppendLine();
             }
 
-            return WebVttSub.Parse(vtt.ToString());
+            return WebVttSub.Parse(vtt.ToString(), baseTimestamp);
         }
     }
 }
