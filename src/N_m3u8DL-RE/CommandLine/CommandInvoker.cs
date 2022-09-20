@@ -48,6 +48,9 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
         private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
 
+        //morehelp
+        private readonly static Option<string?> MoreHelp = new(new string[] { "--morehelp" }, description: ResString.cmd_moreHelp) { ArgumentHelpName = "OPTION" };
+
         //直播相关
         private readonly static Option<bool> LivePerformAsVod = new(new string[] { "--live-perform-as-vod" }, description: ResString.cmd_livePerformAsVod, getDefaultValue: () => false);
         private readonly static Option<bool> LiveRealTimeMerge = new(new string[] { "--live-real-time-merge" }, description: ResString.cmd_liveRealTimeMerge, getDefaultValue: () => false);
@@ -334,7 +337,25 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220919")
+            var argList = new List<string>(args);
+            var index = -1;
+            if ((index = argList.IndexOf("--morehelp")) == 0 && argList.Count == 2) 
+            {
+                var option = argList[index + 1];
+                var msg = option switch
+                {
+                    "mux-after-done" => ResString.cmd_muxAfterDone_more,
+                    "mux-import" => ResString.cmd_muxImport_more,
+                    "select-video" => ResString.cmd_selectVideo_more,
+                    "select-audio" => ResString.cmd_selectAudio_more,
+                    "select-subtitle" => ResString.cmd_selectSubtitle_more,
+                    _ => $"Option=\"{option}\" not found"
+                };
+                Console.WriteLine($"More Help:\r\n\r\n  --{option}\r\n\r\n" + msg);
+                Environment.Exit(0);
+            }
+
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220920")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
@@ -342,7 +363,7 @@ namespace N_m3u8DL_RE.CommandLine
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit,
-                MuxImports, VideoFilter, AudioFilter, SubtitleFilter
+                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, MoreHelp
             };
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());

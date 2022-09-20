@@ -226,6 +226,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "設置UI語言",
                 enUS: "Set UI language"
             ),
+            ["cmd_moreHelp"] = new TextContainer
+            (
+                zhCN: "查看某个选项的详细帮助信息",
+                zhTW: "查看某個選項的詳細幫助訊息",
+                enUS: "Set more help info about one option"
+            ),
             ["cmd_urlProcessorArgs"] = new TextContainer
             (
                 zhCN: "此字符串将直接传递给URL Processor",
@@ -270,6 +276,12 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_selectVideo"] = new TextContainer
             (
+                zhCN: "通过正则表达式选择符合要求的视频流. 输入 \"--morehelp select-video\" 以查看详细信息.",
+                zhTW: "通過正則表達式選擇符合要求的影片軌. 輸入 \"--morehelp select-video\" 以查看詳細訊息.",
+                enUS: "Select video streams by regular expressions. Use \"--morehelp select-video\" for more details."
+            ),
+            ["cmd_selectVideo_more"] = new TextContainer
+            (
                 zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
                       "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
                       "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
@@ -300,6 +312,12 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_selectAudio"] = new TextContainer
             (
+                zhCN: "通过正则表达式选择符合要求的音频流. 输入 \"--morehelp select-audio\" 以查看详细信息.",
+                zhTW: "通過正則表達式選擇符合要求的音軌. 輸入 \"--morehelp select-audio\" 以查看詳細訊息.",
+                enUS: "Select audio streams by regular expressions. Use \"--morehelp select-audio\" for more details."
+            ),
+            ["cmd_selectAudio_more"] = new TextContainer
+            (
                 zhCN: "通过正则表达式选择符合要求的音频流. 参考 --select-video\r\n\r\n" +
                       "例如: \r\n" +
                       "# 选择所有音频\r\n" +
@@ -327,6 +345,12 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_selectSubtitle"] = new TextContainer
             (
+                zhCN: "通过正则表达式选择符合要求的字幕流. 输入 \"--morehelp select-subtitle\" 以查看详细信息.",
+                zhTW: "通過正則表達式選擇符合要求的字幕流. 輸入 \"--morehelp select-subtitle\" 以查看詳細訊息.",
+                enUS: "Select subtitle streams by regular expressions. Use \"--morehelp select-subtitle\" for more details."
+            ),
+            ["cmd_selectSubtitle_more"] = new TextContainer
+            (
                 zhCN: "通过正则表达式选择符合要求的字幕流. 参考 --select-video\r\n\r\n" +
                       "例如: \r\n" +
                       "# 选择所有字幕\r\n" +
@@ -346,7 +370,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# select all subs containing \"English\"\r\n" +
                       "-ss name=\"English\":for=all\r\n"
             ),
-            ["cmd_muxAfterDone"] = new TextContainer
+            ["cmd_muxAfterDone_more"] = new TextContainer
             (
                 zhCN: "所有工作完成时尝试混流分离的音视频. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
@@ -385,7 +409,19 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# use mkvmerge, set bin path\r\n" +
                       "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n"
             ),
+            ["cmd_muxAfterDone"] = new TextContainer
+            (
+                zhCN: "所有工作完成时尝试混流分离的音视频. 输入 \"--morehelp mux-after-done\" 以查看详细信息.",
+                zhTW: "所有工作完成時嘗試混流分離的影音. 輸入 \"--morehelp mux-after-done\" 以查看詳細訊息.",
+                enUS: "When all works is done, try to mux the downloaded streams. Use \"--morehelp mux-after-done\" for more details."
+            ),
             ["cmd_muxImport"] = new TextContainer
+            (
+                zhCN: "混流时引入外部媒体文件. 输入 \"--morehelp mux-import\" 以查看详细信息.",
+                zhTW: "混流時引入外部媒體檔案. 輸入 \"--morehelp mux-import\" 以查看詳細訊息.",
+                enUS: "When MuxAfterDone enabled, allow to import local media files. Use \"--morehelp mux-import\" for more details."
+            ),
+            ["cmd_muxImport_more"] = new TextContainer
             (
                 zhCN: "混流时引入外部媒体文件. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
                       "* path=PATH: 指定媒体文件路径\r\n" +

@@ -26,11 +26,16 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_ffmpegBinaryPath { get => GetText("cmd_ffmpegBinaryPath"); }
         public static string cmd_mkvmergeBinaryPath { get => GetText("cmd_mkvmergeBinaryPath"); }
         public static string cmd_baseUrl { get => GetText("cmd_baseUrl"); }
+        public static string cmd_moreHelp { get => GetText("cmd_moreHelp"); }
         public static string cmd_header { get => GetText("cmd_header"); }
         public static string cmd_muxImport { get => GetText("cmd_muxImport"); }
+        public static string cmd_muxImport_more { get => GetText("cmd_muxImport_more"); }
         public static string cmd_selectVideo { get => GetText("cmd_selectVideo"); }
+        public static string cmd_selectVideo_more { get => GetText("cmd_selectVideo_more"); }
         public static string cmd_selectAudio { get => GetText("cmd_selectAudio"); }
+        public static string cmd_selectAudio_more { get => GetText("cmd_selectAudio_more"); }
         public static string cmd_selectSubtitle { get => GetText("cmd_selectSubtitle"); }
+        public static string cmd_selectSubtitle_more { get => GetText("cmd_selectSubtitle_more"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }
         public static string cmd_keyText { get => GetText("cmd_keyText"); }
@@ -57,6 +62,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_liveRealTimeMerge { get => GetText("cmd_liveRealTimeMerge"); }
         public static string cmd_livePerformAsVod { get => GetText("cmd_livePerformAsVod"); }
         public static string cmd_muxAfterDone { get => GetText("cmd_muxAfterDone"); }
+        public static string cmd_muxAfterDone_more { get => GetText("cmd_muxAfterDone_more"); }
         public static string cmd_writeMetaJson { get => GetText("cmd_writeMetaJson"); }
         public static string liveLimit { get => GetText("liveLimit"); }
         public static string liveLimitReached { get => GetText("liveLimitReached"); }
