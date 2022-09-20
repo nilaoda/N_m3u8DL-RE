@@ -5,6 +5,7 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Util;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,9 +63,21 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 }
                 else if (!string.IsNullOrEmpty(uri))
                 {
-                    var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
-                    var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
-                    encryptInfo.Key = bytes;
+                    var retryCount = parserConfig.KeyRetryCount;
+                getHttpKey:
+                    try
+                    {
+                        var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
+                        var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
+                        encryptInfo.Key = bytes;
+                    }
+                    catch (Exception _ex)
+                    {
+                        Logger.WarnMarkUp($"[grey]{_ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
+                        Thread.Sleep(1000);
+                        if (retryCount > 0) goto getHttpKey;
+                        else throw;
+                    }
                 }
             }
             catch (Exception ex)

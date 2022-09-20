@@ -57,5 +57,10 @@ namespace N_m3u8DL_RE.Parser.Config
         /// 此参数将会传递给URL Processor中
         /// </summary>
         public string? UrlProcessorArgs { get; set; }
+
+        /// <summary>
+        /// KEY重试次数
+        /// </summary>
+        public int KeyRetryCount { get; set; } = 3;
     }
 }
