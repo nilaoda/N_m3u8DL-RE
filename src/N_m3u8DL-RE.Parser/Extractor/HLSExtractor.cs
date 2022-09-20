@@ -318,18 +318,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //解析KEY
                 else if (line.StartsWith(HLSTags.ext_x_key))
                 {
-                    //自定义KEY情况 不读取当前行的KEY信息.
-                    //对于IV，没自定义且当前行有IV的话 就用
-                    if (ParserConfig.CustomeKey != null)
-                    {
-                        currentEncryptInfo.Key = ParserConfig.CustomeKey;
-                        if (ParserConfig.CustomeIV == null && line.Contains("IV=0x"))
-                            currentEncryptInfo.IV = HexUtil.HexToBytes(ParserUtil.GetAttribute(line, "IV"));
-                        continue;
-                    }
-
-                    var iv = ParserUtil.GetAttribute(line, "IV");
-                    var method = ParserUtil.GetAttribute(line, "METHOD");
                     var uri = ParserUtil.GetAttribute(line, "URI");
                     var uri_last = ParserUtil.GetAttribute(lastKeyLine, "URI");
                     

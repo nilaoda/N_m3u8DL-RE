@@ -1,5 +1,7 @@
-﻿using N_m3u8DL_RE.Common.Log;
+﻿using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Util;
@@ -48,8 +50,17 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
         private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
 
+        //代理选项
+        private readonly static Option<bool> UseSystemProxy = new(new string[] { "--use-system-proxy" }, description: ResString.cmd_useSystemProxy, getDefaultValue: () => true);
+
         //morehelp
         private readonly static Option<string?> MoreHelp = new(new string[] { "--morehelp" }, description: ResString.cmd_moreHelp) { ArgumentHelpName = "OPTION" };
+
+        //自定义KEY等
+        private readonly static Option<EncryptMethod?> CustomHLSMethod = new(name: "--custom-hls-method", description: ResString.cmd_customHLSMethod) { ArgumentHelpName = "METHOD" };
+        private readonly static Option<byte[]?> CustomHLSKey = new(name: "--custom-hls-key", description: ResString.cmd_customHLSKey, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
+        private readonly static Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv", description: ResString.cmd_customHLSIv, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
+
 
         //直播相关
         private readonly static Option<bool> LivePerformAsVod = new(new string[] { "--live-perform-as-vod" }, description: ResString.cmd_livePerformAsVod, getDefaultValue: () => false);
@@ -64,6 +75,32 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> VideoFilter = new(new string[] { "-sv", "--select-video" }, description: ResString.cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> AudioFilter = new(new string[] { "-sa", "--select-audio" }, description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> SubtitleFilter = new(new string[] { "-ss", "--select-subtitle" }, description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+
+        /// <summary>
+        /// 解析自定义KEY
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static byte[]? ParseHLSCustomKey(ArgumentResult result)
+        {
+            var input = result.Tokens.First().Value;
+            try
+            {
+                if (string.IsNullOrEmpty(input))
+                    return null;
+                if (File.Exists(input))
+                    return File.ReadAllBytes(input);
+                else if (HexUtil.TryParseHexString(input, out byte[]? bytes))
+                    return bytes;
+                else
+                    return Convert.FromBase64String(input);
+            }
+            catch (Exception)
+            {
+                result.ErrorMessage = "error in parse hls custom key: " + input;
+                return null;
+            }
+        }
 
         /// <summary>
         /// 解析录制直播时长限制
@@ -302,6 +339,10 @@ namespace N_m3u8DL_RE.CommandLine
                     LiveKeepSegments = bindingContext.ParseResult.GetValueForOption(LiveKeepSegments),
                     LiveRecordLimit = bindingContext.ParseResult.GetValueForOption(LiveRecordLimit),
                     LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
+                    UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
+                    CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod),
+                    CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey),
+                    CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv),
                 };
 
                 var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
@@ -362,6 +403,7 @@ namespace N_m3u8DL_RE.CommandLine
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
+                CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, MoreHelp
             };

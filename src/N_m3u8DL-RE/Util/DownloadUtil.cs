@@ -1,5 +1,6 @@
 ﻿using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
 using System;
 using System.Collections.Generic;
@@ -14,15 +15,7 @@ namespace N_m3u8DL_RE.Util
 {
     internal class DownloadUtil
     {
-        private static readonly HttpClient AppHttpClient = new(new HttpClientHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.All,
-            ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-        })
-        {
-            Timeout = TimeSpan.FromMinutes(2)
-        };
+        private static readonly HttpClient AppHttpClient = HTTPUtil.AppHttpClient;
 
         public static async Task<DownloadResult> DownloadToFileAsync(string url, string path, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, long? fromPosition = null, long? toPosition = null)
         {

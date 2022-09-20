@@ -28,12 +28,21 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
             var encryptInfo = new EncryptInfo(method);
+
+            //处理自定义加密方式
+            if (parserConfig.CustomMethod != null)
+            {
+                encryptInfo.Method = parserConfig.CustomMethod.Value;
+                Logger.Warn("METHOD changed to {}", method, encryptInfo.Method);
+            }
+
             //IV
             if (!string.IsNullOrEmpty(iv))
             {
                 encryptInfo.IV = HexUtil.HexToBytes(iv);
             }
-            if (parserConfig.CustomeIV != null)
+            //自定义IV
+            if (parserConfig.CustomeIV != null && parserConfig.CustomeIV.Length > 0) 
             {
                 encryptInfo.IV = parserConfig.CustomeIV;
             }
@@ -41,7 +50,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             //KEY
             try
             {
-                if (parserConfig.CustomeKey != null)
+                if (parserConfig.CustomeKey != null && parserConfig.CustomeKey.Length > 0)
                 {
                     encryptInfo.Key = parserConfig.CustomeKey;
                 }
@@ -75,7 +84,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                     {
                         Logger.WarnMarkUp($"[grey]{_ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
                         Thread.Sleep(1000);
-                        if (retryCount > 0) goto getHttpKey;
+                        if (retryCount-- > 0) goto getHttpKey;
                         else throw;
                     }
                 }

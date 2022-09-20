@@ -36,6 +36,9 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_selectAudio_more { get => GetText("cmd_selectAudio_more"); }
         public static string cmd_selectSubtitle { get => GetText("cmd_selectSubtitle"); }
         public static string cmd_selectSubtitle_more { get => GetText("cmd_selectSubtitle_more"); }
+        public static string cmd_customHLSMethod { get => GetText("cmd_customHLSMethod"); }
+        public static string cmd_customHLSKey { get => GetText("cmd_customHLSKey"); }
+        public static string cmd_customHLSIv { get => GetText("cmd_customHLSIv"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }
         public static string cmd_keyText { get => GetText("cmd_keyText"); }
@@ -57,6 +60,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_urlProcessorArgs { get => GetText("cmd_urlProcessorArgs"); }
         public static string cmd_useShakaPackager { get => GetText("cmd_useShakaPackager"); }
         public static string cmd_concurrentDownload { get => GetText("cmd_concurrentDownload"); }
+        public static string cmd_useSystemProxy { get => GetText("cmd_useSystemProxy"); }
         public static string cmd_liveKeepSegments { get => GetText("cmd_liveKeepSegments"); }
         public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }
         public static string cmd_liveRealTimeMerge { get => GetText("cmd_liveRealTimeMerge"); }

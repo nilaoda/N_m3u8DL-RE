@@ -8,9 +8,9 @@ namespace N_m3u8DL_RE.Util
 {
     internal class OtherUtil
     {
-        public static Dictionary<string,string> SplitHeaderArrayToDic(string[]? headers)
+        public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
         {
-            Dictionary<string,string> dic = new();
+            Dictionary<string, string> dic = new();
 
             if (headers != null)
             {

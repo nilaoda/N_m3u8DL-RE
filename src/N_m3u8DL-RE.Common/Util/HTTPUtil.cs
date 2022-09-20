@@ -23,13 +23,14 @@ namespace N_m3u8DL_RE.Common.Util
 {
     public class HTTPUtil
     {
-
-        public static readonly HttpClient AppHttpClient = new(new HttpClientHandler
+        public static readonly HttpClientHandler HttpClientHandler = new()
         {
             AllowAutoRedirect = false,
             AutomaticDecompression = DecompressionMethods.All,
             ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
-        })
+        };
+
+        public static readonly HttpClient AppHttpClient = new(HttpClientHandler)
         {
             Timeout = TimeSpan.FromMinutes(2)
         };

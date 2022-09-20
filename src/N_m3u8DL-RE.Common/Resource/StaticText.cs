@@ -244,17 +244,41 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "錄製直播時即時合併",
                 enUS: "Real-time merge into file when recording live"
             ),
+            ["cmd_useSystemProxy"] = new TextContainer
+            (
+                zhCN: "使用系统默认代理",
+                zhTW: "使用系統默認代理",
+                enUS: "Use system default proxy"
+            ),
             ["cmd_livePerformAsVod"] = new TextContainer
             (
                 zhCN: "以点播方式下载直播流",
                 zhTW: "以點播方式下載直播流",
                 enUS: "Download live streams as vod"
             ),
+            ["cmd_customHLSMethod"] = new TextContainer
+            (
+                zhCN: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",
+                zhTW: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",
+                enUS: "Set HLS encryption method (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)"
+            ),
+            ["cmd_customHLSKey"] = new TextContainer
+            (
+                zhCN: "指定HLS解密KEY. 可以是文件, HEX或Base64",
+                zhTW: "指定HLS解密KEY. 可以是文件, HEX或Base64",
+                enUS: "Set the HLS decryption key. Can be file, HEX or Base64"
+            ),
+            ["cmd_customHLSIv"] = new TextContainer
+            (
+                zhCN: "指定HLS解密IV. 可以是文件, HEX或Base64",
+                zhTW: "指定HLS解密IV. 可以是文件, HEX或Base64",
+                enUS: "Set the HLS decryption iv. Can be file, HEX or Base64"
+            ),
             ["cmd_liveKeepSegments"] = new TextContainer
             (
                 zhCN: "录制直播并开启实时合并时依然保留分片",
                 zhTW: "錄製直播並開啟即時合併時依然保留分片",
-                enUS: "Keep segments when recording a live broadcast and enable liveRealTimeMerge"
+                enUS: "Keep segments when recording a live (liveRealTimeMerge enabled)"
             ),
             ["cmd_liveRecordLimit"] = new TextContainer
             (
@@ -276,9 +300,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_selectVideo"] = new TextContainer
             (
-                zhCN: "通过正则表达式选择符合要求的视频流. 输入 \"--morehelp select-video\" 以查看详细信息.",
-                zhTW: "通過正則表達式選擇符合要求的影片軌. 輸入 \"--morehelp select-video\" 以查看詳細訊息.",
-                enUS: "Select video streams by regular expressions. Use \"--morehelp select-video\" for more details."
+                zhCN: "通过正则表达式选择符合要求的视频流. 输入 \"--morehelp select-video\" 以查看详细信息",
+                zhTW: "通過正則表達式選擇符合要求的影片軌. 輸入 \"--morehelp select-video\" 以查看詳細訊息",
+                enUS: "Select video streams by regular expressions. Use \"--morehelp select-video\" for more details"
             ),
             ["cmd_selectVideo_more"] = new TextContainer
             (
@@ -312,9 +336,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_selectAudio"] = new TextContainer
             (
-                zhCN: "通过正则表达式选择符合要求的音频流. 输入 \"--morehelp select-audio\" 以查看详细信息.",
-                zhTW: "通過正則表達式選擇符合要求的音軌. 輸入 \"--morehelp select-audio\" 以查看詳細訊息.",
-                enUS: "Select audio streams by regular expressions. Use \"--morehelp select-audio\" for more details."
+                zhCN: "通过正则表达式选择符合要求的音频流. 输入 \"--morehelp select-audio\" 以查看详细信息",
+                zhTW: "通過正則表達式選擇符合要求的音軌. 輸入 \"--morehelp select-audio\" 以查看詳細訊息",
+                enUS: "Select audio streams by regular expressions. Use \"--morehelp select-audio\" for more details"
             ),
             ["cmd_selectAudio_more"] = new TextContainer
             (
@@ -345,9 +369,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_selectSubtitle"] = new TextContainer
             (
-                zhCN: "通过正则表达式选择符合要求的字幕流. 输入 \"--morehelp select-subtitle\" 以查看详细信息.",
-                zhTW: "通過正則表達式選擇符合要求的字幕流. 輸入 \"--morehelp select-subtitle\" 以查看詳細訊息.",
-                enUS: "Select subtitle streams by regular expressions. Use \"--morehelp select-subtitle\" for more details."
+                zhCN: "通过正则表达式选择符合要求的字幕流. 输入 \"--morehelp select-subtitle\" 以查看详细信息",
+                zhTW: "通過正則表達式選擇符合要求的字幕流. 輸入 \"--morehelp select-subtitle\" 以查看詳細訊息",
+                enUS: "Select subtitle streams by regular expressions. Use \"--morehelp select-subtitle\" for more details"
             ),
             ["cmd_selectSubtitle_more"] = new TextContainer
             (
@@ -411,15 +435,15 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_muxAfterDone"] = new TextContainer
             (
-                zhCN: "所有工作完成时尝试混流分离的音视频. 输入 \"--morehelp mux-after-done\" 以查看详细信息.",
-                zhTW: "所有工作完成時嘗試混流分離的影音. 輸入 \"--morehelp mux-after-done\" 以查看詳細訊息.",
-                enUS: "When all works is done, try to mux the downloaded streams. Use \"--morehelp mux-after-done\" for more details."
+                zhCN: "所有工作完成时尝试混流分离的音视频. 输入 \"--morehelp mux-after-done\" 以查看详细信息",
+                zhTW: "所有工作完成時嘗試混流分離的影音. 輸入 \"--morehelp mux-after-done\" 以查看詳細訊息",
+                enUS: "When all works is done, try to mux the downloaded streams. Use \"--morehelp mux-after-done\" for more details"
             ),
             ["cmd_muxImport"] = new TextContainer
             (
-                zhCN: "混流时引入外部媒体文件. 输入 \"--morehelp mux-import\" 以查看详细信息.",
-                zhTW: "混流時引入外部媒體檔案. 輸入 \"--morehelp mux-import\" 以查看詳細訊息.",
-                enUS: "When MuxAfterDone enabled, allow to import local media files. Use \"--morehelp mux-import\" for more details."
+                zhCN: "混流时引入外部媒体文件. 输入 \"--morehelp mux-import\" 以查看详细信息",
+                zhTW: "混流時引入外部媒體檔案. 輸入 \"--morehelp mux-import\" 以查看詳細訊息",
+                enUS: "When MuxAfterDone enabled, allow to import local media files. Use \"--morehelp mux-import\" for more details"
             ),
             ["cmd_muxImport_more"] = new TextContainer
             (

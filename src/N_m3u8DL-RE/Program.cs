@@ -58,6 +58,11 @@ namespace N_m3u8DL_RE
         {
             Logger.LogLevel = option.LogLevel;
 
+            if (option.UseSystemProxy == false)
+            {
+                HTTPUtil.HttpClientHandler.UseProxy = false;
+            }
+
             try
             {
                 //检查互斥的选项
@@ -130,7 +135,10 @@ namespace N_m3u8DL_RE
                     AppendUrlParams = option.AppendUrlParams,
                     UrlProcessorArgs = option.UrlProcessorArgs,
                     BaseUrl = option.BaseUrl!,
-                    Headers = headers
+                    Headers = headers,
+                    CustomMethod = option.CustomHLSMethod,
+                    CustomeKey = option.CustomHLSKey,
+                    CustomeIV = option.CustomHLSIv,
                 };
 
                 //demo1
