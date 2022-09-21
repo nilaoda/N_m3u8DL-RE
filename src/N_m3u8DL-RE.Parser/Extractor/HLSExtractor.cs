@@ -236,13 +236,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             //当前的加密信息
             EncryptInfo currentEncryptInfo = new();
-            if (ParserConfig.CustomeKey != null)
-            {
-                currentEncryptInfo.Method = ParserConfig.CustomMethod ?? EncryptMethod.AES_128;
+            if (ParserConfig.CustomMethod != null)
+                currentEncryptInfo.Method = ParserConfig.CustomMethod.Value;
+            if (ParserConfig.CustomeKey != null && ParserConfig.CustomeKey.Length > 0) 
                 currentEncryptInfo.Key = ParserConfig.CustomeKey;
-                if (ParserConfig.CustomeIV != null)
-                    currentEncryptInfo.IV = ParserConfig.CustomeIV;
-            }
+            if (ParserConfig.CustomeIV != null && ParserConfig.CustomeIV.Length > 0)
+                currentEncryptInfo.IV = ParserConfig.CustomeIV;
             //上次读取到的加密行，#EXT-X-KEY:……
             string lastKeyLine = "";
 
