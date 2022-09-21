@@ -340,10 +340,20 @@ namespace N_m3u8DL_RE.CommandLine
                     LiveRecordLimit = bindingContext.ParseResult.GetValueForOption(LiveRecordLimit),
                     LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
                     UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
-                    CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod),
-                    CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey),
-                    CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv),
                 };
+
+                if (bindingContext.ParseResult.HasOption(CustomHLSMethod))
+                {
+                    option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
+                }
+                if (bindingContext.ParseResult.HasOption(CustomHLSKey))
+                {
+                    option.CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey);
+                }
+                if (bindingContext.ParseResult.HasOption(CustomHLSIv))
+                {
+                    option.CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv);
+                }
 
                 var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
                 if (parsedHeaders != null)
@@ -396,7 +406,7 @@ namespace N_m3u8DL_RE.CommandLine
                 Environment.Exit(0);
             }
 
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220920")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220921")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
