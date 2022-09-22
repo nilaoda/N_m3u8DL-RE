@@ -298,7 +298,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
             }
 
-            if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0 && mp4InitFile != "")
+            if (!string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.MP4RealTimeDecryption && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0 && mp4InitFile != "")
             {
                 File.Delete(mp4InitFile);
                 //shaka实时解密不需要init文件用于合并
