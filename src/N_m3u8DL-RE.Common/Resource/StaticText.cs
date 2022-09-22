@@ -289,7 +289,7 @@ namespace N_m3u8DL_RE.Common.Resource
             ["cmd_useShakaPackager"] = new TextContainer
             (
                 zhCN: "解密时使用shaka-packager替代mp4decrypt",
-                zhTW: "解密时使用shaka-packager替代mp4decrypt",
+                zhTW: "解密時使用shaka-packager替代mp4decrypt",
                 enUS: "Use shaka-packager instead of mp4decrypt to decrypt"
             ),
             ["cmd_concurrentDownload"] = new TextContainer
