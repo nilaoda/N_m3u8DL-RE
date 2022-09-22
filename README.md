@@ -1,5 +1,5 @@
 # N_m3u8DL-RE
-N_m3u8DL-CLI，但是跨平台
+跨平台的DASH/HLS下载工具。支持点播、直播。
 
 ---
 Beta Version：
@@ -16,7 +16,9 @@ Find latest binary at [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions)
 
 ---
 
-运行截图
+# 运行截图
+
+## 点播
 
 ![RE1](img/RE.gif)
 
@@ -25,6 +27,8 @@ Find latest binary at [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions)
 
 ![RE2](img/RE2.gif)
 
+## 直播
+
 录制TS直播源：
 
 [click to show gif](http://pan.iqiyi.com/file/paopao/W0LfmaMRvuA--uCdOpZ1cldM5JCVhMfIm7KFqr4oKCz80jLn0bBb-9PWmeCFZ-qHpAaQydQ1zk-CHYT_UbRLtw.gif)
@@ -32,3 +36,8 @@ Find latest binary at [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions)
 录制MPD直播源：
 
 [click to show gif](http://pan.iqiyi.com/file/paopao/nmAV5MOh0yIyHhnxdgM_6th_p2nqrFsM4k-o3cUPwUa8Eh8QOU4uyPkLa_BlBrMa3GBnKWSk8rOaUwbsjKN14g.gif)
+
+录制过程中，借助ffmpeg完成对音视频的实时混流
+```
+ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a -c copy 2022-09-21_19-54-42_V.ts
+```
