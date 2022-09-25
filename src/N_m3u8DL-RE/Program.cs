@@ -63,6 +63,12 @@ namespace N_m3u8DL_RE
                 HTTPUtil.HttpClientHandler.UseProxy = false;
             }
 
+            if (option.CustomProxy != null)
+            {
+                HTTPUtil.HttpClientHandler.Proxy = option.CustomProxy;
+                HTTPUtil.HttpClientHandler.UseProxy = true;
+            }
+
             try
             {
                 //检查互斥的选项

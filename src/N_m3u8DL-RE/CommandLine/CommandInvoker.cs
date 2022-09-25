@@ -10,6 +10,7 @@ using System.CommandLine;
 using System.CommandLine.Binding;
 using System.CommandLine.Parsing;
 using System.Globalization;
+using System.Net;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.CommandLine
@@ -52,6 +53,8 @@ namespace N_m3u8DL_RE.CommandLine
 
         //代理选项
         private readonly static Option<bool> UseSystemProxy = new(new string[] { "--use-system-proxy" }, description: ResString.cmd_useSystemProxy, getDefaultValue: () => true);
+        private readonly static Option<WebProxy?> CustomProxy = new(new string[] { "--custom-proxy" }, description: ResString.cmd_customProxy, parseArgument: ParseProxy) { ArgumentHelpName = "URL" };
+
 
         //morehelp
         private readonly static Option<string?> MoreHelp = new(new string[] { "--morehelp" }, description: ResString.cmd_moreHelp) { ArgumentHelpName = "OPTION" };
@@ -75,6 +78,30 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> VideoFilter = new(new string[] { "-sv", "--select-video" }, description: ResString.cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> AudioFilter = new(new string[] { "-sa", "--select-audio" }, description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> SubtitleFilter = new(new string[] { "-ss", "--select-subtitle" }, description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+
+        /// <summary>
+        /// 解析用户代理
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        private static WebProxy? ParseProxy(ArgumentResult result)
+        {
+            var input = result.Tokens.First().Value;
+            try
+            {
+                if (string.IsNullOrEmpty(input))
+                    return null;
+                if (!input.StartsWith("http"))
+                    throw new ArgumentException("url must starts with http");
+                return new WebProxy(new Uri(input));
+            }
+            catch (Exception ex)
+            {
+                result.ErrorMessage = $"error in parse {input}: " + ex.Message;
+                return null;
+            }
+        }
 
         /// <summary>
         /// 解析自定义KEY
@@ -340,20 +367,12 @@ namespace N_m3u8DL_RE.CommandLine
                     LiveRecordLimit = bindingContext.ParseResult.GetValueForOption(LiveRecordLimit),
                     LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
                     UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
+                    CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
                 };
 
-                if (bindingContext.ParseResult.HasOption(CustomHLSMethod))
-                {
-                    option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
-                }
-                if (bindingContext.ParseResult.HasOption(CustomHLSKey))
-                {
-                    option.CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey);
-                }
-                if (bindingContext.ParseResult.HasOption(CustomHLSIv))
-                {
-                    option.CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv);
-                }
+                if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
+                if (bindingContext.ParseResult.HasOption(CustomHLSKey)) option.CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey);
+                if (bindingContext.ParseResult.HasOption(CustomHLSIv)) option.CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv);
 
                 var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
                 if (parsedHeaders != null)
@@ -413,7 +432,7 @@ namespace N_m3u8DL_RE.CommandLine
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
-                CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy,
+                CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, MoreHelp
             };

@@ -244,6 +244,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "錄製直播時即時合併",
                 enUS: "Real-time merge into file when recording live"
             ),
+            ["cmd_customProxy"] = new TextContainer
+            (
+                zhCN: "设置请求代理",
+                zhTW: "設置請求代理",
+                enUS: "Set web request proxy"
+            ),
             ["cmd_useSystemProxy"] = new TextContainer
             (
                 zhCN: "使用系统默认代理",
