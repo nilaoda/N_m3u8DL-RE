@@ -32,7 +32,7 @@ namespace N_m3u8DL_RE.Common.Util
 
         public static readonly HttpClient AppHttpClient = new(HttpClientHandler)
         {
-            Timeout = TimeSpan.FromMinutes(2)
+            Timeout = TimeSpan.FromSeconds(100)
         };
 
         private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)

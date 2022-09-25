@@ -31,37 +31,60 @@ namespace N_m3u8DL_RE.Util
                 }
             }
             Logger.Debug(request.Headers.ToString());
-            using var response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-            if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved)
+            CancellationTokenSource cancellationTokenSource = new(); //取消下载
+            using var watcher = Task.Factory.StartNew(async () =>
             {
-                HttpResponseHeaders respHeaders = response.Headers;
-                Logger.Debug(respHeaders.ToString());
-                if (respHeaders != null && respHeaders.Location != null)
+                while (true)
                 {
-                    var redirectedUrl = respHeaders.Location.AbsoluteUri;
-                    return await DownloadToFileAsync(redirectedUrl, path, speedContainer, headers, fromPosition, toPosition);
+                    if (speedContainer == null) break;
+                    if (speedContainer.ShouldStop)
+                    {
+                        cancellationTokenSource.Cancel();
+                        speedContainer.ResetLowSpeedCount();
+                        Logger.WarnMarkUp("Cancel...");
+                        break;
+                    }
+                    await Task.Delay(500);
                 }
-            }
-            response.EnsureSuccessStatusCode();
-            var contentLength = response.Content.Headers.ContentLength;
-            if (speedContainer.SingleSegment) speedContainer.ResponseLength = contentLength;
-
-            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            using var responseStream = await response.Content.ReadAsStreamAsync();
-            var buffer = new byte[16 * 1024];
-            var size = 0;
-            while ((size = await responseStream.ReadAsync(buffer)) > 0)
+            });
+            try
             {
-                speedContainer.Add(size);
-                await stream.WriteAsync(buffer, 0, size);
-            }
+                using var response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
+                if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved)
+                {
+                    HttpResponseHeaders respHeaders = response.Headers;
+                    Logger.Debug(respHeaders.ToString());
+                    if (respHeaders != null && respHeaders.Location != null)
+                    {
+                        var redirectedUrl = respHeaders.Location.AbsoluteUri;
+                        return await DownloadToFileAsync(redirectedUrl, path, speedContainer, headers, fromPosition, toPosition);
+                    }
+                }
+                response.EnsureSuccessStatusCode();
+                var contentLength = response.Content.Headers.ContentLength;
+                if (speedContainer.SingleSegment) speedContainer.ResponseLength = contentLength;
 
-            return new DownloadResult()
+                using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                using var responseStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token);
+                var buffer = new byte[16 * 1024];
+                var size = 0;
+                while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
+                {
+                    speedContainer.Add(size);
+                    await stream.WriteAsync(buffer, 0, size);
+                }
+
+                return new DownloadResult()
+                {
+                    ActualContentLength = stream.Length,
+                    RespContentLength = contentLength,
+                    ActualFilePath = path
+                };
+            }
+            catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationTokenSource.Token)
             {
-                ActualContentLength = stream.Length,
-                RespContentLength = contentLength,
-                ActualFilePath = path
-            };
+                throw new Exception("Download speed too slow!");
+            }
         }
     }
 }
