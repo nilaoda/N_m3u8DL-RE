@@ -92,7 +92,15 @@ namespace N_m3u8DL_RE.CommandLine
             {
                 if (string.IsNullOrEmpty(input))
                     return null;
-                return new WebProxy(new Uri(input));
+
+                var uri = new Uri(input);
+                var proxy = new WebProxy(uri, true);
+                if (uri.UserInfo != null)
+                {
+                    var infos = uri.UserInfo.Split(':');
+                    proxy.Credentials = new NetworkCredential(infos.First(), infos.Last());
+                }
+                return proxy;
             }
             catch (Exception ex)
             {
