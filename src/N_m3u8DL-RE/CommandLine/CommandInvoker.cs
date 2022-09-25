@@ -95,7 +95,7 @@ namespace N_m3u8DL_RE.CommandLine
 
                 var uri = new Uri(input);
                 var proxy = new WebProxy(uri, true);
-                if (uri.UserInfo != null)
+                if (!string.IsNullOrEmpty(uri.UserInfo))
                 {
                     var infos = uri.UserInfo.Split(':');
                     proxy.Credentials = new NetworkCredential(infos.First(), infos.Last());
