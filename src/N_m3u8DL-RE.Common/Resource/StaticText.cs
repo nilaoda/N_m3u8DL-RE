@@ -583,6 +583,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "內容匹配: [white on deepskyblue1]HTTP Live Streaming[/]",
                 enUS: "Content Matched: [white on deepskyblue1]HTTP Live Streaming[/]"
             ),
+            ["partMerge"] = new TextContainer
+            (
+                zhCN: "分片数量大于1800个，开始分块合并...",
+                zhTW: "分片數量大於1800個，開始分塊合併...",
+                enUS: "Segments more than 1800, start partial merge..."
+            ),
             ["notSupported"] = new TextContainer
             (
                 zhCN: "当前输入不受支持: ",

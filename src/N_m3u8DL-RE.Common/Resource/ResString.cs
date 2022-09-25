@@ -72,6 +72,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string liveLimit { get => GetText("liveLimit"); }
         public static string liveLimitReached { get => GetText("liveLimitReached"); }
         public static string saveName { get => GetText("saveName"); }
+        public static string partMerge { get => GetText("partMerge"); }
         public static string fetch { get => GetText("fetch"); }
         public static string ffmpegMerge { get => GetText("ffmpegMerge"); }
         public static string ffmpegNotFound { get => GetText("ffmpegNotFound"); }

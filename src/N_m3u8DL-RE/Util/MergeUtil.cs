@@ -75,6 +75,38 @@ namespace N_m3u8DL_RE.Util
             p.WaitForExit();
         }
 
+        public static string[] PartialCombineMultipleFiles(string[] files)
+        {
+            var newFiles = new List<string>();
+            int div = 0;
+            if (files.Length <= 90000)
+                div = 100;
+            else
+                div = 200;
+
+            string outputName = Path.GetDirectoryName(files[0]) + "\\T";
+            int index = 0; //序号
+
+            //按照div的容量分割为小数组
+            string[][] li = Enumerable.Range(0, files.Count() / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
+            foreach (var items in li)
+            {
+                if (items.Count() == 0)
+                    continue;
+                var output = outputName + index.ToString("0000") + ".ts";
+                CombineMultipleFilesIntoSingleFile(items, output);
+                newFiles.Add(output);
+                //合并后删除这些文件
+                foreach (var item in items)
+                {
+                    File.Delete(item);
+                }
+                index++;
+            }
+
+            return newFiles.ToArray();
+        }
+
         public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
             bool fastStart = false,
             bool writeDate = true, string poster = "", string audioName = "", string title = "",

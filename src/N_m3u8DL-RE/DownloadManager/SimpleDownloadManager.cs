@@ -11,6 +11,7 @@ using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Text;
 
 namespace N_m3u8DL_RE.DownloadManager
@@ -508,6 +509,20 @@ namespace N_m3u8DL_RE.DownloadManager
                     while (File.Exists(ffOut))
                     {
                         Logger.WarnMarkUp($"{Path.GetFileName(ffOut)} => {Path.GetFileName(ffOut = Path.ChangeExtension(ffOut, $"copy" + Path.GetExtension(ffOut)))}");
+                    }
+                    //大于1800分片，需要分步骤合并
+                    if (files.Length >= 1800)
+                    {
+                        Logger.WarnMarkUp(ResString.partMerge);
+                        files = MergeUtil.PartialCombineMultipleFiles(files);
+                        FileDic.Clear();
+                        foreach (var item in files)
+                        {
+                            FileDic[new MediaSegment() { Url = item }] = new DownloadResult()
+                            {
+                                ActualFilePath = item
+                            };
+                        }
                     }
                     mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter);
                     if (mergeSuccess) output = ffOut;
