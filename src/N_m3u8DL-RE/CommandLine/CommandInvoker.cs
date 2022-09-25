@@ -415,7 +415,7 @@ namespace N_m3u8DL_RE.CommandLine
         {
             var argList = new List<string>(args);
             var index = -1;
-            if ((index = argList.IndexOf("--morehelp")) == 0 && argList.Count == 2) 
+            if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1) 
             {
                 var option = argList[index + 1];
                 var msg = option switch
