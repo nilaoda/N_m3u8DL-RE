@@ -92,13 +92,11 @@ namespace N_m3u8DL_RE.CommandLine
             {
                 if (string.IsNullOrEmpty(input))
                     return null;
-                if (!input.StartsWith("http"))
-                    throw new ArgumentException("url must starts with http");
                 return new WebProxy(new Uri(input));
             }
             catch (Exception ex)
             {
-                result.ErrorMessage = $"error in parse {input}: " + ex.Message;
+                result.ErrorMessage = $"error in parse proxy: " + ex.Message;
                 return null;
             }
         }

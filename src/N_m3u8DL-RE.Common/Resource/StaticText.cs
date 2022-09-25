@@ -246,9 +246,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_customProxy"] = new TextContainer
             (
-                zhCN: "设置请求代理",
-                zhTW: "設置請求代理",
-                enUS: "Set web request proxy"
+                zhCN: "设置请求代理, 如 http://127.0.0.1:8888",
+                zhTW: "設置請求代理, 如 http://127.0.0.1:8888",
+                enUS: "Set web request proxy, like http://127.0.0.1:8888"
             ),
             ["cmd_useSystemProxy"] = new TextContainer
             (
