@@ -41,7 +41,7 @@ namespace N_m3u8DL_RE.Util
                     {
                         cancellationTokenSource.Cancel();
                         speedContainer.ResetLowSpeedCount();
-                        Logger.WarnMarkUp("Cancel...");
+                        Logger.DebugMarkUp("Cancel...");
                         break;
                     }
                     await Task.Delay(500);
