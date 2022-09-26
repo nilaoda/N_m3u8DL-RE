@@ -431,7 +431,7 @@ namespace N_m3u8DL_RE.CommandLine
                 Environment.Exit(0);
             }
 
-            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220925")
+            var rootCommand = new RootCommand("N_m3u8DL-RE (Beta version) 20220927")
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,

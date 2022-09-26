@@ -73,10 +73,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 else if (!string.IsNullOrEmpty(uri))
                 {
                     var retryCount = parserConfig.KeyRetryCount;
+                    var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
                 getHttpKey:
                     try
                     {
-                        var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
                         var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
                         encryptInfo.Key = bytes;
                     }

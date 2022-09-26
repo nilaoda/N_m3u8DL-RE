@@ -2,14 +2,8 @@
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util
 {
@@ -17,9 +11,39 @@ namespace N_m3u8DL_RE.Util
     {
         private static readonly HttpClient AppHttpClient = HTTPUtil.AppHttpClient;
 
+        private static async Task<DownloadResult> CopyFileAsync(string sourceFile, string path, SpeedContainer speedContainer, long? fromPosition = null, long? toPosition = null)
+        {
+            using var inputStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var outputStream = new FileStream(path, FileMode.OpenOrCreate);
+            inputStream.Seek(fromPosition ?? 0L, SeekOrigin.Begin);
+            var expect = (toPosition ?? inputStream.Length) - inputStream.Position + 1;
+            if (expect == inputStream.Length + 1)
+            {
+                await inputStream.CopyToAsync(outputStream);
+                speedContainer.Add(inputStream.Length);
+            }
+            else
+            {
+                var buffer = new byte[expect];
+                await inputStream.ReadAsync(buffer);
+                await outputStream.WriteAsync(buffer, 0, buffer.Length);
+                speedContainer.Add(buffer.Length);
+            }
+            return new DownloadResult()
+            {
+                ActualContentLength = outputStream.Length,
+                ActualFilePath = path
+            };
+        }
+
         public static async Task<DownloadResult> DownloadToFileAsync(string url, string path, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, long? fromPosition = null, long? toPosition = null)
         {
             Logger.Debug(ResString.fetch + url);
+            if (url.StartsWith("file:"))
+            {
+                var file = new Uri(url).LocalPath;
+                return await CopyFileAsync(file, path, speedContainer, fromPosition, toPosition);
+            }
             using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
             if (fromPosition != null || toPosition != null)
                 request.Headers.Range = new(fromPosition, toPosition);

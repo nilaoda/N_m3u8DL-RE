@@ -84,6 +84,10 @@ namespace N_m3u8DL_RE.Common.Util
 
         public static async Task<byte[]> GetBytesAsync(string url, Dictionary<string, string>? headers = null)
         {
+            if (url.StartsWith("file:"))
+            {
+                return await File.ReadAllBytesAsync(new Uri(url).LocalPath);
+            }
             byte[] bytes = new byte[0];
             var webResponse = await DoGetAsync(url, headers);
             bytes = await webResponse.Content.ReadAsByteArrayAsync();
