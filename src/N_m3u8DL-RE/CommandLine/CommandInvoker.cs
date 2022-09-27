@@ -70,7 +70,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> LiveRealTimeMerge = new(new string[] { "--live-real-time-merge" }, description: ResString.cmd_liveRealTimeMerge, getDefaultValue: () => false);
         private readonly static Option<bool> LiveKeepSegments = new(new string[] { "--live-keep-segments" }, description: ResString.cmd_liveKeepSegments, getDefaultValue: () => true);
         private readonly static Option<TimeSpan?> LiveRecordLimit = new(new string[] { "--live-record-limit" }, description: ResString.cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
-        private readonly static Option<int?> LiveWaitTime = new(new string[] { "--live-wait-time" }, description: ResString.cmd_liveRecordLimit) { ArgumentHelpName = "SEC" };
+        private readonly static Option<int?> LiveWaitTime = new(new string[] { "--live-wait-time" }, description: ResString.cmd_liveWaitTime) { ArgumentHelpName = "SEC" };
 
 
         //复杂命令行如下
