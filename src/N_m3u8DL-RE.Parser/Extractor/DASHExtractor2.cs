@@ -138,6 +138,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
                         var bandwidth = representation.Attribute("bandwidth");
                         StreamSpec streamSpec = new();
+                        streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
                         streamSpec.PeriodId = periodId;
                         streamSpec.Playlist = new Playlist();
                         streamSpec.Playlist.MediaParts.Add(new MediaPart());
@@ -481,7 +482,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
             if (streamSpecs.Count == 0) return;
-            var rawText = await HTTPUtil.GetWebSourceAsync(ParserConfig.Url);
+            var  (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+            ParserConfig.Url = url;
             var newStreams = await ExtractStreamsAsync(rawText);
             foreach (var streamSpec in streamSpecs)
             {

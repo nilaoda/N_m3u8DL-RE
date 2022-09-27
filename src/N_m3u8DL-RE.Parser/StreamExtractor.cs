@@ -34,10 +34,11 @@ namespace N_m3u8DL_RE.Parser
             {
                 var uri = new Uri(url);
                 this.rawText = File.ReadAllText(uri.LocalPath);
-                parserConfig.Url = url;
+                parserConfig.OriginalUrl = parserConfig.Url = url;
             }
             else if (url.StartsWith("http"))
             {
+                parserConfig.OriginalUrl = url;
                 (this.rawText, url) = HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers).Result;
                 parserConfig.Url = url;
             }
@@ -45,7 +46,7 @@ namespace N_m3u8DL_RE.Parser
             {
                 url = Path.GetFullPath(url);
                 this.rawText = File.ReadAllText(url);
-                parserConfig.Url = new Uri(url).AbsoluteUri;
+                parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
             }
             this.rawText = rawText.Trim();
             LoadSourceFromText(this.rawText);

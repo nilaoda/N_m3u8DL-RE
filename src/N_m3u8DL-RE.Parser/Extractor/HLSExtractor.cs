@@ -22,6 +22,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
         private string M3u8Url = string.Empty;
         private string BaseUrl = string.Empty;
         private string M3u8Content = string.Empty;
+        private bool MasterM3u8Flag = false;
+        private bool FirstRefreshFlag = true;
 
         public ParserConfig ParserConfig { get; set; }
 
@@ -84,7 +86,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private bool IsMaster()
         {
-            return M3u8Content.Contains(HLSTags.ext_x_stream_inf);
+            MasterM3u8Flag = M3u8Content.Contains(HLSTags.ext_x_stream_inf);
+            return MasterM3u8Flag;
         }
 
         private async Task<List<StreamSpec>> ParseMasterListAsync()
@@ -104,6 +107,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 if (line.StartsWith(HLSTags.ext_x_stream_inf))
                 {
                     streamSpec = new();
+                    streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
                     var bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH")) ? ParserUtil.GetAttribute(line, "BANDWIDTH") : ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH");
                     streamSpec.Bandwidth = Convert.ToInt32(bandwidth);
                     streamSpec.Codecs = ParserUtil.GetAttribute(line, "CODECS");
@@ -505,6 +509,23 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task FetchPlayListAsync(List<StreamSpec> lists)
         {
+            if (MasterM3u8Flag && !FirstRefreshFlag)
+            {
+                //重新加载master m3u8, 刷新选中流的URL
+                await LoadM3u8FromUrlAsync(ParserConfig.OriginalUrl);
+                var newStreams = await ParseMasterListAsync();
+                newStreams = newStreams.DistinctBy(p => p.Url).ToList();
+                foreach (var l in lists)
+                {
+                    var match = newStreams.Where(n => n.ToShortString() == l.ToShortString());
+                    if (match.Any())
+                    {
+                        Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
+                        l.Url = match.First().Url;
+                    }
+                }
+            }
+
             for (int i = 0; i < lists.Count; i++)
             {
                 //重新加载m3u8
@@ -522,6 +543,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "m4s" : "ts";
                 }
             }
+
+            //首次刷新已结束，后续重新加载时应该从master开始重新加载
+            FirstRefreshFlag = false;
         }
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)

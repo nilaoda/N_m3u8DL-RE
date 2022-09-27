@@ -214,7 +214,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var seg = segments.First();
                     segments = segments.Skip(1);
                     //获取文件名
-                    var filename = hls ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
+                    var filename = hls && seg.Index > 10 ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -262,7 +262,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 await Parallel.ForEachAsync(segments, options, async (seg, _) =>
                 {
                     //获取文件名
-                    var filename = hls ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
+                    var filename = hls && seg.Index > 10 ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);

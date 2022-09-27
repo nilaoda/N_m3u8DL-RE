@@ -9,6 +9,8 @@ namespace N_m3u8DL_RE.Parser.Config
     {
         public string Url { get; set; }
 
+        public string OriginalUrl { get; set; }
+
         public string BaseUrl { get; set; }
 
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();

@@ -39,7 +39,15 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string? PeriodId { get; set; }
 
+        /// <summary>
+        /// URL
+        /// </summary>
         public string Url { get; set; }
+
+        /// <summary>
+        /// 原始URL
+        /// </summary>
+        public string OriginalUrl { get; set; }
 
         public Playlist? Playlist { get; set; }
 
