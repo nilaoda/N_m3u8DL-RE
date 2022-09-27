@@ -196,6 +196,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.CustomProxy"/>.
         /// </summary>
         public WebProxy? CustomProxy { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveWaitTime"/>.
+        /// </summary>
+        public int? LiveWaitTime { get; set; }
         public bool MuxKeepFiles { get; set; }
     }
 }

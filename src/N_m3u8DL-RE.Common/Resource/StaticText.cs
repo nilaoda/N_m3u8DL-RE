@@ -262,6 +262,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "以點播方式下載直播流",
                 enUS: "Download live streams as vod"
             ),
+            ["cmd_liveWaitTime"] = new TextContainer
+            (
+                zhCN: "手动设置直播列表刷新间隔",
+                zhTW: "手動設置直播列表刷新間隔",
+                enUS: "Manually set the live playlist refresh interval"
+            ),
             ["cmd_customHLSMethod"] = new TextContainer
             (
                 zhCN: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",

@@ -295,7 +295,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //program date time
                 else if (line.StartsWith(HLSTags.ext_x_program_date_time))
                 {
-                    //
+                    segment.DateTime = DateTime.Parse(ParserUtil.GetAttribute(line));
                 }
                 //解析不连续标记，需要单独合并（timestamp不同）
                 else if (line.StartsWith(HLSTags.ext_x_discontinuity))

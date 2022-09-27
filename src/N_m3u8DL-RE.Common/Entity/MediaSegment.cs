@@ -11,6 +11,7 @@ namespace N_m3u8DL_RE.Common.Entity
         public long Index { get; set; }
         public double Duration { get; set; }
         public string? Title { get; set; }
+        public DateTime? DateTime { get; set; }
 
         public long? StartRange { get; set; }
         public long? StopRange { get => (StartRange != null && ExpectLength != null) ? StartRange + ExpectLength - 1 : null; }

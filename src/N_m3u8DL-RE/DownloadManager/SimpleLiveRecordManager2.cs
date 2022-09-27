@@ -40,6 +40,7 @@ namespace N_m3u8DL_RE.DownloadManager
         int WAIT_SEC = 0; //刷新间隔
         ConcurrentDictionary<int, int> RecordingDurDic = new(); //已录制时长
         ConcurrentDictionary<string, string> LastUrlDic = new(); //上次下载的url
+        ConcurrentDictionary<string, long> DateTimeDic = new(); //上次下载的dateTime
         CancellationTokenSource CancellationTokenSource = new(); //取消Wait
 
         public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
@@ -84,6 +85,39 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
+        /// <summary>
+        /// 获取时间戳
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        private long GetUnixTimestamp(DateTime dateTime)
+        {
+            return new DateTimeOffset(dateTime.ToUniversalTime()).ToUnixTimeSeconds();
+        }
+
+        /// <summary>
+        /// 获取分段文件夹
+        /// </summary>
+        /// <param name="segment"></param>
+        /// <param name="allHasDatetime"></param>
+        /// <returns></returns>
+        private string GetSegmentName(MediaSegment segment, bool allHasDatetime)
+        {
+            bool hls = StreamExtractor.ExtractorType == ExtractorType.HLS;
+
+            string name = OtherUtil.GetFileNameFromInput(segment.Url, false);
+            if (hls && allHasDatetime)
+            {
+                name = GetUnixTimestamp(segment.DateTime!.Value).ToString();
+            }
+            else if (hls && segment.Index > 10)
+            {
+                name = segment.Index.ToString();
+            }
+
+            return name;
+        }
+
         private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
         {
             if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison == true))
@@ -125,7 +159,6 @@ namespace N_m3u8DL_RE.DownloadManager
             var readInfo = false; //是否读取过
             bool useAACFilter = false; //ffmpeg合并flag
             bool initDownloaded = false; //是否下载过init文件
-            bool hls = StreamExtractor.ExtractorType == ExtractorType.HLS;
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
             List<Mediainfo> mediaInfos = new();
             FileStream? fileOutputStream = null;
@@ -205,8 +238,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                 }
 
-                //计算填零个数
-                var pad = "0".PadLeft(segments.Count().ToString().Length, '0');
+                var allHasDatetime = segments.All(s => s.DateTime != null);
 
                 //下载第一个分片
                 if (!readInfo)
@@ -214,7 +246,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var seg = segments.First();
                     segments = segments.Skip(1);
                     //获取文件名
-                    var filename = hls && seg.Index > 10 ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
+                    var filename = GetSegmentName(seg, allHasDatetime);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -262,7 +294,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 await Parallel.ForEachAsync(segments, options, async (seg, _) =>
                 {
                     //获取文件名
-                    var filename = hls && seg.Index > 10 ? seg.Index.ToString(pad) : OtherUtil.GetFileNameFromInput(seg.Url, false);
+                    var filename = GetSegmentName(seg, allHasDatetime);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -505,7 +537,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (WAIT_SEC != 0)
                 {
                     //过滤不需要下载的片段
-                    FilterMediaSegments(streamSpec, LastUrlDic[streamSpec.ToShortString()]);
+                    FilterMediaSegments(streamSpec, LastUrlDic[streamSpec.ToShortString()], DateTimeDic[streamSpec.ToShortString()]);
                     var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
                     if (newList.Count > 0)
                     {
@@ -513,6 +545,9 @@ namespace N_m3u8DL_RE.DownloadManager
                         await target.SendAsync(newList);
                         //更新最新链接
                         LastUrlDic[streamSpec.ToShortString()] = GetPath(newList.Last().Url);
+                        //尝试更新时间戳
+                        var dt = newList.Last().DateTime;
+                        DateTimeDic[streamSpec.ToShortString()] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
                         task.MaxValue += newList.Count;
                     }
                     try
@@ -532,11 +567,22 @@ namespace N_m3u8DL_RE.DownloadManager
             target.Complete();
         }
 
-        private void FilterMediaSegments(StreamSpec streamSpec, string lastUrl)
+        private void FilterMediaSegments(StreamSpec streamSpec, string lastUrl, long dateTime)
         {
-            if (string.IsNullOrEmpty(lastUrl)) return;
+            if (string.IsNullOrEmpty(lastUrl) && dateTime == 0) return;
 
-            var index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetPath(s.Url) == lastUrl);
+            var index = -1;
+
+            //优先使用dateTime判断
+            if (dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null)) 
+            {
+                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetUnixTimestamp(s.DateTime!.Value) == dateTime);
+            }
+            else
+            {
+                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetPath(s.Url) == lastUrl);
+            }
+
             if (index > -1)
             {
                 streamSpec.Playlist!.MediaParts[0].MediaSegments = streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1).ToList();
@@ -566,11 +612,16 @@ namespace N_m3u8DL_RE.DownloadManager
             foreach (var item in SelectedSteams)
             {
                 LastUrlDic[item.ToShortString()] = "";
+                DateTimeDic[item.ToShortString()] = 0L;
             }
             //设置等待时间
             if (WAIT_SEC == 0)
             {
                 WAIT_SEC = (int)(SelectedSteams.Min(s => s.Playlist!.MediaParts[0].MediaSegments.Sum(s => s.Duration)) / 2);
+                WAIT_SEC -= 2; //再提前两秒吧 留出冗余
+                if (DownloaderConfig.MyOptions.LiveWaitTime != null)
+                    WAIT_SEC = DownloaderConfig.MyOptions.LiveWaitTime.Value;
+                if (WAIT_SEC <= 0) WAIT_SEC = 1;
                 Logger.WarnMarkUp($"set refresh interval to {WAIT_SEC} seconds");
             }
 
