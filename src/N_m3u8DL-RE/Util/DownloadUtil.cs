@@ -74,13 +74,23 @@ namespace N_m3u8DL_RE.Util
             try
             {
                 using var response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
-                if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved)
+                if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved || response.StatusCode == HttpStatusCode.SeeOther)
                 {
                     HttpResponseHeaders respHeaders = response.Headers;
                     Logger.Debug(respHeaders.ToString());
                     if (respHeaders != null && respHeaders.Location != null)
                     {
-                        var redirectedUrl = respHeaders.Location.AbsoluteUri;
+                        var redirectedUrl = "";
+                        if (!respHeaders.Location.IsAbsoluteUri)
+                        {
+                            Uri uri1 = new Uri(url);
+                            Uri uri2 = new Uri(uri1, respHeaders.Location);
+                            redirectedUrl = uri2.ToString();
+                        }
+                        else
+                        {
+                            redirectedUrl = respHeaders.Location.AbsoluteUri;
+                        }
                         return await DownloadToFileAsync(redirectedUrl, path, speedContainer, headers, fromPosition, toPosition);
                     }
                 }
