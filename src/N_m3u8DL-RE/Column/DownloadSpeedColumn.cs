@@ -39,7 +39,7 @@ namespace N_m3u8DL_RE.Column
                 task.Value = speedContainer.RDownloaded;
             }
             //一秒汇报一次即可
-            if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now)
+            if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now && !flag)
             {
                 SpeedDic[taskId] = FormatFileSize(speedContainer.Downloaded);
                 //速度为0，计数增加
