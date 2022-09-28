@@ -593,12 +593,12 @@ namespace N_m3u8DL_RE.DownloadManager
             ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
             //取最后15个分片
-            var minIndex = SelectedSteams.Max(s => s.Playlist!.MediaParts[0].MediaSegments.Min(s => s.Index));
+            var maxIndex = SelectedSteams.Min(s => s.Playlist!.MediaParts[0].MediaSegments.Max(s => s.Index));
             foreach (var item in SelectedSteams)
             {
                 foreach (var part in item.Playlist!.MediaParts)
                 {
-                    part.MediaSegments = part.MediaSegments.Where(s => s.Index >= minIndex).TakeLast(takeLastCount).ToList();
+                    part.MediaSegments = part.MediaSegments.Where(s => s.Index <= maxIndex).TakeLast(takeLastCount).ToList();
                 }
             }
             //初始化dic
