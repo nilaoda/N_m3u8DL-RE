@@ -6,6 +6,7 @@ using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Extractor;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Common.Enum;
+using Spectre.Console;
 
 namespace N_m3u8DL_RE.Parser
 {
@@ -114,7 +115,22 @@ namespace N_m3u8DL_RE.Parser
             try
             {
                 await semaphore.WaitAsync();
-                await extractor.RefreshPlayListAsync(streamSpecs);
+                int retryCount = 3; //增加重试
+            reGet:
+                try
+                {
+                    await extractor.RefreshPlayListAsync(streamSpecs);
+                }
+                catch (Exception ex)
+                {
+                    if (retryCount-- > 0)
+                    {
+                        Logger.WarnMarkUp($"[grey]Refresh Exception: {ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
+                        await Task.Delay(300);
+                        goto reGet;
+                    }
+                    else throw;
+                }
             }
             finally
             {
