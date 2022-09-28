@@ -10,21 +10,11 @@ using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Util;
-using NiL.JS;
-using NiL.JS.BaseLibrary;
 using Spectre.Console;
-using Spectre.Console.Rendering;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.CommandLine.Parsing;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Xml.Linq;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
@@ -149,7 +139,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
-        private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, ISourceBlock<List<MediaSegment>> source)
+        private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, BufferBlock<List<MediaSegment>> source)
         {
             var baseTimestamp = PublishDateTime == null ? 0L : (long)(PublishDateTime.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalMilliseconds;
             //mp4decrypt
@@ -183,11 +173,14 @@ namespace N_m3u8DL_RE.DownloadManager
 
             while (!STOP_FLAG && await source.OutputAvailableAsync())
             {
-                //接收新片段
-                var segments = (await source.ReceiveAsync()).AsEnumerable();
+                //接收新片段 且总是拿全部未处理的片段
+                //有时每次只有很少的片段，但是之前的片段下载慢，导致后面还没下载的片段都失效了
+                //TryReceiveAll可以稍微缓解一下
+                source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
+                var segments = segmentsList!.SelectMany(s => s);
 
                 //下载init
-                if (!initDownloaded && streamSpec.Playlist?.MediaInit != null)
+                if (!initDownloaded && streamSpec.Playlist?.MediaInit != null) 
                 {
                     task.MaxValue += 1;
                     //对于fMP4，自动开启二进制合并
@@ -530,7 +523,7 @@ namespace N_m3u8DL_RE.DownloadManager
             return true;
         }
 
-        private async Task PlayListProduceAsync(StreamSpec streamSpec, ProgressTask task, ITargetBlock<List<MediaSegment>> target)
+        private async Task PlayListProduceAsync(StreamSpec streamSpec, ProgressTask task, BufferBlock<List<MediaSegment>> target)
         {
             while (!STOP_FLAG)
             {
