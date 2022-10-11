@@ -82,9 +82,8 @@ namespace N_m3u8DL_RE.Util
             }
             else
             {
-                var uri = new Uri(input);
-                var name = uri.GetLeftPart(UriPartial.Path).Split('/').Last();
-                name = string.Join(".", name.Split('.').SkipLast(1)).Trim('.');
+                var uri = new Uri(input.Split('?').First());
+                var name = Path.GetFileNameWithoutExtension(uri.LocalPath);
                 saveName = GetValidFileName(name) + "_" + saveName;
             }
             return saveName;

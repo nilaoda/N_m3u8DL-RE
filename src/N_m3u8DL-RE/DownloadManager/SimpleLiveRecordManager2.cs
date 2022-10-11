@@ -584,7 +584,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private string GetPath(string url)
         {
-            return new Uri(url).GetLeftPart(UriPartial.Path);
+            return url.Split('?').First();
         }
 
         public async Task<bool> StartRecordAsync()
