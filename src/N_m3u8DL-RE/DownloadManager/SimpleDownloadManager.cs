@@ -345,7 +345,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     //手动计算MPEGTS
                     if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                     {
-                        vtt.MpegtsTimestamp = 90 * (long)(seg.Duration * 1000) * seg.Index;
+                        vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
                     }
                     if (first)
                     {
