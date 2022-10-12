@@ -156,19 +156,21 @@ jobs:
     needs: [build-win-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
     runs-on: ubuntu-latest
     steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d')"
+        
       - name: GH version
         run: gh --version
       
       - name: Fetch executables
         uses: actions/download-artifact@v3
-      - name: Fetch executables
-        uses: actions/download-artifact@v3
 
       - name: Tar (linux, macOS)
-        run: for dir in *{osx,linux}*; do tar cvzf "${dir}.tar.gz" "$dir"; done
+        run: for dir in *{osx,linux}*; do tar cvzf "${dir}_${{ steps.date.outputs.date }}.tar.gz" "$dir"; done
         
       - name: Zip (windows)
-        run: for dir in *win*; do zip -r "${dir}.zip" "$dir"; done
+        run: for dir in *win*; do zip -r "${dir}_${{ steps.date.outputs.date }}.zip" "$dir"; done
 
       - name: Upload
         run: |
