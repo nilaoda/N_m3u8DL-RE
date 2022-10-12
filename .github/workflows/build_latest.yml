@@ -29,19 +29,19 @@ jobs:
         run: |
           echo "::echo::on"
           gh release view --repo '${{ github.repository }}' '${{ github.event.inputs.tag }}' \
-            && echo "::set-output name=already_exists::true" \
-            || echo "::set-output name=already_exists::false"
+            && echo "already_exists=true" >> $GITHUB_ENV \
+            || echo "already_exists=false" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout repo
-        if: steps.check_release.outputs.already_exists == 'false'
+        if: env.already_exists == 'false'
         uses: actions/checkout@v3
         with:
           ref: '${{ github.event.inputs.ref }}'
 
       - name: Create release
-        if: steps.check_release.outputs.already_exists == 'false'
+        if: env.already_exists == 'false'
         run: >
           gh release create
           '${{ github.event.inputs.tag }}'
@@ -158,7 +158,7 @@ jobs:
     steps:
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y%m%d')"
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_ENV
         
       - name: GH version
         run: gh --version
@@ -167,10 +167,10 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Tar (linux, macOS)
-        run: for dir in *{osx,linux}*; do tar cvzf "${dir}_${{ steps.date.outputs.date }}.tar.gz" "$dir"; done
+        run: for dir in *{osx,linux}*; do tar cvzf "${dir}_${{ env.date }}.tar.gz" "$dir"; done
         
       - name: Zip (windows)
-        run: for dir in *win*; do zip -r "${dir}_${{ steps.date.outputs.date }}.zip" "$dir"; done
+        run: for dir in *win*; do zip -r "${dir}_${{ env.date }}.zip" "$dir"; done
 
       - name: Upload
         run: |
