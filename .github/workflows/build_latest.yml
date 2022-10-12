@@ -1,19 +1,63 @@
 name: Build Latest
 
-on: 
+on:
   workflow_dispatch:
+    inputs:
+      tag:
+        type: string
+        description: 'Release version tag (e.g. v1.2.3)'
+        required: true
+      ref:
+        type: string
+        description: 'Git ref from which to release'
+        required: true
+        default: 'main'
 
 env:
-  DOTNET_SDK_VERSION: '7.0.*'
+  DOTNET_SDK_VERSION: "7.0.*"
 
 jobs:
+  create_draft_release:
+    name: Create Github draft release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Audit gh version
+        run: gh --version
+
+      - name: Check for existing release
+        id: check_release
+        run: |
+          echo "::echo::on"
+          gh release view --repo '${{ github.repository }}' '${{ github.event.inputs.tag }}' \
+            && echo "::set-output name=already_exists::true" \
+            || echo "::set-output name=already_exists::false"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout repo
+        if: steps.check_release.outputs.already_exists == 'false'
+        uses: actions/checkout@v3
+        with:
+          ref: '${{ github.event.inputs.ref }}'
+
+      - name: Create release
+        if: steps.check_release.outputs.already_exists == 'false'
+        run: >
+          gh release create
+          '${{ github.event.inputs.tag }}'
+          --draft
+          --repo '${{ github.repository }}'
+          --title '${{ github.event.inputs.tag }}'
+          --target '${{ github.event.inputs.ref }}'
+          --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-win-x64-arm64:
-    
     runs-on: windows-latest
-    
+    needs: create_draft_release
+
     steps:
-      
       - uses: actions/checkout@v2
 
       - name: Set up dotnet
@@ -36,15 +80,13 @@ jobs:
         with:
           name: N_m3u8DL-RE_Beta_win-arm64
           path: artifact-arm64\N_m3u8DL-RE.exe
-  
 
   build-linux-x64:
-    
     runs-on: ubuntu-latest
     container: ubuntu:18.04
-    
+    needs: create_draft_release
+
     steps:
-      
       - run: apt-get update
       - run: apt-get install -y curl wget
       - uses: actions/checkout@v2
@@ -55,7 +97,7 @@ jobs:
           include-prerelease: true
       - run: apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
       - run: dotnet publish src/N_m3u8DL-RE -r linux-x64 -c Release -o artifact
-      
+
       - name: Upload Artifact[linux-x64]
         uses: actions/upload-artifact@v1.0.0
         with:
@@ -63,12 +105,11 @@ jobs:
           path: artifact/N_m3u8DL-RE
 
   build-linux-arm64:
-    
     runs-on: ubuntu-latest
     container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-cross-arm64-20220312201346-b2c2436
-    
+    needs: create_draft_release
+
     steps:
-      
       - uses: actions/checkout@v2
       - name: Set up dotnet
         uses: actions/setup-dotnet@v1
@@ -76,7 +117,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
           include-prerelease: true
       - run: dotnet publish src/N_m3u8DL-RE -r linux-arm64 -c Release -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o artifact
-      
+
       - name: Upload Artifact[linux-arm64]
         uses: actions/upload-artifact@v1.0.0
         with:
@@ -84,14 +125,13 @@ jobs:
           path: artifact/N_m3u8DL-RE
 
   build-mac-x64-arm64:
-    
-    runs-on: macOS-latest
-    
+    runs-on: macos-latest
+    needs: create_draft_release
+
     steps:
-      
       - uses: actions/checkout@v2
       - run: rm src/N_m3u8DL-RE/Directory.Build.props
-      
+
       - name: Set up dotnet
         uses: actions/setup-dotnet@v1
         with:
@@ -110,3 +150,32 @@ jobs:
         with:
           name: N_m3u8DL-RE_Beta_osx-arm64
           path: artifact-arm64/N_m3u8DL-RE
+
+  attach_to_release:
+    name: Attach native executables to release
+    needs: [build-win-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: GH version
+        run: gh --version
+      
+      - name: Fetch executables
+        uses: actions/download-artifact@v3
+      - name: Fetch executables
+        uses: actions/download-artifact@v3
+
+      - name: Tar (linux, macOS)
+        run: for dir in *{osx,linux}*; do tar cvzf "${dir}.tar.gz" "$dir"; done
+        
+      - name: Zip (windows)
+        run: for dir in *win*; do zip -r "${dir}.zip" "$dir"; done
+
+      - name: Upload
+        run: |
+          until gh release upload --clobber --repo ${{ github.repository }} ${{ github.event.inputs.tag }} *.zip *.tar.gz; do
+            echo "Attempt $((++attempts)) to upload release artifacts failed. Will retry in 20s"
+            sleep 20
+          done
+        timeout-minutes: 10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
