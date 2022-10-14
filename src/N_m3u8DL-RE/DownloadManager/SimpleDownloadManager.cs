@@ -291,6 +291,10 @@ namespace N_m3u8DL_RE.DownloadManager
             else if (streamSpec.MediaType == MediaType.AUDIO && streamSpec.Extension == "m4s") outputExt = ".m4a";
             else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
 
+            if (DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT && outputExt == ".vtt")
+            {
+                outputExt = ".srt";
+            }
             var output = Path.Combine(saveDir, saveName + outputExt);
 
             //检测目标文件是否存在
@@ -369,7 +373,6 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
-                    output = Path.ChangeExtension(output, ".srt");
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[keys.First()] = new DownloadResult()
@@ -404,7 +407,6 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         path = Path.ChangeExtension(path, ".srt");
                         subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
-                        output = Path.ChangeExtension(output, ".srt");
                     }
                     await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                     FileDic[firstKey] = new DownloadResult()
@@ -412,8 +414,6 @@ namespace N_m3u8DL_RE.DownloadManager
                         ActualContentLength = subContentFixed.Length,
                         ActualFilePath = path
                     };
-                    //修改输出后缀
-                    output = Path.ChangeExtension(output, Path.GetExtension(path));
                 }
             }
 
@@ -437,7 +437,6 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
-                    output = Path.ChangeExtension(output, ".srt");
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[firstKey] = new DownloadResult()
@@ -445,8 +444,6 @@ namespace N_m3u8DL_RE.DownloadManager
                     ActualContentLength = subContentFixed.Length,
                     ActualFilePath = path
                 };
-                //修改输出后缀
-                output = Path.ChangeExtension(output, Path.GetExtension(path));
             }
 
             //自动修复TTML mp4字幕
@@ -474,7 +471,6 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
-                    output = Path.ChangeExtension(output, ".srt");
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[firstKey] = new DownloadResult()
@@ -482,8 +478,6 @@ namespace N_m3u8DL_RE.DownloadManager
                     ActualContentLength = subContentFixed.Length,
                     ActualFilePath = path
                 };
-                //修改输出后缀
-                output = Path.ChangeExtension(output, Path.GetExtension(path));
             }
 
             bool mergeSuccess = false;
