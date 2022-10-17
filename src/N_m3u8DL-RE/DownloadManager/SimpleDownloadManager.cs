@@ -291,9 +291,10 @@ namespace N_m3u8DL_RE.DownloadManager
             else if (streamSpec.MediaType == MediaType.AUDIO && streamSpec.Extension == "m4s") outputExt = ".m4a";
             else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
 
-            if (DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT && outputExt == ".vtt")
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
             {
-                outputExt = ".srt";
+                if (DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT) outputExt = ".srt";
+                else outputExt = ".vtt";
             }
             var output = Path.Combine(saveDir, saveName + outputExt);
 
