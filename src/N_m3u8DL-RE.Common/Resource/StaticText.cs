@@ -499,6 +499,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "本次直播錄製時長上限: ",
                 enUS: "Live recording duration limit: "
             ),
+            ["realTimeDecMessage"] = new TextContainer
+            (
+                zhCN: "启用实时解密时，建议用shaka-packager而非mp4decrypt",
+                zhTW: "啟用即時解密時，建議用shaka-packager而非mp4decrypt",
+                enUS: "When enabling real-time decryption, it is recommended to use shaka-packager instead of mp4decrypt"
+            ),
             ["liveLimitReached"] = new TextContainer
             (
                 zhCN: "到达直播录制上限，即将停止录制",

@@ -589,6 +589,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 new SpinnerColumn(),
             });
 
+            if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !DownloaderConfig.MyOptions.UseShakaPackager
+                && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0)
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
+
             await progress.StartAsync(async ctx =>
             {
                 //创建任务

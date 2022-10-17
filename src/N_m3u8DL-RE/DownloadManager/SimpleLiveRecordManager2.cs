@@ -29,7 +29,7 @@ namespace N_m3u8DL_RE.DownloadManager
         bool STOP_FLAG = false;
         int WAIT_SEC = 0; //刷新间隔
         ConcurrentDictionary<int, int> RecordingDurDic = new(); //已录制时长
-        ConcurrentDictionary<string, string> LastUrlDic = new(); //上次下载的url
+        ConcurrentDictionary<string, string> LastFileNameDic = new(); //上次下载的文件名
         ConcurrentDictionary<string, long> DateTimeDic = new(); //上次下载的dateTime
         CancellationTokenSource CancellationTokenSource = new(); //取消Wait
 
@@ -178,6 +178,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 //TryReceiveAll可以稍微缓解一下
                 source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
                 var segments = segmentsList!.SelectMany(s => s);
+                Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false))));
 
                 //下载init
                 if (!initDownloaded && streamSpec.Playlist?.MediaInit != null) 
@@ -529,15 +530,16 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 if (WAIT_SEC != 0)
                 {
+                    var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
                     //过滤不需要下载的片段
-                    FilterMediaSegments(streamSpec, LastUrlDic[streamSpec.ToShortString()], DateTimeDic[streamSpec.ToShortString()]);
+                    FilterMediaSegments(streamSpec, allHasDatetime);
                     var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
                     if (newList.Count > 0)
                     {
                         //推送给消费者
                         await target.SendAsync(newList);
                         //更新最新链接
-                        LastUrlDic[streamSpec.ToShortString()] = GetPath(newList.Last().Url);
+                        LastFileNameDic[streamSpec.ToShortString()] = GetSegmentName(newList.Last(), allHasDatetime);
                         //尝试更新时间戳
                         var dt = newList.Last().DateTime;
                         DateTimeDic[streamSpec.ToShortString()] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
@@ -560,11 +562,13 @@ namespace N_m3u8DL_RE.DownloadManager
             target.Complete();
         }
 
-        private void FilterMediaSegments(StreamSpec streamSpec, string lastUrl, long dateTime)
+        private void FilterMediaSegments(StreamSpec streamSpec, bool allHasDatetime)
         {
-            if (string.IsNullOrEmpty(lastUrl) && dateTime == 0) return;
+            if (string.IsNullOrEmpty(LastFileNameDic[streamSpec.ToShortString()]) && DateTimeDic[streamSpec.ToShortString()] == 0) return;
 
             var index = -1;
+            var dateTime = DateTimeDic[streamSpec.ToShortString()];
+            var lastName = LastFileNameDic[streamSpec.ToShortString()];
 
             //优先使用dateTime判断
             if (dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null)) 
@@ -573,18 +577,13 @@ namespace N_m3u8DL_RE.DownloadManager
             }
             else
             {
-                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetPath(s.Url) == lastUrl);
+                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetSegmentName(s, allHasDatetime) == lastName);
             }
 
             if (index > -1)
             {
                 streamSpec.Playlist!.MediaParts[0].MediaSegments = streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1).ToList();
             }
-        }
-
-        private string GetPath(string url)
-        {
-            return url.Split('?').First();
         }
 
         public async Task<bool> StartRecordAsync()
@@ -604,7 +603,7 @@ namespace N_m3u8DL_RE.DownloadManager
             //初始化dic
             foreach (var item in SelectedSteams)
             {
-                LastUrlDic[item.ToShortString()] = "";
+                LastFileNameDic[item.ToShortString()] = "";
                 DateTimeDic[item.ToShortString()] = 0L;
             }
             //设置等待时间
@@ -645,6 +644,9 @@ namespace N_m3u8DL_RE.DownloadManager
                 DownloaderConfig.MyOptions.ConcurrentDownload = true;
                 DownloaderConfig.MyOptions.MP4RealTimeDecryption = true;
                 DownloaderConfig.MyOptions.LiveRecordLimit = DownloaderConfig.MyOptions.LiveRecordLimit ?? TimeSpan.MaxValue;
+                if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !DownloaderConfig.MyOptions.UseShakaPackager
+                    && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0)
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
                 var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");

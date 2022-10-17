@@ -71,6 +71,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_muxAfterDone_more { get => GetText("cmd_muxAfterDone_more"); }
         public static string cmd_writeMetaJson { get => GetText("cmd_writeMetaJson"); }
         public static string liveLimit { get => GetText("liveLimit"); }
+        public static string realTimeDecMessage { get => GetText("realTimeDecMessage"); }
         public static string liveLimitReached { get => GetText("liveLimitReached"); }
         public static string saveName { get => GetText("saveName"); }
         public static string partMerge { get => GetText("partMerge"); }

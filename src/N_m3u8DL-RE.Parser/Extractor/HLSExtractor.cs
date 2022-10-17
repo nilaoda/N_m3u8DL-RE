@@ -525,7 +525,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     }
                 }
             }
-            else if (lists.Count == 1 && ParserConfig.OriginalUrl != lists[0].Url)
+            else if (!MasterM3u8Flag && lists.Count == 1 && ParserConfig.OriginalUrl != lists[0].Url)
             {
                 //单m3u8, 但是发生了重定向, 则应从原始URL开始解析
                 lists[0].Url = ParserConfig.OriginalUrl;
