@@ -129,11 +129,28 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (mediainfos.All(m => m.Type == "Audio"))
             {
+                var lastKey = streamSpec.ToShortString();
                 streamSpec.MediaType = MediaType.AUDIO;
+                var newKey = streamSpec.ToShortString();
+
+                //需要同步修改Dictionary中的Key
+                if (LastFileNameDic.Remove(lastKey, out var lastValue1))
+                    LastFileNameDic[newKey] = lastValue1!;
+                if (DateTimeDic.Remove(lastKey, out var lastValue2))
+                    DateTimeDic[newKey] = lastValue2;
             }
             else if (mediainfos.All(m => m.Type == "Subtitle"))
             {
+                var lastKey = streamSpec.ToShortString();
                 streamSpec.MediaType = MediaType.SUBTITLES;
+                var newKey = streamSpec.ToShortString();
+
+                //需要同步修改Dictionary中的Key
+                if (LastFileNameDic.Remove(lastKey, out var lastValue1))
+                    LastFileNameDic[newKey] = lastValue1!;
+                if (DateTimeDic.Remove(lastKey, out var lastValue2))
+                    DateTimeDic[newKey] = lastValue2;
+
                 if (streamSpec.Extension == null || streamSpec.Extension == "ts")
                     streamSpec.Extension = "vtt";
             }
