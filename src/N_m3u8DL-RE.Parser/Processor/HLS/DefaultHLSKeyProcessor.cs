@@ -29,13 +29,6 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 
             var encryptInfo = new EncryptInfo(method);
 
-            //处理自定义加密方式
-            if (parserConfig.CustomMethod != null)
-            {
-                encryptInfo.Method = parserConfig.CustomMethod.Value;
-                Logger.Warn("METHOD changed to {}", method, encryptInfo.Method);
-            }
-
             //IV
             if (!string.IsNullOrEmpty(iv))
             {
@@ -93,6 +86,13 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             {
                 Logger.Error(ResString.cmd_loadKeyFailed + ": " + ex.Message);
                 encryptInfo.Method = EncryptMethod.UNKNOWN;
+            }
+
+            //处理自定义加密方式
+            if (parserConfig.CustomMethod != null)
+            {
+                encryptInfo.Method = parserConfig.CustomMethod.Value;
+                Logger.Warn("METHOD changed to {}", method, encryptInfo.Method);
             }
 
             return encryptInfo;
