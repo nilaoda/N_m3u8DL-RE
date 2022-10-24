@@ -17,6 +17,8 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20221024";
+
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
 
@@ -433,8 +435,7 @@ namespace N_m3u8DL_RE.CommandLine
                 Environment.Exit(0);
             }
 
-            var info = "N_m3u8DL-RE (Beta version) 20221023";
-            var rootCommand = new RootCommand(info)
+            var rootCommand = new RootCommand(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
@@ -445,7 +446,7 @@ namespace N_m3u8DL_RE.CommandLine
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit, LiveWaitTime,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, MoreHelp
             };
-            Logger.Info(info);
+
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());
 

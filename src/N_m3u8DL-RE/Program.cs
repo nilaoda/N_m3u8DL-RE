@@ -56,6 +56,7 @@ namespace N_m3u8DL_RE
 
         static async Task DoWorkAsync(MyOption option)
         {
+            Logger.Info(CommandInvoker.VERSION_INFO);
             Logger.LogLevel = option.LogLevel;
 
             if (option.UseSystemProxy == false)
