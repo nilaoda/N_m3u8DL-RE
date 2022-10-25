@@ -12,7 +12,7 @@ namespace N_m3u8DL_RE.Util
 {
     internal partial class MediainfoUtil
     {
-        [GeneratedRegex(" Stream #.*")]
+        [GeneratedRegex("  Stream #.*")]
         private static partial Regex TextRegex();
         [GeneratedRegex("#0:\\d(\\[0x\\w+?\\])")]
         private static partial Regex IdRegex();
