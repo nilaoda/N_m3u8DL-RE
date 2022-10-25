@@ -28,6 +28,8 @@ namespace N_m3u8DL_RE.Util
         private static partial Regex BitrateRegex();
         [GeneratedRegex("(\\d+(\\.\\d+)?) fps")]
         private static partial Regex FpsRegex();
+        [GeneratedRegex("DOVI configuration record.*profile: (\\d).*compatibility id: (\\d)")]
+        private static partial Regex DoViRegex();
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
         {
@@ -67,6 +69,7 @@ namespace N_m3u8DL_RE.Util
                     || info.BaseInfo.Contains("dvh1")
                     || info.BaseInfo.Contains("DOVI")
                     || info.Type.Contains("dvvideo")
+                    || DoViRegex().IsMatch(output)
                     )
                     info.DolbyVison = true;
 
