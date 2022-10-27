@@ -288,8 +288,8 @@ namespace N_m3u8DL_RE.DownloadManager
             //修改输出后缀
             var outputExt = "." + streamSpec.Extension;
             if (streamSpec.Extension == null) outputExt = ".ts";
-            else if (streamSpec.MediaType == MediaType.AUDIO && streamSpec.Extension == "m4s") outputExt = ".m4a";
-            else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
+            else if (streamSpec.MediaType == MediaType.AUDIO && (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4")) outputExt = ".m4a";
+            else if (streamSpec.MediaType != MediaType.SUBTITLES && (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4")) outputExt = ".mp4";
 
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
             {
