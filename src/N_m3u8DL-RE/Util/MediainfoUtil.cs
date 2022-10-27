@@ -53,7 +53,7 @@ namespace N_m3u8DL_RE.Util
             {
                 var info = new Mediainfo()
                 {
-                    Text = TypeRegex().Match(stream.Value).Groups[2].Value,
+                    Text = TypeRegex().Match(stream.Value).Groups[2].Value.TrimEnd(),
                     Id = IdRegex().Match(stream.Value).Groups[1].Value,
                     Type = TypeRegex().Match(stream.Value).Groups[1].Value,
                 };
