@@ -117,7 +117,7 @@ namespace N_m3u8DL_RE.Util
 
             string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
 
-            StringBuilder command = new StringBuilder("-loglevel warning -i concat:\"");
+            StringBuilder command = new StringBuilder("-loglevel warning -nostdin -i concat:\"");
             string ddpAudio = string.Empty;
             string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
             ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
@@ -179,7 +179,7 @@ namespace N_m3u8DL_RE.Util
         {
             var ext = mp4 ? "mp4" : "mkv";
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-loglevel warning -y ");
+            StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y ");
 
             //INPUT
             foreach (var item in files)
