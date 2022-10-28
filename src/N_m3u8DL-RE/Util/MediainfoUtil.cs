@@ -69,7 +69,7 @@ namespace N_m3u8DL_RE.Util
                     || info.BaseInfo.Contains("dvh1")
                     || info.BaseInfo.Contains("DOVI")
                     || info.Type.Contains("dvvideo")
-                    || DoViRegex().IsMatch(output)
+                    || (DoViRegex().IsMatch(output) && info.Type == "Video")
                     )
                     info.DolbyVison = true;
 
