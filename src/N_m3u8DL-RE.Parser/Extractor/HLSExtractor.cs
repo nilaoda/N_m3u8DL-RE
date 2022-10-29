@@ -380,6 +380,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             playlist.MediaInit.ExpectLength = n;
                             playlist.MediaInit.StartRange = o ?? 0L;
                         }
+                        //是否有加密，有的话写入KEY和IV
+                        if (currentEncryptInfo.Method != EncryptMethod.NONE)
+                        {
+                            playlist.MediaInit.EncryptInfo.Method = currentEncryptInfo.Method;
+                            playlist.MediaInit.EncryptInfo.Key = currentEncryptInfo.Key;
+                            playlist.MediaInit.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
+                        }
                     }
                     //遇到了其他的map，说明已经不是一个视频了，全部丢弃即可
                     else
