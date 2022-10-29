@@ -64,7 +64,6 @@ namespace N_m3u8DL_RE.Util
                     if (speedContainer.ShouldStop)
                     {
                         cancellationTokenSource.Cancel();
-                        speedContainer.ResetLowSpeedCount();
                         Logger.DebugMarkUp("Cancel...");
                         break;
                     }
@@ -105,7 +104,7 @@ namespace N_m3u8DL_RE.Util
                 while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
                 {
                     speedContainer.Add(size);
-                    await stream.WriteAsync(buffer, 0, size);
+                    await stream.WriteAsync(buffer, 0, size, cancellationTokenSource.Token);
                 }
 
                 return new DownloadResult()
@@ -117,6 +116,7 @@ namespace N_m3u8DL_RE.Util
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationTokenSource.Token)
             {
+                speedContainer.ResetLowSpeedCount();
                 throw new Exception("Download speed too slow!");
             }
         }
