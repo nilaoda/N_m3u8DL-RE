@@ -50,7 +50,6 @@ namespace Mp4SubtitleParser
 
         private static void ReadBox(byte[] data, ParsedMP4Info info)
         {
-            info.KID = HexUtil.BytesToHex(data[^16..]).ToLower();
             //find schm 
             var schmBytes = new byte[4] { 0x73, 0x63, 0x68, 0x6d };
             var schmIndex = 0;
@@ -65,6 +64,24 @@ namespace Mp4SubtitleParser
             if (schmIndex + 8 < data.Length)
             {
                 info.Scheme = System.Text.Encoding.UTF8.GetString(data[schmIndex..][8..12]);
+            }
+
+            if (info.Scheme != "cenc") return;
+
+            //find KID
+            var tencBytes = new byte[4] { 0x74, 0x65, 0x6E, 0x63 };
+            var tencIndex = 0;
+            for (int i = 0; i < data.Length - 4; i++)
+            {
+                if (new byte[4] { data[i], data[i + 1], data[i + 2], data[i + 3] }.SequenceEqual(tencBytes))
+                {
+                    tencIndex = i;
+                    break;
+                }
+            }
+            if (tencIndex + 12 < data.Length)
+            {
+                info.KID = HexUtil.BytesToHex(data[tencIndex..][12..28]).ToLower();
             }
         }
     }
