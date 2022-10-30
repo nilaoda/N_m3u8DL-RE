@@ -489,7 +489,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             {
                 var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
                 if (match.Any())
-                    streamSpec.Playlist = match.First().Playlist;
+                    streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; //不更新init
             }
             //这里才调用URL预处理器，节省开销
             await ProcessUrlAsync(streamSpecs);
