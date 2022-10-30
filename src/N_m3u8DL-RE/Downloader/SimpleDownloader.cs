@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Downloader
@@ -55,16 +56,38 @@ namespace N_m3u8DL_RE.Downloader
 
         private async Task<DownloadResult?> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
         {
+            CancellationTokenSource? cancellationTokenSource = null;
         retry:
             try
             {
+                cancellationTokenSource = new();
                 var des = Path.ChangeExtension(path, null);
+
                 //已下载过跳过
                 if (File.Exists(des))
                 {
                     return new DownloadResult() { ActualContentLength = 0, ActualFilePath = des };
                 }
-                var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, headers, fromPosition, toPosition);
+
+                //另起线程进行监控
+                using var watcher = Task.Factory.StartNew(async () =>
+                {
+                    while (true)
+                    {
+                        if (cancellationTokenSource == null || cancellationTokenSource.IsCancellationRequested) break;
+                        if (speedContainer.ShouldStop)
+                        {
+                            cancellationTokenSource.Cancel();
+                            Logger.DebugMarkUp("Cancel...");
+                            break;
+                        }
+                        await Task.Delay(500);
+                    }
+                });
+
+                //调用下载
+                var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
+                
                 //下载完成后改名
                 if (result.Success || !DownloaderConfig.CheckContentLength)
                 {
@@ -85,6 +108,15 @@ namespace N_m3u8DL_RE.Downloader
                 }
                 //throw new Exception("download failed", ex);
                 return null;
+            }
+            finally
+            {
+                if (cancellationTokenSource != null)
+                {
+                    //调用后销毁
+                    cancellationTokenSource.Dispose();
+                    cancellationTokenSource = null;
+                }
             }
         }
     }
