@@ -127,19 +127,18 @@ namespace N_m3u8DL_RE.DownloadManager
                 useAACFilter = true;
             }
 
-            if (mediainfos.All(m => m.Type == "Audio"))
+            if (mediainfos.All(m => m.Type == "Audio") && streamSpec.MediaType != MediaType.AUDIO)
             {
                 var lastKey = streamSpec.ToShortString();
                 streamSpec.MediaType = MediaType.AUDIO;
                 var newKey = streamSpec.ToShortString();
-
                 //需要同步修改Dictionary中的Key
                 if (LastFileNameDic.Remove(lastKey, out var lastValue1))
                     LastFileNameDic[newKey] = lastValue1!;
                 if (DateTimeDic.Remove(lastKey, out var lastValue2))
                     DateTimeDic[newKey] = lastValue2;
             }
-            else if (mediainfos.All(m => m.Type == "Subtitle"))
+            else if (mediainfos.All(m => m.Type == "Subtitle") && streamSpec.MediaType != MediaType.SUBTITLES)
             {
                 var lastKey = streamSpec.ToShortString();
                 streamSpec.MediaType = MediaType.SUBTITLES;
