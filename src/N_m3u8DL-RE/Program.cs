@@ -21,6 +21,7 @@ namespace N_m3u8DL_RE
     {
         static async Task Main(string[] args)
         {
+            Console.CancelKeyPress += Console_CancelKeyPress;
             ServicePointManager.DefaultConnectionLimit = 1024;
             try { Console.CursorVisible = true; } catch { }
             string loc = "en-US";
@@ -42,6 +43,13 @@ namespace N_m3u8DL_RE
 
 
             await CommandInvoker.InvokeArgs(args, DoWorkAsync);
+        }
+
+        private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+        {
+            Logger.WarnMarkUp("Force Exit...");
+            try { Console.CursorVisible = true; } catch { }
+            Environment.Exit(0);
         }
 
         static int GetOrder(StreamSpec streamSpec)
