@@ -8,6 +8,7 @@ using N_m3u8DL_RE.Util;
 using NiL.JS.Expressions;
 using System.CommandLine;
 using System.CommandLine.Binding;
+using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using System.Net;
@@ -17,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20221029";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20221030";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -450,7 +451,22 @@ namespace N_m3u8DL_RE.CommandLine
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());
 
-            return await rootCommand.InvokeAsync(args);
+            var parser = new CommandLineBuilder(rootCommand)
+                .UseDefaults()
+                .EnablePosixBundling(false)
+                .UseExceptionHandler((ex, context) =>
+                {
+                    try { Console.CursorVisible = true; } catch { }
+                    string msg = Logger.LogLevel == Common.Log.LogLevel.DEBUG ? ex.ToString() : ex.Message;
+#if DEBUG
+                    msg = ex.ToString();
+#endif
+                    Logger.Error(msg);
+                    Thread.Sleep(3000);
+                }, 1)
+                .Build();
+
+            return await parser.InvokeAsync(args);
         }
     }
 }
