@@ -10,7 +10,7 @@
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20221024
+  N_m3u8DL-RE (Beta version) 20221101
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -31,13 +31,14 @@ Options:
   --check-segments-count                   检测实际下载的分片数量和预期数量是否匹配 [default: True]
   --binary-merge                           二进制合并 [default: False]
   --del-after-done                         完成后删除临时文件 [default: True]
+  --no-date-info                           混流时不写入日期信息 [default: False]
   --write-meta-json                        解析后的信息是否输出json文件 [default: False]
   --append-url-params                      将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com [default: False]
   -mt, --concurrent-download               并发下载已选择的音频、视频和字幕 [default: False]
   -H, --header <header>                    为HTTP请求设置特定的请求头, 例如:
                                            -H "Cookie: mycookie" -H "User-Agent: iOS"
   --sub-only                               只选取字幕轨道 [default: False]
-  --sub-format <SRT|VTT>                   字幕输出类型 [default: VTT]
+  --sub-format <SRT|VTT>                   字幕输出类型 [default: SRT]
   --auto-subtitle-fix                      自动修正字幕 [default: True]
   --ffmpeg-binary-path <PATH>              ffmpeg可执行程序全路径, 例如 C:\Tools\ffmpeg.exe
   --log-level <DEBUG|ERROR|INFO|OFF|WARN>  设置日志级别 [default: INFO]
@@ -50,8 +51,7 @@ Options:
   --use-shaka-packager                     解密时使用shaka-packager替代mp4decrypt [default: False]
   --mp4-real-time-decryption               实时解密MP4分片 [default: False]
   -M, --mux-after-done <OPTIONS>           所有工作完成时尝试混流分离的音视频. 输入 "--morehelp mux-after-done" 以查看详细信息
-  --custom-hls-method <METHOD>             指定HLS加密方式
-                                           (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
+  --custom-hls-method <METHOD>             指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>       指定HLS解密KEY. 可以是文件, HEX或Base64
   --custom-hls-iv <FILE|HEX|BASE64>        指定HLS解密IV. 可以是文件, HEX或Base64
   --use-system-proxy                       使用系统默认代理 [default: True]
@@ -64,7 +64,7 @@ Options:
   --mux-import <OPTIONS>                   混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
   -sv, --select-video <OPTIONS>            通过正则表达式选择符合要求的视频流. 输入 "--morehelp select-video" 以查看详细信息
   -sa, --select-audio <OPTIONS>            通过正则表达式选择符合要求的音频流. 输入 "--morehelp select-audio" 以查看详细信息
-  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看 详细信息
+  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看详细信息
   --morehelp <OPTION>                      查看某个选项的详细帮助信息
   --version                                Show version information
   -?, -h, --help                           Show help and usage information
