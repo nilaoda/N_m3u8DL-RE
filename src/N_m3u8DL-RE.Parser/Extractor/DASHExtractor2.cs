@@ -487,7 +487,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
             var newStreams = await ExtractStreamsAsync(rawText);
             foreach (var streamSpec in streamSpecs)
             {
+                //有的网站每次请求MPD返回的码率不一致，导致ToShortString()无法匹配 无法更新playlist
+                //故增加通过init url来匹配 (如果有的话)
                 var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
+                if (!match.Any())
+                    match = newStreams.Where(n => n.Playlist?.MediaInit?.Url == streamSpec.Playlist?.MediaInit?.Url);
+
                 if (match.Any())
                     streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; //不更新init
             }
