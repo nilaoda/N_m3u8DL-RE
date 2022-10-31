@@ -39,7 +39,15 @@ namespace N_m3u8DL_RE.Util
                 sb.AppendLine();
             }
             sb.AppendLine();
-            return sb.ToString();
+
+            var srt = sb.ToString();
+
+            if (string.IsNullOrEmpty(srt.Trim()))
+            {
+                srt = "1\r\n00:00:00,000 --> 00:00:01,000"; //空字幕
+            }
+
+            return srt;
         }
 
         public static string WebVtt2Other(WebVttSub vtt, SubtitleFormat toFormat)
