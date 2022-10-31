@@ -2,6 +2,7 @@
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Config;
+using N_m3u8DL_RE.Crypto;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
@@ -38,13 +39,22 @@ namespace N_m3u8DL_RE.Downloader
                 {
                     var key = segment.EncryptInfo.Key;
                     var iv = segment.EncryptInfo.IV;
-                    Crypto.AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
+                    AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
                 }
                 else if (segment.EncryptInfo.Method == EncryptMethod.AES_128_ECB)
                 {
                     var key = segment.EncryptInfo.Key;
                     var iv = segment.EncryptInfo.IV;
-                    Crypto.AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
+                    AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
+                }
+                else if (segment.EncryptInfo.Method == EncryptMethod.CHACHA20)
+                {
+                    var key = segment.EncryptInfo.Key;
+                    var nonce = segment.EncryptInfo.IV;
+
+                    var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
+                    var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
+                    await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
                 }
                 else if (segment.EncryptInfo.Method == EncryptMethod.SAMPLE_AES_CTR)
                 {
