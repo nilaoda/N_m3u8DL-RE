@@ -710,7 +710,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 var result = false;
                 if (DownloaderConfig.MyOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
-                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxToMp4);
+                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxToMp4, !DownloaderConfig.MyOptions.NoDateInfo);
                 //完成后删除各轨道文件
                 if (result && !DownloaderConfig.MyOptions.MuxKeepFiles)
                 {

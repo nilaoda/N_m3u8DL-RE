@@ -37,6 +37,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public LogLevel LogLevel { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.NoDateInfo"/>.
+        /// </summary>
+        public bool NoDateInfo { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.AutoSelect"/>.
         /// </summary>
         public bool AutoSelect { get; set; }

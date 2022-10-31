@@ -175,7 +175,7 @@ namespace N_m3u8DL_RE.Util
             return false;
         }
 
-        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, bool mp4)
+        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, bool mp4, bool dateinfo)
         {
             var ext = mp4 ? "mp4" : "mkv";
             string dateString = DateTime.Now.ToString("o");
@@ -223,7 +223,8 @@ namespace N_m3u8DL_RE.Util
                     streamIndex++;
             }
 
-            command.Append($" -metadata date=\"{dateString}\" -ignore_unknown -copy_unknown ");
+            if(dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
+            command.Append($" -ignore_unknown -copy_unknown ");
             command.Append($" \"{outputPath}.{ext}\"");
 
             InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);

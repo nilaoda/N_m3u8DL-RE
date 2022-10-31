@@ -49,6 +49,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_saveName { get => GetText("cmd_saveName"); }
         public static string cmd_savePattern { get => GetText("cmd_savePattern"); }
         public static string cmd_skipDownload { get => GetText("cmd_skipDownload"); }
+        public static string cmd_noDateInfo { get => GetText("cmd_noDateInfo"); }
         public static string cmd_skipMerge { get => GetText("cmd_skipMerge"); }
         public static string cmd_subFormat { get => GetText("cmd_subFormat"); }
         public static string cmd_subOnly { get => GetText("cmd_subOnly"); }

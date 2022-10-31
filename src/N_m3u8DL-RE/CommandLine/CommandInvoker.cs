@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20221031";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20221101";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -41,6 +41,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<int> DownloadRetryCount = new(new string[] { "--download-retry-count" }, description: ResString.cmd_downloadRetryCount, getDefaultValue: () => 3) { ArgumentHelpName = "number" };
         private readonly static Option<bool> SkipMerge = new(new string[] { "--skip-merge" }, description: ResString.cmd_skipMerge, getDefaultValue: () => false);
         private readonly static Option<bool> SkipDownload = new(new string[] { "--skip-download" }, description: ResString.cmd_skipDownload, getDefaultValue: () => false);
+        private readonly static Option<bool> NoDateInfo = new(new string[] { "--no-date-info" }, description: ResString.cmd_noDateInfo, getDefaultValue: () => false);
         private readonly static Option<bool> BinaryMerge = new(new string[] { "--binary-merge" }, description: ResString.cmd_binaryMerge, getDefaultValue: () => false);
         private readonly static Option<bool> DelAfterDone = new(new string[] { "--del-after-done" }, description: ResString.cmd_delAfterDone, getDefaultValue: () => true);
         private readonly static Option<bool> AutoSubtitleFix = new(new string[] { "--auto-subtitle-fix" }, description: ResString.cmd_subtitleFix, getDefaultValue: () => true);
@@ -379,6 +380,7 @@ namespace N_m3u8DL_RE.CommandLine
                     UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
                     CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
                     LiveWaitTime = bindingContext.ParseResult.GetValueForOption(LiveWaitTime),
+                    NoDateInfo = bindingContext.ParseResult.GetValueForOption(NoDateInfo),
                 };
 
                 if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
@@ -439,7 +441,7 @@ namespace N_m3u8DL_RE.CommandLine
             var rootCommand = new RootCommand(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                BinaryMerge, DelAfterDone, NoDateInfo, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
