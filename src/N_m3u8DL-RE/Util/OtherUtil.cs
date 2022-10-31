@@ -118,5 +118,23 @@ namespace N_m3u8DL_RE.Util
 
             return new TimeSpan(days, hours, mins, secs);
         }
+
+        //若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录
+        public static void SafeDeleteDir(string dirPath)
+        {
+            if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))
+                return;
+
+            var parent = Path.GetDirectoryName(dirPath)!;
+            if (!Directory.EnumerateFileSystemEntries(dirPath).Any())
+            {
+                Directory.Delete(dirPath);
+            }
+            else
+            {
+                return;
+            }
+            SafeDeleteDir(parent);
+        }
     }
 }

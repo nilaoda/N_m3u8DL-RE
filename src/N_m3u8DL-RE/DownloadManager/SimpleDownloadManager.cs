@@ -49,24 +49,6 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
-        //若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录
-        private void SafeDeleteDir(string dirPath)
-        {
-            if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))
-                return;
-
-            var parent = Path.GetDirectoryName(dirPath)!;
-            if (!Directory.EnumerateFileSystemEntries(dirPath).Any())
-            {
-                Directory.Delete(dirPath);
-            }
-            else
-            {
-                return;
-            }
-            SafeDeleteDir(parent);
-        }
-
         //从文件读取KEY
         private async Task SearchKeyAsync(string? currentKID)
         {
@@ -532,7 +514,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     File.Delete(file);
                 }
-                SafeDeleteDir(tmpDir);
+                OtherUtil.SafeDeleteDir(tmpDir);
             }
 
             //重新读取init信息
@@ -650,7 +632,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     Logger.WarnMarkUp("[grey]Cleaning files...[/]");
                     OutputFiles.ForEach(f => File.Delete(f.FilePath));
                     var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
-                    SafeDeleteDir(tmpDir);  
+                    OtherUtil.SafeDeleteDir(tmpDir);  
                 }
                 else Logger.ErrorMarkUp($"Mux failed");
                 //判断是否要改名

@@ -24,6 +24,7 @@ namespace N_m3u8DL_RE.DownloadManager
         DownloaderConfig DownloaderConfig;
         StreamExtractor StreamExtractor;
         List<StreamSpec> SelectedSteams;
+        List<OutputFile> OutputFiles = new();
         DateTime NowDateTime;
         DateTime? PublishDateTime;
         bool STOP_FLAG = false;
@@ -533,6 +534,15 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (fileOutputStream != null)
             {
+                //记录所有文件信息
+                OutputFiles.Add(new OutputFile()
+                {
+                    Index = task.Id,
+                    FilePath = fileOutputStream.Name,
+                    LangCode = streamSpec.Language,
+                    Description = streamSpec.Name,
+                    Mediainfos = mediaInfos
+                });
                 fileOutputStream.Close();
                 fileOutputStream.Dispose();
             }
@@ -685,9 +695,38 @@ namespace N_m3u8DL_RE.DownloadManager
             var success = Results.Values.All(v => v == true);
 
             //混流
-            if (success && DownloaderConfig.MyOptions.MuxAfterDone)
+            if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0)
             {
-                Logger.Error("Not supported yet!");
+                OutputFiles = OutputFiles.OrderBy(o => o.Index).ToList();
+                if (DownloaderConfig.MyOptions.MuxImports != null)
+                {
+                    OutputFiles.AddRange(DownloaderConfig.MyOptions.MuxImports);
+                }
+                OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
+                var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
+                var ext = DownloaderConfig.MyOptions.MuxToMp4 ? ".mp4" : ".mkv";
+                var outName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}.MUX";
+                var outPath = Path.Combine(saveDir, outName);
+                Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
+                var result = false;
+                if (DownloaderConfig.MyOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
+                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxToMp4);
+                //完成后删除各轨道文件
+                if (result && !DownloaderConfig.MyOptions.MuxKeepFiles)
+                {
+                    Logger.WarnMarkUp("[grey]Cleaning files...[/]");
+                    OutputFiles.ForEach(f => File.Delete(f.FilePath));
+                    var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
+                    OtherUtil.SafeDeleteDir(tmpDir);
+                }
+                else Logger.ErrorMarkUp($"Mux failed");
+                //判断是否要改名
+                var newPath = Path.ChangeExtension(outPath, ext);
+                if (result && !File.Exists(newPath))
+                {
+                    Logger.WarnMarkUp($"Rename to [grey]{Path.GetFileName(newPath).EscapeMarkup()}[/]");
+                    File.Move(outPath + ext, newPath);
+                }
             }
 
             return success;
