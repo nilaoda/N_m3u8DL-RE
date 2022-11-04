@@ -276,6 +276,7 @@ namespace N_m3u8DL_RE
             if (selectedStreams.Any(s => s.Playlist.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
             {
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge3}[/]");
+                option.BinaryMerge = true;
             }
 
             if (option.WriteMetaJson)
