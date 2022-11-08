@@ -92,7 +92,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             if (parserConfig.CustomMethod != null)
             {
                 encryptInfo.Method = parserConfig.CustomMethod.Value;
-                Logger.Warn("METHOD changed to {}", method, encryptInfo.Method);
+                Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
             }
 
             return encryptInfo;
