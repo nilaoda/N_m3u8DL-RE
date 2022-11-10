@@ -21,9 +21,12 @@ namespace N_m3u8DL_RE.Parser.Processor
                 var uriFromConfig = new Uri(paserConfig.Url);
                 var newUri = new Uri(oriUrl);
                 var newQuery = (newUri.Query.TrimStart('?') + "&" + uriFromConfig.Query.TrimStart('?')).Trim('&');
-                Logger.Debug("Before: " + oriUrl);
-                oriUrl = (newUri.GetLeftPart(UriPartial.Path) + "?" + newQuery).TrimEnd('?');
-                Logger.Debug("After: " + oriUrl);
+                if (!oriUrl.Contains(uriFromConfig.Query))
+                {
+                    Logger.Debug("Before: " + oriUrl);
+                    oriUrl = (newUri.GetLeftPart(UriPartial.Path) + "?" + newQuery).TrimEnd('?');
+                    Logger.Debug("After: " + oriUrl);
+                }
             }
 
             return oriUrl;
