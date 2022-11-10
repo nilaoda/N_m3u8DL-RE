@@ -323,7 +323,7 @@ namespace N_m3u8DL_RE
                 if (result)
                     Logger.InfoMarkUp("[white on green]Done[/]");
                 else
-                    Logger.ErrorMarkUp("[white on red]Faild[/]");
+                    Logger.ErrorMarkUp("[white on red]Failed[/]");
             }
             else
             {
@@ -332,7 +332,7 @@ namespace N_m3u8DL_RE
                 if (result)
                     Logger.InfoMarkUp("[white on green]Done[/]");
                 else
-                    Logger.ErrorMarkUp("[white on red]Faild[/]");
+                    Logger.ErrorMarkUp("[white on red]Failed[/]");
             }
         }
     }
