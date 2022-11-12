@@ -9,6 +9,7 @@ using Spectre.Console;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -116,7 +117,7 @@ namespace N_m3u8DL_RE.Downloader
             catch (Exception ex)
             {
                 Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
-                Logger.Debug(ex.ToString());
+                Logger.Debug(url + " " + ex.ToString());
                 if (retryCount-- > 0)
                 {
                     await Task.Delay(1000);

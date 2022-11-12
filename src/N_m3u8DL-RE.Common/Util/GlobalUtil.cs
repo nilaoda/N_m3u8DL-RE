@@ -35,6 +35,10 @@ namespace N_m3u8DL_RE.Common.Util
             {
                 return JsonSerializer.Serialize(sList, Context.ListStreamSpec);
             }
+            else if (o is IEnumerable<MediaSegment> mList)
+            {
+                return JsonSerializer.Serialize(mList, Context.IEnumerableMediaSegment);
+            }
             return "{NOT SUPPORTED}";
         }
 
