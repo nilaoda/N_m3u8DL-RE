@@ -187,6 +187,8 @@ namespace N_m3u8DL_RE
             //url = "https://theater.kktv.com.tw/98/04000198010001_584b26392f7f7f11fc62299214a55fb7/16113081449d8d5e9960_sub_dash.mpd"; //MPD+VTT
             //url = "https://vsl.play.kakao.com/vod/rvty90n7btua6u9oebr97i8zl/dash/vhs/cenc/adaptive.mpd?e=1658297362&p=71&h=53766bdde112d59da2b2514e8ab41e81"; //需要补params
             //url = "https://a38avoddashs3ww-a.akamaihd.net/ondemand/iad_2/8e91/f2f2/ec5a/430f-bd7a-0779f4a0189d/685cda75-609c-41c1-86bb-688f4cdb5521_corrected.mpd";
+            //url = "http://ht.grelighting.cn/m3u8/OEtYNVNjMFF5N1g2VzNkZ2lwbWEvd1ZtTGJ0dlZXOEk=.m3u8"; //特殊的图片伪装
+            //url = "https://ali6.a.yximgs.com/udata/music/music_295e59bdb3084def8158873ad6f5c8250.jpg"; //PNG图片伪装
             //url = "";
 
             if (!string.IsNullOrEmpty(option.Input))

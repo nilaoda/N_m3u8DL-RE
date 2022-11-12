@@ -60,6 +60,12 @@ namespace N_m3u8DL_RE.Downloader
                 {
                     //throw new NotSupportedException("SAMPLE-AES-CTR");
                 }
+
+                //Image头处理
+                if (dResult.ImageHeader)
+                {
+                    await ImageHeaderUtil.ProcessAsync(dResult.ActualFilePath);
+                }
             }
             return dResult;
         }
