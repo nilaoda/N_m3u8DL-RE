@@ -58,7 +58,7 @@ namespace N_m3u8DL_RE.Util
             try
             {
                 using var response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
-                if (response.StatusCode == HttpStatusCode.Found || response.StatusCode == HttpStatusCode.Moved || response.StatusCode == HttpStatusCode.SeeOther)
+                if (((int)response.StatusCode).ToString().StartsWith("30"))
                 {
                     HttpResponseHeaders respHeaders = response.Headers;
                     Logger.Debug(respHeaders.ToString());
@@ -86,6 +86,13 @@ namespace N_m3u8DL_RE.Util
                 using var responseStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token);
                 var buffer = new byte[16 * 1024];
                 var size = 0;
+
+                //检测imageHeader
+                size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token);
+                speedContainer.Add(size);
+                await stream.WriteAsync(buffer, 0, size);
+                bool imageHeader = ImageHeaderUtil.IsImageHeader(buffer);
+
                 while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
                 {
                     speedContainer.Add(size);
@@ -96,7 +103,8 @@ namespace N_m3u8DL_RE.Util
                 {
                     ActualContentLength = stream.Length,
                     RespContentLength = contentLength,
-                    ActualFilePath = path
+                    ActualFilePath = path,
+                    ImageHeader= imageHeader
                 };
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationTokenSource.Token)

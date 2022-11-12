@@ -52,7 +52,7 @@ namespace N_m3u8DL_RE.Common.Util
             Logger.Debug(webRequest.Headers.ToString());
             //手动处理跳转，以免自定义Headers丢失
             var webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
-            if (webResponse.StatusCode == HttpStatusCode.Found || webResponse.StatusCode == HttpStatusCode.Moved || webResponse.StatusCode == HttpStatusCode.SeeOther)
+            if (((int)webResponse.StatusCode).ToString().StartsWith("30"))
             {
                 HttpResponseHeaders respHeaders = webResponse.Headers;
                 Logger.Debug(respHeaders.ToString());
