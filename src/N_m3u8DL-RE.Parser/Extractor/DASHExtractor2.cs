@@ -29,9 +29,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
         public DASHExtractor2(ParserConfig parserConfig)
         {
             this.ParserConfig = parserConfig;
-            this.MpdUrl = parserConfig.Url ?? string.Empty;
-            if (!string.IsNullOrEmpty(parserConfig.BaseUrl))
-                this.BaseUrl = parserConfig.BaseUrl;
+            SetInitUrl();
+        }
+
+
+        private void SetInitUrl()
+        {
+            this.MpdUrl = ParserConfig.Url ?? string.Empty;
+            if (!string.IsNullOrEmpty(ParserConfig.BaseUrl))
+                this.BaseUrl = ParserConfig.BaseUrl;
             else
                 this.BaseUrl = this.MpdUrl;
         }
@@ -484,6 +490,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             if (streamSpecs.Count == 0) return;
             var  (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
             ParserConfig.Url = url;
+            SetInitUrl();
             var newStreams = await ExtractStreamsAsync(rawText);
             foreach (var streamSpec in streamSpecs)
             {
