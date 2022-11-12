@@ -14,6 +14,7 @@ using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
+using System.Net.Http.Headers;
 
 namespace N_m3u8DL_RE
 {
@@ -64,6 +65,9 @@ namespace N_m3u8DL_RE
 
         static async Task DoWorkAsync(MyOption option)
         {
+            //检测更新
+            CheckUpdateAsync();
+
             Logger.Info(CommandInvoker.VERSION_INFO);
             Logger.LogLevel = option.LogLevel;
 
@@ -336,6 +340,53 @@ namespace N_m3u8DL_RE
                 else
                     Logger.ErrorMarkUp("[white on red]Failed[/]");
             }
+        }
+
+        static async Task CheckUpdateAsync()
+        {
+            try
+            {
+                var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
+                string nowVer = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
+                string redirctUrl = await Get302Async("https://github.com/nilaoda/N_m3u8DL-RE/releases/latest");
+                string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
+                if (!latestVer.StartsWith(nowVer) && !latestVer.StartsWith("https"))
+                {
+                    Console.Title = $"{ResString.newVersionFound} {latestVer}";
+                    Logger.InfoMarkUp($"[cyan]{ResString.newVersionFound}[/] [red]{latestVer}[/]");
+                }
+            }
+            catch (Exception)
+            {
+                ;
+            }
+        }
+
+        //重定向
+        static async Task<string> Get302Async(string url)
+        {
+            //this allows you to set the settings so that we can get the redirect url
+            var handler = new HttpClientHandler()
+            {
+                AllowAutoRedirect = false
+            };
+            string redirectedUrl = "";
+            using (HttpClient client = new(handler))
+            using (HttpResponseMessage response = await client.GetAsync(url))
+            using (HttpContent content = response.Content)
+            {
+                // ... Read the response to see if we have the redirected url
+                if (response.StatusCode == System.Net.HttpStatusCode.Found)
+                {
+                    HttpResponseHeaders headers = response.Headers;
+                    if (headers != null && headers.Location != null)
+                    {
+                        redirectedUrl = headers.Location.AbsoluteUri;
+                    }
+                }
+            }
+
+            return redirectedUrl;
         }
     }
 }
