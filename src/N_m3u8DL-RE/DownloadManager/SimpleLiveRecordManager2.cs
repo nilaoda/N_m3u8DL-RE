@@ -458,15 +458,14 @@ namespace N_m3u8DL_RE.DownloadManager
                         FileDic!.Remove(badKey, out _);
                     }
 
-                    //检测目标文件是否存在
-                    while (!readInfo && File.Exists(output))
-                    {
-                        Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
-                    }
-
                     //设置输出流
                     if (fileOutputStream == null)
                     {
+                        //检测目标文件是否存在
+                        while (File.Exists(output))
+                        {
+                            Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
+                        }
                         fileOutputStream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
                     }
 
