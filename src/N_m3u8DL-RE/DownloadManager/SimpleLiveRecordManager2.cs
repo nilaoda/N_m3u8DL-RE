@@ -712,6 +712,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 };
                 //开始刷新
                 var producerTask = PlayListProduceAsync(dic);
+                await Task.Delay(200);
                 //并发下载
                 await Parallel.ForEachAsync(dic, options, async (kp, _) =>
                 {
