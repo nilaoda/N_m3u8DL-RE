@@ -102,6 +102,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string streamsInfo { get => GetText("streamsInfo"); }
         public static string writeJson { get => GetText("writeJson"); }
         public static string noStreamsToDownload { get => GetText("noStreamsToDownload"); }
+        public static string newVersionFound { get => GetText("newVersionFound"); }
 
         private static string GetText(string key)
         {

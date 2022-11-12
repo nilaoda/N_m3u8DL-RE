@@ -10,6 +10,12 @@ namespace N_m3u8DL_RE.Common.Resource
     {
         public static Dictionary<string, TextContainer> LANG_DIC = new()
         {
+            ["newVersionFound"] = new TextContainer
+            (
+                zhCN: "检测到新版本，请尽快升级！",
+                zhTW: "檢測到新版本，請盡快升級！",
+                enUS: "New version detected!"
+            ),
             ["autoBinaryMerge"] = new TextContainer
             (
                 zhCN: "检测到fMP4，自动开启二进制合并",
