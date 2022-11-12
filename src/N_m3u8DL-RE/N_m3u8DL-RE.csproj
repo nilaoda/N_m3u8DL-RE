@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	<LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
-	<Version>0.0.9</Version>
+	<Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NiL.JS" Version="2.5.1560" />
+    <PackageReference Include="NiL.JS" Version="2.5.1600" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
