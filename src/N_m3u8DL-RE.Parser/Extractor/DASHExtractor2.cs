@@ -488,9 +488,21 @@ namespace N_m3u8DL_RE.Parser.Extractor
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
             if (streamSpecs.Count == 0) return;
-            var  (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+
+            var (rawText, url) = ("", ParserConfig.Url);
+            try
+            {
+                (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.Url, ParserConfig.Headers);
+            }
+            catch (HttpRequestException) when (ParserConfig.Url!= ParserConfig.OriginalUrl)
+            {
+                //当URL无法访问时，再请求原始URL
+                (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+            }
+
             ParserConfig.Url = url;
             SetInitUrl();
+
             var newStreams = await ExtractStreamsAsync(rawText);
             foreach (var streamSpec in streamSpecs)
             {

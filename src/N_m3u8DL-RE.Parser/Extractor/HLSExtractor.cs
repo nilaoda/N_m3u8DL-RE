@@ -506,7 +506,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
             else if (url.StartsWith("http"))
             {
-                (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
+                try
+                {
+                    (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
+                }
+                catch (HttpRequestException) when (url != ParserConfig.OriginalUrl)
+                {
+                    //当URL无法访问时，再请求原始URL
+                    (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+                }
             }
 
             this.M3u8Url = url;
@@ -516,10 +524,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task FetchPlayListAsync(List<StreamSpec> lists)
         {
-            if (MasterM3u8Flag && !FirstRefreshFlag)
+            if (MasterM3u8Flag)
             {
                 //重新加载master m3u8, 刷新选中流的URL
-                await LoadM3u8FromUrlAsync(ParserConfig.OriginalUrl);
+                await LoadM3u8FromUrlAsync(ParserConfig.Url);
                 var newStreams = await ParseMasterListAsync();
                 newStreams = newStreams.DistinctBy(p => p.Url).ToList();
                 foreach (var l in lists)
@@ -531,11 +539,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         l.Url = match.First().Url;
                     }
                 }
-            }
-            else if (!MasterM3u8Flag && lists.Count == 1 && ParserConfig.OriginalUrl != lists[0].Url)
-            {
-                //单m3u8, 但是发生了重定向, 则应从原始URL开始解析
-                lists[0].Url = ParserConfig.OriginalUrl;
             }
 
             for (int i = 0; i < lists.Count; i++)
@@ -555,9 +558,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "m4s" : "ts";
                 }
             }
-
-            //首次刷新已结束，后续重新加载时应该从master开始重新加载
-            FirstRefreshFlag = false;
         }
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
