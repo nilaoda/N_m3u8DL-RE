@@ -66,11 +66,11 @@ namespace Mp4SubtitleParser
                 info.Scheme = System.Text.Encoding.UTF8.GetString(data[schmIndex..][8..12]);
             }
 
-            if (info.Scheme != "cenc") return;
+            //if (info.Scheme != "cenc") return;
 
             //find KID
             var tencBytes = new byte[4] { 0x74, 0x65, 0x6E, 0x63 };
-            var tencIndex = 0;
+            var tencIndex = -1;
             for (int i = 0; i < data.Length - 4; i++)
             {
                 if (new byte[4] { data[i], data[i + 1], data[i + 2], data[i + 3] }.SequenceEqual(tencBytes))
@@ -79,7 +79,7 @@ namespace Mp4SubtitleParser
                     break;
                 }
             }
-            if (tencIndex + 12 < data.Length)
+            if (tencIndex != -1 && tencIndex + 12 < data.Length) 
             {
                 info.KID = HexUtil.BytesToHex(data[tencIndex..][12..28]).ToLower();
             }
