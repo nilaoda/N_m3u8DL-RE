@@ -410,6 +410,22 @@ namespace N_m3u8DL_RE.DownloadManager
                 //写出字幕
                 var firstKey = FileDic.Keys.First();
                 var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
+
+                //处理图形字幕
+                if (finalVtt.Cues.All(v => v.Payload.StartsWith("Base64::")))
+                {
+                    Logger.WarnMarkUp(ResString.processImageSub);
+                    var _pad = "0".PadLeft(finalVtt.Cues.Count().ToString().Length, '0');
+                    var _i = 0;
+                    foreach (var img in finalVtt.Cues)
+                    {
+                        var base64 = img.Payload[8..];
+                        var name = _i++.ToString(_pad) + ".png";
+                        await File.WriteAllBytesAsync(Path.Combine(tmpDir, name), Convert.FromBase64String(base64));
+                        img.Payload = name;
+                    }
+                }
+
                 foreach (var item in files) File.Delete(item);
                 FileDic.Clear();
                 var index = 0;
@@ -444,6 +460,22 @@ namespace N_m3u8DL_RE.DownloadManager
                 //写出字幕
                 var firstKey = FileDic.Keys.First();
                 var files = FileDic.Values.Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
+
+                //处理图形字幕
+                if (finalVtt.Cues.All(v => v.Payload.StartsWith("Base64::")))
+                {
+                    Logger.WarnMarkUp(ResString.processImageSub);
+                    var _pad = "0".PadLeft(finalVtt.Cues.Count().ToString().Length, '0');
+                    var _i = 0;
+                    foreach (var img in finalVtt.Cues)
+                    {
+                        var base64 = img.Payload[8..];
+                        var name = _i++.ToString(_pad) + ".png";
+                        await File.WriteAllBytesAsync(Path.Combine(tmpDir, name), Convert.FromBase64String(base64));
+                        img.Payload = name;
+                    }
+                }
+
                 foreach (var item in files) File.Delete(item);
                 FileDic.Clear();
                 var index = 0;

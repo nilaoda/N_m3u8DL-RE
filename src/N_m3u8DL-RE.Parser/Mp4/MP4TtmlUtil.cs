@@ -34,6 +34,8 @@ namespace Mp4SubtitleParser
         private static partial Regex LabelFixRegex();
         [GeneratedRegex("\\<tt[\\s\\S]*?\\<\\/tt\\>")]
         private static partial Regex MultiElementsFixRegex();
+        [GeneratedRegex("\\<smpte:image.*xml:id=\\\"(.*?)\\\".*\\>([\\s\\S]*?)<\\/smpte:image>")]
+        private static partial Regex ImageRegex();
 
         public static bool CheckInit(byte[] data)
         {
@@ -229,38 +231,66 @@ namespace Mp4SubtitleParser
                 if (_div == null)
                     continue;
 
+
+                //PNG Subs
+                var imageDic = new Dictionary<string, string>(); //id, Base64
+                if (ImageRegex().IsMatch(xmlDoc.InnerXml))
+                {
+                    foreach (Match img in ImageRegex().Matches(xmlDoc.InnerXml))
+                    {
+                        imageDic.Add(img.Groups[1].Value, img.Groups[2].Value);
+                    }
+                }
+
                 //Parse <p> label
                 foreach (XmlElement _p in _div!.SelectNodes("ns:p", nsMgr)!)
                 {
                     var _begin = _p.GetAttribute("begin");
                     var _end = _p.GetAttribute("end");
                     var _region = _p.GetAttribute("region");
+                    var _bgImg = _p.GetAttribute("smpte:backgroundImage");
                     var sub = new SubEntity
                     {
                         Begin = _begin,
                         End = _end,
                         Region = _region
                     };
-                    var _spans = _p.ChildNodes;
-                    //Collect <span>
-                    foreach (XmlNode _node in _spans)
+
+                    if (string.IsNullOrEmpty(_bgImg))
                     {
-                        if (_node.NodeType == XmlNodeType.Element)
+                        var _spans = _p.ChildNodes;
+                        //Collect <span>
+                        foreach (XmlNode _node in _spans)
                         {
-                            var _span = (XmlElement)_node;
-                            if (string.IsNullOrEmpty(_span.InnerText))
-                                continue;
-                            sub.Contents.Add(_span);
-                            sub.ContentStrings.Add(_span.OuterXml);
+                            if (_node.NodeType == XmlNodeType.Element)
+                            {
+                                var _span = (XmlElement)_node;
+                                if (string.IsNullOrEmpty(_span.InnerText))
+                                    continue;
+                                sub.Contents.Add(_span);
+                                sub.ContentStrings.Add(_span.OuterXml);
+                            }
+                            else if (_node.NodeType == XmlNodeType.Text)
+                            {
+                                var _span = new XmlDocument().CreateElement("span");
+                                _span.InnerText = _node.Value!;
+                                sub.Contents.Add(_span);
+                                sub.ContentStrings.Add(_span.OuterXml);
+                            }
                         }
-                        else if (_node.NodeType == XmlNodeType.Text)
+                    }
+                    else
+                    {
+                        var id = _bgImg.Replace("#", "");
+                        if (imageDic.ContainsKey(id))
                         {
                             var _span = new XmlDocument().CreateElement("span");
-                            _span.InnerText = _node.Value!;
+                            _span.InnerText = $"Base64::{imageDic[id]}";
                             sub.Contents.Add(_span);
                             sub.ContentStrings.Add(_span.OuterXml);
                         }
                     }
+                    
                     //Check if one <p> has been splitted
                     var index = finalSubs.FindLastIndex(s => s.End == _begin && s.Region == _region && s.ContentStrings.SequenceEqual(sub.ContentStrings));
                     //Skip empty lines

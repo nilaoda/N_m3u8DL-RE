@@ -193,6 +193,7 @@ namespace N_m3u8DL_RE
             //url = "https://a38avoddashs3ww-a.akamaihd.net/ondemand/iad_2/8e91/f2f2/ec5a/430f-bd7a-0779f4a0189d/685cda75-609c-41c1-86bb-688f4cdb5521_corrected.mpd";
             //url = "http://ht.grelighting.cn/m3u8/OEtYNVNjMFF5N1g2VzNkZ2lwbWEvd1ZtTGJ0dlZXOEk=.m3u8"; //特殊的图片伪装
             //url = "https://ali6.a.yximgs.com/udata/music/music_295e59bdb3084def8158873ad6f5c8250.jpg"; //PNG图片伪装
+            //url = "https://vod.cds.nowonline.com.br/Content/dsc/VOD/movie/df/83/4dd69316-2022-45c0-a4f7-c35cad87df83/manifest.mpd"; //TTML+PNG
             //url = "";
 
             if (!string.IsNullOrEmpty(option.Input))

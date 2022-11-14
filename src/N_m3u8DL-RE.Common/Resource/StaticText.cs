@@ -10,6 +10,12 @@ namespace N_m3u8DL_RE.Common.Resource
     {
         public static Dictionary<string, TextContainer> LANG_DIC = new()
         {
+            ["processImageSub"] = new TextContainer
+            (
+                zhCN: "正在处理图形字幕",
+                zhTW: "正在處理圖形字幕",
+                enUS: "Processing Image Sub"
+            ),
             ["newVersionFound"] = new TextContainer
             (
                 zhCN: "检测到新版本，请尽快升级！",
