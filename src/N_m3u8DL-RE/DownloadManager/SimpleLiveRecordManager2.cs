@@ -11,6 +11,7 @@ using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Threading.Tasks;
@@ -94,11 +95,15 @@ namespace N_m3u8DL_RE.DownloadManager
         /// <param name="segment"></param>
         /// <param name="allHasDatetime"></param>
         /// <returns></returns>
-        private string GetSegmentName(MediaSegment segment, bool allHasDatetime)
+        private string GetSegmentName(MediaSegment segment, bool allHasDatetime, bool allSamePath)
         {
             bool hls = StreamExtractor.ExtractorType == ExtractorType.HLS;
 
             string name = OtherUtil.GetFileNameFromInput(segment.Url, false);
+            if (allSamePath)
+            {
+                name = OtherUtil.GetValidFileName(segment.Url.Split('?').Last(), "_");
+            }
             if (hls && allHasDatetime)
             {
                 name = GetUnixTimestamp(segment.DateTime!.Value).ToString();
@@ -196,7 +201,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 //TryReceiveAll可以稍微缓解一下
                 source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
                 var segments = segmentsList!.SelectMany(s => s);
-                Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false))));
+                Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
                 //下载init
                 if (!initDownloaded && streamSpec.Playlist?.MediaInit != null) 
@@ -251,6 +256,8 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 var allHasDatetime = segments.All(s => s.DateTime != null);
+                var allName = segments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
+                var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
 
                 //下载第一个分片
                 if (!readInfo)
@@ -258,7 +265,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var seg = segments.First();
                     segments = segments.Skip(1);
                     //获取文件名
-                    var filename = GetSegmentName(seg, allHasDatetime);
+                    var filename = GetSegmentName(seg, allHasDatetime, allSamePath);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -306,7 +313,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 await Parallel.ForEachAsync(segments, options, async (seg, _) =>
                 {
                     //获取文件名
-                    var filename = GetSegmentName(seg, allHasDatetime);
+                    var filename = GetSegmentName(seg, allHasDatetime, allSamePath);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -572,8 +579,10 @@ namespace N_m3u8DL_RE.DownloadManager
                         var streamSpec = dic.Key;
                         var task = dic.Value;
                         var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
+                        var allName = streamSpec.Playlist!.MediaParts[0].MediaSegments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
+                        var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
                         //过滤不需要下载的片段
-                        FilterMediaSegments(streamSpec, allHasDatetime);
+                        FilterMediaSegments(streamSpec, allHasDatetime, allSamePath);
                         var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
                         if (newList.Count > 0)
                         {
@@ -581,7 +590,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             //推送给消费者
                             await BlockDic[task.Id].SendAsync(newList);
                             //更新最新链接
-                            LastFileNameDic[streamSpec.ToShortString()] = GetSegmentName(newList.Last(), allHasDatetime);
+                            LastFileNameDic[streamSpec.ToShortString()] = GetSegmentName(newList.Last(), allHasDatetime, allSamePath);
                             //尝试更新时间戳
                             var dt = newList.Last().DateTime;
                             DateTimeDic[streamSpec.ToShortString()] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
@@ -608,7 +617,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
-        private void FilterMediaSegments(StreamSpec streamSpec, bool allHasDatetime)
+        private void FilterMediaSegments(StreamSpec streamSpec, bool allHasDatetime, bool allSamePath)
         {
             if (string.IsNullOrEmpty(LastFileNameDic[streamSpec.ToShortString()]) && DateTimeDic[streamSpec.ToShortString()] == 0) return;
 
@@ -623,7 +632,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
             else
             {
-                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetSegmentName(s, allHasDatetime) == lastName);
+                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetSegmentName(s, allHasDatetime, allSamePath) == lastName);
             }
 
             if (index > -1)
