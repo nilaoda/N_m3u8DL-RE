@@ -33,6 +33,7 @@ namespace N_m3u8DL_RE.DownloadManager
         int WAIT_SEC = 0; //刷新间隔
         ConcurrentDictionary<int, int> RecordingDurDic = new(); //已录制时长
         ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); //各流的Block
+        ConcurrentDictionary<int, bool> SamePathDic = new(); //各流是否allSamePath
         ConcurrentDictionary<string, string> LastFileNameDic = new(); //上次下载的文件名
         ConcurrentDictionary<string, long> DateTimeDic = new(); //上次下载的dateTime
         CancellationTokenSource CancellationTokenSource = new(); //取消Wait
@@ -256,8 +257,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 var allHasDatetime = segments.All(s => s.DateTime != null);
-                var allName = segments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
-                var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
+                if (!SamePathDic.ContainsKey(task.Id))
+                {
+                    var allName = segments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
+                    var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
+                    SamePathDic[task.Id] = allSamePath;
+                }
 
                 //下载第一个分片
                 if (!readInfo)
@@ -265,7 +270,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var seg = segments.First();
                     segments = segments.Skip(1);
                     //获取文件名
-                    var filename = GetSegmentName(seg, allHasDatetime, allSamePath);
+                    var filename = GetSegmentName(seg, allHasDatetime, SamePathDic[task.Id]);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -313,7 +318,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 await Parallel.ForEachAsync(segments, options, async (seg, _) =>
                 {
                     //获取文件名
-                    var filename = GetSegmentName(seg, allHasDatetime, allSamePath);
+                    var filename = GetSegmentName(seg, allHasDatetime, SamePathDic[task.Id]);
                     var index = seg.Index;
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
@@ -579,10 +584,14 @@ namespace N_m3u8DL_RE.DownloadManager
                         var streamSpec = dic.Key;
                         var task = dic.Value;
                         var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
-                        var allName = streamSpec.Playlist!.MediaParts[0].MediaSegments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
-                        var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
+                        if (!SamePathDic.ContainsKey(task.Id))
+                        {
+                            var allName = streamSpec.Playlist!.MediaParts[0].MediaSegments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
+                            var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
+                            SamePathDic[task.Id] = allSamePath;
+                        }
                         //过滤不需要下载的片段
-                        FilterMediaSegments(streamSpec, allHasDatetime, allSamePath);
+                        FilterMediaSegments(streamSpec, allHasDatetime, SamePathDic[task.Id]);
                         var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
                         if (newList.Count > 0)
                         {
@@ -590,7 +599,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             //推送给消费者
                             await BlockDic[task.Id].SendAsync(newList);
                             //更新最新链接
-                            LastFileNameDic[streamSpec.ToShortString()] = GetSegmentName(newList.Last(), allHasDatetime, allSamePath);
+                            LastFileNameDic[streamSpec.ToShortString()] = GetSegmentName(newList.Last(), allHasDatetime, SamePathDic[task.Id]);
                             //尝试更新时间戳
                             var dt = newList.Last().DateTime;
                             DateTimeDic[streamSpec.ToShortString()] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
