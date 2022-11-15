@@ -238,7 +238,18 @@ namespace Mp4SubtitleParser
                 {
                     foreach (Match img in ImageRegex().Matches(xmlDoc.InnerXml))
                     {
-                        imageDic.Add(img.Groups[1].Value, img.Groups[2].Value);
+                        imageDic.Add(img.Groups[1].Value.Trim(), img.Groups[2].Value.Trim());
+                    }
+                }
+
+                //convert <div> to <p>
+                if (_div!.SelectNodes("ns:p", nsMgr) == null || _div!.SelectNodes("ns:p", nsMgr)!.Count == 0)
+                {
+                    foreach (XmlElement _tDiv in bodyNode.SelectNodes("ns:div", nsMgr)!)
+                    {
+                        var _p = xmlDoc.CreateDocumentFragment();
+                        _p.InnerXml = _tDiv.OuterXml.Replace("<div ", "<p ").Replace("</div>", "</p>");
+                        _div.AppendChild(_p);
                     }
                 }
 
