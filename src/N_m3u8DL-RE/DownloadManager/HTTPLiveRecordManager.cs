@@ -78,7 +78,7 @@ namespace N_m3u8DL_RE.DownloadManager
             response.EnsureSuccessStatusCode();
 
             var output = Path.Combine(saveDir, saveName + ".ts");
-            using var stream = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None);
+            using var stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             using var responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
             var buffer = new byte[16 * 1024];
             var size = 0;
