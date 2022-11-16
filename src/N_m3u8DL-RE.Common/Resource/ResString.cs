@@ -9,6 +9,7 @@ namespace N_m3u8DL_RE.Common.Resource
 {
     public class ResString
     {
+        public readonly static string ReLiveTs = "<RE_LIVE_TS>";
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
         public static string autoBinaryMerge3 { get => GetText("autoBinaryMerge3"); }
@@ -88,6 +89,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string loadingUrl { get => GetText("loadingUrl"); }
         public static string masterM3u8Found { get => GetText("masterM3u8Found"); }
         public static string matchDASH { get => GetText("matchDASH"); }
+        public static string matchTS { get => GetText("matchTS"); }
         public static string matchHLS { get => GetText("matchHLS"); }
         public static string notSupported { get => GetText("notSupported"); }
         public static string parsingStream { get => GetText("parsingStream"); }

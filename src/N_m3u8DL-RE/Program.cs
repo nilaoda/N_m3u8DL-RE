@@ -323,7 +323,13 @@ namespace N_m3u8DL_RE
             };
 
             var result = false;
-            if (!livingFlag)
+            
+            if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+            {
+                var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
+                result = await sldm.StartRecordAsync();
+            }
+            else if(!livingFlag)
             {
                 //开始下载
                 var sdm = new SimpleDownloadManager(downloadConfig);

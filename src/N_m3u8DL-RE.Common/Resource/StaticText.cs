@@ -601,6 +601,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到Master列表，開始解析全部流訊息",
                 enUS: "Master List detected, try parse all streams"
             ),
+            ["matchTS"] = new TextContainer
+            (
+                zhCN: "内容匹配: [white on green3]HTTP Live MPEG2-TS[/]",
+                zhTW: "內容匹配: [white on green3]HTTP Live MPEG2-TS[/]",
+                enUS: "Content Matched: [white on green3]HTTP Live MPEG2-TS[/]"
+            ),
             ["matchDASH"] = new TextContainer
             (
                 zhCN: "内容匹配: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]",

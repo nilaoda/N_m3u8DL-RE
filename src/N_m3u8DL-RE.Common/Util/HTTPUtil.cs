@@ -1,21 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Cache;
-using System.Net.Http;
+﻿using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 
@@ -110,6 +94,12 @@ namespace N_m3u8DL_RE.Common.Util
             return htmlCode;
         }
 
+        private static bool CheckMPEG2TS(HttpResponseMessage? webResponse)
+        {
+            var mediaType = webResponse?.Content.Headers.ContentType?.MediaType;
+            return mediaType == "video/ts" || mediaType == "video/mp2t";
+        }
+
         /// <summary>
         /// 获取网页源码和跳转后的URL
         /// </summary>
@@ -120,7 +110,14 @@ namespace N_m3u8DL_RE.Common.Util
         {
             string htmlCode = string.Empty;
             var webResponse = await DoGetAsync(url, headers);
-            htmlCode = await webResponse.Content.ReadAsStringAsync();
+            if (CheckMPEG2TS(webResponse))
+            {
+                htmlCode = ResString.ReLiveTs;
+            }
+            else
+            {
+                htmlCode = await webResponse.Content.ReadAsStringAsync();
+            }
             Logger.Debug(htmlCode);
             return (htmlCode, webResponse.Headers.Location != null ? webResponse.Headers.Location.AbsoluteUri : url);
         }

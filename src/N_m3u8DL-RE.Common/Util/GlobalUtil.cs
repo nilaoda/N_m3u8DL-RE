@@ -42,6 +42,18 @@ namespace N_m3u8DL_RE.Common.Util
             return "{NOT SUPPORTED}";
         }
 
+        public static string FormatFileSize(double fileSize)
+        {
+            return fileSize switch
+            {
+                < 0 => throw new ArgumentOutOfRangeException(nameof(fileSize)),
+                >= 1024 * 1024 * 1024 => string.Format("{0:########0.00}GB", (double)fileSize / (1024 * 1024 * 1024)),
+                >= 1024 * 1024 => string.Format("{0:####0.00}MB", (double)fileSize / (1024 * 1024)),
+                >= 1024 => string.Format("{0:####0.00}KB", (double)fileSize / 1024),
+                _ => string.Format("{0:####0.00}B", fileSize)
+            };
+        }
+
         //此函数用于格式化输出时长  
         public static string FormatTime(int time)
         {

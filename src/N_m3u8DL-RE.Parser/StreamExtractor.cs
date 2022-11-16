@@ -68,6 +68,11 @@ namespace N_m3u8DL_RE.Parser
                 //extractor = new DASHExtractor(parserConfig);
                 extractor = new DASHExtractor2(parserConfig);
             }
+            else if (rawText == ResString.ReLiveTs)
+            {
+                Logger.InfoMarkUp(ResString.matchTS);
+                extractor = new LiveTSExtractor(parserConfig);
+            }
             else
             {
                 throw new NotSupportedException(ResString.notSupported);
