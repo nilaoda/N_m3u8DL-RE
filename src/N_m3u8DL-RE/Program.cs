@@ -322,24 +322,27 @@ namespace N_m3u8DL_RE
                 Headers = parserConfig.Headers, //使用命令行解析得到的Headers
             };
 
+            var result = false;
             if (!livingFlag)
             {
                 //开始下载
                 var sdm = new SimpleDownloadManager(downloadConfig);
-                var result = await sdm.StartDownloadAsync(selectedStreams);
-                if (result)
-                    Logger.InfoMarkUp("[white on green]Done[/]");
-                else
-                    Logger.ErrorMarkUp("[white on red]Failed[/]");
+                result = await sdm.StartDownloadAsync(selectedStreams);
             }
             else
             {
                 var sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
-                var result = await sldm.StartRecordAsync();
-                if (result)
-                    Logger.InfoMarkUp("[white on green]Done[/]");
-                else
-                    Logger.ErrorMarkUp("[white on red]Failed[/]");
+                result = await sldm.StartRecordAsync();
+            }
+
+            if (result)
+            {
+                Logger.InfoMarkUp("[white on green]Done[/]");
+            }
+            else
+            {
+                Logger.ErrorMarkUp("[white on red]Failed[/]");
+                Environment.ExitCode = 1;
             }
         }
 
