@@ -167,10 +167,10 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Tar (linux, macOS)
-        run: for dir in *{osx,linux}*; do tar cvzf "${dir}_${{ env.date }}.tar.gz" "$dir"; done
+        run: for dir in *{osx,linux}*; do tar cvzf "${dir}_${{ github.event.inputs.tag }}.tar.gz" "$dir"; done
         
       - name: Zip (windows)
-        run: for dir in *win*; do zip -r "${dir}_${{ env.date }}.zip" "$dir"; done
+        run: for dir in *win*; do zip -r "${dir}_${{ github.event.inputs.tag }}.zip" "$dir"; done
 
       - name: Upload
         run: |
