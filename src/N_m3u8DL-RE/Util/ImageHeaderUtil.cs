@@ -21,6 +21,9 @@ namespace N_m3u8DL_RE.Util
             //BMP HEADER检测
             else if (size > 10 && 0x42 == bArr[0] && 0x4D == bArr[1] && 0x00 == bArr[5] && 0x00 == bArr[6] && 0x00 == bArr[7] && 0x00 == bArr[8])
                 return true;
+            //JPEG HEADER检测
+            else if (size > 3 && 0xFF == bArr[0] && 0xD8 == bArr[1] && 0xFF == bArr[2])
+                return true;
             return false;
         }
 
@@ -41,7 +44,7 @@ namespace N_m3u8DL_RE.Util
                     sourceData = sourceData[771..];
                 else
                 {
-                    //确定是PNG但是需要手动查询结尾标记 0x47 出现两次
+                    //手动查询结尾标记 0x47 出现两次
                     int skip = 0;
                     for (int i = 4; i < sourceData.Length - 188 * 2 - 4; i++)
                     {
@@ -63,6 +66,21 @@ namespace N_m3u8DL_RE.Util
             else if (0x42 == sourceData[0] && 0x4D == sourceData[1] && 0x00 == sourceData[5] && 0x00 == sourceData[6] && 0x00 == sourceData[7] && 0x00 == sourceData[8])
             {
                 sourceData = sourceData[0x3E..];
+            }
+            //JPEG HEADER检测
+            else if (0xFF == sourceData[0] && 0xD8 == sourceData[1] && 0xFF == sourceData[2])
+            {
+                //手动查询结尾标记 0x47 出现两次
+                int skip = 0;
+                for (int i = 4; i < sourceData.Length - 188 * 2 - 4; i++)
+                {
+                    if (sourceData[i] == 0x47 && sourceData[i + 188] == 0x47 && sourceData[i + 188 + 188] == 0x47)
+                    {
+                        skip = i;
+                        break;
+                    }
+                }
+                sourceData = sourceData[skip..];
             }
 
             await File.WriteAllBytesAsync(sourcePath, sourceData);
