@@ -300,6 +300,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             var varDic = new Dictionary<string, object?>();
                             varDic[DASHTags.TemplateRepresentationID] = streamSpec.GroupId;
                             varDic[DASHTags.TemplateBandwidth] = bandwidth?.Value;
+                            //presentationTimeOffset
+                            var presentationTimeOffsetStr = segmentTemplate.Attribute("presentationTimeOffset")?.Value ?? segmentTemplateOuter.Attribute("presentationTimeOffset")?.Value ?? "0";
                             //timesacle
                             var timescaleStr = segmentTemplate.Attribute("timescale")?.Value ?? segmentTemplateOuter.Attribute("timescale")?.Value ?? "1";
                             var durationStr = segmentTemplate.Attribute("duration")?.Value ?? segmentTemplateOuter.Attribute("duration")?.Value;
@@ -318,7 +320,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             if (segmentTimeline != null)
                             {
                                 //使用了SegmentTimeline 结果精确
-                                var segNumber = Convert.ToInt32(startNumberStr);
+                                var segNumber = Convert.ToInt64(startNumberStr);
                                 var Ss = segmentTimeline.Elements().Where(e => e.Name.LocalName == "S");
                                 var currentTime = 0L;
                                 var segIndex = 0;
@@ -373,6 +375,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 {
                                     var now = publishTime == null ? DateTime.Now : DateTime.Parse(publishTime);
                                     var availableTime = DateTime.Parse(availabilityStartTime!);
+                                    //可用时间+偏移量
+                                    var offsetMs = TimeSpan.FromMilliseconds(Convert.ToInt64(presentationTimeOffsetStr) / 1000);
+                                    availableTime = availableTime.Add(offsetMs);
                                     var ts = now - availableTime;
                                     var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth!);
                                     //(当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
