@@ -5,6 +5,15 @@
 
 版本较低的Windows系统自带的终端可能不支持本程序，替代方案：在 [cmder](https://github.com/cmderdev/cmder) 中运行。
 
+Arch Linux 可以从 AUR 获取：[n-m3u8dl-re-bin](https://aur.archlinux.org/packages/n-m3u8dl-re-bin)、[n-m3u8dl-re-git](https://aur.archlinux.org/packages/n-m3u8dl-re-git)
+
+```bash
+# Arch Linux 及其衍生版安装 N_m3u8DL-RE 发行版
+yay -Syu n-m3u8dl-re-bin
+
+# Arch Linux 及其衍生版安装 N_m3u8DL-RE 开发版
+yay -Syu n-m3u8dl-re-git
+```
 ---
 
 # 命令行参数
