@@ -21,6 +21,8 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string Url { get; set; }
 
+        public string? NameFromVar { get; set; } //MPD分段文件名
+
         public override bool Equals(object? obj)
         {
             return obj is MediaSegment segment &&

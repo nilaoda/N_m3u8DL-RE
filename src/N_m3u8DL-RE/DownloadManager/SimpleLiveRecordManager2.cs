@@ -98,6 +98,11 @@ namespace N_m3u8DL_RE.DownloadManager
         /// <returns></returns>
         private string GetSegmentName(MediaSegment segment, bool allHasDatetime, bool allSamePath)
         {
+            if (!string.IsNullOrEmpty(segment.NameFromVar))
+            {
+                return segment.NameFromVar;
+            }
+
             bool hls = StreamExtractor.ExtractorType == ExtractorType.HLS;
 
             string name = OtherUtil.GetFileNameFromInput(segment.Url, false);
@@ -105,6 +110,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 name = OtherUtil.GetValidFileName(segment.Url.Split('?').Last(), "_");
             }
+
             if (hls && allHasDatetime)
             {
                 name = GetUnixTimestamp(segment.DateTime!.Value).ToString();
