@@ -376,7 +376,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     var (sawVtt, timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                     if (sawVtt)
                     {
-                        var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).OrderBy(s => s).ToArray();
+                        var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
                         if (firstSub)
                         {
                             currentVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
@@ -394,7 +394,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                     && streamSpec.Extension != null && streamSpec.Extension.Contains("ttml"))
                 {
-                    var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".ttml")).OrderBy(s => s).ToArray();
+                    var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".ttml")).ToArray();
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
@@ -421,7 +421,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     //var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
                     //var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                     //var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
-                    var mp4s = FileDic.Values.Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).OrderBy(s => s).ToArray();
+                    var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
@@ -484,7 +484,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (streamSpec.MediaType != MediaType.SUBTITLES)
                     {
                         var initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
-                        var files = FileDic.Where(f => f.Key != streamSpec.Playlist!.MediaInit).Select(f => f.Value).Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
+                        var files = FileDic.Where(f => f.Key != streamSpec.Playlist!.MediaInit).OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath).ToArray();
                         if (initResult != null && mp4InitFile != "")
                         {
                             //shaka实时解密不需要init文件用于合并，mp4decrpyt需要
@@ -513,7 +513,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     else
                     {
                         var initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
-                        var files = FileDic.Select(f => f.Value).Select(v => v!.ActualFilePath).OrderBy(s => s).ToArray();
+                        var files = FileDic.OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath).ToArray();
                         foreach (var inputFilePath in files)
                         {
                             if (!DownloaderConfig.MyOptions.LiveKeepSegments && !Path.GetFileName(inputFilePath).StartsWith("_init"))
