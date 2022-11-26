@@ -31,3 +31,5 @@
 * https://m-3s3.ll.smooth.row.aiv-cdn.net/iad_2/b473/00fa/20a4/4f93-bc40-1f4462cbba74/5f923727-474e-4788-ab2f-6ebc512a5be3.ism/manifest (ISM test1)
 * https://ec21-waw1.waw2.cache.orange.pl/canal/v/canal/vod/store01/CSM_21006719/_/hd4-hssdrm02.ism/Manifest
 * http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest
+* http://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest
+* https://azclwds01.akamaized.net/4e8f6858-5d05-4e28-83ab-48c7a2b259e1/XVuosg_tab_hd.ism/Manifest (`e5114f87b3e54b9faca331e6e6d646a6:55c5d9f1cedfd018b75623f2565a1d29`)
