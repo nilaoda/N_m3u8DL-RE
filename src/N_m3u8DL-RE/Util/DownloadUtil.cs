@@ -2,6 +2,7 @@
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
+using System.IO;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -43,6 +44,26 @@ namespace N_m3u8DL_RE.Util
             {
                 var file = new Uri(url).LocalPath;
                 return await CopyFileAsync(file, path, speedContainer, fromPosition, toPosition);
+            }
+            if (url.StartsWith("base64://"))
+            {
+                var bytes = Convert.FromBase64String(url[9..]);
+                await File.WriteAllBytesAsync(path, bytes);
+                return new DownloadResult()
+                {
+                    ActualContentLength = bytes.Length,
+                    ActualFilePath = path,
+                };
+            }
+            if (url.StartsWith("hex://"))
+            {
+                var bytes = HexUtil.HexToBytes(url[6..]);
+                await File.WriteAllBytesAsync(path, bytes);
+                return new DownloadResult()
+                {
+                    ActualContentLength = bytes.Length,
+                    ActualFilePath = path,
+                };
             }
             using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
             if (fromPosition != null || toPosition != null)

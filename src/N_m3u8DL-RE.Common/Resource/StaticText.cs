@@ -613,6 +613,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "內容匹配: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]",
                 enUS: "Content Matched: [white on mediumorchid1]Dynamic Adaptive Streaming over HTTP[/]"
             ),
+            ["matchMSS"] = new TextContainer
+            (
+                zhCN: "内容匹配: [white on steelblue1]Microsoft Smooth Streaming[/]",
+                zhTW: "內容匹配: [white on steelblue1]Microsoft Smooth Streaming[/]",
+                enUS: "Content Matched: [white on steelblue1]Microsoft Smooth Streaming[/]"
+            ),
             ["matchHLS"] = new TextContainer
             (
                 zhCN: "内容匹配: [white on deepskyblue1]HTTP Live Streaming[/]",

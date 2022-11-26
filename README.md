@@ -1,5 +1,5 @@
 # N_m3u8DL-RE
-跨平台的DASH/HLS下载工具。支持点播、直播。
+跨平台的DASH/HLS/MSS下载工具。支持点播、直播(DASH/HLS)。
 
 ---
 

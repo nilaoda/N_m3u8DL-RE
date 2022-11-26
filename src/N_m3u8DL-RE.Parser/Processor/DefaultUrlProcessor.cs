@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.Parser.Processor
 
         public override string Process(string oriUrl, ParserConfig paserConfig)
         {
-            if (paserConfig.AppendUrlParams)
+            if (paserConfig.AppendUrlParams && oriUrl.StartsWith("http")) 
             {
                 var uriFromConfig = new Uri(paserConfig.Url);
                 var oldUri = new Uri(oriUrl);

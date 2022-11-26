@@ -7,6 +7,8 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
+using N_m3u8DL_RE.Parser;
+using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -20,12 +22,16 @@ namespace N_m3u8DL_RE.DownloadManager
     {
         IDownloader Downloader;
         DownloaderConfig DownloaderConfig;
+        StreamExtractor StreamExtractor;
+        List<StreamSpec> SelectedSteams;
         DateTime NowDateTime;
         List<OutputFile> OutputFiles = new();
 
-        public SimpleDownloadManager(DownloaderConfig downloaderConfig) 
+        public SimpleDownloadManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor) 
         { 
             this.DownloaderConfig = downloaderConfig;
+            this.SelectedSteams = selectedSteams;
+            this.StreamExtractor = streamExtractor;
             Downloader = new SimpleDownloader(DownloaderConfig);
             NowDateTime = DateTime.Now;
         }
@@ -197,7 +203,7 @@ namespace N_m3u8DL_RE.DownloadManager
             var pad = "0".PadLeft(segments.Count().ToString().Length, '0');
 
             //下载第一个分片
-            if (!readInfo)
+            if (!readInfo || StreamExtractor.ExtractorType == ExtractorType.MSS)
             {
                 var seg = segments.First();
                 segments = segments.Skip(1);
@@ -213,6 +219,13 @@ namespace N_m3u8DL_RE.DownloadManager
                 task.Increment(1);
                 if (result != null && result.Success)
                 {
+                    //修复MSS init
+                    if (StreamExtractor.ExtractorType == ExtractorType.MSS)
+                    {
+                        var processor = new MSSMoovProcessor(streamSpec);
+                        var header = processor.GenHeader(File.ReadAllBytes(result.ActualFilePath));
+                        await File.WriteAllBytesAsync(FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath, header);
+                    }
                     //读取init信息
                     if (string.IsNullOrEmpty(currentKID))
                     {
@@ -232,12 +245,15 @@ namespace N_m3u8DL_RE.DownloadManager
                             result.ActualFilePath = dec;
                         }
                     }
-                    //ffmpeg读取信息
-                    Logger.WarnMarkUp(ResString.readingInfo);
-                    mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
-                    mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                    ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
-                    readInfo = true;
+                    if (!readInfo)
+                    {
+                        //ffmpeg读取信息
+                        Logger.WarnMarkUp(ResString.readingInfo);
+                        mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
+                        mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                        ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                        readInfo = true;
+                    }
                 }
             }
 
@@ -456,7 +472,8 @@ namespace N_m3u8DL_RE.DownloadManager
                 //var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                 //var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
                 var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
-                var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0);
+                var segmentDurMs = FileDic.Where(s => s.Value.ActualFilePath.EndsWith(".m4s")).First().Key.Duration * 1000;
+                var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, (long)segmentDurMs);
                 //写出字幕
                 var firstKey = FileDic.Keys.First();
                 var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
@@ -585,7 +602,7 @@ namespace N_m3u8DL_RE.DownloadManager
             return true;
         }
 
-        public async Task<bool> StartDownloadAsync(IEnumerable<StreamSpec> streamSpecs)
+        public async Task<bool> StartDownloadAsync()
         {
             ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
@@ -610,7 +627,7 @@ namespace N_m3u8DL_RE.DownloadManager
             await progress.StartAsync(async ctx =>
             {
                 //创建任务
-                var dic = streamSpecs.Select(item =>
+                var dic = SelectedSteams.Select(item =>
                 {
                     var task = ctx.AddTask(item.ToShortString(), autoStart: false);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算

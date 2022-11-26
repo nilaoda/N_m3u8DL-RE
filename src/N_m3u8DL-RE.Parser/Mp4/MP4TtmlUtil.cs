@@ -66,7 +66,7 @@ namespace Mp4SubtitleParser
                 return string.Format("{0:00}:{1:00}:{2:00}.{3:000}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
             }
 
-            if (!xmlSrc.Contains("<?xml") || !xmlSrc.Contains("<head>")) return xmlSrc;
+            if (!xmlSrc.Contains("<tt") || !xmlSrc.Contains("<head>")) return xmlSrc;
             var xmlDoc = new XmlDocument();
             XmlNamespaceManager? nsMgr = null;
             xmlDoc.LoadXml(xmlSrc);

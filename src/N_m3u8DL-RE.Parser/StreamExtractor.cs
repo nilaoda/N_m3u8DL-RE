@@ -68,6 +68,12 @@ namespace N_m3u8DL_RE.Parser
                 //extractor = new DASHExtractor(parserConfig);
                 extractor = new DASHExtractor2(parserConfig);
             }
+            else if (rawText.Contains("</SmoothStreamingMedia>") && rawText.Contains("<SmoothStreamingMedia"))
+            {
+                Logger.InfoMarkUp(ResString.matchMSS);
+                //extractor = new DASHExtractor(parserConfig);
+                extractor = new MSSExtractor(parserConfig);
+            }
             else if (rawText == ResString.ReLiveTs)
             {
                 Logger.InfoMarkUp(ResString.matchTS);

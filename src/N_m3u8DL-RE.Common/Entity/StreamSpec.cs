@@ -17,6 +17,9 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? Name { get; set; }
         public Choise? Default { get; set; }
 
+        //MSS信息
+        public MSSData? MSSData { get; set; }
+
         //基本信息
         public int? Bandwidth { get; set; }
         public string? Codecs { get; set; }

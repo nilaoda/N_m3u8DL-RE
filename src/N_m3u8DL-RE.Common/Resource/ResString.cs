@@ -89,6 +89,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string loadingUrl { get => GetText("loadingUrl"); }
         public static string masterM3u8Found { get => GetText("masterM3u8Found"); }
         public static string matchDASH { get => GetText("matchDASH"); }
+        public static string matchMSS { get => GetText("matchMSS"); }
         public static string matchTS { get => GetText("matchTS"); }
         public static string matchHLS { get => GetText("matchHLS"); }
         public static string notSupported { get => GetText("notSupported"); }
