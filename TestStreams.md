@@ -29,3 +29,5 @@
 * https://ali6.a.yximgs.com/udata/music/music_295e59bdb3084def8158873ad6f5c8250.jpg (PNG图片伪装)
 * https://vod.cds.nowonline.com.br/Content/dsc/VOD/movie/df/83/4dd69316-2022-45c0-a4f7-c35cad87df83/manifest.mpd (TTML+PNG)
 * https://m-3s3.ll.smooth.row.aiv-cdn.net/iad_2/b473/00fa/20a4/4f93-bc40-1f4462cbba74/5f923727-474e-4788-ab2f-6ebc512a5be3.ism/manifest (ISM test1)
+* https://ec21-waw1.waw2.cache.orange.pl/canal/v/canal/vod/store01/CSM_21006719/_/hd4-hssdrm02.ism/Manifest
+* http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest
