@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 //https://github.com/canalplus/rx-player/blob/48d1f845064cea5c5a3546d2c53b1855c2be149d/src/parsers/manifest/smooth/get_codecs.ts
 //https://github.dev/Dash-Industry-Forum/dash.js/blob/2aad3e79079b4de0bcd961ce6b4957103d98a621/src/mss/MssFragmentMoovProcessor.js
 //https://github.com/yt-dlp/yt-dlp/blob/3639df54c3298e35b5ae2a96a25bc4d3c38950d0/yt_dlp/downloader/ism.py
+//https://github.com/google/ExoPlayer/blob/a9444c880230d2c2c79097e89259ce0b9f80b87d/library/extractor/src/main/java/com/google/android/exoplayer2/video/HevcConfig.java#L38
+//https://github.com/sannies/mp4parser/blob/master/isoparser/src/main/java/org/mp4parser/boxes/iso14496/part15/HevcDecoderConfigurationRecord.java
 namespace N_m3u8DL_RE.Parser.Mp4
 {
     public partial class MSSMoovProcessor
@@ -92,6 +94,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
         }
 
+        private static string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = new string[] { "", "A", "B", "C" };
         private int SamplingFrequencyIndex(int samplingRate) => samplingRate switch
         {
             96000 => 0x0,
@@ -520,9 +523,9 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 else if (FourCC == "HVC1" || FourCC == "HEV1")
                 {
                     var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                    var sps = HexUtil.HexToBytes(arr[0]);
-                    var pps = HexUtil.HexToBytes(arr[1]);
-                    var vps = arr.Length > 2 ? HexUtil.HexToBytes(arr[2]) : null;
+                    var vps = HexUtil.HexToBytes(arr[0]);
+                    var sps = HexUtil.HexToBytes(arr[1]);
+                    var pps = HexUtil.HexToBytes(arr[2]);
                     //make hvcC
                     var hvcC = GetHvcC(sps, pps, vps);
                     writer.Write(hvcC);
@@ -582,19 +585,88 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return Box("avcC", stream.ToArray()); //AVC Decoder Configuration Record
         }
 
-        private byte[] GetHvcC(byte[] sps, byte[] pps, byte[]? vps)
+        private byte[] GetHvcC(byte[] sps, byte[] pps, byte[] vps)
         {
+            var oriSps = new List<byte>(sps);
+            //https://www.itu.int/rec/dologin.asp?lang=f&id=T-REC-H.265-201504-S!!PDF-E&type=items
+            //Read generalProfileSpace, generalTierFlag, generalProfileIdc,
+            //generalProfileCompatibilityFlags, constraintBytes, generalLevelIdc
+            //from sps
+            var encList = new List<byte>();
+            /**
+             * 处理payload, 有00 00 03 0,1,2,3的情况 统一换成00 00 XX 即丢弃03
+             * 注意：此处采用的逻辑是直接简单粗暴地判断列表末尾3字节，如果是0x000003就删掉最后的0x03，可能会导致以下情况
+             * 00 00 03 03 03 03 03 01 会被直接处理成 => 00 00 01
+             * 此处经过测试只有直接跳过才正常，如果处理成 00 00 03 03 03 03 01 是有问题的
+             * 
+             * 测试的数据如下：
+             *   原始：42 01 01 01 60 00 00 03 00 90 00 00 03 00 00 03 00 96 a0 01 e0 20 06 61 65 95 9a 49 30 bf fc 0c 7c 0c 81 a8 08 08 08 20 00 00 03 00 20 00 00 03 03 01
+             * 处理后：42 01 01 01 60 00 00 00 90 00 00 00 00 00 96 A0 01 E0 20 06 61 65 95 9A 49 30 BF FC 0C 7C 0C 81 A8 08 08 08 20 00 00 00 20 00 00 01
+             */
+            using (var _reader = new BinaryReader(new MemoryStream(sps)))
+            {
+                while (_reader.BaseStream.Position < _reader.BaseStream.Length)
+                {
+                    encList.Add(_reader.ReadByte());
+                    if (encList.Count >= 3 && encList[encList.Count - 3] == 0x00 && encList[encList.Count - 2] == 0x00 && encList[encList.Count - 1] == 0x03)
+                    {
+                        encList.RemoveAt(encList.Count - 1);
+                    }
+                }
+            }
+            sps = encList.ToArray();
+
+            using var reader = new BinaryReader2(new MemoryStream(sps));
+            reader.ReadBytes(2); //Skip 2 bytes unit header
+            var firstByte = reader.ReadByte();
+            var maxSubLayersMinus1 = (firstByte & 0xe) >> 1;
+            var nextByte = reader.ReadByte();
+            var generalProfileSpace = (nextByte & 0xc0) >> 6;
+            var generalTierFlag = (nextByte & 0x20) >> 5;
+            var generalProfileIdc = nextByte & 0x1f;
+            var generalProfileCompatibilityFlags = reader.ReadUInt32();
+            var constraintBytes = reader.ReadBytes(6);
+            var generalLevelIdc = reader.ReadByte();
+
+            /*var skipBit = 0;
+            for (int i = 0; i < maxSubLayersMinus1; i++)
+            {
+                skipBit += 2; //sub_layer_profile_present_flag sub_layer_level_present_flag
+            }
+            if (maxSubLayersMinus1 > 0)
+            {
+                for (int i = maxSubLayersMinus1; i < 8; i++)
+                {
+                    skipBit += 2; //reserved_zero_2bits
+                }
+            }
+            for (int i = 0; i < maxSubLayersMinus1; i++)
+            {
+                skipBit += 2; //sub_layer_profile_present_flag sub_layer_level_present_flag
+            }*/
+
+            //生成编码信息
+            var codecs = $"hvc1" +
+                $".{HEVC_GENERAL_PROFILE_SPACE_STRINGS[generalProfileSpace]}{generalProfileIdc}" +
+                $".{Convert.ToString(generalProfileCompatibilityFlags, 16)}" +
+                $".{(generalTierFlag == 1 ? 'H' : 'L')}{generalLevelIdc}" +
+                $".{HexUtil.BytesToHex(constraintBytes.Where(b => b != 0).ToArray())}";
+            StreamSpec.Codecs = codecs;
+
+
+            ///////////////////////
+
+
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter2(stream);
 
-            var generalProfileCompatibilityFlags = 0xffffffff;
-            var generalConstraintIndicatorFlags = 0xffffffffffff;
+            //var reserved1 = 0xF;
+
             writer.WriteByte(1); //configuration version
-            writer.WriteByte(0 << 6 | 0 << 5 | 0); //general_profile_space + general_tier_flag + general_profile_idc
+            writer.WriteByte((byte)((generalProfileSpace << 6) + (generalTierFlag == 1 ? 0x20 : 0) | generalProfileIdc)); //general_profile_space + general_tier_flag + general_profile_idc
             writer.WriteUInt(generalProfileCompatibilityFlags); //general_profile_compatibility_flags
-            writer.WriteUInt(generalConstraintIndicatorFlags >> 16); //general_constraint_indicator_flags
-            writer.WriteUShort(ushort.MaxValue);
-            writer.WriteByte(0); //general_level_idc
+            writer.Write(constraintBytes); //general_constraint_indicator_flags
+            writer.WriteByte((byte)generalProfileIdc); //general_level_idc
             writer.WriteUShort(0xf000); //reserved + min_spatial_segmentation_idc
             writer.WriteByte(0xfc); //reserved + parallelismType
             writer.WriteByte(0 | 0xfc); //reserved + chromaFormat 
@@ -602,21 +674,19 @@ namespace N_m3u8DL_RE.Parser.Mp4
             writer.WriteByte(0 | 0xf8); //reserved + bitDepthChromaMinus8
             writer.WriteUShort(0); //avgFrameRate
             writer.WriteByte((byte)(0 << 6 | 0 << 3 | 0 << 2 | (NalUnitLengthField - 1))); //constantFrameRate + numTemporalLayers + temporalIdNested + lengthSizeMinusOne
-            writer.WriteByte((byte)(vps != null ? 0x03 : 0x02)); //numOfArrays (vps sps pps)
-
-            if (vps != null)
-            {
-                writer.WriteByte(32); //array_completeness + reserved + NAL_unit_type
-                writer.WriteUShort(1); //numNalus 
-                writer.WriteUShort(vps.Length);
-                writer.Write(vps);
-            }
-            writer.WriteByte(33);
-            writer.WriteByte(1); //numNalus
+            writer.WriteByte(0x03); //numOfArrays (vps sps pps)
+            
+            sps = oriSps.ToArray();
+            writer.WriteByte(0x20); //array_completeness + reserved + NAL_unit_type
+            writer.WriteUShort(1); //numNalus 
+            writer.WriteUShort(vps.Length);
+            writer.Write(vps);
+            writer.WriteByte(0x21);
+            writer.WriteUShort(1); //numNalus
             writer.WriteUShort(sps.Length);
             writer.Write(sps);
-            writer.WriteByte(34); 
-            writer.WriteByte(1); //numNalus
+            writer.WriteByte(0x22); 
+            writer.WriteUShort(1); //numNalus
             writer.WriteUShort(pps.Length);
             writer.Write(pps);
 
