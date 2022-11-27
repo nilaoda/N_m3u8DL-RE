@@ -194,9 +194,9 @@ namespace N_m3u8DL_RE.Util
             }
 
             if (mp4)
-                command.Append($" -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
+                command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
             else
-                command.Append($" -c copy ");
+                command.Append($" -strict unofficial -c copy ");
 
             //CLEAN
             command.Append(" -map_metadata -1 ");
