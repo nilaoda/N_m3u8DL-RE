@@ -379,7 +379,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 //直播的情况，需要自己计算totalNumber
                                 if (totalNumber == 0 && isLive)
                                 {
-                                    var now = publishTime == null ? DateTime.Now : DateTime.Parse(publishTime);
+                                    var now = DateTime.Now;
                                     var availableTime = DateTime.Parse(availabilityStartTime!);
                                     //可用时间+偏移量
                                     var offsetMs = TimeSpan.FromMilliseconds(Convert.ToInt64(presentationTimeOffsetStr) / 1000);
