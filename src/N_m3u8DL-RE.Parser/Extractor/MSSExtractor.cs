@@ -62,6 +62,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             //选中第一个SmoothStreamingMedia节点
             var ssmElement = xmlDocument.Elements().First(e => e.Name.LocalName == "SmoothStreamingMedia");
+            bool isLive = Convert.ToBoolean(ssmElement.Attribute("IsLive")?.Value ?? "FALSE");
             var timeScaleStr = ssmElement.Attribute("TimeScale")?.Value ?? "10000000";
             var durationStr = ssmElement.Attribute("Duration")?.Value;
             var isLiveStr = ssmElement.Attribute("IsLive")?.Value;
@@ -124,6 +125,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
                     streamSpec.PeriodId = indexStr;
                     streamSpec.Playlist = new Playlist();
+                    streamSpec.Playlist.IsLive = isLive;
                     streamSpec.Playlist.MediaParts.Add(new MediaPart());
                     streamSpec.GroupId = name ?? indexStr;
                     streamSpec.Bandwidth = bitrate;
@@ -212,6 +214,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             ProtectionData = protectionData,
                             ProtectionSystemID = protectionSystemId,
                         };
+                        if (streamSpec.MSSData.Duration == 0)
+                        {
+                            streamSpec.MSSData.Duration = streamSpec.MSSData.Timesacle;
+                        }
                         var processor = new MSSMoovProcessor(streamSpec);
                         var header = processor.GenHeader(); //trackId可能不正确
                         streamSpec.Playlist!.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";
@@ -353,9 +359,38 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
         }
 
-        public Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+        public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
-            throw new NotImplementedException();
+            if (streamSpecs.Count == 0) return;
+
+            var (rawText, url) = ("", ParserConfig.Url);
+            try
+            {
+                (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.Url, ParserConfig.Headers);
+            }
+            catch (HttpRequestException) when (ParserConfig.Url != ParserConfig.OriginalUrl)
+            {
+                //当URL无法访问时，再请求原始URL
+                (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+            }
+
+            ParserConfig.Url = url;
+            SetInitUrl();
+
+            var newStreams = await ExtractStreamsAsync(rawText);
+            foreach (var streamSpec in streamSpecs)
+            {
+                //有的网站每次请求MPD返回的码率不一致，导致ToShortString()无法匹配 无法更新playlist
+                //故增加通过init url来匹配 (如果有的话)
+                var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
+                if (!match.Any())
+                    match = newStreams.Where(n => n.Playlist?.MediaInit?.Url == streamSpec.Playlist?.MediaInit?.Url);
+
+                if (match.Any())
+                    streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; //不更新init
+            }
+            //这里才调用URL预处理器，节省开销
+            await ProcessUrlAsync(streamSpecs);
         }
     }
 }

@@ -9,6 +9,7 @@ using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Parser;
+using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -271,7 +272,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 //下载第一个分片
-                if (!readInfo)
+                if (!readInfo || StreamExtractor.ExtractorType == ExtractorType.MSS)
                 {
                     var seg = segments.First();
                     segments = segments.Skip(1);
@@ -288,6 +289,13 @@ namespace N_m3u8DL_RE.DownloadManager
                     task.Increment(1);
                     if (result != null && result.Success)
                     {
+                        //修复MSS init
+                        if (StreamExtractor.ExtractorType == ExtractorType.MSS)
+                        {
+                            var processor = new MSSMoovProcessor(streamSpec);
+                            var header = processor.GenHeader(File.ReadAllBytes(result.ActualFilePath));
+                            await File.WriteAllBytesAsync(FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath, header);
+                        }
                         //读取init信息
                         if (string.IsNullOrEmpty(currentKID))
                         {
@@ -307,12 +315,15 @@ namespace N_m3u8DL_RE.DownloadManager
                                 result.ActualFilePath = dec;
                             }
                         }
-                        //ffmpeg读取信息
-                        Logger.WarnMarkUp(ResString.readingInfo);
-                        mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
-                        mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                        ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
-                        readInfo = true;
+                        if (!readInfo)
+                        {
+                            //ffmpeg读取信息
+                            Logger.WarnMarkUp(ResString.readingInfo);
+                            mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
+                            mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                            ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                            readInfo = true;
+                        }
                     }
                 }
 
