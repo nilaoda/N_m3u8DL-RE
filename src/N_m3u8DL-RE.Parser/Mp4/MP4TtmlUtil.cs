@@ -30,6 +30,8 @@ namespace Mp4SubtitleParser
 
     public partial class MP4TtmlUtil
     {
+        [GeneratedRegex(" \\w+:\\w+=\\\"[^\\\"]*\\\"")]
+        private static partial Regex AttrRegex();
         [GeneratedRegex("<p.*?>(.+?)<\\/p>")]
         private static partial Regex LabelFixRegex();
         [GeneratedRegex("\\<tt[\\s\\S]*?\\<\\/tt\\>")]
@@ -191,6 +193,7 @@ namespace Mp4SubtitleParser
             XmlNode? headNode = null;
             XmlNamespaceManager? nsMgr = null;
             var regex = LabelFixRegex();
+            var attrRegex = AttrRegex();
             foreach (var item in xmls)
             {
                 var xmlContent = item;
@@ -204,7 +207,12 @@ namespace Mp4SubtitleParser
                     {
                         try
                         {
-                            new XmlDocument().LoadXml($"<p>{m.Groups[1].Value}</p>");
+                            var inner = m.Groups[1].Value;
+                            if (attrRegex.IsMatch(inner))
+                            {
+                                inner = attrRegex.Replace(inner, "");
+                            }
+                            new XmlDocument().LoadXml($"<p>{inner}</p>");
                         }
                         catch (Exception)
                         {
