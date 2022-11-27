@@ -221,9 +221,11 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
             var tencPayload = new List<byte>();
             tencPayload.AddRange(new byte[] { 0, 0 });
-            tencPayload.Add(0x1); //default_IsEncrypted
-            tencPayload.Add(0x8); //default_IV_size
+            tencPayload.Add(0x1); //default_IsProtected
+            tencPayload.Add(0x8); //default_Per_Sample_IV_size
             tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID)); //default_KID
+            //tencPayload.Add(0x8);//default_constant_IV_size
+            //tencPayload.AddRange(new byte[8]);//default_constant_IV
             var tencBox = FullBox("tenc", 0, 0, tencPayload.ToArray());
 
             var schiBox = Box("schi", tencBox);
@@ -497,15 +499,15 @@ namespace N_m3u8DL_RE.Parser.Mp4
                     writer.WriteByte(0);
                 }
                 writer.WriteUShort(0x18); //depth
-                writer.WriteShort(-1); //pre defined
+                writer.WriteUShort(65535); //pre defined
 
                 var codecPrivateData = HexUtil.HexToBytes(CodecPrivateData);
 
                 if (FourCC == "H264" || FourCC == "AVC1" || FourCC == "DAVC" || FourCC == "AVC1")
                 {
                     var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                    var sps = HexUtil.HexToBytes(arr[0]);
-                    var pps = HexUtil.HexToBytes(arr[1]);
+                    var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 7).First());
+                    var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 8).First());
                     //make avcC
                     var avcC = GetAvcC(sps, pps);
                     writer.Write(avcC);
@@ -523,9 +525,9 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 else if (FourCC == "HVC1" || FourCC == "HEV1")
                 {
                     var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                    var vps = HexUtil.HexToBytes(arr[0]);
-                    var sps = HexUtil.HexToBytes(arr[1]);
-                    var pps = HexUtil.HexToBytes(arr[2]);
+                    var vps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x3F) == 0x20).First());
+                    var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x3F) == 0x21).First());
+                    var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x3F) == 0x22).First());
                     //make hvcC
                     var hvcC = GetHvcC(sps, pps, vps);
                     writer.Write(hvcC);
@@ -799,7 +801,15 @@ namespace N_m3u8DL_RE.Parser.Mp4
             var mvexBox = Box("mvex", mvexPayload); //Movie Extends Box
             moovPayload = moovPayload.Concat(mvexBox).ToArray();
 
+            /*if (IsProtection) //gen pssh
+            {
+                var pssh = HexUtil.HexToBytes(ProtectionData);
+                var psshBox = FullBox("pssh", 1, 0, pssh);
+                moovPayload = moovPayload.Concat(psshBox).ToArray();
+            }*/
+
             var moovBox = Box("moov", moovPayload); //Movie Box
+
 
             stream.Write(moovBox);
 
