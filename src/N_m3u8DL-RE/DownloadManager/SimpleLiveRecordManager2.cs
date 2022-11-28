@@ -414,7 +414,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         var first = true;
                         foreach (var seg in keys)
                         {
-                            var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0, first ? baseTimestamp : 0);
+                            var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0, baseTimestamp);
                             //手动计算MPEGTS
                             if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                             {
@@ -429,7 +429,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         foreach (var seg in keys)
                         {
-                            var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0);
+                            var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0, baseTimestamp);
                             //手动计算MPEGTS
                             if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                             {
@@ -460,7 +460,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         var first = true;
                         foreach (var seg in keys)
                         {
-                            var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0, first ? baseTimestamp : 0);
+                            var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0, baseTimestamp);
                             //手动计算MPEGTS
                             if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                             {
@@ -475,7 +475,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         foreach (var seg in keys)
                         {
-                            var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0);
+                            var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0, baseTimestamp);
                             //手动计算MPEGTS
                             if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                             {
