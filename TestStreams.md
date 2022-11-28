@@ -7,7 +7,7 @@
 * http://playertest.longtailvideo.com/adaptive/oceans_aes/oceans_aes.m3u8 
 * https://vod.sdn.wavve.com/hls/S01/S01_E461382925.1/1/5000/chunklist.m3u8
 * https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd
-* http://tv-live.ynkmit.com/tv/anning.m3u8?txSecret=7528f35fb4b62bd24d55b891899db68f&txTime=632C8680 (直播
+* http://tv-live.ynkmit.com/tv/anning.m3u8?txSecret=7528f35fb4b62bd24d55b891899db68f&txTime=632C8680 (直播)
 * https://rest-as.ott.kaltura.com/api_v3/service/assetFile/action/playManifest/partnerId/147/assetId/1304099/assetType/media/assetFileId/16136929/contextType/PLAYBACK/isAltUrl/False/ks/djJ8MTQ3fMusTFH6PCZpcrfKLQwI-pPm9ex6b6r49wioe32WH2udXeM4reyWIkSDpi7HhvhxBHAHAKiHrcnkmIJQpyAt4MuDBG0ywGQ-jOeqQFcTRQ8BGJGw6g-smSBLwSbo4CCx9M9vWNJX3GkOfhoMAY4yRU-ur3okHiVq1mUJ82XBd_iVqLuzodnc9sJEtcHH0zc5CoPiTq2xor-dq3yDURnZm3isfSN3t9uLIJEW09oE-SJ84DM5GUuFUdbnIV8bdcWUsPicUg-Top1G2D3WcWXq4EvPnwvD8jrC_vsiOpLHf5akAwtdGsJ6__cXUmT7a-QlfjdvaZ5T8UhDLnttHmsxYs2E5c0lh4uOvvJou8dD8iYxUexlPI2j4QUkBRxqOEVLSNV3Y82-5TTRqgnK_uGYXHwk7EAmDws7hbLj2-DJ1heXDcye3OJYdunJgAS-9ma5zmQQNiY_HYh6wj2N1HpCTNAtWWga6R9fC0VgBTZbidW-YwMSGzIvMQfIfWKe15X7Oc_hCs-zGfW9XeRJZrutcWKK_D_HlzpQVBF2vIF3XgaI/a.mpd
 * https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd
 * https://cmaf.lln.latam.hbomaxcdn.com/videos/GYPGKMQjoDkVLBQEAAAAo/1/1b5ad5/1_single_J8sExA_1080hi.mpd
@@ -33,3 +33,6 @@
 * http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest
 * http://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest
 * https://azclwds01.akamaized.net/4e8f6858-5d05-4e28-83ab-48c7a2b259e1/XVuosg_tab_hd.ism/Manifest (`e5114f87b3e54b9faca331e6e6d646a6:55c5d9f1cedfd018b75623f2565a1d29`)
+* https://cd-stream-live.telenorcdn.net/cdgo/cdgo_tv2hd_dk_live/cdgo_tv2hd_dk_live.isml/Manifest (`a1447cecef3a4e839d59c1f994eaf2c6:86a376288496a0c32e1178e42139ce66`, **LIVE**)
+* https://linear017-gb-hss1-prd-ak.cdn.skycdp.com/100e/Content/SS_002_sd/Live/channel(skycinemaanimation).isml/Manifest_sd (`8f2b488c1214a4085c34968f8505910a:fe607f4050b2b217b0eee7906d196cca`, **LIVE**, **NOT** Supported Yet)
+* https://avpanta-cdn.pantaflix.com/cl/prod/content/CO2568_CO2568_Intro_e3e4814b_V1/C3CMm43Aucy-TVOD-dash/main_feature_DASH.ism/Manifest (`0751e816fce5433aaab2b775ef5c2131:f771897857b42d31e64d10d551376dcf`)
