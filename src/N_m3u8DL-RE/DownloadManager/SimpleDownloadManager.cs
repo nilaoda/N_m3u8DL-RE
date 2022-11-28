@@ -13,6 +13,7 @@ using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -350,15 +351,8 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
                     }
-                    if (first)
-                    {
-                        finalVtt = vtt;
-                        first = false;
-                    }
-                    else
-                    {
-                        finalVtt.AddCuesFromOne(vtt);
-                    }
+                    if (first) { finalVtt = vtt; first = false; }
+                    else finalVtt.AddCuesFromOne(vtt);
                 }
                 //写出字幕
                 var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
@@ -421,8 +415,20 @@ namespace N_m3u8DL_RE.DownloadManager
                 && streamSpec.Extension != null && streamSpec.Extension.Contains("ttml"))
             {
                 Logger.WarnMarkUp(ResString.fixingTTML);
-                var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".ttml")).ToArray();
-                var finalVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0);
+                var first = true;
+                var finalVtt = new WebVttSub();
+                var keys = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Key);
+                foreach (var seg in keys)
+                {
+                    var vtt = MP4TtmlUtil.ExtractFromTTMLs(new string[] { FileDic[seg]!.ActualFilePath }, 0);
+                    //手动计算MPEGTS
+                    if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                    {
+                        vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
+                    }
+                    if (first) { finalVtt = vtt; first = false; }
+                    else finalVtt.AddCuesFromOne(vtt);
+                }
                 //写出字幕
                 var firstKey = FileDic.Keys.First();
                 var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
@@ -471,9 +477,21 @@ namespace N_m3u8DL_RE.DownloadManager
                 //var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
                 //var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                 //var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
-                var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
-                var segmentDurMs = FileDic.Where(s => s.Value.ActualFilePath.EndsWith(".m4s")).First().Key.Duration * 1000;
-                var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, (long)segmentDurMs);
+                var first = true;
+                var finalVtt = new WebVttSub();
+                var keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
+                foreach (var seg in keys)
+                {
+                    var vtt = MP4TtmlUtil.ExtractFromMp4s(new string[] { FileDic[seg]!.ActualFilePath }, 0);
+                    //手动计算MPEGTS
+                    if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                    {
+                        vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
+                    }
+                    if (first) { finalVtt = vtt; first = false; }
+                    else finalVtt.AddCuesFromOne(vtt);
+                }
+
                 //写出字幕
                 var firstKey = FileDic.Keys.First();
                 var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
