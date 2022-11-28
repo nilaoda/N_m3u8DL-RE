@@ -37,6 +37,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         private string ProtectionSystemId;
         private string ProtectionData;
         private string ProtecitonKID;
+        private string ProtecitonKID_PR;
         private byte[] UnityMatrix
         {
             get
@@ -165,6 +166,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 var bytes = HexUtil.HexToBytes(ProtectionData.Replace("00", ""));
                 var text = Encoding.ASCII.GetString(bytes);
                 var kidBytes = Convert.FromBase64String(KIDRegex().Match(text).Groups[1].Value);
+                //save kid for playready
+                this.ProtecitonKID_PR = HexUtil.BytesToHex(kidBytes);
                 //fix byte order
                 var reverse1 = new byte[4] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
                 var reverse2 = new byte[4] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
@@ -244,7 +247,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             writer.Write("iso6"); //major brand
             writer.WriteUInt(1); //minor version
             writer.Write("isom"); //compatible brand
-            writer.Write("iso6"); //compatible brand
+            writer.Write("iso5"); //compatible brand
             writer.Write("msdh"); //compatible brand
 
             return Box("ftyp", stream.ToArray());
@@ -525,9 +528,9 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 else if (FourCC == "HVC1" || FourCC == "HEV1")
                 {
                     var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                    var vps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x3F) == 0x20).First());
-                    var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x3F) == 0x21).First());
-                    var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x3F) == 0x22).First());
+                    var vps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20).First());
+                    var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21).First());
+                    var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22).First());
                     //make hvcC
                     var hvcC = GetHvcC(sps, pps, vps);
                     writer.Write(hvcC);
@@ -730,6 +733,35 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return FullBox("trex", 0, 0, stream.ToArray()); //Track Extends Box
         }
 
+        private byte[] GenPsshBoxForPlayReady()
+        {
+            using var _stream = new MemoryStream();
+            using var _writer = new BinaryWriter2(_stream);
+            var sysIdData = HexUtil.HexToBytes(ProtectionSystemId.Replace("-", ""));
+            var psshData = HexUtil.HexToBytes(ProtectionData);
+
+            _writer.Write(sysIdData);  // SystemID 16 bytes
+            _writer.WriteUInt(psshData.Length); //Size of Data 4 bytes
+            _writer.Write(psshData); //Data
+            var psshBox = FullBox("pssh", 0, 0, _stream.ToArray());
+            return psshBox;
+        }
+
+        private byte[] GenPsshBoxForWideVine()
+        {
+            using var _stream = new MemoryStream();
+            using var _writer = new BinaryWriter2(_stream);
+            var sysIdData = HexUtil.HexToBytes("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed".Replace("-", ""));
+            //var kid = HexUtil.HexToBytes(ProtecitonKID);
+
+            _writer.Write(sysIdData);  // SystemID 16 bytes
+            var psshData = HexUtil.HexToBytes($"08011210{ProtecitonKID}1A046E647265220400000000");
+            _writer.WriteUInt(psshData.Length); //Size of Data 4 bytes
+            _writer.Write(psshData); //Data
+            var psshBox = FullBox("pssh", 0, 0, _stream.ToArray());
+            return psshBox;
+        }
+
         public byte[] GenHeader(byte[] firstSegment)
         {
             new MP4Parser()
@@ -801,12 +833,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
             var mvexBox = Box("mvex", mvexPayload); //Movie Extends Box
             moovPayload = moovPayload.Concat(mvexBox).ToArray();
 
-            /*if (IsProtection) //gen pssh
+            if (IsProtection)
             {
-                var pssh = HexUtil.HexToBytes(ProtectionData);
-                var psshBox = FullBox("pssh", 1, 0, pssh);
-                moovPayload = moovPayload.Concat(psshBox).ToArray();
-            }*/
+                var psshBox1 = GenPsshBoxForPlayReady();
+                var psshBox2 = GenPsshBoxForWideVine();
+                moovPayload = moovPayload.Concat(psshBox1).Concat(psshBox2).ToArray();
+            }
 
             var moovBox = Box("moov", moovPayload); //Movie Box
 

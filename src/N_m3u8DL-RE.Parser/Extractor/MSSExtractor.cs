@@ -164,6 +164,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         var _duration = Convert.ToInt64(_durationStr);
                         var timescale = Convert.ToInt32(timeScaleStr);
                         var _repeatCount = Convert.ToInt64(_repeatCountStr);
+                        if (_repeatCount > 0)
+                        {
+                            // This value is one-based. (A value of 2 means two fragments in the contiguous series).
+                            _repeatCount -= 1;
+                        }
 
                         varDic[MSSTags.StartTime] = currentTime;
                         var oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
@@ -215,10 +220,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             ProtectionData = protectionData,
                             ProtectionSystemID = protectionSystemId,
                         };
-                        if (streamSpec.MSSData.Duration == 0)
-                        {
-                            streamSpec.MSSData.Duration = streamSpec.MSSData.Timesacle;
-                        }
                         var processor = new MSSMoovProcessor(streamSpec);
                         var header = processor.GenHeader(); //trackId可能不正确
                         streamSpec.Playlist!.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";

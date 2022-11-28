@@ -241,7 +241,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         //从文件读取KEY
                         await SearchKeyAsync(currentKID);
                         //实时解密
-                        if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
+                        if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID) && StreamExtractor.ExtractorType != ExtractorType.MSS)
                         {
                             var enc = result.ActualFilePath;
                             var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -296,6 +296,17 @@ namespace N_m3u8DL_RE.DownloadManager
                             var processor = new MSSMoovProcessor(streamSpec);
                             var header = processor.GenHeader(File.ReadAllBytes(result.ActualFilePath));
                             await File.WriteAllBytesAsync(FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath, header);
+                            if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
+                            {
+                                //需要重新解密init
+                                var enc = FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath;
+                                var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+                                var dResult = await MP4DecryptUtil.DecryptAsync(DownloaderConfig.MyOptions.UseShakaPackager, mp4decrypt, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
+                                if (dResult)
+                                {
+                                    FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath = dec;
+                                }
+                            }
                         }
                         //读取init信息
                         if (string.IsNullOrEmpty(currentKID))
