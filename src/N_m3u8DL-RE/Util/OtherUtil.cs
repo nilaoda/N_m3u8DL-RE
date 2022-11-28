@@ -27,40 +27,6 @@ namespace N_m3u8DL_RE.Util
             return dic;
         }
 
-        private static string WebVtt2Srt(WebVttSub vtt)
-        {
-            StringBuilder sb = new StringBuilder();
-            int index = 1;
-            foreach (var c in vtt.Cues)
-            {
-                sb.AppendLine($"{index++}");
-                sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff"));
-                sb.AppendLine(c.Payload);
-                sb.AppendLine();
-            }
-            sb.AppendLine();
-
-            var srt = sb.ToString();
-
-            if (string.IsNullOrEmpty(srt.Trim()))
-            {
-                srt = "1\r\n00:00:00,000 --> 00:00:01,000"; //空字幕
-            }
-
-            return srt;
-        }
-
-        public static string WebVtt2Other(WebVttSub vtt, SubtitleFormat toFormat)
-        {
-            Logger.Debug($"Convert {SubtitleFormat.VTT} ==> {toFormat}");
-            return toFormat switch
-            {
-                SubtitleFormat.VTT => vtt.ToStringWithHeader(),
-                SubtitleFormat.SRT => WebVtt2Srt(vtt),
-                _ => throw new NotSupportedException($"{toFormat} not supported!")
-            };
-        }
-
         private static char[] InvalidChars = "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
                 .Split(',').Select(s => (char)int.Parse(s)).ToArray();
         public static string GetValidFileName(string input, string re = ".", bool filterSlash = false)

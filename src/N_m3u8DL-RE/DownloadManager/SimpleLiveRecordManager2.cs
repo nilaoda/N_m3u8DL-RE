@@ -209,6 +209,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 //TryReceiveAll可以稍微缓解一下
                 source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
                 var segments = segmentsList!.SelectMany(s => s);
+                var segmentsDuration = segments.Sum(s => s.Duration);
                 Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
                 //下载init
@@ -355,8 +356,6 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                 });
 
-                RecordingDurDic[task.Id] += (int)segments.Sum(s => s.Duration);
-
                 //自动修复VTT raw字幕
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                     && streamSpec.Extension != null && streamSpec.Extension.Contains("vtt"))
@@ -372,15 +371,8 @@ namespace N_m3u8DL_RE.DownloadManager
                         {
                             vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
                         }
-                        if (firstSub)
-                        {
-                            currentVtt = vtt;
-                            firstSub = false;
-                        }
-                        else
-                        {
-                            currentVtt.AddCuesFromOne(vtt);
-                        }
+                        if (firstSub) { currentVtt = vtt; firstSub = false; }
+                        else currentVtt.AddCuesFromOne(vtt);
                     }
                 }
 
@@ -401,8 +393,8 @@ namespace N_m3u8DL_RE.DownloadManager
                         }
                         else
                         {
-                            var finalVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
-                            currentVtt.AddCuesFromOne(finalVtt);
+                            var vtt = MP4VttUtil.ExtractSub(mp4s, timescale);
+                            currentVtt.AddCuesFromOne(vtt);
                         }
                     }
                 }
@@ -411,21 +403,40 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                     && streamSpec.Extension != null && streamSpec.Extension.Contains("ttml"))
                 {
-                    var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".ttml")).ToArray();
+                    var keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
                         {
-                            var total = segments.Sum(s => s.Duration);
+                            var total = segmentsDuration;
                             baseTimestamp -= (long)TimeSpan.FromSeconds(total).TotalMilliseconds;
                         }
-                        currentVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0, baseTimestamp);
+                        var first = true;
+                        foreach (var seg in keys)
+                        {
+                            var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0, first ? baseTimestamp : 0);
+                            //手动计算MPEGTS
+                            if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                            {
+                                vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
+                            }
+                            if (first) { currentVtt = vtt; first = false; }
+                            else currentVtt.AddCuesFromOne(vtt);
+                        }
                         firstSub = false;
                     }
                     else
                     {
-                        var finalVtt = MP4TtmlUtil.ExtractFromTTMLs(mp4s, 0, baseTimestamp);
-                        currentVtt.AddCuesFromOne(finalVtt);
+                        foreach (var seg in keys)
+                        {
+                            var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0);
+                            //手动计算MPEGTS
+                            if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                            {
+                                vtt.MpegtsTimestamp = 90000 * (RecordingDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
+                            }
+                            currentVtt.AddCuesFromOne(vtt);
+                        }
                     }
                 }
 
@@ -438,23 +449,44 @@ namespace N_m3u8DL_RE.DownloadManager
                     //var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
                     //var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                     //var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
-                    var mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
+                    var keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
                         {
-                            var total = segments.Sum(s => s.Duration);
+                            var total = segmentsDuration;
                             baseTimestamp -= (long)TimeSpan.FromSeconds(total).TotalMilliseconds;
                         }
-                        currentVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0, baseTimestamp);
+                        var first = true;
+                        foreach (var seg in keys)
+                        {
+                            var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0, first ? baseTimestamp : 0);
+                            //手动计算MPEGTS
+                            if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                            {
+                                vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
+                            }
+                            if (first) { currentVtt = vtt; first = false; }
+                            else currentVtt.AddCuesFromOne(vtt);
+                        }
                         firstSub = false;
                     }
                     else
                     {
-                        var finalVtt = MP4TtmlUtil.ExtractFromMp4s(mp4s, 0, baseTimestamp);
-                        currentVtt.AddCuesFromOne(finalVtt);
+                        foreach (var seg in keys)
+                        {
+                            var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0);
+                            //手动计算MPEGTS
+                            if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                            {
+                                vtt.MpegtsTimestamp = 90000 * (RecordingDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
+                            }
+                            currentVtt.AddCuesFromOne(vtt);
+                        }
                     }
                 }
+
+                RecordingDurDic[task.Id] += (int)segmentsDuration;
 
                 /*//写出m3u8
                 if (DownloaderConfig.MyOptions.LiveWriteHLS)
@@ -538,10 +570,10 @@ namespace N_m3u8DL_RE.DownloadManager
                                 File.Delete(inputFilePath);
                             }
                         }
-                        var subText = currentVtt.ToStringWithHeader();
+                        var subText = currentVtt.ToVtt();
                         if (outputExt == ".srt")
                         {
-                            subText = OtherUtil.WebVtt2Other(currentVtt, Enum.SubtitleFormat.SRT);
+                            subText = currentVtt.ToSrt();
                         }
                         var subBytes = Encoding.UTF8.GetBytes(subText);
                         fileOutputStream.Position = 0;

@@ -122,6 +122,11 @@ namespace Mp4SubtitleParser
             return MultiElementsFixRegex().Matches(xml).Select(m => m.Value).ToList();
         }
 
+        public static WebVttSub ExtractFromMp4(string item, long segTimeMs, long baseTimestamp = 0L)
+        {
+            return ExtractFromMp4s(new string[] { item }, segTimeMs, baseTimestamp);
+        }
+
         public static WebVttSub ExtractFromMp4s(IEnumerable<string> items, long segTimeMs, long baseTimestamp = 0L)
         {
             //read ttmls
@@ -161,6 +166,11 @@ namespace Mp4SubtitleParser
             }
 
             return ExtractSub(xmls, baseTimestamp);
+        }
+
+        public static WebVttSub ExtractFromTTML(string item, long segTimeMs, long baseTimestamp = 0L)
+        {
+            return ExtractFromTTMLs(new string[] { item }, segTimeMs, baseTimestamp);
         }
 
         public static WebVttSub ExtractFromTTMLs(IEnumerable<string> items, long segTimeMs, long baseTimestamp = 0L)

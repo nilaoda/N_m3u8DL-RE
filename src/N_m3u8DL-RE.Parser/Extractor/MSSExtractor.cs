@@ -62,10 +62,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             //选中第一个SmoothStreamingMedia节点
             var ssmElement = xmlDocument.Elements().First(e => e.Name.LocalName == "SmoothStreamingMedia");
-            bool isLive = Convert.ToBoolean(ssmElement.Attribute("IsLive")?.Value ?? "FALSE");
             var timeScaleStr = ssmElement.Attribute("TimeScale")?.Value ?? "10000000";
             var durationStr = ssmElement.Attribute("Duration")?.Value;
             var isLiveStr = ssmElement.Attribute("IsLive")?.Value;
+            bool isLive = Convert.ToBoolean(isLiveStr ?? "FALSE");
 
             var isProtection = false;
             var protectionSystemId = "";
@@ -121,6 +121,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     var channels = qualityLevel.Attribute("Channels")?.Value;
 
                     StreamSpec streamSpec = new();
+                    streamSpec.PublishTime = DateTime.Now; //发布时间默认现在
                     streamSpec.Extension = "m4s";
                     streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
                     streamSpec.PeriodId = indexStr;

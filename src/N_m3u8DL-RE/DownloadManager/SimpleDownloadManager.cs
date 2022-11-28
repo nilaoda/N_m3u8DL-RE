@@ -360,12 +360,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic.Clear();
                 var index = 0;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                var subContentFixed = finalVtt.ToStringWithHeader();
+                var subContentFixed = finalVtt.ToVtt();
                 //转换字幕格式
                 if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
-                    subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                    subContentFixed = finalVtt.ToSrt();
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[keys.First()] = new DownloadResult()
@@ -394,12 +394,12 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic.Clear();
                     var index = 0;
                     var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                    var subContentFixed = finalVtt.ToStringWithHeader();
+                    var subContentFixed = finalVtt.ToVtt();
                     //转换字幕格式
                     if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                     {
                         path = Path.ChangeExtension(path, ".srt");
-                        subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                        subContentFixed = finalVtt.ToSrt();
                     }
                     await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                     FileDic[firstKey] = new DownloadResult()
@@ -420,7 +420,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 var keys = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Key);
                 foreach (var seg in keys)
                 {
-                    var vtt = MP4TtmlUtil.ExtractFromTTMLs(new string[] { FileDic[seg]!.ActualFilePath }, 0);
+                    var vtt = MP4TtmlUtil.ExtractFromTTML(FileDic[seg]!.ActualFilePath, 0);
                     //手动计算MPEGTS
                     if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                     {
@@ -452,12 +452,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic.Clear();
                 var index = 0;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                var subContentFixed = finalVtt.ToStringWithHeader();
+                var subContentFixed = finalVtt.ToVtt();
                 //转换字幕格式
                 if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
-                    subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                    subContentFixed = finalVtt.ToSrt();
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[firstKey] = new DownloadResult()
@@ -482,7 +482,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 var keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
                 foreach (var seg in keys)
                 {
-                    var vtt = MP4TtmlUtil.ExtractFromMp4s(new string[] { FileDic[seg]!.ActualFilePath }, 0);
+                    var vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0);
                     //手动计算MPEGTS
                     if (finalVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                     {
@@ -515,12 +515,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 FileDic.Clear();
                 var index = 0;
                 var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
-                var subContentFixed = finalVtt.ToStringWithHeader();
+                var subContentFixed = finalVtt.ToVtt();
                 //转换字幕格式
                 if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
-                    subContentFixed = OtherUtil.WebVtt2Other(finalVtt, DownloaderConfig.MyOptions.SubtitleFormat);
+                    subContentFixed = finalVtt.ToSrt();
                 }
                 await File.WriteAllTextAsync(path, subContentFixed, Encoding.UTF8);
                 FileDic[firstKey] = new DownloadResult()

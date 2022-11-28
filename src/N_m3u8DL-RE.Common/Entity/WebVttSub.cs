@@ -164,6 +164,11 @@ namespace N_m3u8DL_RE.Common.Entity
             }
         }
 
+        private IEnumerable<SubCue> GetCues()
+        {
+            return this.Cues.Where(c => !string.IsNullOrEmpty(c.Payload));
+        }
+
         private static TimeSpan ConvertToTS(string str)
         {
             var ms = Convert.ToInt32(str.Split('.').Last());
@@ -180,7 +185,7 @@ namespace N_m3u8DL_RE.Common.Entity
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            foreach (var c in this.Cues)
+            foreach (var c in GetCues())  //输出时去除空串
             {
                 sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);
                 sb.AppendLine(c.Payload);
@@ -190,9 +195,32 @@ namespace N_m3u8DL_RE.Common.Entity
             return sb.ToString();
         }
 
-        public string ToStringWithHeader()
+        public string ToVtt()
         {
             return "WEBVTT" + Environment.NewLine + Environment.NewLine + ToString();
+        }
+
+        public string ToSrt()
+        {
+            StringBuilder sb = new StringBuilder();
+            int index = 1;
+            foreach (var c in GetCues())
+            {
+                sb.AppendLine($"{index++}");
+                sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff"));
+                sb.AppendLine(c.Payload);
+                sb.AppendLine();
+            }
+            sb.AppendLine();
+
+            var srt = sb.ToString();
+
+            if (string.IsNullOrEmpty(srt.Trim()))
+            {
+                srt = "1\r\n00:00:00,000 --> 00:00:01,000"; //空字幕
+            }
+
+            return srt;
         }
     }
 }
