@@ -244,10 +244,11 @@ namespace N_m3u8DL_RE.Parser.Mp4
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter2(stream);
 
-            writer.Write("iso6"); //major brand
+            writer.Write("isml"); //major brand
             writer.WriteUInt(1); //minor version
-            writer.Write("isom"); //compatible brand
             writer.Write("iso5"); //compatible brand
+            writer.Write("iso6"); //compatible brand
+            writer.Write("piff"); //compatible brand
             writer.Write("msdh"); //compatible brand
 
             return Box("ftyp", stream.ToArray());
@@ -762,6 +763,22 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return psshBox;
         }
 
+        private byte[] GenMoof()
+        {
+            using var stream = new MemoryStream();
+            using var writer = new BinaryWriter2(stream);
+
+            //make senc
+            writer.WriteUInt(1); //sample_count
+            writer.Write(new byte[8]); //8 bytes IV
+
+            var sencBox = FullBox("senc", 1, 0, stream.ToArray());
+
+            var moofBox = Box("moof", sencBox); //Movie Extends Box
+
+            return moofBox;
+        }
+
         public byte[] GenHeader(byte[] firstSegment)
         {
             new MP4Parser()
@@ -842,8 +859,10 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
             var moovBox = Box("moov", moovPayload); //Movie Box
 
-
             stream.Write(moovBox);
+
+            //var moofBox = GenMoof(); //Movie Extends Box
+            //stream.Write(moofBox);
 
             return stream.ToArray();
         }
