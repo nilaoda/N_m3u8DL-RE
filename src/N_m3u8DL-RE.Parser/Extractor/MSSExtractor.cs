@@ -148,6 +148,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     streamSpec.Playlist.MediaInit = new MediaSegment();
                     if (!string.IsNullOrEmpty(codecPrivateData))
                     {
+                        streamSpec.Playlist.MediaInit.Index = -1; //便于排序
                         streamSpec.Playlist.MediaInit.Url = $"hex://{codecPrivateData}";
                     }
 

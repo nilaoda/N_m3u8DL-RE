@@ -372,6 +372,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         playlist.MediaInit = new MediaSegment()
                         {
                             Url = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, ParserUtil.GetAttribute(line, "URI"))),
+                            Index = -1, //便于排序
                         };
                         if (line.Contains("BYTERANGE"))
                         {

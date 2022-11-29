@@ -230,6 +230,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                     var initRange = initialization.Attribute("range")?.Value;
                                     streamSpec.Playlist.MediaInit = new MediaSegment();
+                                    streamSpec.Playlist.MediaInit.Index = -1; //便于排序
                                     streamSpec.Playlist.MediaInit.Url = initUrl;
                                     if (initRange != null)
                                     {
@@ -253,6 +254,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                 var initRange = initialization.Attribute("range")?.Value;
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
+                                streamSpec.Playlist.MediaInit.Index = -1; //便于排序
                                 streamSpec.Playlist.MediaInit.Url = initUrl;
                                 if (initRange != null)
                                 {
@@ -312,6 +314,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 var initUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, initialization), varDic);
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
+                                streamSpec.Playlist.MediaInit.Index = -1; //便于排序
                                 streamSpec.Playlist.MediaInit.Url = initUrl;
                             }
                             //处理分片
