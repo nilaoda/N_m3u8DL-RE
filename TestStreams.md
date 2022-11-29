@@ -36,3 +36,4 @@
 * https://cd-stream-live.telenorcdn.net/cdgo/cdgo_tv2hd_dk_live/cdgo_tv2hd_dk_live.isml/Manifest (`a1447cecef3a4e839d59c1f994eaf2c6:86a376288496a0c32e1178e42139ce66`, **LIVE**)
 * https://linear017-gb-hss1-prd-ak.cdn.skycdp.com/100e/Content/SS_002_sd/Live/channel(skycinemaanimation).isml/Manifest_sd (`8f2b488c1214a4085c34968f8505910a:fe607f4050b2b217b0eee7906d196cca`, **LIVE**, **NOT** Supported Yet)
 * https://avpanta-cdn.pantaflix.com/cl/prod/content/CO2568_CO2568_Intro_e3e4814b_V1/C3CMm43Aucy-TVOD-dash/main_feature_DASH.ism/Manifest (`0751e816fce5433aaab2b775ef5c2131:f771897857b42d31e64d10d551376dcf`)
+* http://ss-cdn1.blim.com/PAID0000000000756826/ss/66aa2b5c2bafc73753fd6ad23db679330e3a35ba32931990125d5b41092e4291/ss_66aa2b5c2bafc73753fd6ad23db679330e3a35ba32931990125d5b41092e4291.ism/Manifest (`b6e16839eebd4ff6ab768d482d8d2b6a:ad6c675e0810741538f7f2f0b4099d9e`, **Invalid** Language)
