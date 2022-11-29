@@ -28,7 +28,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         ////////////////////////////////////////
         
-        private static EncryptMethod DEFAULT_METHOD = EncryptMethod.PLAYREADY;
+        private static EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
 
         public ExtractorType ExtractorType => ExtractorType.MSS;
 

@@ -288,9 +288,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_customHLSMethod"] = new TextContainer
             (
-                zhCN: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|PLAYREADY|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",
-                zhTW: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|PLAYREADY|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",
-                enUS: "Set HLS encryption method (AES_128|AES_128_ECB|CENC|PLAYREADY|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)"
+                zhCN: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",
+                zhTW: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",
+                enUS: "Set HLS encryption method (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)"
             ),
             ["cmd_customHLSKey"] = new TextContainer
             (
