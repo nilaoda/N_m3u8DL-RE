@@ -64,6 +64,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             var ssmElement = xmlDocument.Elements().First(e => e.Name.LocalName == "SmoothStreamingMedia");
             var timeScaleStr = ssmElement.Attribute("TimeScale")?.Value ?? "10000000";
             var durationStr = ssmElement.Attribute("Duration")?.Value;
+            var timescale = Convert.ToInt32(timeScaleStr);
             var isLiveStr = ssmElement.Attribute("IsLive")?.Value;
             bool isLive = Convert.ToBoolean(isLiveStr ?? "FALSE");
 
@@ -97,6 +98,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 //StartTimeSubstitution = "{start time}" / "{start_time}"
                 var urlPattern = streamIndex.Attribute("Url")?.Value;
                 var language = streamIndex.Attribute("Language")?.Value;
+                //去除不规范的语言标签
+                if (language?.Length != 3) language = null;
 
                 //所有c节点
                 var cElements = streamIndex.Elements().Where(e => e.Name.LocalName == "c");
@@ -162,7 +165,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                         if (_startTimeStr != null) currentTime = Convert.ToInt64(_startTimeStr);
                         var _duration = Convert.ToInt64(_durationStr);
-                        var timescale = Convert.ToInt32(timeScaleStr);
                         var _repeatCount = Convert.ToInt64(_repeatCountStr);
                         if (_repeatCount > 0)
                         {
