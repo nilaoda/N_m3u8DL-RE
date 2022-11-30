@@ -546,7 +546,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             {
                 //重新加载m3u8
                 await LoadM3u8FromUrlAsync(lists[i].Url!);
-                lists[i].Playlist = await ParseListAsync();
+                lists[i].Playlist!.MediaParts = (await ParseListAsync()).MediaParts; //不更新init
                 if (lists[i].MediaType == MediaType.SUBTITLES)
                 {
                     var a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));
