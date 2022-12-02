@@ -63,7 +63,7 @@ namespace N_m3u8DL_RE.Util
             var inputs = lists.Where(_ => true);
             var selected = DoFilterKeep(lists, filter);
 
-            inputs = inputs.SkipWhile(i => selected.Any(s => s.ToString() == i.ToString()));
+            inputs = inputs.Where(i => selected.All(s => s.ToString() != i.ToString()));
 
             return inputs.ToList();
         }
