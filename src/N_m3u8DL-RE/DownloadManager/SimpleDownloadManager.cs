@@ -621,7 +621,8 @@ namespace N_m3u8DL_RE.DownloadManager
                     FilePath = output,
                     LangCode = streamSpec.Language,
                     Description = streamSpec.Name,
-                    Mediainfos = mediaInfos
+                    Mediainfos = mediaInfos,
+                    MediaType = streamSpec.MediaType,
                 });
 
             return true;

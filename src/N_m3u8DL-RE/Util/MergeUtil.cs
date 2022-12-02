@@ -204,7 +204,7 @@ namespace N_m3u8DL_RE.Util
             for (int i = 0; i < files.Length; i++)
             {
                 //转换语言代码
-                ConvertLangCodeAndDisplayName(files[i]);
+                LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
                 command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
@@ -240,7 +240,7 @@ namespace N_m3u8DL_RE.Util
             for (int i = 0; i < files.Length; i++)
             {
                 //转换语言代码
-                ConvertLangCodeAndDisplayName(files[i]);
+                LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
                 command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                     command.Append($" --track-name 0:\"{files[i].Description}\" ");
@@ -250,74 +250,6 @@ namespace N_m3u8DL_RE.Util
             var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
             return code == 0;
-        }
-
-        /// <summary>
-        /// 转换 ISO 639-1 => ISO 639-2
-        /// 且当Description为空时将DisplayName写入
-        /// </summary>
-        /// <param name="outputFile"></param>
-        private static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
-        {
-            if (string.IsNullOrEmpty(outputFile.LangCode)) return;
-            var originalLangCode = outputFile.LangCode;
-
-            // zh-cn => zh
-            outputFile.LangCode = outputFile.LangCode.Split('-')[0];
-            // ENG => eng
-            if (outputFile.LangCode.ToUpper() == outputFile.LangCode) outputFile.LangCode = outputFile.LangCode.ToLower();
-
-            CultureInfo[] cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
-            foreach (var c in cultures)
-            {
-                if (outputFile.LangCode == c.TwoLetterISOLanguageName)
-                {
-                    outputFile.LangCode = c.ThreeLetterISOLanguageName;
-                    if (string.IsNullOrEmpty(outputFile.Description))
-                    {
-                        outputFile.Description = c.DisplayName;
-                    }
-                    break;
-                }
-                else if (outputFile.LangCode == c.ThreeLetterISOLanguageName)
-                {
-                    if (string.IsNullOrEmpty(outputFile.Description))
-                    {
-                        outputFile.Description = c.DisplayName;
-                    }
-                    break;
-                }
-            }
-
-            //有的播放器不识别zho，统一转为chi
-            if (outputFile.LangCode == "zho") outputFile.LangCode = "chi";
-            else if (outputFile.LangCode == "cmn") outputFile.LangCode = "chi";
-            else if (outputFile.LangCode == "yue") outputFile.LangCode = "chi";
-            else if (outputFile.LangCode == "cn") outputFile.LangCode = "chi";
-            else if (outputFile.LangCode == "cz") outputFile.LangCode = "chi";
-            else if (outputFile.LangCode == "Cantonese" || outputFile.LangCode == "Mandarin")
-            {
-                outputFile.Description = outputFile.LangCode;
-                outputFile.LangCode = "chi";
-            }
-            else if (outputFile.LangCode == "Vietnamese")
-            {
-                outputFile.Description = outputFile.LangCode;
-                outputFile.LangCode = "vie";
-            }
-            else if (outputFile.LangCode == "English")
-            {
-                outputFile.Description = outputFile.LangCode;
-                outputFile.LangCode = "eng";
-            }
-            else if (outputFile.LangCode == "Thai")
-            {
-                outputFile.Description = outputFile.LangCode;
-                outputFile.LangCode = "tha";
-            }
-
-            //无描述，则把LangCode当作描述
-            if (string.IsNullOrEmpty(outputFile.Description)) outputFile.Description = originalLangCode;
         }
     }
 }

@@ -620,7 +620,8 @@ namespace N_m3u8DL_RE.DownloadManager
                     FilePath = fileOutputStream.Name,
                     LangCode = streamSpec.Language,
                     Description = streamSpec.Name,
-                    Mediainfos = mediaInfos
+                    Mediainfos = mediaInfos,
+                    MediaType = streamSpec.MediaType,
                 });
                 fileOutputStream.Close();
                 fileOutputStream.Dispose();
