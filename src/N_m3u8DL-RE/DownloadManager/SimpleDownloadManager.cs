@@ -708,7 +708,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
                     OtherUtil.SafeDeleteDir(tmpDir);  
                 }
-                else Logger.ErrorMarkUp($"Mux failed");
+                else
+                {
+                    success = false;
+                    Logger.ErrorMarkUp($"Mux failed");
+                }
                 //判断是否要改名
                 var newPath = Path.ChangeExtension(outPath, ext);
                 if (result && !File.Exists(newPath))
