@@ -121,7 +121,7 @@ namespace N_m3u8DL_RE.Downloader
             }
             catch (Exception ex)
             {
-                Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
+                Logger.DebugMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
                 Logger.Debug(url + " " + ex.ToString());
                 if (retryCount-- > 0)
                 {
