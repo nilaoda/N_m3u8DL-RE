@@ -236,8 +236,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     //读取mp4信息
                     if (result != null && result.Success)
                     {
-                        var data = File.ReadAllBytes(result.ActualFilePath);
-                        currentKID = ReadInit(data);
+                        currentKID = ReadInit(result.ActualFilePath);
                         //从文件读取KEY
                         await SearchKeyAsync(currentKID);
                         //实时解密
@@ -676,6 +675,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
                     {
                         //不需要做事
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.ErrorMarkUp(e);
+                        STOP_FLAG = true;
                     }
                 }
             }

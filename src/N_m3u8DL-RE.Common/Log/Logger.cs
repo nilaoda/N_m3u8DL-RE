@@ -133,5 +133,15 @@ namespace N_m3u8DL_RE.Common.Log
                 HandleLog(write);
             }
         }
+
+        public static void ErrorMarkUp(Exception exception)
+        {
+            string data = exception.Message.EscapeMarkup();
+            if (LogLevel >= LogLevel.ERROR)
+            {
+                data = exception.ToString().EscapeMarkup();
+            }
+            ErrorMarkUp(data);
+        }
     }
 }
