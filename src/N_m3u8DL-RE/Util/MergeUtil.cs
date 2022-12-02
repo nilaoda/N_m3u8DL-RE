@@ -49,7 +49,7 @@ namespace N_m3u8DL_RE.Util
             }
         }
 
-        private static void InvokeFFmpeg(string binary, string command, string workingDirectory)
+        private static int InvokeFFmpeg(string binary, string command, string workingDirectory)
         {
             Logger.DebugMarkUp($"{binary}: {command}");
 
@@ -73,6 +73,7 @@ namespace N_m3u8DL_RE.Util
             p.Start();
             p.BeginErrorReadLine();
             p.WaitForExit();
+            return p.ExitCode;
         }
 
         public static string[] PartialCombineMultipleFiles(string[] files)
@@ -167,12 +168,9 @@ namespace N_m3u8DL_RE.Util
                     break;
             }
 
-            InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
+            var code = InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
 
-            if (File.Exists($"{outputPath}.{muxFormat}") && new FileInfo($"{outputPath}.{muxFormat}").Length > 0)
-                return true;
-
-            return false;
+            return code == 0;
         }
 
         public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, bool mp4, bool dateinfo)
@@ -227,12 +225,9 @@ namespace N_m3u8DL_RE.Util
             command.Append($" -ignore_unknown -copy_unknown ");
             command.Append($" \"{outputPath}.{ext}\"");
 
-            InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+            var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
-            if (File.Exists($"{outputPath}.{ext}") && new FileInfo($"{outputPath}.{ext}").Length > 1024)
-                return true;
-
-            return false;
+            return code == 0;
         }
 
         public static bool MuxInputsByMkvmerge(string binary, OutputFile[] files, string outputPath)
@@ -252,12 +247,9 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" \"{files[i].FilePath}\" ");
             }
 
-            InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+            var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
-            if (File.Exists($"{outputPath}.mkv") && new FileInfo($"{outputPath}.mkv").Length > 1024)
-                return true;
-
-            return false;
+            return code == 0;
         }
 
         /// <summary>
