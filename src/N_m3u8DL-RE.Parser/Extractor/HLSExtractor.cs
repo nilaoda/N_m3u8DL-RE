@@ -23,7 +23,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         private string BaseUrl = string.Empty;
         private string M3u8Content = string.Empty;
         private bool MasterM3u8Flag = false;
-        private bool FirstRefreshFlag = true;
+        private bool FirstFetchFlag = true;
 
         public ParserConfig ParserConfig { get; set; }
 
@@ -525,7 +525,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task FetchPlayListAsync(List<StreamSpec> lists)
         {
-            if (MasterM3u8Flag)
+            //首次加载不需要刷新URL
+            if (!FirstFetchFlag && MasterM3u8Flag)
             {
                 //重新加载master m3u8, 刷新选中流的URL
                 await LoadM3u8FromUrlAsync(ParserConfig.Url);
@@ -546,7 +547,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
             {
                 //重新加载m3u8
                 await LoadM3u8FromUrlAsync(lists[i].Url!);
-                lists[i].Playlist!.MediaParts = (await ParseListAsync()).MediaParts; //不更新init
+
+                var newPlaylist = await ParseListAsync();
+                if (lists[i].Playlist?.MediaInit != null)
+                    lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; //不更新init
+                else
+                    lists[i].Playlist = newPlaylist;
+
                 if (lists[i].MediaType == MediaType.SUBTITLES)
                 {
                     var a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));
@@ -563,6 +570,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
+            FirstFetchFlag = false;
             await FetchPlayListAsync(streamSpecs);
         }
     }
