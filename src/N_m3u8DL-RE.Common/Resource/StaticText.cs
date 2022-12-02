@@ -22,6 +22,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到新版本，請盡快升級！",
                 enUS: "New version detected!"
             ),
+            ["taskStartAt"] = new TextContainer
+            (
+                zhCN: "程序将等待，直到：",
+                zhTW: "程序將等待，直到：",
+                enUS: "The program will wait until: "
+            ),
             ["autoBinaryMerge"] = new TextContainer
             (
                 zhCN: "检测到fMP4，自动开启二进制合并",
@@ -315,6 +321,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "录制直播时的录制时长限制",
                 zhTW: "錄製直播時的錄製時長限制",
                 enUS: "Recording time limit when recording live"
+            ),
+            ["cmd_taskStartAt"] = new TextContainer
+            (
+                zhCN: "在此时间之前不会开始执行任务",
+                zhTW: "在此時間之前不會開始執行任務",
+                enUS: "Task execution will not start before this time"
             ),
             ["cmd_useShakaPackager"] = new TextContainer
             (

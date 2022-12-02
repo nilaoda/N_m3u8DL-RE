@@ -165,6 +165,15 @@ namespace N_m3u8DL_RE
             //for www.nowehoryzonty.pl
             parserConfig.UrlProcessors.Insert(0, new NowehoryzontyUrlProcessor());
 
+            //等待任务开始时间
+            if (option.TaskStartAt != null && option.TaskStartAt > DateTime.Now)
+            {
+                Logger.InfoMarkUp(ResString.taskStartAt + option.TaskStartAt);
+                while (option.TaskStartAt > DateTime.Now)
+                {
+                    await Task.Delay(1000);
+                }
+            }
 
             var url = option.Input;
 

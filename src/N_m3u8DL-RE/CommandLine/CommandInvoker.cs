@@ -68,6 +68,9 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<byte[]?> CustomHLSKey = new(name: "--custom-hls-key", description: ResString.cmd_customHLSKey, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
         private readonly static Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv", description: ResString.cmd_customHLSIv, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
 
+        //任务开始时间
+        private readonly static Option<DateTime?> TaskStartAt = new(new string[] { "--task-start-at" }, description: ResString.cmd_taskStartAt, parseArgument: ParseStartTime) { ArgumentHelpName = "yyyyMMddHHmmss" };
+
 
         //直播相关
         private readonly static Option<bool> LivePerformAsVod = new(new string[] { "--live-perform-as-vod" }, description: ResString.cmd_livePerformAsVod, getDefaultValue: () => false);
@@ -159,6 +162,26 @@ namespace N_m3u8DL_RE.CommandLine
             catch (Exception)
             {
                 result.ErrorMessage = "error in parse LiveRecordLimit: " + input;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 解析任务开始时间
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static DateTime? ParseStartTime(ArgumentResult result)
+        {
+            var input = result.Tokens.First().Value;
+            try
+            {
+                CultureInfo provider = CultureInfo.InvariantCulture;
+                return DateTime.ParseExact(input, "yyyyMMddHHmmss", provider);
+            }
+            catch (Exception)
+            {
+                result.ErrorMessage = "error in parse TaskStartTime: " + input;
                 return null;
             }
         }
@@ -391,6 +414,7 @@ namespace N_m3u8DL_RE.CommandLine
                     LiveRealTimeMerge = bindingContext.ParseResult.GetValueForOption(LiveRealTimeMerge),
                     LiveKeepSegments = bindingContext.ParseResult.GetValueForOption(LiveKeepSegments),
                     LiveRecordLimit = bindingContext.ParseResult.GetValueForOption(LiveRecordLimit),
+                    TaskStartAt = bindingContext.ParseResult.GetValueForOption(TaskStartAt),
                     LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
                     UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
                     CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
@@ -460,7 +484,7 @@ namespace N_m3u8DL_RE.CommandLine
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
-                CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy,
+                CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, TaskStartAt,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit, LiveWaitTime,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp
             };
