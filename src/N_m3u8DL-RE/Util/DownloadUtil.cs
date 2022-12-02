@@ -108,11 +108,13 @@ namespace N_m3u8DL_RE.Util
                 var buffer = new byte[16 * 1024];
                 var size = 0;
 
-                //检测imageHeader
                 size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token);
                 speedContainer.Add(size);
                 await stream.WriteAsync(buffer, 0, size);
+                //检测imageHeader
                 bool imageHeader = ImageHeaderUtil.IsImageHeader(buffer);
+                //检测GZip（For DDP Audio）
+                bool gZipHeader = buffer.Length > 2 && buffer[0] == 0x1f && buffer[1] == 0x8b;
 
                 while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
                 {
@@ -125,7 +127,8 @@ namespace N_m3u8DL_RE.Util
                     ActualContentLength = stream.Length,
                     RespContentLength = contentLength,
                     ActualFilePath = path,
-                    ImageHeader= imageHeader
+                    ImageHeader= imageHeader,
+                    GzipHeader = gZipHeader
                 };
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationTokenSource.Token)

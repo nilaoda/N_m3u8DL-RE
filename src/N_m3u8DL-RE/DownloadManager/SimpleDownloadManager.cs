@@ -11,10 +11,7 @@ using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
-using Spectre.Console.Rendering;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace N_m3u8DL_RE.DownloadManager
@@ -48,12 +45,12 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private string? ReadInit(string output)
         {
+            var header = new byte[4096]; //4KB
             using (var fs = File.OpenRead(output))
             {
-                var header = new byte[4096]; //4KB
                 fs.Read(header);
-                return ReadInit(header);
             }
+            return ReadInit(header);
         }
 
         //从文件读取KEY
@@ -173,8 +170,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 //读取mp4信息
                 if (result != null && result.Success) 
                 {
-                    var data = File.ReadAllBytes(result.ActualFilePath);
-                    currentKID = ReadInit(data);
+                    currentKID = ReadInit(result.ActualFilePath);
                     //从文件读取KEY
                     await SearchKeyAsync(currentKID);
                     //实时解密

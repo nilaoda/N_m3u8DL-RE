@@ -67,6 +67,11 @@ namespace N_m3u8DL_RE.Downloader
                 {
                     await ImageHeaderUtil.ProcessAsync(dResult.ActualFilePath);
                 }
+                //Gzip解压
+                if (dResult.GzipHeader)
+                {
+                    await OtherUtil.DeGzipFileAsync(dResult.ActualFilePath);
+                }
             }
             return dResult;
         }

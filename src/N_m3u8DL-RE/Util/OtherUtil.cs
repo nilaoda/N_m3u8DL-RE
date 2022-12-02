@@ -2,6 +2,7 @@
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Enum;
 using System.CommandLine;
+using System.IO.Compression;
 using System.Text;
 
 namespace N_m3u8DL_RE.Util
@@ -109,6 +110,30 @@ namespace N_m3u8DL_RE.Util
                 return;
             }
             SafeDeleteDir(parent);
+        }
+
+        /// <summary>
+        /// 解压并替换原文件
+        /// </summary>
+        /// <param name="filePath"></param>
+        public static async Task DeGzipFileAsync(string filePath)
+        {
+            string deGzipFile = Path.ChangeExtension(filePath, ".tmp");
+            try
+            {
+                using (var fileToDecompressAsStream = File.OpenRead(filePath))
+                {
+                    using var decompressedStream = File.Create(deGzipFile);
+                    using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
+                    await decompressionStream.CopyToAsync(decompressedStream);
+                }
+                File.Delete(filePath);
+                File.Move(deGzipFile, filePath);
+            }
+            catch 
+            {
+                if (File.Exists(deGzipFile)) File.Delete(deGzipFile);
+            }
         }
     }
 }
