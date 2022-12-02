@@ -54,6 +54,14 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public Playlist? Playlist { get; set; }
 
+        public int SegmentsCount
+        {
+            get
+            {
+                return Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) : 0;
+            }
+        }
+
         public string ToShortString()
         {
             var prefixStr = "";
@@ -93,8 +101,7 @@ namespace N_m3u8DL_RE.Common.Entity
             var prefixStr = "";
             var returnStr = "";
             var encStr = string.Empty;
-            var segmentsCount = Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) : 0;
-            var segmentsCountStr = segmentsCount == 0 ? "" : (segmentsCount > 1 ? $"{segmentsCount} Segments" : $"{segmentsCount} Segment");
+            var segmentsCountStr = SegmentsCount == 0 ? "" : (SegmentsCount > 1 ? $"{SegmentsCount} Segments" : $"{SegmentsCount} Segment");
 
             //增加加密标志
             if (Playlist != null && Playlist.MediaParts.Any(m => m.MediaSegments.Any(s => s.EncryptInfo.Method != EncryptMethod.NONE)))

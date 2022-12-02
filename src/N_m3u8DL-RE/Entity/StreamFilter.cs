@@ -19,6 +19,8 @@ namespace N_m3u8DL_RE.Entity
         public Regex? ChannelsReg { get; set; }
         public Regex? VideoRangeReg { get; set; }
         public Regex? UrlReg { get; set; }
+        public long? SegmentsMinCount { get; set; }
+        public long? SegmentsMaxCount { get; set; }
 
         public string For { get; set; } = "best";
     }

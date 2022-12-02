@@ -198,6 +198,14 @@ namespace N_m3u8DL_RE
             }
 
             var selectedStreams = new List<StreamSpec>();
+            if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
+            {
+                basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
+                audios = FilterUtil.DoFilterDrop(audios, option.DropAudioFilter);
+                subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
+                lists = basicStreams.Concat(audios).Concat(subs).OrderBy(x => true);
+            }
+
             if (option.AutoSelect)
             {
                 if (basicStreams.Any())
@@ -215,9 +223,9 @@ namespace N_m3u8DL_RE
             }
             else if (option.VideoFilter != null || option.AudioFilter != null || option.SubtitleFilter != null)
             {
-                basicStreams = FilterUtil.DoFilter(basicStreams, option.VideoFilter);
-                audios = FilterUtil.DoFilter(audios, option.AudioFilter);
-                subs = FilterUtil.DoFilter(subs, option.SubtitleFilter);
+                basicStreams = FilterUtil.DoFilterKeep(basicStreams, option.VideoFilter);
+                audios = FilterUtil.DoFilterKeep(audios, option.AudioFilter);
+                subs = FilterUtil.DoFilterKeep(subs, option.SubtitleFilter);
                 selectedStreams = basicStreams.Concat(audios).Concat(subs).ToList();
             }
             else

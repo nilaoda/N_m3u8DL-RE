@@ -13,7 +13,7 @@ namespace N_m3u8DL_RE.Util
 {
     public class FilterUtil
     {
-        public static List<StreamSpec> DoFilter(IEnumerable<StreamSpec> lists, StreamFilter? filter)
+        public static List<StreamSpec> DoFilterKeep(IEnumerable<StreamSpec> lists, StreamFilter? filter)
         {
             if (filter == null) return new List<StreamSpec>();
 
@@ -36,6 +36,10 @@ namespace N_m3u8DL_RE.Util
                 inputs = inputs.Where(i => i.VideoRange != null && filter.VideoRangeReg.IsMatch(i.VideoRange));
             if (filter.UrlReg != null)
                 inputs = inputs.Where(i => i.Url != null && filter.UrlReg.IsMatch(i.Url));
+            if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0)) 
+                inputs = inputs.Where(i => i.SegmentsCount < filter.SegmentsMaxCount);
+            if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
+                inputs = inputs.Where(i => i.SegmentsCount > filter.SegmentsMinCount);
 
             var bestNumberStr = filter.For.Replace("best", "");
             var worstNumberStr = filter.For.Replace("worst", "");
@@ -48,6 +52,18 @@ namespace N_m3u8DL_RE.Util
                 inputs = inputs.Take(bestNumber).ToList();
             else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Count() > 0)
                 inputs = inputs.TakeLast(worstNumber).ToList();
+
+            return inputs.ToList();
+        }
+
+        public static List<StreamSpec> DoFilterDrop(IEnumerable<StreamSpec> lists, StreamFilter? filter)
+        {
+            if (filter == null) return new List<StreamSpec>();
+
+            var inputs = lists.Where(_ => true);
+            var selected = DoFilterKeep(lists, filter);
+
+            inputs = inputs.SkipWhile(i => selected.Any(s => s.ToString() == i.ToString()));
 
             return inputs.ToList();
         }

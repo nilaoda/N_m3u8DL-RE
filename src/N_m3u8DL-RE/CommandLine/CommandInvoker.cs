@@ -83,6 +83,10 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> VideoFilter = new(new string[] { "-sv", "--select-video" }, description: ResString.cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> AudioFilter = new(new string[] { "-sa", "--select-audio" }, description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> SubtitleFilter = new(new string[] { "-ss", "--select-subtitle" }, description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        
+        private readonly static Option<StreamFilter?> DropVideoFilter = new(new string[] { "-dv", "--drop-video" }, description: ResString.cmd_dropVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private readonly static Option<StreamFilter?> DropAudioFilter = new(new string[] { "-da", "--drop-audio" }, description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private readonly static Option<StreamFilter?> DropSubtitleFilter = new(new string[] { "-ds", "--drop-subtitle" }, description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
         /// <summary>
         /// 解析用户代理
@@ -236,6 +240,14 @@ namespace N_m3u8DL_RE.CommandLine
             if (!string.IsNullOrEmpty(url))
                 streamFilter.UrlReg = new Regex(url);
 
+            var segsMin = p.GetValue("segsMin");
+            if (!string.IsNullOrEmpty(segsMin))
+                streamFilter.SegmentsMinCount = long.Parse(segsMin);
+
+            var segsMax = p.GetValue("segsMax");
+            if (!string.IsNullOrEmpty(segsMax))
+                streamFilter.SegmentsMaxCount = long.Parse(segsMax);
+
             return streamFilter;
         }
 
@@ -373,6 +385,9 @@ namespace N_m3u8DL_RE.CommandLine
                     VideoFilter = bindingContext.ParseResult.GetValueForOption(VideoFilter),
                     AudioFilter = bindingContext.ParseResult.GetValueForOption(AudioFilter),
                     SubtitleFilter = bindingContext.ParseResult.GetValueForOption(SubtitleFilter),
+                    DropVideoFilter = bindingContext.ParseResult.GetValueForOption(DropVideoFilter),
+                    DropAudioFilter = bindingContext.ParseResult.GetValueForOption(DropAudioFilter),
+                    DropSubtitleFilter = bindingContext.ParseResult.GetValueForOption(DropSubtitleFilter),
                     LiveRealTimeMerge = bindingContext.ParseResult.GetValueForOption(LiveRealTimeMerge),
                     LiveKeepSegments = bindingContext.ParseResult.GetValueForOption(LiveKeepSegments),
                     LiveRecordLimit = bindingContext.ParseResult.GetValueForOption(LiveRecordLimit),
@@ -447,7 +462,7 @@ namespace N_m3u8DL_RE.CommandLine
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LiveRecordLimit, LiveWaitTime,
-                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, MoreHelp
+                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp
             };
 
             rootCommand.TreatUnmatchedTokensAsErrors = true;

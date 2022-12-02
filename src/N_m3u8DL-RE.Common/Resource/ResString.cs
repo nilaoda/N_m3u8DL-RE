@@ -32,10 +32,13 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_muxImport { get => GetText("cmd_muxImport"); }
         public static string cmd_muxImport_more { get => GetText("cmd_muxImport_more"); }
         public static string cmd_selectVideo { get => GetText("cmd_selectVideo"); }
+        public static string cmd_dropVideo { get => GetText("cmd_dropVideo"); }
         public static string cmd_selectVideo_more { get => GetText("cmd_selectVideo_more"); }
         public static string cmd_selectAudio { get => GetText("cmd_selectAudio"); }
+        public static string cmd_dropAudio { get => GetText("cmd_dropAudio"); }
         public static string cmd_selectAudio_more { get => GetText("cmd_selectAudio_more"); }
         public static string cmd_selectSubtitle { get => GetText("cmd_selectSubtitle"); }
+        public static string cmd_dropSubtitle { get => GetText("cmd_dropSubtitle"); }
         public static string cmd_selectSubtitle_more { get => GetText("cmd_selectSubtitle_more"); }
         public static string cmd_customHLSMethod { get => GetText("cmd_customHLSMethod"); }
         public static string cmd_customHLSKey { get => GetText("cmd_customHLSKey"); }

@@ -334,11 +334,17 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "通過正則表達式選擇符合要求的影片軌. 輸入 \"--morehelp select-video\" 以查看詳細訊息",
                 enUS: "Select video streams by regular expressions. Use \"--morehelp select-video\" for more details"
             ),
+            ["cmd_dropVideo"] = new TextContainer
+            (
+                zhCN: "通过正则表达式去除符合要求的视频流.",
+                zhTW: "通過正則表達式去除符合要求的影片串流.",
+                enUS: "Drop video streams by regular expressions."
+            ),
             ["cmd_selectVideo_more"] = new TextContainer
             (
                 zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
-                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
-                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
+                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
                       "* for=FOR: 选择方式. best[number], worst[number], all (默认: best)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 选择最佳视频\r\n" +
@@ -369,6 +375,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "通过正则表达式选择符合要求的音频流. 输入 \"--morehelp select-audio\" 以查看详细信息",
                 zhTW: "通過正則表達式選擇符合要求的音軌. 輸入 \"--morehelp select-audio\" 以查看詳細訊息",
                 enUS: "Select audio streams by regular expressions. Use \"--morehelp select-audio\" for more details"
+            ),
+            ["cmd_dropAudio"] = new TextContainer
+            (
+                zhCN: "通过正则表达式去除符合要求的音频流.",
+                zhTW: "通過正則表達式去除符合要求的音軌.",
+                enUS: "Drop audio streams by regular expressions."
             ),
             ["cmd_selectAudio_more"] = new TextContainer
             (
@@ -402,6 +414,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "通过正则表达式选择符合要求的字幕流. 输入 \"--morehelp select-subtitle\" 以查看详细信息",
                 zhTW: "通過正則表達式選擇符合要求的字幕流. 輸入 \"--morehelp select-subtitle\" 以查看詳細訊息",
                 enUS: "Select subtitle streams by regular expressions. Use \"--morehelp select-subtitle\" for more details"
+            ),
+            ["cmd_dropSubtitle"] = new TextContainer
+            (
+                zhCN: "通过正则表达式去除符合要求的字幕流.",
+                zhTW: "通過正則表達式去除符合要求的字幕流.",
+                enUS: "Drop subtitle streams by regular expressions."
             ),
             ["cmd_selectSubtitle_more"] = new TextContainer
             (
