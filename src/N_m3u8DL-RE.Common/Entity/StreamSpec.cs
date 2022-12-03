@@ -96,6 +96,40 @@ namespace N_m3u8DL_RE.Common.Entity
             return returnStr.TrimEnd().TrimEnd('|').TrimEnd();
         }
 
+        public string ToShortShortString()
+        {
+            var prefixStr = "";
+            var returnStr = "";
+            var encStr = string.Empty;
+
+            if (MediaType == Enum.MediaType.AUDIO)
+            {
+                prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
+                var d = $"{(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")}";
+                returnStr = d.EscapeMarkup();
+            }
+            else if (MediaType == Enum.MediaType.SUBTITLES)
+            {
+                prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
+                var d = $"{Language} | {Name} | {Codecs}";
+                returnStr = d.EscapeMarkup();
+            }
+            else
+            {
+                prefixStr = $"[aqua]Vid[/] {encStr}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange}";
+                returnStr = d.EscapeMarkup();
+            }
+
+            returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
+            while (returnStr.Contains("|  |"))
+            {
+                returnStr = returnStr.Replace("|  |", "|");
+            }
+
+            return returnStr.TrimEnd().TrimEnd('|').TrimEnd();
+        }
+
         public override string ToString()
         {
             var prefixStr = "";

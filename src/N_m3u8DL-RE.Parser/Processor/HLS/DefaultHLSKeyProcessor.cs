@@ -73,7 +73,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                         var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
                         encryptInfo.Key = bytes;
                     }
-                    catch (Exception _ex)
+                    catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
                     {
                         Logger.WarnMarkUp($"[grey]{_ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
                         Thread.Sleep(1000);

@@ -59,7 +59,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.INFO)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline #548c26]INFO[/]  : ";
+                var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : ";
                 HandleLog(write, data);
             }
         }
@@ -69,7 +69,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.INFO)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline #548c26]INFO[/]  : " + data;
+                var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : " + data;
                 HandleLog(write);
             }
         }
@@ -79,7 +79,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.DEBUG)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline grey]DEBUG[/] : ";
+                var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: ";
                 HandleLog(write, data);
             }
         }
@@ -89,7 +89,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.DEBUG)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline grey]DEBUG[/] : " + data;
+                var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: " + data;
                 HandleLog(write);
             }
         }
@@ -99,7 +99,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.WARN)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline #a89022]WARN[/]  : ";
+                var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : ";
                 HandleLog(write, data);
             }
         }
@@ -109,7 +109,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.WARN)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline #a89022]WARN[/]  : " + data;
+                var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : " + data;
                 HandleLog(write);
             }
         }
@@ -119,7 +119,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.ERROR)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline red1]ERROR[/] : ";
+                var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: ";
                 HandleLog(write, data);
             }
         }
@@ -129,7 +129,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel >= LogLevel.ERROR)
             {
                 data = ReplaceVars(data, ps);
-                var write = GetCurrTime() + " " + "[underline red1]ERROR[/] : " + data;
+                var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: " + data;
                 HandleLog(write);
             }
         }
