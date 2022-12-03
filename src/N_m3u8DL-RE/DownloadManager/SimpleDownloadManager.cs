@@ -643,9 +643,9 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.Columns(new ProgressColumn[]
             {
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
-                new ProgressBarColumn() { Width = 30 },
+                new ProgressBarColumn(),
                 new PercentageColumn(),
-                new DownloadStatusColumn(DownloadedSizeDic),
+                new DownloadStatusColumn(DownloadedSizeDic, SpeedContainerDic),
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
