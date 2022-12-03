@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Column
 
         public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
         {
-            if (task.Value == 0) return new Text("", MyStyle).RightAligned();
+            if (task.Value == 0) return new Text("-", MyStyle).RightAligned();
 
             var done = task.IsFinished;
 
