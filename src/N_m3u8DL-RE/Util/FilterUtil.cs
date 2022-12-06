@@ -58,7 +58,7 @@ namespace N_m3u8DL_RE.Util
 
         public static List<StreamSpec> DoFilterDrop(IEnumerable<StreamSpec> lists, StreamFilter? filter)
         {
-            if (filter == null) return new List<StreamSpec>();
+            if (filter == null) return new List<StreamSpec>(lists);
 
             var inputs = lists.Where(_ => true);
             var selected = DoFilterKeep(lists, filter);
