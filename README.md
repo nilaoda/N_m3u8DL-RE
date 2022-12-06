@@ -19,7 +19,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20221101
+  N_m3u8DL-RE (Beta version) 20221206
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -32,7 +32,7 @@ Options:
   --save-dir <save-dir>                    设置输出目录
   --save-name <save-name>                  设置保存文件名
   --base-url <base-url>                    设置BaseURL
-  --thread-count <number>                  设置下载线程数 [default: 8]
+  --thread-count <number>                  设置下载线程数 [default: 16]
   --download-retry-count <number>          每个分片下载异常时的重试次数 [default: 3]
   --auto-select                            自动选择所有类型的最佳轨道 [default: False]
   --skip-merge                             跳过合并分片 [default: False]
@@ -60,11 +60,13 @@ Options:
   --use-shaka-packager                     解密时使用shaka-packager替代mp4decrypt [default: False]
   --mp4-real-time-decryption               实时解密MP4分片 [default: False]
   -M, --mux-after-done <OPTIONS>           所有工作完成时尝试混流分离的音视频. 输入 "--morehelp mux-after-done" 以查看详细信息
-  --custom-hls-method <METHOD>             指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
+  --custom-hls-method <METHOD>             指定HLS加密方式
+                                           (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>       指定HLS解密KEY. 可以是文件, HEX或Base64
   --custom-hls-iv <FILE|HEX|BASE64>        指定HLS解密IV. 可以是文件, HEX或Base64
   --use-system-proxy                       使用系统默认代理 [default: True]
   --custom-proxy <URL>                     设置请求代理, 如 http://127.0.0.1:8888
+  --task-start-at <yyyyMMddHHmmss>         在此时间之前不会开始执行任务
   --live-perform-as-vod                    以点播方式下载直播流 [default: False]
   --live-real-time-merge                   录制直播时实时合并 [default: False]
   --live-keep-segments                     录制直播并开启实时合并时依然保留分片 [default: True]
@@ -73,7 +75,10 @@ Options:
   --mux-import <OPTIONS>                   混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
   -sv, --select-video <OPTIONS>            通过正则表达式选择符合要求的视频流. 输入 "--morehelp select-video" 以查看详细信息
   -sa, --select-audio <OPTIONS>            通过正则表达式选择符合要求的音频流. 输入 "--morehelp select-audio" 以查看详细信息
-  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看详细信息
+  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看 详细信息
+  -dv, --drop-video <OPTIONS>              通过正则表达式去除符合要求的视频流.
+  -da, --drop-audio <OPTIONS>              通过正则表达式去除符合要求的音频流.
+  -ds, --drop-subtitle <OPTIONS>           通过正则表达式去除符合要求的字幕流.
   --morehelp <OPTION>                      查看某个选项的详细帮助信息
   --version                                Show version information
   -?, -h, --help                           Show help and usage information
