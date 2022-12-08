@@ -171,6 +171,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         private static TimeSpan ConvertToTS(string str)
         {
+            str = str.Replace(',', '.');
             var ms = Convert.ToInt32(str.Split('.').Last());
             var o = str.Split('.').First();
             var t = o.Split(':').Reverse().ToList();
