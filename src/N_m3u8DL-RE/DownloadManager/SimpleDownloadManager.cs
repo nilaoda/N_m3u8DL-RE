@@ -98,7 +98,7 @@ namespace N_m3u8DL_RE.DownloadManager
         }
 
 
-        private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, ConcurrentDictionary<int, long> sizeDic)
+        private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer)
         {
             speedContainer.ResetVars();
             bool useAACFilter = false; //ffmpeg合并flag
@@ -166,7 +166,6 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
                 mp4InitFile = result.ActualFilePath;
                 task.Increment(1);
-                sizeDic[task.Id] += result.ActualContentLength ?? 0;
 
                 //读取mp4信息
                 if (result != null && result.Success) 
@@ -215,7 +214,6 @@ namespace N_m3u8DL_RE.DownloadManager
                     throw new Exception("Download first segment failed!");
                 }
                 task.Increment(1);
-                sizeDic[task.Id] += result.ActualContentLength ?? 0;
                 if (result != null && result.Success)
                 {
                     //修复MSS init
@@ -279,7 +277,6 @@ namespace N_m3u8DL_RE.DownloadManager
                 var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
                 task.Increment(1);
-                sizeDic[task.Id] += result.ActualContentLength ?? 0;
                 //实时解密
                 if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && result != null && result.Success && !string.IsNullOrEmpty(currentKID)) 
                 {
@@ -633,7 +630,6 @@ namespace N_m3u8DL_RE.DownloadManager
 
         public async Task<bool> StartDownloadAsync()
         {
-            ConcurrentDictionary<int, long> DownloadedSizeDic = new(); //大小计算
             ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
 
@@ -645,7 +641,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new ProgressBarColumn(),
                 new PercentageColumn(),
-                new DownloadStatusColumn(DownloadedSizeDic, SpeedContainerDic),
+                new DownloadStatusColumn(SpeedContainerDic),
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
@@ -663,7 +659,6 @@ namespace N_m3u8DL_RE.DownloadManager
                     var description = item.ToShortShortString();
                     var task = ctx.AddTask(description, autoStart: false);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算
-                    DownloadedSizeDic[task.Id] = 0; //大小计算
                     return (item, task);
                 }).ToDictionary(item => item.item, item => item.task);
 
@@ -673,7 +668,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     foreach (var kp in dic)
                     {
                         var task = kp.Value;
-                        var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id], DownloadedSizeDic);
+                        var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
                         Results[kp.Key] = result;
                     }
                 }
@@ -683,7 +678,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     await Parallel.ForEachAsync(dic, async (kp, _) =>
                     {
                         var task = kp.Value;
-                        var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id], DownloadedSizeDic);
+                        var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
                         Results[kp.Key] = result;
                     });
                 }

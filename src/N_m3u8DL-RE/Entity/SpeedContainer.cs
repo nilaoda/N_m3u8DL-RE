@@ -13,7 +13,7 @@ namespace N_m3u8DL_RE.Entity
     {
         public bool SingleSegment { get; set; } = false;
         public long? ResponseLength { get; set; }
-        public long RDownloaded { get; set; } = 0L;
+        public long RDownloaded { get => _Rdownloaded; }
         private int _zeroSpeedCount = 0;
         public int LowSpeedCount { get => _zeroSpeedCount; }
         public bool ShouldStop { get => LowSpeedCount >= 20; }
@@ -21,6 +21,7 @@ namespace N_m3u8DL_RE.Entity
         ///////////////////////////////////////////////////
 
         private long _downloaded = 0;
+        private long _Rdownloaded = 0;
         public long Downloaded { get => _downloaded; }
 
         public int AddLowSpeedCount()
@@ -35,7 +36,7 @@ namespace N_m3u8DL_RE.Entity
 
         public long Add(long size)
         {
-            if (SingleSegment) RDownloaded += size;
+            Interlocked.Add(ref _Rdownloaded, size);
             return Interlocked.Add(ref _downloaded, size);
         }
 
@@ -50,7 +51,7 @@ namespace N_m3u8DL_RE.Entity
             ResetLowSpeedCount();
             SingleSegment = false;
             ResponseLength = null;
-            RDownloaded = 0L;
+            _Rdownloaded = 0L;
         }
     }
 }
