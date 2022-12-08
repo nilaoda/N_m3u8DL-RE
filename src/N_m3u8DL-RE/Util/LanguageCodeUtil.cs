@@ -384,6 +384,7 @@ Thai;tha;Thai;Thai
 CN;chi;中文（繁體）;中文
 CC;chi;中文（繁體）;中文
 CZ;chi;中文（简体）;中文
+MA;msa;Melayu;Melayu
 "
 .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x =>
 {
