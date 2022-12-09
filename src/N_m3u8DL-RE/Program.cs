@@ -68,8 +68,8 @@ namespace N_m3u8DL_RE
             //检测更新
             CheckUpdateAsync();
 
-            Logger.Info(CommandInvoker.VERSION_INFO);
             Logger.LogLevel = option.LogLevel;
+            Logger.Info(CommandInvoker.VERSION_INFO);
 
             if (option.UseSystemProxy == false)
             {
