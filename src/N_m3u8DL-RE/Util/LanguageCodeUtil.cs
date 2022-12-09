@@ -514,30 +514,28 @@ sr;srp
         /// <param name="outputFile"></param>
         public static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
         {
-            if (string.IsNullOrEmpty(outputFile.LangCode) || outputFile.MediaType == null) return;
+            if (string.IsNullOrEmpty(outputFile.LangCode)) return;
             var originalLangCode = outputFile.LangCode;
 
-            if (string.IsNullOrEmpty(outputFile.Description))
+            //先直接查找
+            var lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
+            //处理特殊的扩展语言标记
+            if (lang == null)
             {
-                //先直接查找
-                var lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
-                //处理特殊的扩展语言标记
-                if (lang == null)
-                {
-                    //2位转3位
-                    var l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
-                    lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(l, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(l, StringComparison.OrdinalIgnoreCase));
-                }
+                //2位转3位
+                var l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
+                lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(l, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(l, StringComparison.OrdinalIgnoreCase));
+            }
 
-                if (lang != null)
-                {
-                    outputFile.LangCode = lang.Code;
+            if (lang != null)
+            {
+                outputFile.LangCode = lang.Code;
+                if (string.IsNullOrEmpty(outputFile.Description))
                     outputFile.Description = outputFile.MediaType == Common.Enum.MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
-                }
-                else
-                {
-                    outputFile.LangCode = "und"; //无法识别直接置为und
-                }
+            }
+            else if (outputFile.LangCode == null) 
+            {
+                outputFile.LangCode = "und"; //无法识别直接置为und
             }
 
             //无描述，则把LangCode当作描述
