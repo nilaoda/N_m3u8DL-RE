@@ -69,8 +69,8 @@ namespace N_m3u8DL_RE.Util
             {
                 FileName = name,
                 Arguments = arg,
-                //RedirectStandardOutput = true,
-                //RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true,
                 UseShellExecute = false
             })!.WaitForExitAsync();
