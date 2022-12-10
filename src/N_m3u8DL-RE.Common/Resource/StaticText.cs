@@ -22,6 +22,18 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到新版本，請盡快升級！",
                 enUS: "New version detected!"
             ),
+            ["namedPipeCreated"] = new TextContainer
+            (
+                zhCN: "已创建命名管道：",
+                zhTW: "已創建命名管道：",
+                enUS: "Named pipe created: "
+            ),
+            ["namedPipeMux"] = new TextContainer
+            (
+                zhCN: "通过命名管道混流到",
+                zhTW: "通過命名管道混流到",
+                enUS: "Mux with named pipe, to"
+            ),
             ["taskStartAt"] = new TextContainer
             (
                 zhCN: "程序将等待，直到：",
@@ -309,6 +321,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "指定HLS解密IV. 可以是文件, HEX或Base64",
                 zhTW: "指定HLS解密IV. 可以是文件, HEX或Base64",
                 enUS: "Set the HLS decryption iv. Can be file, HEX or Base64"
+            ),
+            ["cmd_livePipeMux"] = new TextContainer
+            (
+                zhCN: "录制直播并开启实时合并时通过管道+ffmpeg实时混流到TS文件",
+                zhTW: "錄製直播並開啟即時合併時通過管道+ffmpeg即時混流到TS文件",
+                enUS: "Real-time muxing to TS file through pipeline + ffmpeg (liveRealTimeMerge enabled)"
             ),
             ["cmd_liveKeepSegments"] = new TextContainer
             (

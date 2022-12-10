@@ -14,6 +14,9 @@ using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -27,6 +30,7 @@ namespace N_m3u8DL_RE.DownloadManager
         DownloaderConfig DownloaderConfig;
         StreamExtractor StreamExtractor;
         List<StreamSpec> SelectedSteams;
+        ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
         List<OutputFile> OutputFiles = new();
         DateTime NowDateTime;
         DateTime? PublishDateTime;
@@ -183,7 +187,7 @@ namespace N_m3u8DL_RE.DownloadManager
             bool initDownloaded = false; //是否下载过init文件
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
             List<Mediainfo> mediaInfos = new();
-            FileStream? fileOutputStream = null;
+            Stream? fileOutputStream = null;
             WebVttSub currentVtt = new(); //字幕流始终维护一个实例
             bool firstSub = true;
             task.StartTask();
@@ -537,7 +541,30 @@ namespace N_m3u8DL_RE.DownloadManager
                         {
                             Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
                         }
-                        fileOutputStream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+
+                        if (!DownloaderConfig.MyOptions.LivePipeMux || streamSpec.MediaType == MediaType.SUBTITLES)
+                        {
+                            fileOutputStream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+                        }
+                        else 
+                        {
+                            //创建管道
+                            output = Path.ChangeExtension(output, ".ts");
+                            var pipeName = $"RE_pipe_{Guid.NewGuid()}";
+                            fileOutputStream = PipeUtil.CreatePipe(pipeName);
+                            Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
+                            PipeSteamNamesDic[task.Id] = pipeName;
+                            if (PipeSteamNamesDic.Count == SelectedSteams.Where(x => x.MediaType != MediaType.SUBTITLES).Count()) 
+                            {
+                                var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
+                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
+                                var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, names, output);
+                            }
+
+                            //Windows only
+                            if (OperatingSystem.IsWindows())
+                                await (fileOutputStream as NamedPipeServerStream)!.WaitForConnectionAsync();
+                        }
                     }
 
                     if (streamSpec.MediaType != MediaType.SUBTITLES)
@@ -613,16 +640,19 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (fileOutputStream != null)
             {
-                //记录所有文件信息
-                OutputFiles.Add(new OutputFile()
+                if (!DownloaderConfig.MyOptions.LivePipeMux)
                 {
-                    Index = task.Id,
-                    FilePath = fileOutputStream.Name,
-                    LangCode = streamSpec.Language,
-                    Description = streamSpec.Name,
-                    Mediainfos = mediaInfos,
-                    MediaType = streamSpec.MediaType,
-                });
+                    //记录所有文件信息
+                    OutputFiles.Add(new OutputFile()
+                    {
+                        Index = task.Id,
+                        FilePath = (fileOutputStream as FileStream)!.Name,
+                        LangCode = streamSpec.Language,
+                        Description = streamSpec.Name,
+                        Mediainfos = mediaInfos,
+                        MediaType = streamSpec.MediaType,
+                    });
+                }
                 fileOutputStream.Close();
                 fileOutputStream.Dispose();
             }

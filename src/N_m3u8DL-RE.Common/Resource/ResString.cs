@@ -68,6 +68,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_useSystemProxy { get => GetText("cmd_useSystemProxy"); }
         public static string cmd_customProxy { get => GetText("cmd_customProxy"); }
         public static string cmd_liveKeepSegments { get => GetText("cmd_liveKeepSegments"); }
+        public static string cmd_livePipeMux { get => GetText("cmd_livePipeMux"); }
         public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }
         public static string cmd_taskStartAt { get => GetText("cmd_taskStartAt"); }
         public static string cmd_liveWaitTime { get => GetText("cmd_liveWaitTime"); }
@@ -81,6 +82,8 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string liveLimitReached { get => GetText("liveLimitReached"); }
         public static string saveName { get => GetText("saveName"); }
         public static string taskStartAt { get => GetText("taskStartAt"); }
+        public static string namedPipeCreated { get => GetText("namedPipeCreated"); }
+        public static string namedPipeMux { get => GetText("namedPipeMux"); }
         public static string partMerge { get => GetText("partMerge"); }
         public static string fetch { get => GetText("fetch"); }
         public static string ffmpegMerge { get => GetText("ffmpegMerge"); }

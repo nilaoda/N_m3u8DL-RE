@@ -222,5 +222,9 @@ namespace N_m3u8DL_RE.CommandLine
         public int? LiveWaitTime { get; set; }
         public bool MuxKeepFiles { get; set; }
         //public bool LiveWriteHLS { get; set; } = true;
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LivePipeMux"/>.
+        /// </summary>
+        public bool LivePipeMux { get; set; }
     }
 }
