@@ -79,7 +79,7 @@ namespace N_m3u8DL_RE.Util
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
-            p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
+            //p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
             p.Start();
             p.WaitForExit();
 
