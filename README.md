@@ -19,7 +19,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20221206
+  N_m3u8DL-RE (Beta version) 20221210
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -70,6 +70,7 @@ Options:
   --live-perform-as-vod                    以点播方式下载直播流 [default: False]
   --live-real-time-merge                   录制直播时实时合并 [default: False]
   --live-keep-segments                     录制直播并开启实时合并时依然保留分片 [default: True]
+  --live-pipe-mux                          录制直播并开启实时合并时通过管道+ffmpeg实时混流到TS文件 [default: False]
   --live-record-limit <HH:mm:ss>           录制直播时的录制时长限制
   --live-wait-time <SEC>                   手动设置直播列表刷新间隔
   --mux-import <OPTIONS>                   混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
