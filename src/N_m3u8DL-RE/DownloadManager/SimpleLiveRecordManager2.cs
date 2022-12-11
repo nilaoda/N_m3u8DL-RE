@@ -741,7 +741,22 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (index > -1)
             {
-                streamSpec.Playlist!.MediaParts[0].MediaSegments = streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1).ToList();
+                //修正Index
+                var list = streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1).ToList();
+                if (list.Count > 0)
+                {
+                    var newMin = list.Min(s => s.Index);
+                    var oldMax = streamSpec.Playlist!.MediaParts[0].MediaSegments.Max(s => s.Index);
+                    if (newMin < oldMax)
+                    {
+                        var offset = oldMax - newMin + 1;
+                        foreach (var item in list)
+                        {
+                            item.Index += offset;
+                        }
+                    }
+                }
+                streamSpec.Playlist!.MediaParts[0].MediaSegments = list;
             }
         }
 
