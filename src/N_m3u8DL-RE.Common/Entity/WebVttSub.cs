@@ -152,14 +152,19 @@ namespace N_m3u8DL_RE.Common.Entity
             }
 
             //确实存在时间轴错误的情况，才修复
-            if ((this.Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < this.Cues.Last().EndTime) || this.Cues.Count == 0)
+            if ((this.Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < this.Cues.Last().EndTime && sub.Cues.First().EndTime != this.Cues.Last().EndTime) || this.Cues.Count == 0)
             {
                 //The MPEG2 transport stream clocks (PCR, PTS, DTS) all have units of 1/90000 second
                 var seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
-                for (int i = 0; i < sub.Cues.Count; i++)
+                var offset = TimeSpan.FromSeconds(seconds);
+                //当前预添加的字幕的起始时间小于实际上已经走过的时间(如offset已经是100秒，而字幕起始却是2秒)，才修复
+                if (sub.Cues.Count > 0 && sub.Cues.First().StartTime < offset)
                 {
-                    sub.Cues[i].StartTime += TimeSpan.FromSeconds(seconds);
-                    sub.Cues[i].EndTime += TimeSpan.FromSeconds(seconds);
+                    for (int i = 0; i < sub.Cues.Count; i++)
+                    {
+                        sub.Cues[i].StartTime += offset;
+                        sub.Cues[i].EndTime += offset;
+                    }
                 }
             }
         }
