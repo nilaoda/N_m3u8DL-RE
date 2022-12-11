@@ -1,4 +1,4 @@
-﻿using Mp4SubtitleParser;
+using Mp4SubtitleParser;
 using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
@@ -197,10 +197,10 @@ namespace N_m3u8DL_RE.DownloadManager
             var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{streamSpec.GroupId}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
             var tmpDir = Path.Combine(DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory, dirName);
             var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-            var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
+            var saveName = DownloaderConfig.MyOptions.SaveName != null ? DownloaderConfig.MyOptions.SaveName : dirName;
             var headers = DownloaderConfig.Headers;
 
-            Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}");
+            Logger.Info($" saveName: {saveName}");
 
             //创建文件夹
             if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
@@ -549,7 +549,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         else 
                         {
                             //创建管道
-                            output = saveName;
+                            output = "udp://127.0.0.1:" + saveName;
                             var pipeName = $"RE_pipe_{Guid.NewGuid()}";
                             fileOutputStream = PipeUtil.CreatePipe(pipeName);
                             Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
