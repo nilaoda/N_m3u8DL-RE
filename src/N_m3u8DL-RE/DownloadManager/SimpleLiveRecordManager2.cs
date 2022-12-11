@@ -549,7 +549,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         else 
                         {
                             //创建管道
-                            output = "udp://127.0.0.1:" + saveName;
+                            output = "udp://239.10.0.1:" + saveName;
                             var pipeName = $"RE_pipe_{Guid.NewGuid()}";
                             fileOutputStream = PipeUtil.CreatePipe(pipeName);
                             Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
