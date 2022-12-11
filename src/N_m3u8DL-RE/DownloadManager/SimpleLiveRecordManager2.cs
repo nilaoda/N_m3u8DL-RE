@@ -549,7 +549,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         else 
                         {
                             //创建管道
-                            output = Path.ChangeExtension(output, ".ts");
+                            output = saveName;
                             var pipeName = $"RE_pipe_{Guid.NewGuid()}";
                             fileOutputStream = PipeUtil.CreatePipe(pipeName);
                             Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
