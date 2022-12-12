@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -39,8 +40,9 @@ namespace N_m3u8DL_RE.DownloadManager
         ConcurrentDictionary<int, int> RecordingDurDic = new(); //已录制时长
         ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); //各流的Block
         ConcurrentDictionary<int, bool> SamePathDic = new(); //各流是否allSamePath
-        ConcurrentDictionary<string, string> LastFileNameDic = new(); //上次下载的文件名
-        ConcurrentDictionary<string, long> DateTimeDic = new(); //上次下载的dateTime
+        ConcurrentDictionary<int, string> LastFileNameDic = new(); //上次下载的文件名
+        ConcurrentDictionary<int, long> MaxIndexDic = new(); //最大Index
+        ConcurrentDictionary<int, long> DateTimeDic = new(); //上次下载的dateTime
         CancellationTokenSource CancellationTokenSource = new(); //取消Wait
 
         public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
@@ -149,26 +151,11 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (mediainfos.All(m => m.Type == "Audio") && streamSpec.MediaType != MediaType.AUDIO)
             {
-                var lastKey = streamSpec.ToShortString();
                 streamSpec.MediaType = MediaType.AUDIO;
-                var newKey = streamSpec.ToShortString();
-                //需要同步修改Dictionary中的Key
-                if (LastFileNameDic.Remove(lastKey, out var lastValue1))
-                    LastFileNameDic[newKey] = lastValue1!;
-                if (DateTimeDic.Remove(lastKey, out var lastValue2))
-                    DateTimeDic[newKey] = lastValue2;
             }
             else if (mediainfos.All(m => m.Type == "Subtitle") && streamSpec.MediaType != MediaType.SUBTITLES)
             {
-                var lastKey = streamSpec.ToShortString();
                 streamSpec.MediaType = MediaType.SUBTITLES;
-                var newKey = streamSpec.ToShortString();
-
-                //需要同步修改Dictionary中的Key
-                if (LastFileNameDic.Remove(lastKey, out var lastValue1))
-                    LastFileNameDic[newKey] = lastValue1!;
-                if (DateTimeDic.Remove(lastKey, out var lastValue2))
-                    DateTimeDic[newKey] = lastValue2;
 
                 if (streamSpec.Extension == null || streamSpec.Extension == "ts")
                     streamSpec.Extension = "vtt";
@@ -681,7 +668,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             SamePathDic[task.Id] = allSamePath;
                         }
                         //过滤不需要下载的片段
-                        FilterMediaSegments(streamSpec, allHasDatetime, SamePathDic[task.Id]);
+                        FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
                         var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
                         if (newList.Count > 0)
                         {
@@ -689,10 +676,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             //推送给消费者
                             await BlockDic[task.Id].SendAsync(newList);
                             //更新最新链接
-                            LastFileNameDic[streamSpec.ToShortString()] = GetSegmentName(newList.Last(), allHasDatetime, SamePathDic[task.Id]);
+                            LastFileNameDic[task.Id] = GetSegmentName(newList.Last(), allHasDatetime, SamePathDic[task.Id]);
                             //尝试更新时间戳
                             var dt = newList.Last().DateTime;
-                            DateTimeDic[streamSpec.ToShortString()] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
+                            DateTimeDic[task.Id] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
                         }
                     });
 
@@ -721,13 +708,13 @@ namespace N_m3u8DL_RE.DownloadManager
             }
         }
 
-        private void FilterMediaSegments(StreamSpec streamSpec, bool allHasDatetime, bool allSamePath)
+        private void FilterMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)
         {
-            if (string.IsNullOrEmpty(LastFileNameDic[streamSpec.ToShortString()]) && DateTimeDic[streamSpec.ToShortString()] == 0) return;
+            if (string.IsNullOrEmpty(LastFileNameDic[task.Id]) && DateTimeDic[task.Id] == 0) return;
 
             var index = -1;
-            var dateTime = DateTimeDic[streamSpec.ToShortString()];
-            var lastName = LastFileNameDic[streamSpec.ToShortString()];
+            var dateTime = DateTimeDic[task.Id];
+            var lastName = LastFileNameDic[task.Id];
 
             //优先使用dateTime判断
             if (dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null)) 
@@ -746,7 +733,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (list.Count > 0)
                 {
                     var newMin = list.Min(s => s.Index);
-                    var oldMax = streamSpec.Playlist!.MediaParts[0].MediaSegments.Max(s => s.Index);
+                    var oldMax = MaxIndexDic[task.Id];
                     if (newMin < oldMax)
                     {
                         var offset = oldMax - newMin + 1;
@@ -755,6 +742,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             item.Index += offset;
                         }
                     }
+                    MaxIndexDic[task.Id] = list.Max(s => s.Index);
                 }
                 streamSpec.Playlist!.MediaParts[0].MediaSegments = list;
             }
@@ -773,12 +761,6 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     part.MediaSegments = part.MediaSegments.Where(s => s.Index <= maxIndex).TakeLast(takeLastCount).ToList();
                 }
-            }
-            //初始化dic
-            foreach (var item in SelectedSteams)
-            {
-                LastFileNameDic[item.ToShortString()] = "";
-                DateTimeDic[item.ToShortString()] = 0L;
             }
             //设置等待时间
             if (WAIT_SEC == 0)
@@ -819,7 +801,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     var task = ctx.AddTask(item.ToShortString(), autoStart: false, maxValue: 0);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算
+                    LastFileNameDic[task.Id] = "";
+                    DateTimeDic[task.Id] = 0L;
                     RecordingDurDic[task.Id] = 0;
+                    MaxIndexDic[task.Id] = item.Playlist?.MediaParts[0].MediaSegments.Max(s => s.Index) ?? 0L; //最大Index
                     BlockDic[task.Id] = new BufferBlock<List<MediaSegment>>();
                     return (item, task);
                 }).ToDictionary(item => item.item, item => item.task);
