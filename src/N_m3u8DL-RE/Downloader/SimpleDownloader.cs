@@ -128,6 +128,10 @@ namespace N_m3u8DL_RE.Downloader
                     await Task.Delay(1000);
                     goto retry;
                 }
+                else
+                {
+                    Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
+                }
                 //throw new Exception("download failed", ex);
                 return null;
             }
