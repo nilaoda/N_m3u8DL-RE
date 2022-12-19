@@ -7,15 +7,24 @@ namespace N_m3u8DL_RE.Util
 {
     internal class MP4DecryptUtil
     {
+        private static string ZeroKid = "00000000000000000000000000000000";
         public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "")
         {
             if (keys == null || keys.Length == 0) return false;
 
-            var keyPair = keys.First();
+            string? keyPair = null;
+            string? trackId = null;
             if (!string.IsNullOrEmpty(kid))
             {
                 var test = keys.Where(k => k.StartsWith(kid));
                 if (test.Any()) keyPair = test.First();
+            }
+
+            //Apple
+            if (kid == ZeroKid)
+            {
+                keyPair = keys.First();
+                trackId = "1";
             }
 
             if (keyPair == null) return false;
@@ -37,12 +46,19 @@ namespace N_m3u8DL_RE.Util
                     enc = tmpFile;
                 }
 
-                cmd = $"--enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
-                    $"--keys key_id={keyPair.Split(':')[0]}:key={keyPair.Split(':')[1]}";
+                cmd = $"--quiet --enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
+                    $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={ZeroKid}:key={keyPair.Split(':')[1]}";
             }
             else
             {
-                cmd = string.Join(" ", keys.Select(k => $"--key {k}"));
+                if (trackId == null)
+                {
+                    cmd = string.Join(" ", keys.Select(k => $"--key {k}"));
+                }
+                else
+                {
+                    cmd = string.Join(" ", keys.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
+                }
                 if (init != "")
                 {
                     cmd += $" --fragments-info \"{init}\" ";
@@ -69,8 +85,8 @@ namespace N_m3u8DL_RE.Util
             {
                 FileName = name,
                 Arguments = arg,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                //RedirectStandardOutput = true,
+                //RedirectStandardError = true,
                 CreateNoWindow = true,
                 UseShellExecute = false
             })!.WaitForExitAsync();
