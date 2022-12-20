@@ -85,10 +85,17 @@ namespace N_m3u8DL_RE.Downloader
                 cancellationTokenSource = new();
                 var des = Path.ChangeExtension(path, null);
 
-                //已下载过跳过
+                //已下载跳过
                 if (File.Exists(des))
                 {
                     return new DownloadResult() { ActualContentLength = 0, ActualFilePath = des };
+                }
+
+                //已解密跳过
+                var dec = Path.Combine(Path.GetDirectoryName(des)!, Path.GetFileNameWithoutExtension(des) + "_dec" + Path.GetExtension(des));
+                if (File.Exists(dec))
+                {
+                    return new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec };
                 }
 
                 //另起线程进行监控
@@ -127,6 +134,10 @@ namespace N_m3u8DL_RE.Downloader
                 {
                     await Task.Delay(1000);
                     goto retry;
+                }
+                else
+                {
+                    Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
                 }
                 //throw new Exception("download failed", ex);
                 return null;

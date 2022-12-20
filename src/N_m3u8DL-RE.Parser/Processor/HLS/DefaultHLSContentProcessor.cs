@@ -22,6 +22,8 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         private static partial Regex OrderFixRegex();
         [GeneratedRegex("#EXT-X-MAP.*\\.apple\\.com/")]
         private static partial Regex ATVRegex();
+        [GeneratedRegex("(#EXT-X-KEY:[\\s\\S]*?)(#EXT-X-DISCONTINUITY|#EXT-X-ENDLIST)")]
+        private static partial Regex ATVRegex2();
 
         public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig) => extractorType == ExtractorType.HLS;
 
@@ -80,7 +82,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && (m3u8Url.Contains(".apple.com/") || ATVRegex().IsMatch(m3u8Content)))
             {
                 //只取加密部分即可
-                Regex ykmap = DNSPRegex();
+                Regex ykmap = ATVRegex2();
                 if (ykmap.IsMatch(m3u8Content))
                 {
                     m3u8Content = "#EXTM3U\r\n" + ykmap.Match(m3u8Content).Groups[1].Value + "\r\n#EXT-X-ENDLIST";

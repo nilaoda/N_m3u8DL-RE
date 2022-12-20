@@ -323,7 +323,7 @@ namespace N_m3u8DL_RE.DownloadManager
             //校验分片数量
             if (DownloaderConfig.MyOptions.CheckSegmentsCount && FileDic.Values.Any(s => s == null))
             {
-                Logger.WarnMarkUp(ResString.segmentCountCheckNotPass, totalCount, FileDic.Values.Where(s => s != null).Count());
+                Logger.ErrorMarkUp(ResString.segmentCountCheckNotPass, totalCount, FileDic.Values.Where(s => s != null).Count());
                 return false;
             }
 
@@ -670,6 +670,8 @@ namespace N_m3u8DL_RE.DownloadManager
                         var task = kp.Value;
                         var result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
                         Results[kp.Key] = result;
+                        //失败不再下载后续
+                        if (!result) break;
                     }
                 }
                 else

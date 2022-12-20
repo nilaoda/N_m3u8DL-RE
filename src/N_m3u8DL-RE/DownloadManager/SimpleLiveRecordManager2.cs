@@ -799,7 +799,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 //创建任务
                 var dic = SelectedSteams.Select(item =>
                 {
-                    var task = ctx.AddTask(item.ToShortString(), autoStart: false, maxValue: 0);
+                    var task = ctx.AddTask(item.ToShortShortString(), autoStart: false, maxValue: 0);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算
                     LastFileNameDic[task.Id] = "";
                     DateTimeDic[task.Id] = 0L;
