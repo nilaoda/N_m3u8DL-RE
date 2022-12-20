@@ -47,7 +47,7 @@ namespace N_m3u8DL_RE.Util
                 }
 
                 cmd = $"--quiet --enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
-                    $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={ZeroKid}:key={keyPair.Split(':')[1]}";
+                    $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={(trackId != null ? ZeroKid : kid)}:key={keyPair.Split(':')[1]}";
             }
             else
             {
