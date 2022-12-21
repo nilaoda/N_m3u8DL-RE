@@ -312,13 +312,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             var initialization = segmentTemplate.Attribute("initialization")?.Value ?? segmentTemplateOuter.Attribute("initialization")?.Value;
                             if (initialization != null)
                             {
-                                var initUrl = ParserUtil.ReplaceVars(ParserUtil.CombineURL(segBaseUrl, initialization), varDic);
+                                var _init = ParserUtil.ReplaceVars(initialization, varDic);
+                                var initUrl = ParserUtil.CombineURL(segBaseUrl, _init);
                                 streamSpec.Playlist.MediaInit = new MediaSegment();
                                 streamSpec.Playlist.MediaInit.Index = -1; //便于排序
                                 streamSpec.Playlist.MediaInit.Url = initUrl;
                             }
                             //处理分片
-                            var media = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
+                            var mediaTemplate = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
                             var segmentTimeline = segmentTemplate.Elements().Where(e => e.Name.LocalName == "SegmentTimeline").FirstOrDefault();
                             if (segmentTimeline != null)
                             {
@@ -340,11 +341,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     var _repeatCount = Convert.ToInt64(_repeatCountStr);
                                     varDic[DASHTags.TemplateTime] = currentTime;
                                     varDic[DASHTags.TemplateNumber] = segNumber++;
-                                    var oriUrl = ParserUtil.CombineURL(segBaseUrl, media!);
-                                    var mediaUrl = ParserUtil.ReplaceVars(oriUrl, varDic);
+                                    var hasTime = mediaTemplate!.Contains(DASHTags.TemplateTime);
+                                    var media = ParserUtil.ReplaceVars(mediaTemplate!, varDic);
+                                    var mediaUrl = ParserUtil.CombineURL(segBaseUrl, media!);
                                     MediaSegment mediaSegment = new();
                                     mediaSegment.Url = mediaUrl;
-                                    if (oriUrl.Contains(DASHTags.TemplateTime))
+                                    if (hasTime)
                                         mediaSegment.NameFromVar = currentTime.ToString();
                                     mediaSegment.Duration = _duration / (double)timescale;
                                     mediaSegment.Index = segIndex++;
@@ -360,12 +362,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                         MediaSegment _mediaSegment = new();
                                         varDic[DASHTags.TemplateTime] = currentTime;
                                         varDic[DASHTags.TemplateNumber] = segNumber++;
-                                        var _oriUrl = ParserUtil.CombineURL(segBaseUrl, media!);
-                                        var _mediaUrl = ParserUtil.ReplaceVars(_oriUrl, varDic);
+                                        var _hashTime = mediaTemplate!.Contains(DASHTags.TemplateTime);
+                                        var _media = ParserUtil.ReplaceVars(mediaTemplate!, varDic);
+                                        var _mediaUrl = ParserUtil.CombineURL(segBaseUrl, _media);
                                         _mediaSegment.Url = _mediaUrl;
                                         _mediaSegment.Index = segIndex++;
                                         _mediaSegment.Duration = _duration / (double)timescale;
-                                        if (_oriUrl.Contains(DASHTags.TemplateTime))
+                                        if (_hashTime)
                                             _mediaSegment.NameFromVar = currentTime.ToString();
                                         streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
                                     }
@@ -396,11 +399,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 for (long index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
                                 {
                                     varDic[DASHTags.TemplateNumber] = index;
-                                    var oriUrl = ParserUtil.CombineURL(segBaseUrl, media!);
-                                    var mediaUrl = ParserUtil.ReplaceVars(oriUrl, varDic);
+                                    var hasNumber = mediaTemplate!.Contains(DASHTags.TemplateNumber);
+                                    var media = ParserUtil.ReplaceVars(mediaTemplate!, varDic);
+                                    var mediaUrl = ParserUtil.CombineURL(segBaseUrl, media!);
                                     MediaSegment mediaSegment = new();
                                     mediaSegment.Url = mediaUrl;
-                                    if (oriUrl.Contains(DASHTags.TemplateNumber))
+                                    if (hasNumber)
                                         mediaSegment.NameFromVar = index.ToString();
                                     mediaSegment.Index = isLive ? index : segIndex; //直播直接用startNumber
                                     mediaSegment.Duration = duration / (double)timescale;
