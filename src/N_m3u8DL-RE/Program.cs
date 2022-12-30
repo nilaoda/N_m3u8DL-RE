@@ -71,7 +71,11 @@ namespace N_m3u8DL_RE
         static async Task DoWorkAsync(MyOption option)
         {
             //检测更新
-            CheckUpdateAsync();
+            if (!option.SkipUpdateCheck)
+                CheckUpdateAsync();
+            else
+                Logger.WarnMarkUp($"[darkorange3_1]Skipping update check due to --skip-update-check not set to false[/]");
+
 
             Logger.LogLevel = option.LogLevel;
             Logger.Info(CommandInvoker.VERSION_INFO);

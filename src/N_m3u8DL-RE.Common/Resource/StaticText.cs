@@ -757,7 +757,11 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "沒有找到需要下載的流",
                 enUS: "No stream found to download"
             ),
-
+            ["cmd_skipUpdateCheck"] = new TextContainer(
+                zhCN: "跳过更新检查",
+                zhTW: "跳过更新检查",
+                enUS: "Skip update check"
+            )
         };
     }
 }

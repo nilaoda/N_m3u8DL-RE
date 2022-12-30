@@ -92,6 +92,8 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> DropAudioFilter = new(new string[] { "-da", "--drop-audio" }, description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> DropSubtitleFilter = new(new string[] { "-ds", "--drop-subtitle" }, description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
+        private readonly static Option<bool> SkipUpdateCheck = new(new string[] { "--skip-update-check" }, description: ResString.cmd_skipUpdateCheck, getDefaultValue: () => true);
+
         /// <summary>
         /// 解析用户代理
         /// </summary>
@@ -380,6 +382,7 @@ namespace N_m3u8DL_RE.CommandLine
                     LogLevel = bindingContext.ParseResult.GetValueForOption(LogLevel),
                     AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
                     SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
+                    SkipUpdateCheck = bindingContext.ParseResult.GetValueForOption(SkipUpdateCheck),
                     BinaryMerge = bindingContext.ParseResult.GetValueForOption(BinaryMerge),
                     DelAfterDone = bindingContext.ParseResult.GetValueForOption(DelAfterDone),
                     AutoSubtitleFix = bindingContext.ParseResult.GetValueForOption(AutoSubtitleFix),
@@ -488,7 +491,7 @@ namespace N_m3u8DL_RE.CommandLine
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, TaskStartAt,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveRecordLimit, LiveWaitTime,
-                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp
+                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp, SkipUpdateCheck
             };
 
             rootCommand.TreatUnmatchedTokensAsErrors = true;

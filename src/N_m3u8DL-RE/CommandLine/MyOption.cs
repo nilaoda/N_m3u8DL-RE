@@ -226,5 +226,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.LivePipeMux"/>.
         /// </summary>
         public bool LivePipeMux { get; set; }
+        public bool SkipUpdateCheck { get; set; }
+        
     }
 }

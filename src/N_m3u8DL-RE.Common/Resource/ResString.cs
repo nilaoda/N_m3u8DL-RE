@@ -115,6 +115,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string noStreamsToDownload { get => GetText("noStreamsToDownload"); }
         public static string newVersionFound { get => GetText("newVersionFound"); }
         public static string processImageSub { get => GetText("processImageSub"); }
+        public static string cmd_skipUpdateCheck { get => GetText("cmd_skipUpdateCheck"); }
 
         private static string GetText(string key)
         {
