@@ -514,13 +514,13 @@ namespace N_m3u8DL_RE.DownloadManager
                     var output = Path.Combine(saveDir, saveName + outputExt);
                     if (streamSpec.MediaType == null)
                     {
-                        output = Path.Combine(saveDir, saveName + "_video_" + streamSpec.Codecs + "_" + streamSpec.Resolution + outputExt);
+                        output = Path.Combine(saveDir, saveName + "_video_" + streamSpec.Bandwidth + "_" + streamSpec.Codecs + "_" + streamSpec.Resolution + outputExt);
                     }
 
 
                     if (streamSpec.MediaType == MediaType.AUDIO)
                     {
-                        output = Path.Combine(saveDir, saveName + "_audio_" + streamSpec.Language + "_" + streamSpec.Bandwidth + "_" + streamSpec.Codecs + "_" + streamSpec.Channels + outputExt);
+                        output = Path.Combine(saveDir, saveName + "_audio_" + streamSpec.Bandwidth + "_" + streamSpec.Language + "_" + streamSpec.Codecs + "_" + streamSpec.Channels + outputExt);
                     }
 
                     //移除无效片段
