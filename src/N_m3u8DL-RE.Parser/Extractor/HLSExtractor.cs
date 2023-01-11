@@ -23,7 +23,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
         private string BaseUrl = string.Empty;
         private string M3u8Content = string.Empty;
         private bool MasterM3u8Flag = false;
-        private bool FirstFetchFlag = true;
 
         public ParserConfig ParserConfig { get; set; }
 
@@ -84,14 +83,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return url;
         }
 
-        private bool IsMaster()
-        {
-            MasterM3u8Flag = M3u8Content.Contains(HLSTags.ext_x_stream_inf);
-            return MasterM3u8Flag;
-        }
-
         private async Task<List<StreamSpec>> ParseMasterListAsync()
         {
+            MasterM3u8Flag = true;
+
             List<StreamSpec> streams = new List<StreamSpec>();
 
             using StringReader sr = new StringReader(M3u8Content);
@@ -475,7 +470,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         {
             this.M3u8Content = rawText;
             this.PreProcessContent();
-            if (IsMaster())
+            if (M3u8Content.Contains(HLSTags.ext_x_stream_inf))
             {
                 Logger.Warn(ResString.masterM3u8Found);
                 var lists = await ParseMasterListAsync();
@@ -523,30 +518,44 @@ namespace N_m3u8DL_RE.Parser.Extractor
             this.PreProcessContent();
         }
 
-        public async Task FetchPlayListAsync(List<StreamSpec> lists)
+        /// <summary>
+        /// 从Master链接中刷新各个流的URL
+        /// </summary>
+        /// <param name="lists"></param>
+        /// <returns></returns>
+        private async Task RefreshUrlFromMaster(List<StreamSpec> lists)
         {
-            //首次加载不需要刷新URL
-            if (!FirstFetchFlag && MasterM3u8Flag)
+            //重新加载master m3u8, 刷新选中流的URL
+            await LoadM3u8FromUrlAsync(ParserConfig.Url);
+            var newStreams = await ParseMasterListAsync();
+            newStreams = newStreams.DistinctBy(p => p.Url).ToList();
+            foreach (var l in lists)
             {
-                //重新加载master m3u8, 刷新选中流的URL
-                await LoadM3u8FromUrlAsync(ParserConfig.Url);
-                var newStreams = await ParseMasterListAsync();
-                newStreams = newStreams.DistinctBy(p => p.Url).ToList();
-                foreach (var l in lists)
+                var match = newStreams.Where(n => n.ToShortString() == l.ToShortString());
+                if (match.Any())
                 {
-                    var match = newStreams.Where(n => n.ToShortString() == l.ToShortString());
-                    if (match.Any())
-                    {
-                        Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
-                        l.Url = match.First().Url;
-                    }
+                    Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
+                    l.Url = match.First().Url;
                 }
             }
+        }
 
+        public async Task FetchPlayListAsync(List<StreamSpec> lists)
+        {
             for (int i = 0; i < lists.Count; i++)
             {
-                //重新加载m3u8
-                await LoadM3u8FromUrlAsync(lists[i].Url!);
+                try
+                {
+                    //直接重新加载m3u8
+                    await LoadM3u8FromUrlAsync(lists[i].Url!);
+                }
+                catch (HttpRequestException) when (MasterM3u8Flag == true)
+                {
+                    Logger.WarnMarkUp("Can not load m3u8. Try refreshing url from master url...");
+                    //当前URL无法加载 尝试从Master链接中刷新URL
+                    await RefreshUrlFromMaster(lists);
+                    await LoadM3u8FromUrlAsync(lists[i].Url!);
+                }
 
                 var newPlaylist = await ParseListAsync();
                 if (lists[i].Playlist?.MediaInit != null)
@@ -570,7 +579,6 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
-            FirstFetchFlag = false;
             await FetchPlayListAsync(streamSpecs);
         }
     }
