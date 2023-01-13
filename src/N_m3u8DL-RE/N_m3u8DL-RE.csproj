@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 	<LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
-	<Version>0.1.5.2</Version>
+	<Version>0.1.5.3</Version>
 	<Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
