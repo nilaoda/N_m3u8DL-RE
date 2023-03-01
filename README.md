@@ -132,8 +132,8 @@ More Help:
 
 通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:
 
-id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX
-frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR
+id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX
+segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR
 
 * for=FOR: 选择方式. best[number], worst[number], all (默认: best)
 
