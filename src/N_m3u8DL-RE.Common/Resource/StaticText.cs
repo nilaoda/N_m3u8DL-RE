@@ -382,8 +382,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 选择4K+HEVC视频\r\n" +
                       "-sv res=\"3840*\":codec=hvc1:for=best\r\n",
                 zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
-                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
-                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
+                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
                       "* for=FOR: 選擇方式. best[number], worst[number], all (默認: best)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 選擇最佳影片\r\n" +
@@ -391,8 +391,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 選擇4K+HEVC影片\r\n" +
                       "-sv res=\"3840*\":codec=hvc1:for=best\r\n",
                 enUS: "Select video streams by regular expressions. OPTIONS is a colon separated list of:\r\n\r\n" +
-                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
-                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
+                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
                       "* for=FOR: Select type. best[number], worst[number], all (Default: best)\r\n\r\n" +
                       "Examples: \r\n" +
                       "# select best video\r\n" +
