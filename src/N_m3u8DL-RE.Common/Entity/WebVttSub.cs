@@ -50,6 +50,7 @@ namespace N_m3u8DL_RE.Common.Entity
             if (!text.Trim().StartsWith("WEBVTT"))
                 throw new Exception("Bad vtt!");
 
+            text += Environment.NewLine;
 
             var webSub = new WebVttSub();
             var needPayload = false;
