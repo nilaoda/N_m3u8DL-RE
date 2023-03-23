@@ -122,7 +122,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 name = GetUnixTimestamp(segment.DateTime!.Value).ToString();
             }
-            else if (hls && segment.Index > 10)
+            else if (hls)
             {
                 name = segment.Index.ToString();
             }
@@ -200,6 +200,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 //TryReceiveAll可以稍微缓解一下
                 source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
                 var segments = segmentsList!.SelectMany(s => s);
+                if (segments == null || !segments.Any()) continue;
                 var segmentsDuration = segments.Sum(s => s.Duration);
                 Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
@@ -594,6 +595,10 @@ namespace N_m3u8DL_RE.DownloadManager
                                 File.Delete(inputFilePath);
                             }
                         }
+
+                        //处理图形字幕
+                        await SubtitleUtil.TryWriteImagePngsAsync(currentVtt, tmpDir);
+
                         var subText = currentVtt.ToVtt();
                         if (outputExt == ".srt")
                         {
