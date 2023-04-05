@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private string? ReadInit(string output)
         {
-            var header = new byte[4096]; //4KB
+            var header = new byte[1 * 1024 * 1024]; //1MB
             using (var fs = File.OpenRead(output))
             {
                 fs.Read(header);
