@@ -78,6 +78,8 @@ namespace N_m3u8DL_RE.Common.Entity
                     if (string.IsNullOrEmpty(line.Trim()))
                     {
                         var payload = string.Join(Environment.NewLine, payloads);
+                        if (string.IsNullOrEmpty(payload.Trim())) continue; //没获取到payload 跳过添加
+
                         var arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
                         var startTime = ConvertToTS(arr[0]);
                         var endTime = ConvertToTS(arr[1]);
