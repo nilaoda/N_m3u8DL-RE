@@ -15,6 +15,8 @@ namespace N_m3u8DL_RE.Common.Entity
         private static partial Regex TSValueRegex();
         [GeneratedRegex("\\s")]
         private static partial Regex SplitRegex();
+        [GeneratedRegex("<c\\..*?>([\\s\\S]*?)<\\/c>")]
+        private static partial Regex VttClassRegex();
 
         public List<SubCue> Cues { get; set; } = new List<SubCue>();
         public long MpegtsTimestamp { get; set; } = 0L;
@@ -88,7 +90,7 @@ namespace N_m3u8DL_RE.Common.Entity
                         {
                             StartTime = startTime,
                             EndTime = endTime,
-                            Payload = string.Join("", payload.Where(c => c != 8203)), //Remove Zero Width Space!
+                            Payload = RemoveClassTag(string.Join("", payload.Where(c => c != 8203))), //Remove Zero Width Space!
                             Settings = style
                         });
                         payloads.Clear();
@@ -118,6 +120,15 @@ namespace N_m3u8DL_RE.Common.Entity
             }
 
             return webSub;
+        }
+
+        private static string RemoveClassTag(string text)
+        {
+            if (VttClassRegex().IsMatch(text))
+            {
+                return VttClassRegex().Match(text).Groups[1].Value;
+            }
+            else return text;
         }
 
         /// <summary>
