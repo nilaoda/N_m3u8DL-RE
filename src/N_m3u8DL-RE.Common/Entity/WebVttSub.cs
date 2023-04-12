@@ -190,6 +190,13 @@ namespace N_m3u8DL_RE.Common.Entity
 
         private static TimeSpan ConvertToTS(string str)
         {
+            //17.0s
+            if (str.EndsWith('s'))
+            {
+                double sec = Convert.ToDouble(str[..^1]);
+                return TimeSpan.FromSeconds(sec);
+            }
+
             str = str.Replace(',', '.');
             var ms = Convert.ToInt32(str.Split('.').Last());
             var o = str.Split('.').First();
