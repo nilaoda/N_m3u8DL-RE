@@ -16,6 +16,7 @@ namespace N_m3u8DL_RE.Entity
         public string? Resolution { get; set; }
         public string? Fps { get; set; }
         public string? Type { get; set; }
+        public TimeSpan? StartTime { get; set; }
         public bool DolbyVison { get; set; }
         public bool HDR { get; set; }
 

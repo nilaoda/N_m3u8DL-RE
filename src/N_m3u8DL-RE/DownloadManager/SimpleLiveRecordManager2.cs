@@ -45,6 +45,9 @@ namespace N_m3u8DL_RE.DownloadManager
         ConcurrentDictionary<int, long> DateTimeDic = new(); //上次下载的dateTime
         CancellationTokenSource CancellationTokenSource = new(); //取消Wait
 
+        private readonly object lockObj = new object();
+        TimeSpan? audioStart = null;
+
         public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {
             this.DownloaderConfig = downloaderConfig;
@@ -248,6 +251,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             Logger.WarnMarkUp(ResString.readingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                            lock (lockObj)
+                            {
+                                if (audioStart == null) audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
+                            }
                             ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                             readInfo = true;
                         }
@@ -324,6 +331,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             Logger.WarnMarkUp(ResString.readingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                            lock (lockObj)
+                            {
+                                if (audioStart == null) audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
+                            }
                             ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                             readInfo = true;
                         }
@@ -367,7 +378,13 @@ namespace N_m3u8DL_RE.DownloadManager
                     foreach (var seg in keys)
                     {
                         var vttContent = File.ReadAllText(FileDic[seg]!.ActualFilePath);
-                        var vtt = WebVttSub.Parse(vttContent);
+                        var waitCount = 0;
+                        while (DownloaderConfig.MyOptions.LiveFixVttByAudio && audioStart == null && waitCount++ < 5)
+                        {
+                            await Task.Delay(1000);
+                        }
+                        var subOffset = audioStart != null ? (long)audioStart.Value.TotalMilliseconds : 0L;
+                        var vtt = WebVttSub.Parse(vttContent, subOffset);
                         //手动计算MPEGTS
                         if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                         {
@@ -772,6 +789,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     WAIT_SEC = DownloaderConfig.MyOptions.LiveWaitTime.Value;
                 if (WAIT_SEC <= 0) WAIT_SEC = 1;
                 Logger.WarnMarkUp($"set refresh interval to {WAIT_SEC} seconds");
+            }
+            //如果没有选中音频 取消通过音频修复vtt时间轴
+            if (!SelectedSteams.Any(x => x.MediaType == MediaType.AUDIO))
+            {
+                DownloaderConfig.MyOptions.LiveFixVttByAudio = false;
             }
 
             /*//写出master

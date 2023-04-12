@@ -30,6 +30,8 @@ namespace N_m3u8DL_RE.Util
         private static partial Regex FpsRegex();
         [GeneratedRegex("DOVI configuration record.*profile: (\\d).*compatibility id: (\\d)")]
         private static partial Regex DoViRegex();
+        [GeneratedRegex("Duration.*?start: (\\d+\\.?\\d{0,3})")]
+        private static partial Regex StartRegex();
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
         {
@@ -72,6 +74,13 @@ namespace N_m3u8DL_RE.Util
                     || (DoViRegex().IsMatch(output) && info.Type == "Video")
                     )
                     info.DolbyVison = true;
+
+                if (StartRegex().IsMatch(output))
+                {
+                    var f = StartRegex().Match(output).Groups[1].Value;
+                    if (double.TryParse(f, out var d))
+                        info.StartTime = TimeSpan.FromSeconds(d);
+                }
 
                 result.Add(info);
             }

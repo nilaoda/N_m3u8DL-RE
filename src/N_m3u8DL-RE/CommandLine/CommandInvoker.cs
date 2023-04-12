@@ -79,6 +79,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> LivePipeMux = new(new string[] { "--live-pipe-mux" }, description: ResString.cmd_livePipeMux, getDefaultValue: () => false);
         private readonly static Option<TimeSpan?> LiveRecordLimit = new(new string[] { "--live-record-limit" }, description: ResString.cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
         private readonly static Option<int?> LiveWaitTime = new(new string[] { "--live-wait-time" }, description: ResString.cmd_liveWaitTime) { ArgumentHelpName = "SEC" };
+        private readonly static Option<bool> LiveFixVttByAudio = new(new string[] { "--live-fix-vtt-by-audio" }, description: ResString.cmd_liveFixVttByAudio, getDefaultValue: () => false);
 
 
         //复杂命令行如下
@@ -418,6 +419,7 @@ namespace N_m3u8DL_RE.CommandLine
                     TaskStartAt = bindingContext.ParseResult.GetValueForOption(TaskStartAt),
                     LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
                     LivePipeMux = bindingContext.ParseResult.GetValueForOption(LivePipeMux),
+                    LiveFixVttByAudio = bindingContext.ParseResult.GetValueForOption(LiveFixVttByAudio),
                     UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
                     CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
                     LiveWaitTime = bindingContext.ParseResult.GetValueForOption(LiveWaitTime),
@@ -487,7 +489,7 @@ namespace N_m3u8DL_RE.CommandLine
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, TaskStartAt,
-                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveRecordLimit, LiveWaitTime,
+                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp
             };
 

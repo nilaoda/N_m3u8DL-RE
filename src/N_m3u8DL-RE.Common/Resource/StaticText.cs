@@ -154,6 +154,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "mkvmerge可執行程序全路徑, 例如 C:\\Tools\\mkvmerge.exe",
                 enUS: "Full path to the mkvmerge binary, like C:\\Tools\\mkvmerge.exe"
             ),
+            ["cmd_liveFixVttByAudio"] = new TextContainer
+            (
+                zhCN: "通过读取音频文件的起始时间修正VTT字幕",
+                zhTW: "透過讀取音訊檔案的起始時間修正VTT字幕",
+                enUS: "Correct VTT sub by reading the start time of the audio file"
+            ),
             ["cmd_header"] = new TextContainer
             (
                 zhCN: "为HTTP请求设置特定的请求头, 例如:\r\n-H \"Cookie: mycookie\" -H \"User-Agent: iOS\"",

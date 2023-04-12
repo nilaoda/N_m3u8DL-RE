@@ -226,5 +226,9 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.LivePipeMux"/>.
         /// </summary>
         public bool LivePipeMux { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveFixVttByAudio"/>.
+        /// </summary>
+        public bool LiveFixVttByAudio { get; set; }
     }
 }
