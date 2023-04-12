@@ -23,7 +23,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20221210
+  N_m3u8DL-RE (Beta version) 20230412
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -102,7 +102,7 @@ More Help:
 * format=FORMAT: 指定混流容器 mkv, mp4
 * muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)
 * bin_path=PATH: 指定程序路径 (默认: 自动寻找)
-* keep=BOOL: 混流完成是否删除文件 true, false (默认: true)
+* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)
 
 例如:
 # 混流为mp4容器
