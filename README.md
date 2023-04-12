@@ -64,8 +64,7 @@ Options:
   --use-shaka-packager                     解密时使用shaka-packager替代mp4decrypt [default: False]
   --mp4-real-time-decryption               实时解密MP4分片 [default: False]
   -M, --mux-after-done <OPTIONS>           所有工作完成时尝试混流分离的音视频. 输入 "--morehelp mux-after-done" 以查看详细信息
-  --custom-hls-method <METHOD>             指定HLS加密方式
-                                           (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
+  --custom-hls-method <METHOD>             指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>       指定HLS解密KEY. 可以是文件, HEX或Base64
   --custom-hls-iv <FILE|HEX|BASE64>        指定HLS解密IV. 可以是文件, HEX或Base64
   --use-system-proxy                       使用系统默认代理 [default: True]
@@ -75,12 +74,13 @@ Options:
   --live-real-time-merge                   录制直播时实时合并 [default: False]
   --live-keep-segments                     录制直播并开启实时合并时依然保留分片 [default: True]
   --live-pipe-mux                          录制直播并开启实时合并时通过管道+ffmpeg实时混流到TS文件 [default: False]
+  --live-fix-vtt-by-audio                  通过读取音频文件的起始时间修正VTT字幕 [default: False]
   --live-record-limit <HH:mm:ss>           录制直播时的录制时长限制
   --live-wait-time <SEC>                   手动设置直播列表刷新间隔
   --mux-import <OPTIONS>                   混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
   -sv, --select-video <OPTIONS>            通过正则表达式选择符合要求的视频流. 输入 "--morehelp select-video" 以查看详细信息
   -sa, --select-audio <OPTIONS>            通过正则表达式选择符合要求的音频流. 输入 "--morehelp select-audio" 以查看详细信息
-  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看 详细信息
+  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看详细信息
   -dv, --drop-video <OPTIONS>              通过正则表达式去除符合要求的视频流.
   -da, --drop-audio <OPTIONS>              通过正则表达式去除符合要求的音频流.
   -ds, --drop-subtitle <OPTIONS>           通过正则表达式去除符合要求的字幕流.
