@@ -761,15 +761,8 @@ namespace N_m3u8DL_RE.DownloadManager
             var takeLastCount = 15;
             ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
-            //取最后15个分片
-            var maxIndex = SelectedSteams.Min(s => s.Playlist!.MediaParts[0].MediaSegments.Max(s => s.Index));
-            foreach (var item in SelectedSteams)
-            {
-                foreach (var part in item.Playlist!.MediaParts)
-                {
-                    part.MediaSegments = part.MediaSegments.Where(s => s.Index <= maxIndex).TakeLast(takeLastCount).ToList();
-                }
-            }
+            //同步流
+            FilterUtil.SyncStreams(SelectedSteams, takeLastCount);
             //设置等待时间
             if (WAIT_SEC == 0)
             {
@@ -812,7 +805,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     LastFileNameDic[task.Id] = "";
                     DateTimeDic[task.Id] = 0L;
                     RecordingDurDic[task.Id] = 0;
-                    MaxIndexDic[task.Id] = item.Playlist?.MediaParts[0].MediaSegments.Max(s => s.Index) ?? 0L; //最大Index
+                    MaxIndexDic[task.Id] = item.Playlist?.MediaParts[0].MediaSegments.LastOrDefault()?.Index ?? 0L; //最大Index
                     BlockDic[task.Id] = new BufferBlock<List<MediaSegment>>();
                     return (item, task);
                 }).ToDictionary(item => item.item, item => item.task);
