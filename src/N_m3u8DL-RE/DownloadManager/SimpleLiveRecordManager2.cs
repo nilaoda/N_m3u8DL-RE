@@ -573,7 +573,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             {
                                 inputStream.CopyTo(fileOutputStream);
                             }
-                            if (!DownloaderConfig.MyOptions.LiveKeepSegments && !Path.GetFileName(inputFilePath).StartsWith("_init"))
+                        }
+                        if (!DownloaderConfig.MyOptions.LiveKeepSegments)
+                        {
+                            foreach (var inputFilePath in files.Where(x => !Path.GetFileName(x).StartsWith("_init")))
                             {
                                 File.Delete(inputFilePath);
                             }
