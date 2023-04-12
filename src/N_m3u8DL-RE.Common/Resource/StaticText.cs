@@ -478,7 +478,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
-                      "* keep=BOOL: 混流完成是否删除文件 true, false (默认: true)\r\n\r\n" +
+                      "* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 混流为mp4容器\r\n" +
                       "-M format=mp4\r\n" +
@@ -490,7 +490,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默認: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
-                      "* keep=BOOL: 混流完成是否刪除文件 true, false (默認: true)\r\n\r\n" +
+                      "* keep=BOOL: 混流完成是否保留文件 true, false (默認: false)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 混流為mp4容器\r\n" +
                       "-M format=mp4\r\n" +
@@ -502,7 +502,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: set container. mkv, mp4\r\n" +
                       "* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)\r\n" +
                       "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
-                      "* keep=BOOL: set whether or not delete files. true, false (Default: true)\r\n\r\n" +
+                      "* keep=BOOL: set whether or not keep files. true, false (Default: false)\r\n\r\n" +
                       "Examples: \r\n" +
                       "# mux to mp4\r\n" +
                       "-M format=mp4\r\n" +
