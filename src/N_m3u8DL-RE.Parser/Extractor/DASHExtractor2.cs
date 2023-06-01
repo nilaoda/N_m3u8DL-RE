@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -151,7 +152,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         streamSpec.GroupId = representation.Attribute("id")?.Value;
                         streamSpec.Bandwidth = Convert.ToInt32(bandwidth?.Value ?? "0");
                         streamSpec.Codecs = representation.Attribute("codecs")?.Value ?? adaptationSet.Attribute("codecs")?.Value;
-                        streamSpec.Language = representation.Attribute("lang")?.Value ?? adaptationSet.Attribute("lang")?.Value;
+                        streamSpec.Language = FilterLanguage(representation.Attribute("lang")?.Value ?? adaptationSet.Attribute("lang")?.Value);
                         streamSpec.FrameRate = frameRate ?? GetFrameRate(representation);
                         streamSpec.Resolution = representation.Attribute("width")?.Value != null ? $"{representation.Attribute("width")?.Value}x{representation.Attribute("height")?.Value}" : null;
                         streamSpec.Url = MpdUrl;
@@ -509,6 +510,18 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
 
             return streamList;
+        }
+
+        /// <summary>
+        /// 如果有非法字符 返回und
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        private string? FilterLanguage(string? v)
+        {
+            if (v == null) return null;
+            if (Regex.IsMatch(v, "^[\\w_\\-\\d]+$")) return v;
+            return "und";
         }
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
