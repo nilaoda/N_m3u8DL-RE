@@ -161,6 +161,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             "audio" => MediaType.AUDIO,
                             _ => null
                         };
+                        //特殊处理
+                        if (representation.Attribute("volumeAdjust") != null)
+                        {
+                            streamSpec.GroupId += "-" + representation.Attribute("volumeAdjust")?.Value;
+                        }
                         //推测后缀名
                         var mType = representation.Attribute("mimeType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value;
                         if (mType != null)
