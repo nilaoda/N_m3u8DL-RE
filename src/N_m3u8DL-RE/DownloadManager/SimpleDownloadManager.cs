@@ -107,7 +107,13 @@ namespace N_m3u8DL_RE.DownloadManager
 
             var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
             if (segments == null || !segments.Any()) return false;
-            if (segments.Count() == 1) speedContainer.SingleSegment = true;
+            //单分段尝试切片并行下载
+            if (segments.Count() == 1)
+            {
+                var splitSegments = await LargeSingleFileSplitUtil.SplitUrlAsync(segments.First(), DownloaderConfig.Headers);
+                if (splitSegments != null) segments = splitSegments;
+                else speedContainer.SingleSegment = true;
+            }
 
             var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
             var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
