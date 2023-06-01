@@ -456,17 +456,26 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             }
                             else
                             {
-                                //点播，这种情况作为新的part出现
-                                var startIndex = streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Index + 1;
-                                var enumerator = streamSpec.Playlist.MediaParts[0].MediaSegments.GetEnumerator();
-                                while (enumerator.MoveNext())
+                                //点播，这种情况如果URL不同则作为新的part出现，否则仅把时间加起来
+                                var url1 = streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Url;
+                                var url2 = streamSpec.Playlist.MediaParts[0].MediaSegments.LastOrDefault()?.Url;
+                                if (url1 != url2)
                                 {
-                                    enumerator.Current.Index += startIndex;
+                                    var startIndex = streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Index + 1;
+                                    var enumerator = streamSpec.Playlist.MediaParts[0].MediaSegments.GetEnumerator();
+                                    while (enumerator.MoveNext())
+                                    {
+                                        enumerator.Current.Index += startIndex;
+                                    }
+                                    streamList[_index].Playlist!.MediaParts.Add(new MediaPart()
+                                    {
+                                        MediaSegments = streamSpec.Playlist.MediaParts[0].MediaSegments
+                                    });
                                 }
-                                streamList[_index].Playlist!.MediaParts.Add(new MediaPart()
+                                else
                                 {
-                                    MediaSegments = streamSpec.Playlist.MediaParts[0].MediaSegments
-                                });
+                                    streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Duration += streamSpec.Playlist.MediaParts[0].MediaSegments.Sum(x => x.Duration);
+                                }
                             }
                         }
                         else
