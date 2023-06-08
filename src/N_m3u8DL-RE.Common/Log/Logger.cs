@@ -1,10 +1,12 @@
 ﻿using Spectre.Console;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace N_m3u8DL_RE.Common.Log
 {
@@ -23,6 +25,42 @@ namespace N_m3u8DL_RE.Common.Log
         /// </summary>
         public static bool IsWriteFile { get; set; } = true;
 
+        /// <summary>
+        /// 本次运行日志文件所在位置
+        /// </summary>
+        private static string? LogFilePath { get; set; }
+
+        //读写锁
+        static ReaderWriterLockSlim LogWriteLock = new ReaderWriterLockSlim();
+
+        public static void InitLogFile()
+        {
+            try
+            {
+                var logDir = Path.GetDirectoryName(Environment.ProcessPath) + "/Logs";
+                if (!Directory.Exists(logDir)) { Directory.CreateDirectory(logDir); }
+                LogFilePath = Path.Combine(logDir, DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".log");
+                //若文件存在则加序号
+                int index = 1;
+                var fileName = Path.GetFileNameWithoutExtension(LogFilePath);
+                while (File.Exists(LogFilePath))
+                {
+                    LogFilePath = Path.Combine(Path.GetDirectoryName(LogFilePath)!, $"{fileName}-{index++}.log");
+                }
+                string now = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string init = "LOG " + DateTime.Now.ToString("yyyy/MM/dd") + Environment.NewLine
+                    + "Save Path: " + Path.GetDirectoryName(LogFilePath) + Environment.NewLine
+                    + "Task Start: " + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + Environment.NewLine
+                    + "Task CommandLine: " + Environment.CommandLine;
+                init += $"{Environment.NewLine}{Environment.NewLine}";
+                File.WriteAllText(LogFilePath, init, Encoding.UTF8);
+            }
+            catch (Exception ex)
+            {
+                Error($"Init log failed! {ex.Message.RemoveMarkup()}");
+            }
+        }
+
         private static string GetCurrTime()
         {
             return DateTime.Now.ToString("HH:mm:ss.fff");
@@ -39,9 +77,23 @@ namespace N_m3u8DL_RE.Common.Log
                 AnsiConsole.Markup(write);
                 Console.WriteLine(subWrite);
             }
-            if (IsWriteFile)
+            if (IsWriteFile && File.Exists(LogFilePath))
             {
-                var plain = write.RemoveMarkup();
+                var plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
+                try
+                {
+                    //进入写入
+                    LogWriteLock.EnterWriteLock();
+                    using (StreamWriter sw = File.AppendText(LogFilePath))
+                    {
+                        sw.WriteLine(plain, Encoding.UTF8);
+                    }
+                }
+                finally
+                {
+                    //释放占用
+                    LogWriteLock.ExitWriteLock();
+                }
             }
         }
 
