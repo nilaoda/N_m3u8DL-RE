@@ -509,11 +509,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 {
                     if (aL.Any())
                     {
-                        item.AudioId = aL.First().GroupId;
+                        item.AudioId = aL.OrderByDescending(x => x.Bandwidth).First().GroupId;
                     }
                     if (sL.Any())
                     {
-                        item.SubtitleId = sL.First().GroupId;
+                        item.SubtitleId = sL.OrderByDescending(x => x.Bandwidth).First().GroupId;
                     }
                 }
             }
