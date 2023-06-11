@@ -126,7 +126,10 @@ namespace N_m3u8DL_RE.Common.Entity
         {
             if (VttClassRegex().IsMatch(text))
             {
-                return VttClassRegex().Match(text).Groups[1].Value;
+                return string.Join(Environment.NewLine, text.Split('\n').Select(line => line.TrimEnd()).Select(line =>
+                {
+                    return string.Concat(VttClassRegex().Matches(line).Select(x => x.Groups[1].Value + " "));
+                })).TrimEnd();
             }
             else return text;
         }
