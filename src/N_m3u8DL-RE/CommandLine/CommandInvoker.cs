@@ -274,6 +274,14 @@ namespace N_m3u8DL_RE.CommandLine
             if (!string.IsNullOrEmpty(segsMax))
                 streamFilter.SegmentsMaxCount = long.Parse(segsMax);
 
+            var plistDurMin = p.GetValue("plistDurMin");
+            if (!string.IsNullOrEmpty(plistDurMin))
+                streamFilter.PlaylistMinDur = OtherUtil.ParseSeconds(plistDurMin);
+
+            var plistDurMax = p.GetValue("plistDurMax");
+            if (!string.IsNullOrEmpty(plistDurMax))
+                streamFilter.PlaylistMaxDur = OtherUtil.ParseSeconds(plistDurMax);
+
             return streamFilter;
         }
 

@@ -40,6 +40,10 @@ namespace N_m3u8DL_RE.Util
                 inputs = inputs.Where(i => i.SegmentsCount < filter.SegmentsMaxCount);
             if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
                 inputs = inputs.Where(i => i.SegmentsCount > filter.SegmentsMinCount);
+            if (filter.PlaylistMinDur != null)
+                inputs = inputs.Where(i => i.Playlist?.TotalDuration > filter.PlaylistMinDur);
+            if (filter.PlaylistMaxDur != null)
+                inputs = inputs.Where(i => i.Playlist?.TotalDuration < filter.PlaylistMaxDur);
 
             var bestNumberStr = filter.For.Replace("best", "");
             var worstNumberStr = filter.For.Replace("worst", "");

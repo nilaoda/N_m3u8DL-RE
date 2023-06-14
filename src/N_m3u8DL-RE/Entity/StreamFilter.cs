@@ -21,6 +21,8 @@ namespace N_m3u8DL_RE.Entity
         public Regex? UrlReg { get; set; }
         public long? SegmentsMinCount { get; set; }
         public long? SegmentsMaxCount { get; set; }
+        public double? PlaylistMinDur {  get; set; }
+        public double? PlaylistMaxDur {  get; set; }
 
         public string For { get; set; } = "best";
     }
