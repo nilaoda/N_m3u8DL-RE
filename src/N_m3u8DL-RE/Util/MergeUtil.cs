@@ -188,7 +188,16 @@ namespace N_m3u8DL_RE.Util
             //MAP
             for (int i = 0; i < files.Length; i++)
             {
-                command.Append($" -map {i} ");
+                if (files[i].MediaType != Common.Enum.MediaType.AUDIO && files[i].MediaType != Common.Enum.MediaType.SUBTITLES)
+                {
+                    var x = files[i].Mediainfos.FindIndex(x => x.Type == "Video");
+                    //视频流只取视频 防止CC字幕导致的混流失败
+                    command.Append($" -map {i}:{x} ");
+                    //同时需要修正 Mediainfos 数量 只保留视频
+                    files[i].Mediainfos = new List<Mediainfo>() { files[i].Mediainfos[x] };
+                }
+                else
+                    command.Append($" -map {i} ");
             }
 
             if (mp4)
@@ -221,7 +230,23 @@ namespace N_m3u8DL_RE.Util
                     streamIndex++;
             }
 
-            if(dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
+            var videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
+            var audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+            var subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+            if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
+            //字幕都不设置默认
+            if (subTracks.Any()) command.Append(" -disposition:s 0 ");
+            if (audioTracks.Any())
+            {
+                //音频除了第一个音轨 都不设置默认
+                command.Append(" -disposition:a:0 default ");
+                for (int i = 1; i < audioTracks.Count(); i++)
+                {
+                    command.Append($" -disposition:a:{i} 0 ");
+                }
+            }
+
+            if (dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
             command.Append($" -ignore_unknown -copy_unknown ");
             command.Append($" \"{outputPath}.{ext}\"");
 
@@ -236,12 +261,24 @@ namespace N_m3u8DL_RE.Util
 
             command.Append(" --no-chapters ");
 
+            var dFlag = false;
+
             //LANG and NAME
             for (int i = 0; i < files.Length; i++)
             {
                 //转换语言代码
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
                 command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
+                //字幕都不设置默认
+                if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
+                    command.Append($" --default-track 0:no ");
+                //音频除了第一个音轨 都不设置默认
+                if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
+                {
+                    if (dFlag)
+                        command.Append($" --default-track 0:no ");
+                    dFlag = true;
+                }
                 if (!string.IsNullOrEmpty(files[i].Description))
                     command.Append($" --track-name 0:\"{files[i].Description}\" ");
                 command.Append($" \"{files[i].FilePath}\" ");
