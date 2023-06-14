@@ -54,6 +54,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath) { ArgumentHelpName = "PATH" };
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
         private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
+        private readonly static Option<bool> NoLog = new(new string[] { "--no-log" }, description: ResString.cmd_noLog, getDefaultValue: () => false);
 
         //代理选项
         private readonly static Option<bool> UseSystemProxy = new(new string[] { "--use-system-proxy" }, description: ResString.cmd_useSystemProxy, getDefaultValue: () => true);
@@ -424,6 +425,7 @@ namespace N_m3u8DL_RE.CommandLine
                     CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
                     LiveWaitTime = bindingContext.ParseResult.GetValueForOption(LiveWaitTime),
                     NoDateInfo = bindingContext.ParseResult.GetValueForOption(NoDateInfo),
+                    NoLog = bindingContext.ParseResult.GetValueForOption(NoLog),
                 };
 
                 if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
@@ -484,7 +486,7 @@ namespace N_m3u8DL_RE.CommandLine
             var rootCommand = new RootCommand(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, NoDateInfo, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                BinaryMerge, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,

@@ -41,6 +41,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool NoDateInfo { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.NoLog"/>.
+        /// </summary>
+        public bool NoLog { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.AutoSelect"/>.
         /// </summary>
         public bool AutoSelect { get; set; }

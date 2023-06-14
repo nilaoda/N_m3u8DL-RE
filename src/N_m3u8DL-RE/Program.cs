@@ -73,6 +73,7 @@ namespace N_m3u8DL_RE
             //检测更新
             CheckUpdateAsync();
 
+            Logger.IsWriteFile = !option.NoLog;
             Logger.InitLogFile();
             Logger.LogLevel = option.LogLevel;
             Logger.Info(CommandInvoker.VERSION_INFO);

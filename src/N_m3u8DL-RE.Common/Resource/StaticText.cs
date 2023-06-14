@@ -100,6 +100,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "混流時不寫入日期訊息",
                 enUS: "Date information is not written during muxing"
             ),
+            ["cmd_noLog"] = new TextContainer
+            (
+                zhCN: "关闭日志文件输出",
+                zhTW: "關閉日誌文件輸出",
+                enUS: "Disable log file output"
+            ),
             ["cmd_appendUrlParams"] = new TextContainer
             (
                 zhCN: "将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com",
