@@ -151,6 +151,7 @@ namespace N_m3u8DL_RE
             foreach (var item in option.Headers)
             {
                 headers[item.Key] = item.Value;
+                Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
             }
 
             var parserConfig = new ParserConfig()

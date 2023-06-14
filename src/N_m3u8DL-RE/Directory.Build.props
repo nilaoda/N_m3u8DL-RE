@@ -15,7 +15,7 @@
   </PropertyGroup>
 
 	<ItemGroup Condition="'$(PublishAot)' == 'true' and '$(RuntimeIdentifier)' != 'win-arm64' and '$(RuntimeIdentifier)' != 'linux-arm64'">
-		<PackageReference Include="PublishAotCompressed" Version="0.0.4" />
+		<PackageReference Include="PublishAotCompressed" Version="1.0.0" />
 	</ItemGroup>
 	
   <ItemGroup>

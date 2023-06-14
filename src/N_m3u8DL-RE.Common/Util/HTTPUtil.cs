@@ -59,6 +59,7 @@ namespace N_m3u8DL_RE.Common.Util
                     
                     if (redirectedUrl != url)
                     {
+                        Logger.Extra($"Redirected => {redirectedUrl}");
                         return await DoGetAsync(redirectedUrl, headers);
                     }
                 }

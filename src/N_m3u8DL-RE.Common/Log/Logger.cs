@@ -35,6 +35,8 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void InitLogFile()
         {
+            if (!IsWriteFile) return;
+
             try
             {
                 var logDir = Path.GetDirectoryName(Environment.ProcessPath) + "/Logs";
@@ -194,6 +196,34 @@ namespace N_m3u8DL_RE.Common.Log
                 data = exception.ToString().EscapeMarkup();
             }
             ErrorMarkUp(data);
+        }
+
+        /// <summary>
+        /// This thing will only write to the log file.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="ps"></param>
+        public static void Extra(string data, params object[] ps)
+        {
+            if (IsWriteFile && File.Exists(LogFilePath))
+            {
+                data = ReplaceVars(data, ps);
+                var plain = GetCurrTime() + " " + "EXTRA: " + data.RemoveMarkup();
+                try
+                {
+                    //进入写入
+                    LogWriteLock.EnterWriteLock();
+                    using (StreamWriter sw = File.AppendText(LogFilePath))
+                    {
+                        sw.WriteLine(plain, Encoding.UTF8);
+                    }
+                }
+                finally
+                {
+                    //释放占用
+                    LogWriteLock.ExitWriteLock();
+                }
+            }
         }
     }
 }
