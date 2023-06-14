@@ -104,6 +104,8 @@ namespace N_m3u8DL_RE
                 throw new FileNotFoundException(ResString.ffmpegNotFound);
             }
 
+            Logger.Extra($"ffmpeg: {option.FFmpegBinaryPath}");
+
             //预先检查mkvmerge
             if (option.UseMkvmerge && option.MuxAfterDone)
             {
@@ -113,6 +115,7 @@ namespace N_m3u8DL_RE
                 {
                     throw new FileNotFoundException("mkvmerge not found");
                 }
+                Logger.Extra($"mkvmerge: {option.MkvmergeBinaryPath}");
             }
 
             //预先检查
@@ -128,12 +131,14 @@ namespace N_m3u8DL_RE
                         var file4 = GlobalUtil.FindExecutable("packager-win-x64");
                         if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException("shaka-packager not found!");
                         option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
+                        Logger.Extra($"shaka-packager: {option.DecryptionBinaryPath}");
                     }
                     else
                     {
                         var file = GlobalUtil.FindExecutable("mp4decrypt");
                         if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
                         option.DecryptionBinaryPath = file;
+                        Logger.Extra($"mp4decrypt: {option.DecryptionBinaryPath}");
                     }
                 }
                 else if (!File.Exists(option.DecryptionBinaryPath))
@@ -191,6 +196,7 @@ namespace N_m3u8DL_RE
             //解析流信息
             var streams = await extractor.ExtractStreamsAsync();
 
+
             //全部媒体
             var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder);
             //基本流
@@ -200,11 +206,12 @@ namespace N_m3u8DL_RE
             //可选字幕轨道
             var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
 
-            if (option.WriteMetaJson)
-            {
-                Logger.Warn(ResString.writeJson);
-                await File.WriteAllTextAsync("meta.json", GlobalUtil.ConvertToJson(lists), Encoding.UTF8);
-            }
+            //生成文件夹
+            var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+            //记录文件
+            extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
+            //写出文件
+            await WriteRawFilesAsync(option, extractor, tmpDir);
 
             Logger.Info(ResString.streamsInfo, lists.Count(), basicStreams.Count(), audios.Count(), subs.Count());
 
@@ -272,11 +279,9 @@ namespace N_m3u8DL_RE
                 option.BinaryMerge = true;
             }
 
-            if (option.WriteMetaJson)
-            {
-                Logger.Warn(ResString.writeJson);
-                await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
-            }
+            //记录文件
+            extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
+
 
             Logger.Info(ResString.selectedStream);
             foreach (var item in selectedStreams)
@@ -284,12 +289,16 @@ namespace N_m3u8DL_RE
                 Logger.InfoMarkUp(item.ToString());
             }
 
+            //写出文件
+            await WriteRawFilesAsync(option, extractor, tmpDir);
+
             if (option.SkipDownload)
             {
                 return;
             }
 
 #if DEBUG
+            Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
 #endif
 
@@ -305,17 +314,18 @@ namespace N_m3u8DL_RE
             var downloadConfig = new DownloaderConfig()
             {
                 MyOptions = option,
+                DirPrefix = tmpDir,
                 Headers = parserConfig.Headers, //使用命令行解析得到的Headers
             };
 
             var result = false;
-            
+
             if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
             {
                 var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
                 result = await sldm.StartRecordAsync();
             }
-            else if(!livingFlag)
+            else if (!livingFlag)
             {
                 //开始下载
                 var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
@@ -335,6 +345,21 @@ namespace N_m3u8DL_RE
             {
                 Logger.ErrorMarkUp("[white on red]Failed[/]");
                 Environment.ExitCode = 1;
+            }
+        }
+
+        private static async Task WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string tmpDir)
+        {
+            //写出json文件
+            if (option.WriteMetaJson)
+            {
+                if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
+                Logger.Warn(ResString.writeJson);
+                foreach (var item in extractor.RawFiles)
+                {
+                    var file = Path.Combine(tmpDir, item.Key);
+                    if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
+                }
             }
         }
 

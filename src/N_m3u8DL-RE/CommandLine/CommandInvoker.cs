@@ -46,7 +46,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> DelAfterDone = new(new string[] { "--del-after-done" }, description: ResString.cmd_delAfterDone, getDefaultValue: () => true);
         private readonly static Option<bool> AutoSubtitleFix = new(new string[] { "--auto-subtitle-fix" }, description: ResString.cmd_subtitleFix, getDefaultValue: () => true);
         private readonly static Option<bool> CheckSegmentsCount = new(new string[] { "--check-segments-count" }, description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
-        private readonly static Option<bool> WriteMetaJson = new(new string[] { "--write-meta-json" }, description: ResString.cmd_writeMetaJson, getDefaultValue: () => false);
+        private readonly static Option<bool> WriteMetaJson = new(new string[] { "--write-meta-json" }, description: ResString.cmd_writeMetaJson, getDefaultValue: () => true);
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
         private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);

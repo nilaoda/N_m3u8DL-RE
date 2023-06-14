@@ -33,7 +33,6 @@ namespace N_m3u8DL_RE.DownloadManager
         List<StreamSpec> SelectedSteams;
         ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
         List<OutputFile> OutputFiles = new();
-        DateTime NowDateTime;
         DateTime? PublishDateTime;
         bool STOP_FLAG = false;
         int WAIT_SEC = 0; //刷新间隔
@@ -52,7 +51,6 @@ namespace N_m3u8DL_RE.DownloadManager
         {
             this.DownloaderConfig = downloaderConfig;
             Downloader = new SimpleDownloader(DownloaderConfig);
-            NowDateTime = DateTime.Now;
             PublishDateTime = selectedSteams.FirstOrDefault()?.PublishTime;
             StreamExtractor = streamExtractor;
             SelectedSteams = selectedSteams;
@@ -184,8 +182,8 @@ namespace N_m3u8DL_RE.DownloadManager
 
             var name = streamSpec.ToShortString();
             var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
-            var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
-            var tmpDir = Path.Combine(DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory, dirName);
+            var dirName = $"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
+            var tmpDir = Path.Combine(DownloaderConfig.DirPrefix, dirName);
             var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
             var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
             var headers = DownloaderConfig.Headers;
@@ -860,6 +858,17 @@ namespace N_m3u8DL_RE.DownloadManager
 
             var success = Results.Values.All(v => v == true);
 
+            //删除临时文件夹
+            if (!DownloaderConfig.MyOptions.SkipMerge && DownloaderConfig.MyOptions.DelAfterDone && success)
+            {
+                foreach (var item in StreamExtractor.RawFiles)
+                {
+                    var file = Path.Combine(DownloaderConfig.DirPrefix, item.Key);
+                    if (File.Exists(file)) File.Delete(file);
+                }
+                OtherUtil.SafeDeleteDir(DownloaderConfig.DirPrefix);
+            }
+
             //混流
             if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0)
             {
@@ -871,7 +880,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
                 var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
                 var ext = DownloaderConfig.MyOptions.MuxToMp4 ? ".mp4" : ".mkv";
-                var outName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}.MUX";
+                var outName = $"{DownloaderConfig.DirPrefix}.MUX";
                 var outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 var result = false;
