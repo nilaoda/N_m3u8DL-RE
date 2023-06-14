@@ -138,7 +138,8 @@ More Help:
 通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:
 
 id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX
-segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR
+segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX
+plistDurMin=hms:plistDurMax=hms:for=FOR
 
 * for=FOR: 选择方式. best[number], worst[number], all (默认: best)
 
@@ -147,6 +148,8 @@ segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR
 -sv best
 # 选择4K+HEVC视频
 -sv res="3840*":codec=hvc1:for=best
+# 选择长度大于1小时20分钟30秒的视频
+-sv plistDurMin="1h20m30s":for=best
 ```
 ```
 More Help:
