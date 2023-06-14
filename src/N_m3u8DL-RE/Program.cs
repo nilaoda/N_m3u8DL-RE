@@ -105,7 +105,7 @@ namespace N_m3u8DL_RE
                 throw new FileNotFoundException(ResString.ffmpegNotFound);
             }
 
-            Logger.Extra($"ffmpeg: {option.FFmpegBinaryPath}");
+            Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
 
             //预先检查mkvmerge
             if (option.UseMkvmerge && option.MuxAfterDone)
@@ -116,7 +116,7 @@ namespace N_m3u8DL_RE
                 {
                     throw new FileNotFoundException("mkvmerge not found");
                 }
-                Logger.Extra($"mkvmerge: {option.MkvmergeBinaryPath}");
+                Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
             }
 
             //预先检查
@@ -132,14 +132,14 @@ namespace N_m3u8DL_RE
                         var file4 = GlobalUtil.FindExecutable("packager-win-x64");
                         if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException("shaka-packager not found!");
                         option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
-                        Logger.Extra($"shaka-packager: {option.DecryptionBinaryPath}");
+                        Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                     }
                     else
                     {
                         var file = GlobalUtil.FindExecutable("mp4decrypt");
                         if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
                         option.DecryptionBinaryPath = file;
-                        Logger.Extra($"mp4decrypt: {option.DecryptionBinaryPath}");
+                        Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
                     }
                 }
                 else if (!File.Exists(option.DecryptionBinaryPath))
@@ -229,6 +229,13 @@ namespace N_m3u8DL_RE
                 subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
                 lists = basicStreams.Concat(audios).Concat(subs).OrderBy(x => true);
             }
+
+            if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
+            if (option.DropAudioFilter != null) Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
+            if (option.DropSubtitleFilter != null) Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
+            if (option.VideoFilter != null) Logger.Extra($"VideoFilter => {option.VideoFilter}");
+            if (option.AudioFilter != null) Logger.Extra($"AudioFilter => {option.AudioFilter}");
+            if (option.SubtitleFilter != null) Logger.Extra($"SubtitleFilter => {option.SubtitleFilter}");
 
             if (option.AutoSelect)
             {
