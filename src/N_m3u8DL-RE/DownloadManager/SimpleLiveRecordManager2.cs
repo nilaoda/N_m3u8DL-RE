@@ -880,7 +880,8 @@ namespace N_m3u8DL_RE.DownloadManager
                 OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
                 var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
                 var ext = DownloaderConfig.MyOptions.MuxToMp4 ? ".mp4" : ".mkv";
-                var outName = $"{DownloaderConfig.DirPrefix}.MUX";
+                var dirName = Path.GetFileName(DownloaderConfig.DirPrefix);
+                var outName = $"{dirName}.MUX";
                 var outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 var result = false;
