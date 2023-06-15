@@ -188,7 +188,7 @@ namespace N_m3u8DL_RE.Util
             //MAP
             for (int i = 0; i < files.Length; i++)
             {
-                if (files[i].MediaType != Common.Enum.MediaType.AUDIO && files[i].MediaType != Common.Enum.MediaType.SUBTITLES)
+                if (files[i].MediaType != Common.Enum.MediaType.AUDIO && files[i].MediaType != Common.Enum.MediaType.SUBTITLES && files[i].Mediainfos.Any(x => x.Type == "Video"))
                 {
                     var x = files[i].Mediainfos.FindIndex(x => x.Type == "Video");
                     //视频流只取视频 防止CC字幕导致的混流失败
