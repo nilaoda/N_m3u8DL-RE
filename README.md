@@ -212,6 +212,10 @@ ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a
 ```
 在新版本(>=v0.1.5)中，可以尝试开启 `live-pipe-mux` 来代替以上命令
 
+**特别注意：如果网络环境不够稳定，请不要开启 `live-pipe-mux`。管道内数据读取由 ffmpeg 负责，在某些环境下容易丢失直播数据**
+
+在新版本(>=v0.1.8)中，能够通过设置环境变量 `RE_LIVE_PIPE_OPTIONS` 来改变 `live-pipe-mux` 时 ffmpeg 的某些选项： https://github.com/nilaoda/N_m3u8DL-RE/issues/162#issuecomment-1592462532
+
 ## 赞助
 
 <a href="https://www.buymeacoffee.com/nilaoda" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
