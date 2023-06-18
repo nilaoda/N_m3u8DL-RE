@@ -36,9 +36,11 @@ namespace N_m3u8DL_RE.DownloadManager
         DateTime? PublishDateTime;
         bool STOP_FLAG = false;
         int WAIT_SEC = 0; //刷新间隔
-        ConcurrentDictionary<int, int> RecordingDurDic = new(); //已录制时长
+        ConcurrentDictionary<int, int> RecordedDurDic = new(); //已录制时长
+        ConcurrentDictionary<int, int> RefreshedDurDic = new(); //已刷新出的时长
         ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); //各流的Block
         ConcurrentDictionary<int, bool> SamePathDic = new(); //各流是否allSamePath
+        ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); //各流是否达到上限
         ConcurrentDictionary<int, string> LastFileNameDic = new(); //上次下载的文件名
         ConcurrentDictionary<int, long> MaxIndexDic = new(); //最大Index
         ConcurrentDictionary<int, long> DateTimeDic = new(); //上次下载的dateTime
@@ -194,7 +196,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
             if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
 
-            while (!STOP_FLAG && await source.OutputAvailableAsync())
+            while (true && await source.OutputAvailableAsync())
             {
                 //接收新片段 且总是拿全部未处理的片段
                 //有时每次只有很少的片段，但是之前的片段下载慢，导致后面还没下载的片段都失效了
@@ -450,7 +452,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             //手动计算MPEGTS
                             if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                             {
-                                vtt.MpegtsTimestamp = 90000 * (RecordingDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
+                                vtt.MpegtsTimestamp = 90000 * (RecordedDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                             }
                             currentVtt.AddCuesFromOne(vtt);
                         }
@@ -496,14 +498,14 @@ namespace N_m3u8DL_RE.DownloadManager
                             //手动计算MPEGTS
                             if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                             {
-                                vtt.MpegtsTimestamp = 90000 * (RecordingDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
+                                vtt.MpegtsTimestamp = 90000 * (RecordedDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                             }
                             currentVtt.AddCuesFromOne(vtt);
                         }
                     }
                 }
 
-                RecordingDurDic[task.Id] += (int)segmentsDuration;
+                RecordedDurDic[task.Id] += (int)segmentsDuration;
 
                 /*//写出m3u8
                 if (DownloaderConfig.MyOptions.LiveWriteHLS)
@@ -639,13 +641,8 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                 }
 
-                //检测时长限制
-                if (!STOP_FLAG && RecordingDurDic.All(d => d.Value >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds))
-                {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
-                    STOP_FLAG = true;
-                    CancellationTokenSource.Cancel();
-                }
+                if (STOP_FLAG)
+                    break;
             }
 
             if (fileOutputStream != null)
@@ -683,6 +680,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         var streamSpec = dic.Key;
                         var task = dic.Value;
+
+                        //达到上限时 不需要刷新了
+                        if (RecordLimitReachedDic[task.Id])
+                            return;
+
                         var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
                         if (!SamePathDic.ContainsKey(task.Id))
                         {
@@ -703,6 +705,26 @@ namespace N_m3u8DL_RE.DownloadManager
                             //尝试更新时间戳
                             var dt = newList.Last().DateTime;
                             DateTimeDic[task.Id] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
+                            //累加已获取到的时长
+                            RefreshedDurDic[task.Id] += (int)newList.Sum(s => s.Duration);
+                        }
+
+                        if (!STOP_FLAG && RefreshedDurDic[task.Id] >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds)
+                        {
+                            RecordLimitReachedDic[task.Id] = true;
+                        }
+
+                        //检测时长限制
+                        if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x == true))
+                        {
+                            Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                            STOP_FLAG = true;
+                            CancellationTokenSource.Cancel();
+
+                            foreach (var target in BlockDic.Values)
+                            {
+                                target.Complete();
+                            }
                         }
                     });
 
@@ -723,11 +745,6 @@ namespace N_m3u8DL_RE.DownloadManager
                         STOP_FLAG = true;
                     }
                 }
-            }
-
-            foreach (var target in BlockDic.Values)
-            {
-                target.Complete();
             }
         }
 
@@ -808,7 +825,7 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.Columns(new ProgressColumn[]
             {
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
-                new RecordingDurationColumn(RecordingDurDic), //时长显示
+                new RecordingDurationColumn(RecordedDurDic), //时长显示
                 new RecordingStatusColumn(),
                 new PercentageColumn(),
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算
@@ -823,8 +840,10 @@ namespace N_m3u8DL_RE.DownloadManager
                     var task = ctx.AddTask(item.ToShortShortString(), autoStart: false, maxValue: 0);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算
                     LastFileNameDic[task.Id] = "";
+                    RecordLimitReachedDic[task.Id] = false;
                     DateTimeDic[task.Id] = 0L;
-                    RecordingDurDic[task.Id] = 0;
+                    RecordedDurDic[task.Id] = 0;
+                    RefreshedDurDic[task.Id] = 0;
                     MaxIndexDic[task.Id] = item.Playlist?.MediaParts[0].MediaSegments.LastOrDefault()?.Index ?? 0L; //最大Index
                     BlockDic[task.Id] = new BufferBlock<List<MediaSegment>>();
                     return (item, task);
