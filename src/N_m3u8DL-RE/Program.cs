@@ -319,6 +319,13 @@ namespace N_m3u8DL_RE
 
             Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 
+            //开始MuxAfterDone后自动使用二进制版
+            if (!option.BinaryMerge && option.MuxAfterDone)
+            {
+                option.BinaryMerge = true;
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge6}[/]");
+            }
+
             //下载配置
             var downloadConfig = new DownloaderConfig()
             {

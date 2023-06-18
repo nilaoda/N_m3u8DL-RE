@@ -70,6 +70,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到杜比視界內容，混流功能已禁用",
                 enUS: "Dolby Vision content is detected, mux after done is automatically disabled"
             ),
+            ["autoBinaryMerge6"] = new TextContainer
+            (
+                zhCN: "你已开启下载完成后混流，自动开启二进制合并",
+                zhTW: "你已開啟下載完成後混流，自動開啟二進制合併",
+                enUS: "MuxAfterDone is detected, binary merging is automatically enabled"
+            ),
             ["badM3u8"] = new TextContainer
             (
                 zhCN: "错误的m3u8",
