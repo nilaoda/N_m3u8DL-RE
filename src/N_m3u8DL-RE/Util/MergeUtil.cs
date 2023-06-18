@@ -188,22 +188,15 @@ namespace N_m3u8DL_RE.Util
             //MAP
             for (int i = 0; i < files.Length; i++)
             {
-                if (files[i].MediaType != Common.Enum.MediaType.AUDIO && files[i].MediaType != Common.Enum.MediaType.SUBTITLES && files[i].Mediainfos.Any(x => x.Type == "Video"))
-                {
-                    var x = files[i].Mediainfos.FindIndex(x => x.Type == "Video");
-                    //视频流只取视频 防止CC字幕导致的混流失败
-                    command.Append($" -map {i}:{x} ");
-                    //同时需要修正 Mediainfos 数量 只保留视频
-                    files[i].Mediainfos = new List<Mediainfo>() { files[i].Mediainfos[x] };
-                }
-                else
-                    command.Append($" -map {i} ");
+                command.Append($" -map {i} ");
             }
+
+            var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
 
             if (mp4)
                 command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
             else
-                command.Append($" -strict unofficial -c copy ");
+                command.Append($" -strict unofficial -c copy -c:s {(srt ? "srt" : "webvtt")} ");
 
             //CLEAN
             command.Append(" -map_metadata -1 ");
