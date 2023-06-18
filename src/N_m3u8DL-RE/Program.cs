@@ -207,6 +207,12 @@ namespace N_m3u8DL_RE
             //可选字幕轨道
             var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
 
+            //尝试从URL或文件读取文件名
+            if (string.IsNullOrEmpty(option.SaveName))
+            {
+                option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
+            }
+
             //生成文件夹
             var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
             //记录文件
@@ -310,11 +316,6 @@ namespace N_m3u8DL_RE
             Console.ReadKey();
 #endif
 
-            //尝试从URL或文件读取文件名
-            if (string.IsNullOrEmpty(option.SaveName))
-            {
-                option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
-            }
 
             Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 
