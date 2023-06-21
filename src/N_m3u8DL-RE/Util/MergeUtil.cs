@@ -85,7 +85,9 @@ namespace N_m3u8DL_RE.Util
             else
                 div = 200;
 
-            string outputName = Path.GetDirectoryName(files[0]) + "\\T";
+            var delimiter=OperatingSystem.IsWindows()?"\\T":"/T";
+
+            string outputName = Path.GetDirectoryName(files[0]) + delimiter;
             int index = 0; //序号
 
             //按照div的容量分割为小数组
