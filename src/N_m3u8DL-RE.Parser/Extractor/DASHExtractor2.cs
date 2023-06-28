@@ -89,6 +89,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
             var availabilityStartTime = mpdElement.Attribute("availabilityStartTime")?.Value;
             //在availabilityStartTime的前XX段时间，分片有效
             var timeShiftBufferDepth = mpdElement.Attribute("timeShiftBufferDepth")?.Value;
+            if (string.IsNullOrEmpty(timeShiftBufferDepth))
+            {
+                //如果没有 默认一分钟有效
+                timeShiftBufferDepth = "PT1M";
+            }
             //MPD发布时间
             var publishTime = mpdElement.Attribute("publishTime")?.Value;
             //MPD总时长
