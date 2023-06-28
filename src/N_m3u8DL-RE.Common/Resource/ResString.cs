@@ -10,6 +10,9 @@ namespace N_m3u8DL_RE.Common.Resource
     public class ResString
     {
         public readonly static string ReLiveTs = "<RE_LIVE_TS>";
+        public static string customRangeWarn { get => GetText("customRangeWarn"); }
+        public static string customRangeFound { get => GetText("customRangeFound"); }
+        public static string customRangeInvalid { get => GetText("customRangeInvalid"); }
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
         public static string autoBinaryMerge3 { get => GetText("autoBinaryMerge3"); }
@@ -41,6 +44,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_selectSubtitle { get => GetText("cmd_selectSubtitle"); }
         public static string cmd_dropSubtitle { get => GetText("cmd_dropSubtitle"); }
         public static string cmd_selectSubtitle_more { get => GetText("cmd_selectSubtitle_more"); }
+        public static string cmd_custom_range { get => GetText("cmd_custom_range"); }
         public static string cmd_customHLSMethod { get => GetText("cmd_customHLSMethod"); }
         public static string cmd_customHLSKey { get => GetText("cmd_customHLSKey"); }
         public static string cmd_customHLSIv { get => GetText("cmd_customHLSIv"); }
@@ -69,6 +73,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_concurrentDownload { get => GetText("cmd_concurrentDownload"); }
         public static string cmd_useSystemProxy { get => GetText("cmd_useSystemProxy"); }
         public static string cmd_customProxy { get => GetText("cmd_customProxy"); }
+        public static string cmd_customRange { get => GetText("cmd_customRange"); }
         public static string cmd_liveKeepSegments { get => GetText("cmd_liveKeepSegments"); }
         public static string cmd_livePipeMux { get => GetText("cmd_livePipeMux"); }
         public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }

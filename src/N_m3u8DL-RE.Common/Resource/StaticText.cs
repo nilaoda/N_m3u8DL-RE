@@ -10,6 +10,24 @@ namespace N_m3u8DL_RE.Common.Resource
     {
         public static Dictionary<string, TextContainer> LANG_DIC = new()
         {
+            ["customRangeWarn"] = new TextContainer
+            (
+                zhCN: "请注意，自定义下载范围有时会导致音画不同步",
+                zhTW: "請注意，自定義下載範圍有時會導致音畫不同步",
+                enUS: "Please note that custom range may sometimes result in audio and video being out of sync"
+            ),
+            ["customRangeInvalid"] = new TextContainer
+            (
+                zhCN: "自定义下载范围无效",
+                zhTW: "自定義下載範圍無效",
+                enUS: "User customed range invalid"
+            ),
+            ["customRangeFound"] = new TextContainer
+            (
+                zhCN: "用户自定义下载范围：",
+                zhTW: "用戶自定義下載範圍：",
+                enUS: "User customed range: "
+            ),
             ["processImageSub"] = new TextContainer
             (
                 zhCN: "正在处理图形字幕",
@@ -304,6 +322,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "設置請求代理, 如 http://127.0.0.1:8888",
                 enUS: "Set web request proxy, like http://127.0.0.1:8888"
             ),
+            ["cmd_customRange"] = new TextContainer
+            (
+                zhCN: "仅下载部分分片. 输入 \"--morehelp custom-range\" 以查看详细信息",
+                zhTW: "僅下載部分分片. 輸入 \"--morehelp custom-range\" 以查看詳細訊息",
+                enUS: "Download only part of the segments. Use \"--morehelp custom-range\" for more details"
+            ),
             ["cmd_useSystemProxy"] = new TextContainer
             (
                 zhCN: "使用系统默认代理",
@@ -478,6 +502,39 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "通過正則表達式去除符合要求的字幕流.",
                 enUS: "Drop subtitle streams by regular expressions."
             ),
+            ["cmd_custom_range"] = new TextContainer
+            (
+                zhCN: "下载点播内容时, 仅下载部分分片.\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 下载[0,10]共11个分片\r\n" +
+                      "--custom-range 0-10\r\n" +
+                      "# 下载从序号10开始的后续分片\r\n" +
+                      "--custom-range 10-\r\n" +
+                      "# 下载前100个分片\r\n" +
+                      "--custom-range -99\r\n" +
+                      "# 下载第5分钟到20分钟的内容\r\n" +
+                      "--custom-range 05:00-20:00\r\n",
+                zhTW: "下載點播內容時, 僅下載部分分片.\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 下載[0,10]共11個分片\r\n" +
+                      "--custom-range 0-10\r\n" +
+                      "# 下載從序號10開始的後續分片\r\n" +
+                      "--custom-range 10-\r\n" +
+                      "# 下載前100個分片\r\n" +
+                      "--custom-range -99\r\n" +
+                      "# 下載第5分鐘到20分鐘的內容\r\n" +
+                      "--custom-range 05:00-20:00\r\n",
+                enUS: "Download only part of the segments when downloading vod content.\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "# Download [0,10], a total of 11 segments\r\n" +
+                      "--custom-range 0-10\r\n" +
+                      "# Download subsequent segments starting from index 10\r\n" +
+                      "--custom-range 10-\r\n" +
+                      "# Download the first 100 segments\r\n" +
+                      "--custom-range -99\r\n" +
+                      "# Download content from the 05:00 to 20:00\r\n" +
+                      "--custom-range 05:00-20:00\r\n"
+            ),
             ["cmd_selectSubtitle_more"] = new TextContainer
             (
                 zhCN: "通过正则表达式选择符合要求的字幕流. 参考 --select-video\r\n\r\n" +
@@ -505,6 +562,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
+                      "* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)\r\n" +
                       "* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 混流为mp4容器\r\n" +
@@ -517,6 +575,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默認: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
+                      "* skip_sub=BOOL: 是否忽略字幕文件 (默認: false)\r\n" +
                       "* keep=BOOL: 混流完成是否保留文件 true, false (默認: false)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 混流為mp4容器\r\n" +
@@ -529,6 +588,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: set container. mkv, mp4\r\n" +
                       "* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)\r\n" +
                       "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
+                      "* skip_sub=BOOL: set whether or not skip subtitle files (Default: false)\r\n" +
                       "* keep=BOOL: set whether or not keep files. true, false (Default: false)\r\n\r\n" +
                       "Examples: \r\n" +
                       "# mux to mp4\r\n" +

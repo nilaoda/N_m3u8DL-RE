@@ -96,6 +96,7 @@ namespace N_m3u8DL_RE
                 throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
             }
 
+            //LivePipeMux开启时 LiveRealTimeMerge必须开启
             if (option.LivePipeMux && !option.LiveRealTimeMerge)
             {
                 Logger.WarnMarkUp("LivePipeMux detected, forced enable LiveRealTimeMerge");
@@ -114,7 +115,7 @@ namespace N_m3u8DL_RE
             Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
 
             //预先检查mkvmerge
-            if (option.UseMkvmerge && option.MuxAfterDone)
+            if (option.MuxOptions != null && option.MuxOptions.UseMkvmerge && option.MuxAfterDone)
             {
                 if (option.MkvmergeBinaryPath == null)
                     option.MkvmergeBinaryPath = GlobalUtil.FindExecutable("mkvmerge");
@@ -299,9 +300,12 @@ namespace N_m3u8DL_RE
                 option.BinaryMerge = true;
             }
 
+            //应用用户自定义的分片范围
+            if (!livingFlag)
+                FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
+
             //记录文件
             extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
-
 
             Logger.Info(ResString.selectedStream);
             foreach (var item in selectedStreams)
@@ -321,7 +325,6 @@ namespace N_m3u8DL_RE
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
 #endif
-
 
             Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 

@@ -892,24 +892,29 @@ namespace N_m3u8DL_RE.DownloadManager
             if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0)
             {
                 OutputFiles = OutputFiles.OrderBy(o => o.Index).ToList();
+                //是否跳过字幕
+                if (DownloaderConfig.MyOptions.MuxOptions.SkipSubtitle)
+                {
+                    OutputFiles = OutputFiles.Where(o => o.MediaType != MediaType.SUBTITLES).ToList();
+                }
                 if (DownloaderConfig.MyOptions.MuxImports != null)
                 {
                     OutputFiles.AddRange(DownloaderConfig.MyOptions.MuxImports);
                 }
                 OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
                 var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-                var ext = DownloaderConfig.MyOptions.MuxToMp4 ? ".mp4" : ".mkv";
+                var ext = DownloaderConfig.MyOptions.MuxOptions.MuxToMp4 ? ".mp4" : ".mkv";
                 var dirName = Path.GetFileName(DownloaderConfig.DirPrefix);
                 var outName = $"{dirName}.MUX";
                 var outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 var result = false;
-                if (DownloaderConfig.MyOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
-                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxToMp4, !DownloaderConfig.MyOptions.NoDateInfo);
+                if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
+                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxOptions.MuxToMp4, !DownloaderConfig.MyOptions.NoDateInfo);
                 //完成后删除各轨道文件
                 if (result)
                 {
-                    if (!DownloaderConfig.MyOptions.MuxKeepFiles)
+                    if (!DownloaderConfig.MyOptions.MuxOptions.KeepFiles)
                     {
                         Logger.WarnMarkUp("[grey]Cleaning files...[/]");
                         OutputFiles.ForEach(f => File.Delete(f.FilePath));

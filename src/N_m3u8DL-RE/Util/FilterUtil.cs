@@ -1,5 +1,6 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
@@ -180,6 +181,50 @@ namespace N_m3u8DL_RE.Util
                         part.MediaSegments = part.MediaSegments.Skip(skipCount).ToList();
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 应用用户自定义的分片范围
+        /// </summary>
+        /// <param name="selectedSteams"></param>
+        /// <param name="customRange"></param>
+        public static void ApplyCustomRange(List<StreamSpec> selectedSteams, CustomRange? customRange)
+        {
+            var resultList = selectedSteams.Select(x => 0d).ToList();
+
+            if (customRange == null) return;
+
+            Logger.InfoMarkUp($"{ResString.customRangeFound}[Cyan underline]{customRange.InputStr}[/]");
+            Logger.WarnMarkUp($"[darkorange3_1]{ResString.customRangeWarn}[/]");
+
+            var filteByIndex = customRange.StartSegIndex != null && customRange.EndSegIndex != null;
+            var filteByTime = customRange.StartSec != null && customRange.EndSec != null;
+
+            if (!filteByIndex && !filteByTime)
+            {
+                Logger.ErrorMarkUp(ResString.customRangeInvalid);
+                return;
+            }
+
+            foreach (var stream in selectedSteams)
+            {
+                var skippedDur = 0d;
+                if (stream.Playlist == null) continue;
+                foreach (var part in stream.Playlist.MediaParts)
+                {
+                    var newSegments = new List<MediaSegment>();
+                    if (filteByIndex)
+                        newSegments = part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex).ToList();
+                    else
+                        newSegments = part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
+                            && stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) <= customRange.EndSec).ToList();
+
+                    if (newSegments.Count > 0)
+                        skippedDur += part.MediaSegments.Where(seg => seg.Index < newSegments.First().Index).Sum(x => x.Duration);
+                    part.MediaSegments = newSegments;
+                }
+                stream.SkippedDuration = skippedDur;
             }
         }
     }

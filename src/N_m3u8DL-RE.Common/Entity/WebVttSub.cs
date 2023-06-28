@@ -225,6 +225,22 @@ namespace N_m3u8DL_RE.Common.Entity
             return sb.ToString();
         }
 
+        /// <summary>
+        /// 字幕向前平移指定时间
+        /// </summary>
+        /// <param name="time"></param>
+        public void LeftShiftTime(TimeSpan time)
+        {
+            foreach (var cue in this.Cues)
+            {
+                if (cue.StartTime.TotalSeconds - time.TotalSeconds > 0) cue.StartTime -= time;
+                else cue.StartTime = TimeSpan.FromSeconds(0);
+
+                if (cue.EndTime.TotalSeconds - time.TotalSeconds > 0) cue.EndTime -= time;
+                else cue.EndTime = TimeSpan.FromSeconds(0);
+            }
+        }
+
         public string ToVtt()
         {
             return "WEBVTT" + Environment.NewLine + Environment.NewLine + ToString();

@@ -113,14 +113,6 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool MuxAfterDone { get; set; }
         /// <summary>
-        /// See: <see cref="CommandInvoker.MuxToMp4"/>.
-        /// </summary>
-        public bool MuxToMp4 { get; set; }
-        /// <summary>
-        /// See: <see cref="CommandInvoker.UseMkvmerge"/>.
-        /// </summary>
-        public bool UseMkvmerge { get; set; }
-        /// <summary>
         /// See: <see cref="CommandInvoker.ConcurrentDownload"/>.
         /// </summary>
         public bool ConcurrentDownload { get; set; }
@@ -221,10 +213,14 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public WebProxy? CustomProxy { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.CustomRange"/>.
+        /// </summary>
+        public CustomRange? CustomRange { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.LiveWaitTime"/>.
         /// </summary>
         public int? LiveWaitTime { get; set; }
-        public bool MuxKeepFiles { get; set; }
+        public MuxOptions MuxOptions { get; set; }
         //public bool LiveWriteHLS { get; set; } = true;
         /// <summary>
         /// See: <see cref="CommandInvoker.LivePipeMux"/>.
