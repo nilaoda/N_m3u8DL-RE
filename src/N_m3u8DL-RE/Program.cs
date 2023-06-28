@@ -96,6 +96,12 @@ namespace N_m3u8DL_RE
                 throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
             }
 
+            if (option.LivePipeMux && !option.LiveRealTimeMerge)
+            {
+                Logger.WarnMarkUp("LivePipeMux detected, forced enable LiveRealTimeMerge");
+                option.LiveRealTimeMerge = true;
+            }
+
             //预先检查ffmpeg
             if (option.FFmpegBinaryPath == null)
                 option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");

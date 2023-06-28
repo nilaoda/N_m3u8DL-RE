@@ -641,7 +641,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                 }
 
-                if (STOP_FLAG)
+                if (STOP_FLAG && source.Count == 0) 
                     break;
             }
 
@@ -720,11 +720,6 @@ namespace N_m3u8DL_RE.DownloadManager
                             Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
                             STOP_FLAG = true;
                             CancellationTokenSource.Cancel();
-
-                            foreach (var target in BlockDic.Values)
-                            {
-                                target.Complete();
-                            }
                         }
                     });
 
@@ -743,6 +738,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         Logger.ErrorMarkUp(e);
                         STOP_FLAG = true;
+                        //停止所有Block
+                        foreach (var target in BlockDic.Values)
+                        {
+                            target.Complete();
+                        }
                     }
                 }
             }
@@ -825,7 +825,7 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.Columns(new ProgressColumn[]
             {
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
-                new RecordingDurationColumn(RecordedDurDic), //时长显示
+                new RecordingDurationColumn(RecordedDurDic, RefreshedDurDic), //时长显示
                 new RecordingStatusColumn(),
                 new PercentageColumn(),
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算

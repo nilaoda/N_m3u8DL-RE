@@ -134,7 +134,7 @@ namespace N_m3u8DL_RE.Parser
             try
             {
                 await semaphore.WaitAsync();
-                int retryCount = 3; //增加重试
+                int retryCount = 5; //增加重试
             reGet:
                 try
                 {
@@ -145,7 +145,7 @@ namespace N_m3u8DL_RE.Parser
                     if (retryCount-- > 0)
                     {
                         Logger.WarnMarkUp($"[grey]Refresh Exception: {ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
-                        await Task.Delay(300);
+                        await Task.Delay(1000);
                         goto reGet;
                     }
                     else throw;
