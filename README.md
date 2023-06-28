@@ -23,7 +23,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20230615
+  N_m3u8DL-RE (Beta version) 20230628
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -70,6 +70,7 @@ Options:
   --custom-hls-iv <FILE|HEX|BASE64>        指定HLS解密IV. 可以是文件, HEX或Base64
   --use-system-proxy                       使用系统默认代理 [default: True]
   --custom-proxy <URL>                     设置请求代理, 如 http://127.0.0.1:8888
+  --custom-range <RANGE>                   仅下载部分分片. 输入 "--morehelp custom-range" 以查看详细信息
   --task-start-at <yyyyMMddHHmmss>         在此时间之前不会开始执行任务
   --live-perform-as-vod                    以点播方式下载直播流 [default: False]
   --live-real-time-merge                   录制直播时实时合并 [default: False]
@@ -103,6 +104,7 @@ More Help:
 * format=FORMAT: 指定混流容器 mkv, mp4
 * muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)
 * bin_path=PATH: 指定程序路径 (默认: 自动寻找)
+* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)
 * keep=BOOL: 混流完成是否保留文件 true, false (默认: false)
 
 例如:
@@ -178,6 +180,23 @@ More Help:
 -ss all
 # 选择所有带有"中文"的字幕
 -ss name="中文":for=all
+```
+```
+More Help:
+
+  --custom-range
+
+下载点播内容时, 仅下载部分分片.
+
+例如:
+# 下载[0,10]共11个分片
+--custom-range 0-10
+# 下载从序号10开始的后续分片
+--custom-range 10-
+# 下载前100个分片
+--custom-range -99
+# 下载第5分钟到20分钟的内容
+--custom-range 05:00-20:00
 ```
 
 </details>
