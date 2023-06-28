@@ -43,7 +43,7 @@ namespace Mp4SubtitleParser
                 .FullBox("enca", MP4Parser.AllData(data => ReadBox(data, info)))
                 .FullBox("enct", MP4Parser.AllData(data => ReadBox(data, info)))
                 .FullBox("encs", MP4Parser.AllData(data => ReadBox(data, info)))
-                .Parse(data);
+                .Parse(data, stopOnPartial: true);
 
             return info;
         }
