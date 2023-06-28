@@ -88,7 +88,7 @@ namespace N_m3u8DL_RE.Common.Log
                     LogWriteLock.EnterWriteLock();
                     using (StreamWriter sw = File.AppendText(LogFilePath))
                     {
-                        sw.WriteLine(plain, Encoding.UTF8);
+                        sw.WriteLine(plain);
                     }
                 }
                 finally
