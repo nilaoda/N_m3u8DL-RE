@@ -580,6 +580,7 @@ namespace N_m3u8DL_RE.CommandLine
 #endif
                     Logger.Error(msg);
                     Thread.Sleep(3000);
+                    Environment.Exit(1);
                 }, 1)
                 .Build();
 
