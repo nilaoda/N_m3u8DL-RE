@@ -790,7 +790,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         public async Task<bool> StartRecordAsync()
         {
-            var takeLastCount = 15;
+            var takeLastCount = DownloaderConfig.MyOptions.LiveTakeCount;
             ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); //速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
             //同步流

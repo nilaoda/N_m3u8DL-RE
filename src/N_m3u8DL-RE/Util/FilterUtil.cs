@@ -172,7 +172,7 @@ namespace N_m3u8DL_RE.Util
             //取最新的N个分片
             if (selectedSteams.Any(x => x.Playlist!.MediaParts[0].MediaSegments.Count > takeLastCount))
             {
-                var skipCount = selectedSteams.Min(x => x.Playlist!.MediaParts[0].MediaSegments.Count) - takeLastCount;
+                var skipCount = selectedSteams.Min(x => x.Playlist!.MediaParts[0].MediaSegments.Count) - takeLastCount + 1;
                 if (skipCount < 0) skipCount = 0;
                 foreach (var item in selectedSteams)
                 {

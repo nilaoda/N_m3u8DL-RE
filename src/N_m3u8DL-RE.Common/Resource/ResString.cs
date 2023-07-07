@@ -79,6 +79,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }
         public static string cmd_taskStartAt { get => GetText("cmd_taskStartAt"); }
         public static string cmd_liveWaitTime { get => GetText("cmd_liveWaitTime"); }
+        public static string cmd_liveTakeCount { get => GetText("cmd_liveTakeCount"); }
         public static string cmd_liveFixVttByAudio { get => GetText("cmd_liveFixVttByAudio"); }
         public static string cmd_liveRealTimeMerge { get => GetText("cmd_liveRealTimeMerge"); }
         public static string cmd_livePerformAsVod { get => GetText("cmd_livePerformAsVod"); }

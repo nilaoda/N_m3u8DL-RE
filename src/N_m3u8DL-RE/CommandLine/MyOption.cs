@@ -220,6 +220,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.LiveWaitTime"/>.
         /// </summary>
         public int? LiveWaitTime { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveTakeCount"/>.
+        /// </summary>
+        public int LiveTakeCount { get; set; }
         public MuxOptions MuxOptions { get; set; }
         //public bool LiveWriteHLS { get; set; } = true;
         /// <summary>

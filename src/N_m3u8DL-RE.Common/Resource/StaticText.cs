@@ -346,6 +346,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "手動設置直播列表刷新間隔",
                 enUS: "Manually set the live playlist refresh interval"
             ),
+            ["cmd_liveTakeCount"] = new TextContainer
+            (
+                zhCN: "手动设置录制直播时首次获取分片的数量",
+                zhTW: "手動設置錄製直播時首次獲取分片的數量",
+                enUS: "Manually set the number of segments downloaded for the first time when recording live"
+            ),
             ["cmd_customHLSMethod"] = new TextContainer
             (
                 zhCN: "指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)",

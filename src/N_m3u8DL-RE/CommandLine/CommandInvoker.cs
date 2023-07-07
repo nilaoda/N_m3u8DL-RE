@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230628";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230707";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -85,6 +85,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> LivePipeMux = new(new string[] { "--live-pipe-mux" }, description: ResString.cmd_livePipeMux, getDefaultValue: () => false);
         private readonly static Option<TimeSpan?> LiveRecordLimit = new(new string[] { "--live-record-limit" }, description: ResString.cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
         private readonly static Option<int?> LiveWaitTime = new(new string[] { "--live-wait-time" }, description: ResString.cmd_liveWaitTime) { ArgumentHelpName = "SEC" };
+        private readonly static Option<int> LiveTakeCount = new(new string[] { "--live-take-count" }, description: ResString.cmd_liveTakeCount, getDefaultValue: () => 16) { ArgumentHelpName = "NUM" };
         private readonly static Option<bool> LiveFixVttByAudio = new(new string[] { "--live-fix-vtt-by-audio" }, description: ResString.cmd_liveFixVttByAudio, getDefaultValue: () => false);
 
 
@@ -495,6 +496,7 @@ namespace N_m3u8DL_RE.CommandLine
                     CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
                     CustomRange = bindingContext.ParseResult.GetValueForOption(CustomRange),
                     LiveWaitTime = bindingContext.ParseResult.GetValueForOption(LiveWaitTime),
+                    LiveTakeCount = bindingContext.ParseResult.GetValueForOption(LiveTakeCount),
                     NoDateInfo = bindingContext.ParseResult.GetValueForOption(NoDateInfo),
                     NoLog = bindingContext.ParseResult.GetValueForOption(NoLog),
                 };
@@ -561,7 +563,7 @@ namespace N_m3u8DL_RE.CommandLine
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
-                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime,
+                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp
             };
 
