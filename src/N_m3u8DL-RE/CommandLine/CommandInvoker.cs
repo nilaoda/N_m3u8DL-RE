@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230707";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230712";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -57,6 +57,8 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
         private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
         private readonly static Option<bool> NoLog = new(new string[] { "--no-log" }, description: ResString.cmd_noLog, getDefaultValue: () => false);
+        private readonly static Option<string[]?> AdKeywords = new(new string[] { "--ad-keyword" }, description: ResString.cmd_adKeyword) { ArgumentHelpName = "REG" };
+
 
         //代理选项
         private readonly static Option<bool> UseSystemProxy = new(new string[] { "--use-system-proxy" }, description: ResString.cmd_useSystemProxy, getDefaultValue: () => true);
@@ -499,6 +501,7 @@ namespace N_m3u8DL_RE.CommandLine
                     LiveTakeCount = bindingContext.ParseResult.GetValueForOption(LiveTakeCount),
                     NoDateInfo = bindingContext.ParseResult.GetValueForOption(NoDateInfo),
                     NoLog = bindingContext.ParseResult.GetValueForOption(NoLog),
+                    AdKeywords = bindingContext.ParseResult.GetValueForOption(AdKeywords),
                 };
 
                 if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
@@ -564,7 +567,7 @@ namespace N_m3u8DL_RE.CommandLine
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
-                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, MoreHelp
+                MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, MoreHelp
             };
 
             rootCommand.TreatUnmatchedTokensAsErrors = true;

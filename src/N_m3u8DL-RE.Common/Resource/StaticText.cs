@@ -22,6 +22,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "自定義下載範圍無效",
                 enUS: "User customed range invalid"
             ),
+            ["customAdKeywordsFound"] = new TextContainer
+            (
+                zhCN: "用户自定义广告分片URL关键字：",
+                zhTW: "用戶自定義廣告分片URL關鍵字：",
+                enUS: "User customed Ad keyword: "
+            ),
             ["customRangeFound"] = new TextContainer
             (
                 zhCN: "用户自定义下载范围：",
@@ -345,6 +351,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "手动设置直播列表刷新间隔",
                 zhTW: "手動設置直播列表刷新間隔",
                 enUS: "Manually set the live playlist refresh interval"
+            ),
+            ["cmd_adKeyword"] = new TextContainer
+            (
+                zhCN: "设置广告分片的URL关键字(正则表达式)",
+                zhTW: "設置廣告分片的URL關鍵字(正則表達式)",
+                enUS: "Set URL keywords (regular expressions) for AD segments"
             ),
             ["cmd_liveTakeCount"] = new TextContainer
             (

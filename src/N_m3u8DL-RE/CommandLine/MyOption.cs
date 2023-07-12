@@ -17,6 +17,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
         /// <summary>
+        /// See: <see cref="CommandInvoker.AdKeywords"/>.
+        /// </summary>
+        public string[]? AdKeywords { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.Keys"/>.
         /// </summary>
         public string[]? Keys { get; set; }

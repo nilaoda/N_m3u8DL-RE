@@ -12,6 +12,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public readonly static string ReLiveTs = "<RE_LIVE_TS>";
         public static string customRangeWarn { get => GetText("customRangeWarn"); }
         public static string customRangeFound { get => GetText("customRangeFound"); }
+        public static string customAdKeywordsFound { get => GetText("customAdKeywordsFound"); }
         public static string customRangeInvalid { get => GetText("customRangeInvalid"); }
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
@@ -31,6 +32,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_ffmpegBinaryPath { get => GetText("cmd_ffmpegBinaryPath"); }
         public static string cmd_mkvmergeBinaryPath { get => GetText("cmd_mkvmergeBinaryPath"); }
         public static string cmd_baseUrl { get => GetText("cmd_baseUrl"); }
+        public static string cmd_adKeyword { get => GetText("cmd_adKeyword"); }
         public static string cmd_moreHelp { get => GetText("cmd_moreHelp"); }
         public static string cmd_header { get => GetText("cmd_header"); }
         public static string cmd_muxImport { get => GetText("cmd_muxImport"); }

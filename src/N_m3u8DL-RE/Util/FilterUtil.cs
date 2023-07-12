@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util
@@ -225,6 +226,42 @@ namespace N_m3u8DL_RE.Util
                     part.MediaSegments = newSegments;
                 }
                 stream.SkippedDuration = skippedDur;
+            }
+        }
+
+        /// <summary>
+        /// 根据用户输入，清除广告分片
+        /// </summary>
+        /// <param name="selectedSteams"></param>
+        /// <param name="customRange"></param>
+        public static void CleanAd(List<StreamSpec> selectedSteams, string[]? keywords)
+        {
+            if (keywords == null) return;
+            var regList = keywords.Select(s => new Regex(s));
+            foreach ( var reg in regList)
+            {
+                Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
+            }
+
+            foreach (var stream in selectedSteams)
+            {
+                if (stream.Playlist == null) continue;
+                foreach (var part in stream.Playlist.MediaParts)
+                {
+                    //没有找到广告分片
+                    if (part.MediaSegments.All(x => regList.All(reg => !reg.IsMatch(x.Url))))
+                    {
+                        continue;
+                    }
+                    //找到广告分片 清理
+                    else
+                    {
+                        part.MediaSegments = part.MediaSegments.Where(x => regList.All(reg => !reg.IsMatch(x.Url))).ToList();
+                    }
+                }
+
+                //清理已经为空的 part
+                stream.Playlist.MediaParts = stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0).ToList();
             }
         }
     }

@@ -304,6 +304,9 @@ namespace N_m3u8DL_RE
             if (!livingFlag)
                 FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
 
+            //应用用户自定义的广告分片关键字
+            FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
+
             //记录文件
             extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
 
