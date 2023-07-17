@@ -10,6 +10,18 @@ namespace N_m3u8DL_RE.Common.Resource
     {
         public static Dictionary<string, TextContainer> LANG_DIC = new()
         {
+            ["singleFileSplitWarn"] = new TextContainer
+            (
+                zhCN: "整段文件已被自动切割为小分片以加速下载",
+                zhTW: "整段文件已被自動切割為小分片以加速下載",
+                enUS: "The entire file has been cut into small segments to accelerate"
+            ),
+            ["singleFileRealtimeDecryptWarn"] = new TextContainer
+            (
+                zhCN: "实时解密已被强制关闭",
+                zhTW: "即時解密已被強制關閉",
+                enUS: "Real-time decryption has been disabled"
+            ),
             ["customRangeWarn"] = new TextContainer
             (
                 zhCN: "请注意，自定义下载范围有时会导致音画不同步",

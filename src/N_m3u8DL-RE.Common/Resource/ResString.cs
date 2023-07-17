@@ -10,6 +10,8 @@ namespace N_m3u8DL_RE.Common.Resource
     public class ResString
     {
         public readonly static string ReLiveTs = "<RE_LIVE_TS>";
+        public static string singleFileRealtimeDecryptWarn { get => GetText("singleFileRealtimeDecryptWarn"); }
+        public static string singleFileSplitWarn { get => GetText("singleFileSplitWarn"); }
         public static string customRangeWarn { get => GetText("customRangeWarn"); }
         public static string customRangeFound { get => GetText("customRangeFound"); }
         public static string customAdKeywordsFound { get => GetText("customAdKeywordsFound"); }

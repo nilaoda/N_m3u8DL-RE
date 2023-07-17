@@ -109,7 +109,16 @@ namespace N_m3u8DL_RE.DownloadManager
             if (segments.Count() == 1)
             {
                 var splitSegments = await LargeSingleFileSplitUtil.SplitUrlAsync(segments.First(), DownloaderConfig.Headers);
-                if (splitSegments != null) segments = splitSegments;
+                if (splitSegments != null)
+                {
+                    segments = splitSegments;
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileSplitWarn}[/]");
+                    if (DownloaderConfig.MyOptions.MP4RealTimeDecryption)
+                    {
+                        DownloaderConfig.MyOptions.MP4RealTimeDecryption = false;
+                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileRealtimeDecryptWarn}[/]");
+                    }
+                }
                 else speedContainer.SingleSegment = true;
             }
 
