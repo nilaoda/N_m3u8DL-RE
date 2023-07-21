@@ -354,7 +354,8 @@ namespace N_m3u8DL_RE.DownloadManager
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                     var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                     FileDic[seg] = result;
-                    task.Increment(1);
+                    if (result != null && result.Success)
+                        task.Increment(1);
                     //实时解密
                     if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && result != null && result.Success && !string.IsNullOrEmpty(currentKID))
                     {

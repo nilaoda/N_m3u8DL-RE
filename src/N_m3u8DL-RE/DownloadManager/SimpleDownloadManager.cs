@@ -292,7 +292,8 @@ namespace N_m3u8DL_RE.DownloadManager
                 var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
                 var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
-                task.Increment(1);
+                if (result != null && result.Success)
+                    task.Increment(1);
                 //实时解密
                 if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && result != null && result.Success && !string.IsNullOrEmpty(currentKID)) 
                 {
@@ -641,13 +642,13 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.Columns(new ProgressColumn[]
             {
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
-                new ProgressBarColumn(),
-                new PercentageColumn(),
+                new ProgressBarColumn(){ Width = 30 },
+                new MyPercentageColumn(),
                 new DownloadStatusColumn(SpeedContainerDic),
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
-            }) ;
+            });
 
             if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !DownloaderConfig.MyOptions.UseShakaPackager
                 && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0)
