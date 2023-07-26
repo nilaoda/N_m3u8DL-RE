@@ -26,10 +26,10 @@ namespace N_m3u8DL_RE.Column
             _recodingDurDic = recodingDurDic;
             _refreshedDurDic = refreshedDurDic;
         }
-        public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
+        public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
             if (_refreshedDurDic == null)
-                return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}", MyStyle).LeftAligned();
+                return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}", MyStyle).LeftJustified();
             else
             {                
                 return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}/{GlobalUtil.FormatTime(_refreshedDurDic[task.Id])}", GreyStyle);

@@ -13,11 +13,11 @@ namespace N_m3u8DL_RE.Column
         protected override bool NoWrap => true;
         public Style MyStyle { get; set; } = new Style(foreground: Color.Default);
         public Style FinishedStyle { get; set; } = new Style(foreground: Color.Yellow);
-        public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
+        public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
             if (task.IsFinished)
-                return new Text($"{task.Value}/{task.MaxValue} Waiting  ", FinishedStyle).LeftAligned();
-            return new Text($"{task.Value}/{task.MaxValue} Recording", MyStyle).LeftAligned();
+                return new Text($"{task.Value}/{task.MaxValue} Waiting  ", FinishedStyle).LeftJustified();
+            return new Text($"{task.Value}/{task.MaxValue} Recording", MyStyle).LeftJustified();
         }
     }
 }

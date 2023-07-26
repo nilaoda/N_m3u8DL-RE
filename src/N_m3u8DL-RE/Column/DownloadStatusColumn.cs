@@ -24,9 +24,9 @@ namespace N_m3u8DL_RE.Column
             this.SpeedContainerDic = speedContainerDic;
         }
 
-        public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
+        public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            if (task.Value == 0) return new Text("-", MyStyle).RightAligned();
+            if (task.Value == 0) return new Text("-", MyStyle).RightJustified();
             var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
             var speedContainer = SpeedContainerDic[task.Id];
@@ -43,7 +43,7 @@ namespace N_m3u8DL_RE.Column
 
             if (task.IsFinished) sizeStr = GlobalUtil.FormatFileSize(size);
 
-            return new Text(sizeStr ?? "-", MyStyle).RightAligned();
+            return new Text(sizeStr ?? "-", MyStyle).RightJustified();
         }
     }
 }

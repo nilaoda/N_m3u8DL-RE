@@ -22,7 +22,7 @@ namespace N_m3u8DL_RE.Column
         {
             _recodingSizeDic = recodingSizeDic;
         }
-        public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
+        public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
             var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var taskId = task.Id;
@@ -33,7 +33,7 @@ namespace N_m3u8DL_RE.Column
             }
             DateTimeStringDic[taskId] = now;
             var flag = RecodingSizeDic.TryGetValue(taskId, out var size);
-            return new Text(GlobalUtil.FormatFileSize(flag ? size : 0), MyStyle).LeftAligned();
+            return new Text(GlobalUtil.FormatFileSize(flag ? size : 0), MyStyle).LeftJustified();
         }
     }
 }

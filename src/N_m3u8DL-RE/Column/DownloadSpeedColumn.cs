@@ -15,7 +15,6 @@ namespace N_m3u8DL_RE.Column
     {
         private long _stopSpeed = 0;
         private ConcurrentDictionary<int, string> DateTimeStringDic = new();
-        private ConcurrentDictionary<int, string> SpeedDic = new();
         protected override bool NoWrap => true;
         private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; }
 
@@ -26,7 +25,7 @@ namespace N_m3u8DL_RE.Column
 
         public Style MyStyle { get; set; } = new Style(foreground: Color.Green);
 
-        public override IRenderable Render(RenderContext context, ProgressTask task, TimeSpan deltaTime)
+        public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
             var taskId = task.Id;
             var speedContainer = SpeedContainerDic[taskId];
@@ -41,16 +40,15 @@ namespace N_m3u8DL_RE.Column
             //一秒汇报一次即可
             if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now && !flag)
             {
-                SpeedDic[taskId] = FormatFileSize(speedContainer.Downloaded);
+                speedContainer.NowSpeed = speedContainer.Downloaded;
                 //速度为0，计数增加
-                if (speedContainer.Downloaded <= _stopSpeed) { speedContainer.AddLowSpeedCount(); SpeedDic[taskId] += $"({speedContainer.LowSpeedCount})"; }
+                if (speedContainer.Downloaded <= _stopSpeed) { speedContainer.AddLowSpeedCount(); }
                 else speedContainer.ResetLowSpeedCount();
                 speedContainer.Reset();
             }
             DateTimeStringDic[taskId] = now;
             var style = flag ? Style.Plain : MyStyle;
-            SpeedDic.TryGetValue(taskId, out var speed);
-            return flag ? new Text("-", style).Centered() : new Text(speed ?? "0Bps", style).Centered();
+            return flag ? new Text("-", style).Centered() : new Text(FormatFileSize(speedContainer.NowSpeed) + (speedContainer.LowSpeedCount > 0 ? $"({speedContainer.LowSpeedCount})" : ""), style).Centered();
         }
 
         private static string FormatFileSize(double fileSize)

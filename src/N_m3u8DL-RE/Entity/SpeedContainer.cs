@@ -12,6 +12,7 @@ namespace N_m3u8DL_RE.Entity
     internal class SpeedContainer
     {
         public bool SingleSegment { get; set; } = false;
+        public long NowSpeed { get; set; } = 0L; //当前每秒速度
         public long? ResponseLength { get; set; }
         public long RDownloaded { get => _Rdownloaded; }
         private int _zeroSpeedCount = 0;
