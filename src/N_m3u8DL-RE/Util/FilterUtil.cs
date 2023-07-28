@@ -246,6 +246,9 @@ namespace N_m3u8DL_RE.Util
             foreach (var stream in selectedSteams)
             {
                 if (stream.Playlist == null) continue;
+
+                var countBefore = stream.SegmentsCount;
+
                 foreach (var part in stream.Playlist.MediaParts)
                 {
                     //没有找到广告分片
@@ -262,6 +265,13 @@ namespace N_m3u8DL_RE.Util
 
                 //清理已经为空的 part
                 stream.Playlist.MediaParts = stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0).ToList();
+
+                var countAfter = stream.SegmentsCount;
+
+                if (countBefore != countAfter)
+                {
+                    Logger.WarnMarkUp("[grey]{} segments => {} segments[/]", countBefore, countAfter);
+                }
             }
         }
     }
