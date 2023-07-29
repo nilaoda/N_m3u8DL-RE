@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Common.Log;
+﻿using Mp4SubtitleParser;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Config;
 using System.Diagnostics;
@@ -92,7 +93,13 @@ namespace N_m3u8DL_RE.Util
             })!.WaitForExitAsync();
         }
 
-        public static async Task<string?> SearchKeyFromFile(string? file, string? kid)
+        /// <summary>
+        /// 从文本文件中查询KID的KEY
+        /// </summary>
+        /// <param name="file">文本文件</param>
+        /// <param name="kid">目标KID</param>
+        /// <returns></returns>
+        public static async Task<string?> SearchKeyFromFileAsync(string? file, string? kid)
         {
             try
             {
@@ -117,6 +124,25 @@ namespace N_m3u8DL_RE.Util
                 Logger.ErrorMarkUp(ex.Message);
             }
             return null;
+        }
+
+        public static string? ReadInit(byte[] data)
+        {
+            var info = MP4InitUtil.ReadInit(data);
+            if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
+            if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
+            if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
+            return info.KID;
+        }
+
+        public static string? ReadInit(string output)
+        {
+            using (var fs = File.OpenRead(output))
+            {
+                var header = new byte[1 * 1024 * 1024]; //1MB
+                fs.Read(header);
+                return ReadInit(header);
+            }
         }
     }
 }

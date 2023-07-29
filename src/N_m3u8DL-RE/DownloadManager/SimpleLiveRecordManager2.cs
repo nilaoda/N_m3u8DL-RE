@@ -58,29 +58,10 @@ namespace N_m3u8DL_RE.DownloadManager
             SelectedSteams = selectedSteams;
         }
 
-        private string? ReadInit(byte[] data)
-        {
-            var info = MP4InitUtil.ReadInit(data);
-            if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
-            if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
-            if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
-            return info.KID;
-        }
-
-        private string? ReadInit(string output)
-        {
-            using (var fs = File.OpenRead(output))
-            {
-                var header = new byte[4096]; //4KB
-                fs.Read(header);
-                return ReadInit(header);
-            }
-        }
-
         //从文件读取KEY
         private async Task SearchKeyAsync(string? currentKID)
         {
-            var _key = await MP4DecryptUtil.SearchKeyFromFile(DownloaderConfig.MyOptions.KeyTextFile, currentKID);
+            var _key = await MP4DecryptUtil.SearchKeyFromFileAsync(DownloaderConfig.MyOptions.KeyTextFile, currentKID);
             if (_key != null)
             {
                 if (DownloaderConfig.MyOptions.Keys == null)
@@ -231,7 +212,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     //读取mp4信息
                     if (result != null && result.Success)
                     {
-                        currentKID = ReadInit(result.ActualFilePath);
+                        currentKID = MP4DecryptUtil.ReadInit(result.ActualFilePath);
                         //从文件读取KEY
                         await SearchKeyAsync(currentKID);
                         //实时解密
@@ -309,7 +290,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         //读取init信息
                         if (string.IsNullOrEmpty(currentKID))
                         {
-                            currentKID = ReadInit(result.ActualFilePath);
+                            currentKID = MP4DecryptUtil.ReadInit(result.ActualFilePath);
                         }
                         //从文件读取KEY
                         await SearchKeyAsync(currentKID);
