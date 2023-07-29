@@ -34,6 +34,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_ffmpegBinaryPath { get => GetText("cmd_ffmpegBinaryPath"); }
         public static string cmd_mkvmergeBinaryPath { get => GetText("cmd_mkvmergeBinaryPath"); }
         public static string cmd_baseUrl { get => GetText("cmd_baseUrl"); }
+        public static string cmd_maxSpeed { get => GetText("cmd_maxSpeed"); }
         public static string cmd_adKeyword { get => GetText("cmd_adKeyword"); }
         public static string cmd_moreHelp { get => GetText("cmd_moreHelp"); }
         public static string cmd_header { get => GetText("cmd_header"); }

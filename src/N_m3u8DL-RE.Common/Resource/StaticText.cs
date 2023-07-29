@@ -136,6 +136,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "設置BaseURL",
                 enUS: "Set BaseURL"
             ),
+            ["cmd_maxSpeed"] = new TextContainer
+            (
+                zhCN: "设置限速，单位支持 Mbps 或 Kbps，如：15M 100K",
+                zhTW: "設置限速，單位支持 Mbps 或 Kbps，如：15M 100K",
+                enUS: "Set speed limit, Mbps or Kbps, for example: 15M 100K."
+            ),
             ["cmd_noDateInfo"] = new TextContainer
             (
                 zhCN: "混流时不写入日期信息",

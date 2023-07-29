@@ -21,6 +21,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public string[]? AdKeywords { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.MaxSpeed"/>.
+        /// </summary>
+        public long? MaxSpeed { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.Keys"/>.
         /// </summary>
         public string[]? Keys { get; set; }

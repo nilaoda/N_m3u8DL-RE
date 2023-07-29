@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230728";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230730";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -58,6 +58,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> ConcurrentDownload = new(new string[] { "-mt", "--concurrent-download" }, description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
         private readonly static Option<bool> NoLog = new(new string[] { "--no-log" }, description: ResString.cmd_noLog, getDefaultValue: () => false);
         private readonly static Option<string[]?> AdKeywords = new(new string[] { "--ad-keyword" }, description: ResString.cmd_adKeyword) { ArgumentHelpName = "REG" };
+        private readonly static Option<long?> MaxSpeed = new(new string[] { "-R", "--max-speed" }, description: ResString.cmd_maxSpeed, parseArgument: ParseSpeedLimit) { ArgumentHelpName = "SPEED" };
 
 
         //代理选项
@@ -101,6 +102,32 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> DropVideoFilter = new(new string[] { "-dv", "--drop-video" }, description: ResString.cmd_dropVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> DropAudioFilter = new(new string[] { "-da", "--drop-audio" }, description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> DropSubtitleFilter = new(new string[] { "-ds", "--drop-subtitle" }, description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+
+        /// <summary>
+        /// 解析录制直播时长限制
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        private static long? ParseSpeedLimit(ArgumentResult result)
+        {
+            var input = result.Tokens.First().Value.ToUpper();
+            try
+            {
+                var reg = new Regex("([\\d\\\\.]+)(M|K)");
+                if (!reg.IsMatch(input)) throw new ArgumentException();
+
+                var number = double.Parse(reg.Match(input).Groups[1].Value);
+                if (reg.Match(input).Groups[2].Value == "M")
+                    return (long)(number * 1024 * 1024);
+                else
+                    return (long)(number * 1024);
+            }
+            catch (Exception)
+            {
+                result.ErrorMessage = "error in parse SpeedLimit: " + input;
+                return null;
+            }
+        }
 
         /// <summary>
         /// 解析用户定义的下载范围
@@ -502,6 +529,7 @@ namespace N_m3u8DL_RE.CommandLine
                     NoDateInfo = bindingContext.ParseResult.GetValueForOption(NoDateInfo),
                     NoLog = bindingContext.ParseResult.GetValueForOption(NoLog),
                     AdKeywords = bindingContext.ParseResult.GetValueForOption(AdKeywords),
+                    MaxSpeed = bindingContext.ParseResult.GetValueForOption(MaxSpeed),
                 };
 
                 if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
@@ -564,6 +592,7 @@ namespace N_m3u8DL_RE.CommandLine
                 BinaryMerge, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
+                MaxSpeed,
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
                 LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,

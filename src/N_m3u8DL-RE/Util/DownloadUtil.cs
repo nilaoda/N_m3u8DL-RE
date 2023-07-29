@@ -120,6 +120,11 @@ namespace N_m3u8DL_RE.Util
                 {
                     speedContainer.Add(size);
                     await stream.WriteAsync(buffer, 0, size);
+                    //限速策略
+                    while (speedContainer.Downloaded > speedContainer.SpeedLimit)
+                    {
+                        await Task.Delay(1);
+                    }
                 }
 
                 return new DownloadResult()

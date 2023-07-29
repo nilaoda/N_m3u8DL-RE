@@ -662,6 +662,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     var description = item.ToShortShortString();
                     var task = ctx.AddTask(description, autoStart: false);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); //速度计算
+                    //限速设置
+                    if (DownloaderConfig.MyOptions.MaxSpeed != null)
+                    {
+                        SpeedContainerDic[task.Id].SpeedLimit = DownloaderConfig.MyOptions.MaxSpeed.Value;
+                    }
                     return (item, task);
                 }).ToDictionary(item => item.item, item => item.task);
 
