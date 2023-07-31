@@ -81,6 +81,8 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_customRange { get => GetText("cmd_customRange"); }
         public static string cmd_liveKeepSegments { get => GetText("cmd_liveKeepSegments"); }
         public static string cmd_livePipeMux { get => GetText("cmd_livePipeMux"); }
+        public static string cmd_livePipeOptions { get => GetText("cmd_livePipeOptions"); }
+        public static string cmd_livePipeOptions_more { get => GetText("cmd_livePipeOptions_more"); }
         public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }
         public static string cmd_taskStartAt { get => GetText("cmd_taskStartAt"); }
         public static string cmd_liveWaitTime { get => GetText("cmd_liveWaitTime"); }

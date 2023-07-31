@@ -406,6 +406,33 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "錄製直播並開啟即時合併時通過管道+ffmpeg即時混流到TS文件",
                 enUS: "Real-time muxing to TS file through pipeline + ffmpeg (liveRealTimeMerge enabled)"
             ),
+            ["cmd_livePipeOptions"] = new TextContainer
+            (
+                zhCN: "管道+ffmpeg实时混流时传递给ffmpeg的参数. 输入 \"--morehelp live-pipe-options\" 以查看详细信息",
+                zhTW: "管道+ffmpeg實時混流時傳遞給ffmpeg的參數. 輸入 \"--morehelp live-pipe-options\" 以查看詳細訊息",
+                enUS: "Command args passed to ffmpeg when real-time muxing through pipeline + ffmpeg (liveRealTimeMerge enabled). Use \"--morehelp live-pipe-options\" for more details"
+            ),
+            ["cmd_livePipeOptions_more"] = new TextContainer
+            (
+                zhCN: "{INPUTS}将被替换为实际的输入管道.\r\n" +
+                      "{DATE}将被替换为实际的时间.\r\n" +
+                      "上述占位符无需引号包裹\n\r" +
+                      "例如: \r\n\r\n" +
+                      "# 输出为a.ts\r\n"+
+                      "-re {INPUTS} a.ts",
+                zhTW: "{INPUTS}將被替換爲實際的輸入管道.\r\n" +
+                      "{DATE}將被替換爲實際的時間.\r\n" +
+                      "上述佔位符無需引號包裹\n\r\r\n" +
+                      "例如: \r\n" + 
+                      "# 輸出爲a.ts\r\n" +
+                      "-re {INPUTS} a.ts",
+                enUS: "{INPUTS} will be replaced with actual input pipes.\r\n" +
+                      "{DATE} will be replaced with actual time.\r\n" +
+                      "The above placeholders do not need to be wrapped in quotes\r\n\r\n" +
+                      "Example: \r\n" + 
+                      "# output as a.ts\r\n"+
+                      "-re {INPUTS} a.ts"
+            ),
             ["cmd_liveKeepSegments"] = new TextContainer
             (
                 zhCN: "录制直播并开启实时合并时依然保留分片",

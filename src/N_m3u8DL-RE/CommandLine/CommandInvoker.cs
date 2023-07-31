@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230730";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230731";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -86,6 +86,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> LiveRealTimeMerge = new(new string[] { "--live-real-time-merge" }, description: ResString.cmd_liveRealTimeMerge, getDefaultValue: () => false);
         private readonly static Option<bool> LiveKeepSegments = new(new string[] { "--live-keep-segments" }, description: ResString.cmd_liveKeepSegments, getDefaultValue: () => true);
         private readonly static Option<bool> LivePipeMux = new(new string[] { "--live-pipe-mux" }, description: ResString.cmd_livePipeMux, getDefaultValue: () => false);
+        private readonly static Option<string?> LivePipeOptions = new(new string[] { "--live-pipe-options" }, description: ResString.cmd_livePipeOptions) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<TimeSpan?> LiveRecordLimit = new(new string[] { "--live-record-limit" }, description: ResString.cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
         private readonly static Option<int?> LiveWaitTime = new(new string[] { "--live-wait-time" }, description: ResString.cmd_liveWaitTime) { ArgumentHelpName = "SEC" };
         private readonly static Option<int> LiveTakeCount = new(new string[] { "--live-take-count" }, description: ResString.cmd_liveTakeCount, getDefaultValue: () => 16) { ArgumentHelpName = "NUM" };
@@ -520,6 +521,7 @@ namespace N_m3u8DL_RE.CommandLine
                     TaskStartAt = bindingContext.ParseResult.GetValueForOption(TaskStartAt),
                     LivePerformAsVod = bindingContext.ParseResult.GetValueForOption(LivePerformAsVod),
                     LivePipeMux = bindingContext.ParseResult.GetValueForOption(LivePipeMux),
+                    LivePipeOptions = bindingContext.ParseResult.GetValueForOption(LivePipeOptions),
                     LiveFixVttByAudio = bindingContext.ParseResult.GetValueForOption(LiveFixVttByAudio),
                     UseSystemProxy = bindingContext.ParseResult.GetValueForOption(UseSystemProxy),
                     CustomProxy = bindingContext.ParseResult.GetValueForOption(CustomProxy),
@@ -576,6 +578,7 @@ namespace N_m3u8DL_RE.CommandLine
                 {
                     "mux-after-done" => ResString.cmd_muxAfterDone_more,
                     "mux-import" => ResString.cmd_muxImport_more,
+                    "live-pipe-options" => ResString.cmd_livePipeOptions_more,
                     "select-video" => ResString.cmd_selectVideo_more,
                     "select-audio" => ResString.cmd_selectAudio_more,
                     "select-subtitle" => ResString.cmd_selectSubtitle_more,
@@ -595,7 +598,7 @@ namespace N_m3u8DL_RE.CommandLine
                 MaxSpeed,
                 MuxAfterDone,
                 CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
-                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
+                LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux,LivePipeOptions, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
                 MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, MoreHelp
             };
 

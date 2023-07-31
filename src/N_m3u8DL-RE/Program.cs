@@ -96,6 +96,13 @@ namespace N_m3u8DL_RE
                 throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
             }
 
+            //LivePipeOptions开启时 LivePipeMux必须开启
+            if (option.LivePipeOptions!=null && !option.LivePipeMux)
+            {
+                Logger.WarnMarkUp("LivePipeOptions detected, forced enable LivePipeMux");
+                option.LivePipeMux = true;
+            }
+
             //LivePipeMux开启时 LiveRealTimeMerge必须开启
             if (option.LivePipeMux && !option.LiveRealTimeMerge)
             {

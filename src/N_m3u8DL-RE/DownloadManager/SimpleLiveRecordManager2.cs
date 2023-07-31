@@ -544,8 +544,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             if (PipeSteamNamesDic.Count == SelectedSteams.Where(x => x.MediaType != MediaType.SUBTITLES).Count()) 
                             {
                                 var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
-                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
-                                var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, names, output);
+                                var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, DownloaderConfig.MyOptions.LivePipeOptions, names, output);
                             }
 
                             //Windows only

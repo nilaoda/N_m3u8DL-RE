@@ -40,57 +40,83 @@ namespace N_m3u8DL_RE.Util
             }
         }
 
-        public static async Task<bool> StartPipeMuxAsync(string binary, string[] pipeNames, string outputPath)
+        public static async Task<bool> StartPipeMuxAsync(string binary, string? options, string[] pipeNames, string outputPath)
         {
             return await Task.Run(async () =>
             {
                 await Task.Delay(1000);
-                return StartPipeMux(binary, pipeNames, outputPath);
+                return StartPipeMux(binary, options, pipeNames, outputPath);
             });
         }
 
-        public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
+        public static bool StartPipeMux(string binary, string? options, string[] pipeNames, string outputPath)
         {
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
-
+            StringBuilder command = new StringBuilder("-y ");
             string? customDest = Environment.GetEnvironmentVariable("RE_LIVE_PIPE_OPTIONS");
 
-            if (!string.IsNullOrEmpty(customDest))
+            if (!string.IsNullOrEmpty(options))
             {
-                command.Append(" -re ");
+                command.Append(options);
+            }
+            else
+            {
+                command.Append("-fflags +genpts -loglevel quiet ");
+                if (!string.IsNullOrEmpty(customDest))
+                {
+                    command.Append("-re ");
+                }
+                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(outputPath).EscapeMarkup()}[/]");
             }
 
+
+
+            StringBuilder inputs = new StringBuilder("");
             foreach (var item in pipeNames)
             {
                 if (OperatingSystem.IsWindows())
-                    command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
+                    inputs.Append($" -i \"\\\\.\\pipe\\{item}\" ");
                 else
                     //command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
-                    command.Append($" -i \"{Path.Combine(Path.GetTempPath(), item)}\" ");
+                    inputs.Append($" -i \"{Path.Combine(Path.GetTempPath(), item)}\" ");
             }
 
             for (int i = 0; i < pipeNames.Length; i++)
             {
-                command.Append($" -map {i} ");
+                inputs.Append($" -map {i} ");
             }
 
-            command.Append(" -strict unofficial -c copy ");
-            command.Append($" -metadata date=\"{dateString}\" ");
-            command.Append($" -ignore_unknown -copy_unknown ");
-
-
-            if (!string.IsNullOrEmpty(customDest))
+            if (!string.IsNullOrEmpty(options))
             {
-                if (customDest.Trim().StartsWith("-"))
-                    command.Append(customDest);
-                else
-                    command.Append($" -f mpegts -shortest \"{customDest}\"");
-                Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
+                command.Replace("{INPUTS}", $"{inputs}");
+                command.Replace("{DATE}", $"\"{dateString}\"");
             }
             else
             {
-                command.Append($" -f mpegts -shortest \"{outputPath}\"");
+                command.Append(inputs);
+                command.Append(" -strict unofficial -c copy ");
+                command.Append($" -metadata date=\"{dateString}\" ");
+                command.Append($" -ignore_unknown -copy_unknown ");
+            }
+
+            if (string.IsNullOrEmpty(options))
+            {
+                if (!string.IsNullOrEmpty(customDest))
+                {
+                    if (customDest.Trim().StartsWith("-"))
+                        command.Append(customDest);
+                    else
+                        command.Append($" -f mpegts -shortest \"{customDest}\"");
+                    Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
+                }
+                else
+                {
+                    command.Append($" -f mpegts -shortest \"{outputPath}\"");
+                }
+            }
+            else
+            {
+                Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
             }
 
             using var p = new Process();
