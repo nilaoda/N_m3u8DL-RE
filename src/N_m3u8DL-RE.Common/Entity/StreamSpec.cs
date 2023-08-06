@@ -17,6 +17,9 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? Name { get; set; }
         public Choise? Default { get; set; }
 
+        //由于用户选择 被跳过的分片总时长
+        public double? SkippedDuration { get; set; }
+
         //MSS信息
         public MSSData? MSSData { get; set; }
 

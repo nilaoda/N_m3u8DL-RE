@@ -73,6 +73,8 @@ namespace N_m3u8DL_RE
             //检测更新
             CheckUpdateAsync();
 
+            Logger.IsWriteFile = !option.NoLog;
+            Logger.InitLogFile();
             Logger.LogLevel = option.LogLevel;
             Logger.Info(CommandInvoker.VERSION_INFO);
 
@@ -94,6 +96,13 @@ namespace N_m3u8DL_RE
                 throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
             }
 
+            //LivePipeMux开启时 LiveRealTimeMerge必须开启
+            if (option.LivePipeMux && !option.LiveRealTimeMerge)
+            {
+                Logger.WarnMarkUp("LivePipeMux detected, forced enable LiveRealTimeMerge");
+                option.LiveRealTimeMerge = true;
+            }
+
             //预先检查ffmpeg
             if (option.FFmpegBinaryPath == null)
                 option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
@@ -103,8 +112,10 @@ namespace N_m3u8DL_RE
                 throw new FileNotFoundException(ResString.ffmpegNotFound);
             }
 
+            Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
+
             //预先检查mkvmerge
-            if (option.UseMkvmerge && option.MuxAfterDone)
+            if (option.MuxOptions != null && option.MuxOptions.UseMkvmerge && option.MuxAfterDone)
             {
                 if (option.MkvmergeBinaryPath == null)
                     option.MkvmergeBinaryPath = GlobalUtil.FindExecutable("mkvmerge");
@@ -112,6 +123,7 @@ namespace N_m3u8DL_RE
                 {
                     throw new FileNotFoundException("mkvmerge not found");
                 }
+                Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
             }
 
             //预先检查
@@ -127,12 +139,14 @@ namespace N_m3u8DL_RE
                         var file4 = GlobalUtil.FindExecutable("packager-win-x64");
                         if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException("shaka-packager not found!");
                         option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
+                        Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                     }
                     else
                     {
                         var file = GlobalUtil.FindExecutable("mp4decrypt");
                         if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
                         option.DecryptionBinaryPath = file;
+                        Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
                     }
                 }
                 else if (!File.Exists(option.DecryptionBinaryPath))
@@ -150,6 +164,7 @@ namespace N_m3u8DL_RE
             foreach (var item in option.Headers)
             {
                 headers[item.Key] = item.Value;
+                Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
             }
 
             var parserConfig = new ParserConfig()
@@ -189,6 +204,7 @@ namespace N_m3u8DL_RE
             //解析流信息
             var streams = await extractor.ExtractStreamsAsync();
 
+
             //全部媒体
             var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder);
             //基本流
@@ -198,11 +214,18 @@ namespace N_m3u8DL_RE
             //可选字幕轨道
             var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
 
-            if (option.WriteMetaJson)
+            //尝试从URL或文件读取文件名
+            if (string.IsNullOrEmpty(option.SaveName))
             {
-                Logger.Warn(ResString.writeJson);
-                await File.WriteAllTextAsync("meta.json", GlobalUtil.ConvertToJson(lists), Encoding.UTF8);
+                option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
             }
+
+            //生成文件夹
+            var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+            //记录文件
+            extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
+            //写出文件
+            await WriteRawFilesAsync(option, extractor, tmpDir);
 
             Logger.Info(ResString.streamsInfo, lists.Count(), basicStreams.Count(), audios.Count(), subs.Count());
 
@@ -219,6 +242,13 @@ namespace N_m3u8DL_RE
                 subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
                 lists = basicStreams.Concat(audios).Concat(subs).OrderBy(x => true);
             }
+
+            if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
+            if (option.DropAudioFilter != null) Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
+            if (option.DropSubtitleFilter != null) Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
+            if (option.VideoFilter != null) Logger.Extra($"VideoFilter => {option.VideoFilter}");
+            if (option.AudioFilter != null) Logger.Extra($"AudioFilter => {option.AudioFilter}");
+            if (option.SubtitleFilter != null) Logger.Extra($"SubtitleFilter => {option.SubtitleFilter}");
 
             if (option.AutoSelect)
             {
@@ -270,11 +300,15 @@ namespace N_m3u8DL_RE
                 option.BinaryMerge = true;
             }
 
-            if (option.WriteMetaJson)
-            {
-                Logger.Warn(ResString.writeJson);
-                await File.WriteAllTextAsync("meta_selected.json", GlobalUtil.ConvertToJson(selectedStreams), Encoding.UTF8);
-            }
+            //应用用户自定义的分片范围
+            if (!livingFlag)
+                FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
+
+            //应用用户自定义的广告分片关键字
+            FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
+
+            //记录文件
+            extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
 
             Logger.Info(ResString.selectedStream);
             foreach (var item in selectedStreams)
@@ -282,38 +316,44 @@ namespace N_m3u8DL_RE
                 Logger.InfoMarkUp(item.ToString());
             }
 
+            //写出文件
+            await WriteRawFilesAsync(option, extractor, tmpDir);
+
             if (option.SkipDownload)
             {
                 return;
             }
 
 #if DEBUG
+            Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
 #endif
 
-            //尝试从URL或文件读取文件名
-            if (string.IsNullOrEmpty(option.SaveName))
-            {
-                option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
-            }
-
             Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
+
+            //开始MuxAfterDone后自动使用二进制版
+            if (!option.BinaryMerge && option.MuxAfterDone)
+            {
+                option.BinaryMerge = true;
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge6}[/]");
+            }
 
             //下载配置
             var downloadConfig = new DownloaderConfig()
             {
                 MyOptions = option,
+                DirPrefix = tmpDir,
                 Headers = parserConfig.Headers, //使用命令行解析得到的Headers
             };
 
             var result = false;
-            
+
             if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
             {
                 var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
                 result = await sldm.StartRecordAsync();
             }
-            else if(!livingFlag)
+            else if (!livingFlag)
             {
                 //开始下载
                 var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
@@ -333,6 +373,21 @@ namespace N_m3u8DL_RE
             {
                 Logger.ErrorMarkUp("[white on red]Failed[/]");
                 Environment.ExitCode = 1;
+            }
+        }
+
+        private static async Task WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string tmpDir)
+        {
+            //写出json文件
+            if (option.WriteMetaJson)
+            {
+                if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
+                Logger.Warn(ResString.writeJson);
+                foreach (var item in extractor.RawFiles)
+                {
+                    var file = Path.Combine(tmpDir, item.Key);
+                    if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
+                }
             }
         }
 

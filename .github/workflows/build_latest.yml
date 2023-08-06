@@ -3,6 +3,11 @@ name: Build Latest
 on:
   workflow_dispatch:
     inputs:
+      doRelease:
+        description: 'Publish new release'
+        type: boolean
+        default: false
+        required: false
       tag:
         type: string
         description: 'Release version tag (e.g. v1.2.3)'
@@ -14,11 +19,106 @@ on:
         default: 'main'
 
 env:
-  DOTNET_SDK_VERSION: "7.0.*"
+  DOTNET_SDK_VERSION: "8.0.*"
 
 jobs:
+  build-win-x64-arm64:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          include-prerelease: true
+
+      - run: dotnet publish src/N_m3u8DL-RE -r win-x64 -c Release -o artifact-x64
+      - run: dotnet publish src/N_m3u8DL-RE -r win-arm64 -c Release -o artifact-arm64
+
+      - name: Upload Artifact[win-x64]
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: N_m3u8DL-RE_Beta_win-x64
+          path: artifact-x64\N_m3u8DL-RE.exe
+
+      - name: Upload Artifact[win-arm64]
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: N_m3u8DL-RE_Beta_win-arm64
+          path: artifact-arm64\N_m3u8DL-RE.exe
+
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    container: ubuntu:18.04
+
+    steps:
+      - run: apt-get update
+      - run: apt-get install -y curl wget
+      - uses: actions/checkout@v2
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          include-prerelease: true
+      - run: apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
+      - run: dotnet publish src/N_m3u8DL-RE -r linux-x64 -c Release -o artifact
+
+      - name: Upload Artifact[linux-x64]
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: N_m3u8DL-RE_Beta_linux-x64
+          path: artifact/N_m3u8DL-RE
+
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-cross-arm64-20220312201346-b2c2436
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          include-prerelease: true
+      - run: dotnet publish src/N_m3u8DL-RE -r linux-arm64 -c Release -p:StripSymbols=true -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o artifact
+
+      - name: Upload Artifact[linux-arm64]
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: N_m3u8DL-RE_Beta_linux-arm64
+          path: artifact/N_m3u8DL-RE
+
+  build-mac-x64-arm64:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          include-prerelease: true
+      - run: dotnet publish src/N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 
+      - run: dotnet publish src/N_m3u8DL-RE -r osx-x64 -c Release -o artifact-x64 
+
+      - name: Upload Artifact[osx-x64]
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: N_m3u8DL-RE_Beta_osx-x64
+          path: artifact-x64/N_m3u8DL-RE
+      - name: Upload Artifact[osx-arm64]
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: N_m3u8DL-RE_Beta_osx-arm64
+          path: artifact-arm64/N_m3u8DL-RE
+
   create_draft_release:
     name: Create Github draft release
+    if: ${{ github.event.inputs.doRelease == 'true' }}
+    needs: [build-win-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
     runs-on: ubuntu-latest
     steps:
       - name: Audit gh version
@@ -53,109 +153,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-win-x64-arm64:
-    runs-on: windows-latest
-    needs: create_draft_release
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
-
-      - run: dotnet publish src/N_m3u8DL-RE -r win-x64 -c Release -o artifact-x64
-      - run: dotnet publish src/N_m3u8DL-RE -r win-arm64 -c Release -o artifact-arm64
-
-      - name: Upload Artifact[win-x64]
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: N_m3u8DL-RE_Beta_win-x64
-          path: artifact-x64\N_m3u8DL-RE.exe
-
-      - name: Upload Artifact[win-arm64]
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: N_m3u8DL-RE_Beta_win-arm64
-          path: artifact-arm64\N_m3u8DL-RE.exe
-
-  build-linux-x64:
-    runs-on: ubuntu-latest
-    container: ubuntu:18.04
-    needs: create_draft_release
-
-    steps:
-      - run: apt-get update
-      - run: apt-get install -y curl wget
-      - uses: actions/checkout@v2
-      - name: Set up dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
-      - run: apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
-      - run: dotnet publish src/N_m3u8DL-RE -r linux-x64 -c Release -o artifact
-
-      - name: Upload Artifact[linux-x64]
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: N_m3u8DL-RE_Beta_linux-x64
-          path: artifact/N_m3u8DL-RE
-
-  build-linux-arm64:
-    runs-on: ubuntu-latest
-    container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-cross-arm64-20220312201346-b2c2436
-    needs: create_draft_release
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
-      - run: dotnet publish src/N_m3u8DL-RE -r linux-arm64 -c Release -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o artifact
-
-      - name: Upload Artifact[linux-arm64]
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: N_m3u8DL-RE_Beta_linux-arm64
-          path: artifact/N_m3u8DL-RE
-
-  build-mac-x64-arm64:
-    runs-on: macos-latest
-    needs: create_draft_release
-
-    steps:
-      - uses: actions/checkout@v2
-      - run: rm src/N_m3u8DL-RE/Directory.Build.props
-
-      - name: Set up dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
-#      - run: dotnet publish src/N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 -p:PublishTrimmed=true -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
-#      - run: dotnet publish src/N_m3u8DL-RE -r osx-x64 -c Release -o artifact-x64 -p:PublishTrimmed=true -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
-      - run: dotnet publish src/N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
-      - run: dotnet publish src/N_m3u8DL-RE -r osx-x64 -c Release -o artifact-x64 -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
-
-      - name: Upload Artifact[osx-x64]
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: N_m3u8DL-RE_Beta_osx-x64
-          path: artifact-x64/N_m3u8DL-RE
-      - name: Upload Artifact[osx-arm64]
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: N_m3u8DL-RE_Beta_osx-arm64
-          path: artifact-arm64/N_m3u8DL-RE
-
   attach_to_release:
     name: Attach native executables to release
-    needs: [build-win-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
+    if: ${{ github.event.inputs.doRelease == 'true' }}
+    needs: create_draft_release
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
@@ -169,7 +170,7 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Tar (linux, macOS)
-        run: for dir in *{osx,linux}*; do tar cvzf "${dir}_${{ env.date }}.tar.gz" "$dir"; done
+        run: for dir in *{osx,linux}*; do tar cvzfp "${dir}_${{ env.date }}.tar.gz" "$dir"; done
         
       - name: Zip (windows)
         run: for dir in *win*; do zip -r "${dir}_${{ env.date }}.zip" "$dir"; done

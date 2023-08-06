@@ -10,6 +10,42 @@ namespace N_m3u8DL_RE.Common.Resource
     {
         public static Dictionary<string, TextContainer> LANG_DIC = new()
         {
+            ["singleFileSplitWarn"] = new TextContainer
+            (
+                zhCN: "整段文件已被自动切割为小分片以加速下载",
+                zhTW: "整段文件已被自動切割為小分片以加速下載",
+                enUS: "The entire file has been cut into small segments to accelerate"
+            ),
+            ["singleFileRealtimeDecryptWarn"] = new TextContainer
+            (
+                zhCN: "实时解密已被强制关闭",
+                zhTW: "即時解密已被強制關閉",
+                enUS: "Real-time decryption has been disabled"
+            ),
+            ["customRangeWarn"] = new TextContainer
+            (
+                zhCN: "请注意，自定义下载范围有时会导致音画不同步",
+                zhTW: "請注意，自定義下載範圍有時會導致音畫不同步",
+                enUS: "Please note that custom range may sometimes result in audio and video being out of sync"
+            ),
+            ["customRangeInvalid"] = new TextContainer
+            (
+                zhCN: "自定义下载范围无效",
+                zhTW: "自定義下載範圍無效",
+                enUS: "User customed range invalid"
+            ),
+            ["customAdKeywordsFound"] = new TextContainer
+            (
+                zhCN: "用户自定义广告分片URL关键字：",
+                zhTW: "用戶自定義廣告分片URL關鍵字：",
+                enUS: "User customed Ad keyword: "
+            ),
+            ["customRangeFound"] = new TextContainer
+            (
+                zhCN: "用户自定义下载范围：",
+                zhTW: "用戶自定義下載範圍：",
+                enUS: "User customed range: "
+            ),
             ["processImageSub"] = new TextContainer
             (
                 zhCN: "正在处理图形字幕",
@@ -70,6 +106,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "檢測到杜比視界內容，混流功能已禁用",
                 enUS: "Dolby Vision content is detected, mux after done is automatically disabled"
             ),
+            ["autoBinaryMerge6"] = new TextContainer
+            (
+                zhCN: "你已开启下载完成后混流，自动开启二进制合并",
+                zhTW: "你已開啟下載完成後混流，自動開啟二進制合併",
+                enUS: "MuxAfterDone is detected, binary merging is automatically enabled"
+            ),
             ["badM3u8"] = new TextContainer
             (
                 zhCN: "错误的m3u8",
@@ -94,11 +136,23 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "設置BaseURL",
                 enUS: "Set BaseURL"
             ),
+            ["cmd_maxSpeed"] = new TextContainer
+            (
+                zhCN: "设置限速，单位支持 Mbps 或 Kbps，如：15M 100K",
+                zhTW: "設置限速，單位支持 Mbps 或 Kbps，如：15M 100K",
+                enUS: "Set speed limit, Mbps or Kbps, for example: 15M 100K."
+            ),
             ["cmd_noDateInfo"] = new TextContainer
             (
                 zhCN: "混流时不写入日期信息",
                 zhTW: "混流時不寫入日期訊息",
                 enUS: "Date information is not written during muxing"
+            ),
+            ["cmd_noLog"] = new TextContainer
+            (
+                zhCN: "关闭日志文件输出",
+                zhTW: "關閉日誌文件輸出",
+                enUS: "Disable log file output"
             ),
             ["cmd_appendUrlParams"] = new TextContainer
             (
@@ -153,6 +207,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "mkvmerge可执行程序全路径, 例如 C:\\Tools\\mkvmerge.exe",
                 zhTW: "mkvmerge可執行程序全路徑, 例如 C:\\Tools\\mkvmerge.exe",
                 enUS: "Full path to the mkvmerge binary, like C:\\Tools\\mkvmerge.exe"
+            ),
+            ["cmd_liveFixVttByAudio"] = new TextContainer
+            (
+                zhCN: "通过读取音频文件的起始时间修正VTT字幕",
+                zhTW: "透過讀取音訊檔案的起始時間修正VTT字幕",
+                enUS: "Correct VTT sub by reading the start time of the audio file"
             ),
             ["cmd_header"] = new TextContainer
             (
@@ -286,6 +346,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "設置請求代理, 如 http://127.0.0.1:8888",
                 enUS: "Set web request proxy, like http://127.0.0.1:8888"
             ),
+            ["cmd_customRange"] = new TextContainer
+            (
+                zhCN: "仅下载部分分片. 输入 \"--morehelp custom-range\" 以查看详细信息",
+                zhTW: "僅下載部分分片. 輸入 \"--morehelp custom-range\" 以查看詳細訊息",
+                enUS: "Download only part of the segments. Use \"--morehelp custom-range\" for more details"
+            ),
             ["cmd_useSystemProxy"] = new TextContainer
             (
                 zhCN: "使用系统默认代理",
@@ -303,6 +369,18 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "手动设置直播列表刷新间隔",
                 zhTW: "手動設置直播列表刷新間隔",
                 enUS: "Manually set the live playlist refresh interval"
+            ),
+            ["cmd_adKeyword"] = new TextContainer
+            (
+                zhCN: "设置广告分片的URL关键字(正则表达式)",
+                zhTW: "設置廣告分片的URL關鍵字(正則表達式)",
+                enUS: "Set URL keywords (regular expressions) for AD segments"
+            ),
+            ["cmd_liveTakeCount"] = new TextContainer
+            (
+                zhCN: "手动设置录制直播时首次获取分片的数量",
+                zhTW: "手動設置錄製直播時首次獲取分片的數量",
+                enUS: "Manually set the number of segments downloaded for the first time when recording live"
             ),
             ["cmd_customHLSMethod"] = new TextContainer
             (
@@ -374,31 +452,40 @@ namespace N_m3u8DL_RE.Common.Resource
             (
                 zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
                       "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
-                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
+                      "plistDurMin=hms:plistDurMax=hms:for=FOR\r\n\r\n" +
                       "* for=FOR: 选择方式. best[number], worst[number], all (默认: best)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 选择最佳视频\r\n" +
                       "-sv best\r\n" +
                       "# 选择4K+HEVC视频\r\n" +
-                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n",
+                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n" +
+                      "# 选择长度大于1小时20分钟30秒的视频\r\n" +
+                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n",
                 zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
-                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
-                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
+                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
+                      "plistDurMin=hms:plistDurMax=hms:for=FOR\r\n\r\n" +
                       "* for=FOR: 選擇方式. best[number], worst[number], all (默認: best)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 選擇最佳影片\r\n" +
                       "-sv best\r\n" +
                       "# 選擇4K+HEVC影片\r\n" +
-                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n",
+                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n" +
+                      "# 選擇長度大於1小時20分鐘30秒的影片\r\n" +
+                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n",
                 enUS: "Select video streams by regular expressions. OPTIONS is a colon separated list of:\r\n\r\n" +
-                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX\r\n" +
-                      "frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR\r\n\r\n" +
+                      "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
+                      "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
+                      "plistDurMin=hms:plistDurMax=hms:for=FOR\r\n\r\n" +
                       "* for=FOR: Select type. best[number], worst[number], all (Default: best)\r\n\r\n" +
                       "Examples: \r\n" +
                       "# select best video\r\n" +
                       "-sv best\r\n" +
                       "# select 4K+HEVC video\r\n" +
-                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n"
+                      "-sv res=\"3840*\":codec=hvc1:for=best\r\n" +
+                      "# Select best video with duration longer than 1 hour 20 minutes 30 seconds\r\n" +
+                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n"
             ),
             ["cmd_selectAudio"] = new TextContainer
             (
@@ -451,6 +538,39 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "通過正則表達式去除符合要求的字幕流.",
                 enUS: "Drop subtitle streams by regular expressions."
             ),
+            ["cmd_custom_range"] = new TextContainer
+            (
+                zhCN: "下载点播内容时, 仅下载部分分片.\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 下载[0,10]共11个分片\r\n" +
+                      "--custom-range 0-10\r\n" +
+                      "# 下载从序号10开始的后续分片\r\n" +
+                      "--custom-range 10-\r\n" +
+                      "# 下载前100个分片\r\n" +
+                      "--custom-range -99\r\n" +
+                      "# 下载第5分钟到20分钟的内容\r\n" +
+                      "--custom-range 05:00-20:00\r\n",
+                zhTW: "下載點播內容時, 僅下載部分分片.\r\n\r\n" +
+                      "例如: \r\n" +
+                      "# 下載[0,10]共11個分片\r\n" +
+                      "--custom-range 0-10\r\n" +
+                      "# 下載從序號10開始的後續分片\r\n" +
+                      "--custom-range 10-\r\n" +
+                      "# 下載前100個分片\r\n" +
+                      "--custom-range -99\r\n" +
+                      "# 下載第5分鐘到20分鐘的內容\r\n" +
+                      "--custom-range 05:00-20:00\r\n",
+                enUS: "Download only part of the segments when downloading vod content.\r\n\r\n" +
+                      "Examples: \r\n" +
+                      "# Download [0,10], a total of 11 segments\r\n" +
+                      "--custom-range 0-10\r\n" +
+                      "# Download subsequent segments starting from index 10\r\n" +
+                      "--custom-range 10-\r\n" +
+                      "# Download the first 100 segments\r\n" +
+                      "--custom-range -99\r\n" +
+                      "# Download content from the 05:00 to 20:00\r\n" +
+                      "--custom-range 05:00-20:00\r\n"
+            ),
             ["cmd_selectSubtitle_more"] = new TextContainer
             (
                 zhCN: "通过正则表达式选择符合要求的字幕流. 参考 --select-video\r\n\r\n" +
@@ -478,7 +598,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
-                      "* keep=BOOL: 混流完成是否删除文件 true, false (默认: true)\r\n\r\n" +
+                      "* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)\r\n" +
+                      "* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 混流为mp4容器\r\n" +
                       "-M format=mp4\r\n" +
@@ -490,7 +611,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默認: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
-                      "* keep=BOOL: 混流完成是否刪除文件 true, false (默認: true)\r\n\r\n" +
+                      "* skip_sub=BOOL: 是否忽略字幕文件 (默認: false)\r\n" +
+                      "* keep=BOOL: 混流完成是否保留文件 true, false (默認: false)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 混流為mp4容器\r\n" +
                       "-M format=mp4\r\n" +
@@ -502,7 +624,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "* format=FORMAT: set container. mkv, mp4\r\n" +
                       "* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)\r\n" +
                       "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
-                      "* keep=BOOL: set whether or not delete files. true, false (Default: true)\r\n\r\n" +
+                      "* skip_sub=BOOL: set whether or not skip subtitle files (Default: false)\r\n" +
+                      "* keep=BOOL: set whether or not keep files. true, false (Default: false)\r\n\r\n" +
                       "Examples: \r\n" +
                       "# mux to mp4\r\n" +
                       "-M format=mp4\r\n" +

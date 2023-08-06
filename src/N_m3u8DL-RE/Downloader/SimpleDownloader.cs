@@ -88,6 +88,7 @@ namespace N_m3u8DL_RE.Downloader
                 //已下载跳过
                 if (File.Exists(des))
                 {
+                    speedContainer.Add(new FileInfo(des).Length);
                     return new DownloadResult() { ActualContentLength = 0, ActualFilePath = des };
                 }
 
@@ -95,6 +96,7 @@ namespace N_m3u8DL_RE.Downloader
                 var dec = Path.Combine(Path.GetDirectoryName(des)!, Path.GetFileNameWithoutExtension(des) + "_dec" + Path.GetExtension(des));
                 if (File.Exists(dec))
                 {
+                    speedContainer.Add(new FileInfo(dec).Length);
                     return new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec };
                 }
 
@@ -130,6 +132,7 @@ namespace N_m3u8DL_RE.Downloader
             {
                 Logger.DebugMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
                 Logger.Debug(url + " " + ex.ToString());
+                Logger.Extra($"Ah oh!{Environment.NewLine}RetryCount => {retryCount}{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
                 if (retryCount-- > 0)
                 {
                     await Task.Delay(1000);
@@ -137,6 +140,7 @@ namespace N_m3u8DL_RE.Downloader
                 }
                 else
                 {
+                    Logger.Extra($"The retry attempts have been exhausted and the download of this segment has failed.{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
                     Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
                 }
                 //throw new Exception("download failed", ex);

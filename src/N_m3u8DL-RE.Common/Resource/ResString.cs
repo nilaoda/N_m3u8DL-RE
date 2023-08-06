@@ -10,11 +10,18 @@ namespace N_m3u8DL_RE.Common.Resource
     public class ResString
     {
         public readonly static string ReLiveTs = "<RE_LIVE_TS>";
+        public static string singleFileRealtimeDecryptWarn { get => GetText("singleFileRealtimeDecryptWarn"); }
+        public static string singleFileSplitWarn { get => GetText("singleFileSplitWarn"); }
+        public static string customRangeWarn { get => GetText("customRangeWarn"); }
+        public static string customRangeFound { get => GetText("customRangeFound"); }
+        public static string customAdKeywordsFound { get => GetText("customAdKeywordsFound"); }
+        public static string customRangeInvalid { get => GetText("customRangeInvalid"); }
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
         public static string autoBinaryMerge3 { get => GetText("autoBinaryMerge3"); }
         public static string autoBinaryMerge4 { get => GetText("autoBinaryMerge4"); }
         public static string autoBinaryMerge5 { get => GetText("autoBinaryMerge5"); }
+        public static string autoBinaryMerge6 { get => GetText("autoBinaryMerge6"); }
         public static string badM3u8 { get => GetText("badM3u8"); }
         public static string binaryMerge { get => GetText("binaryMerge"); }
         public static string checkingLast { get => GetText("checkingLast"); }
@@ -27,6 +34,8 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_ffmpegBinaryPath { get => GetText("cmd_ffmpegBinaryPath"); }
         public static string cmd_mkvmergeBinaryPath { get => GetText("cmd_mkvmergeBinaryPath"); }
         public static string cmd_baseUrl { get => GetText("cmd_baseUrl"); }
+        public static string cmd_maxSpeed { get => GetText("cmd_maxSpeed"); }
+        public static string cmd_adKeyword { get => GetText("cmd_adKeyword"); }
         public static string cmd_moreHelp { get => GetText("cmd_moreHelp"); }
         public static string cmd_header { get => GetText("cmd_header"); }
         public static string cmd_muxImport { get => GetText("cmd_muxImport"); }
@@ -40,6 +49,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_selectSubtitle { get => GetText("cmd_selectSubtitle"); }
         public static string cmd_dropSubtitle { get => GetText("cmd_dropSubtitle"); }
         public static string cmd_selectSubtitle_more { get => GetText("cmd_selectSubtitle_more"); }
+        public static string cmd_custom_range { get => GetText("cmd_custom_range"); }
         public static string cmd_customHLSMethod { get => GetText("cmd_customHLSMethod"); }
         public static string cmd_customHLSKey { get => GetText("cmd_customHLSKey"); }
         public static string cmd_customHLSIv { get => GetText("cmd_customHLSIv"); }
@@ -54,6 +64,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_savePattern { get => GetText("cmd_savePattern"); }
         public static string cmd_skipDownload { get => GetText("cmd_skipDownload"); }
         public static string cmd_noDateInfo { get => GetText("cmd_noDateInfo"); }
+        public static string cmd_noLog { get => GetText("cmd_noLog"); }
         public static string cmd_skipMerge { get => GetText("cmd_skipMerge"); }
         public static string cmd_subFormat { get => GetText("cmd_subFormat"); }
         public static string cmd_subOnly { get => GetText("cmd_subOnly"); }
@@ -67,11 +78,14 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_concurrentDownload { get => GetText("cmd_concurrentDownload"); }
         public static string cmd_useSystemProxy { get => GetText("cmd_useSystemProxy"); }
         public static string cmd_customProxy { get => GetText("cmd_customProxy"); }
+        public static string cmd_customRange { get => GetText("cmd_customRange"); }
         public static string cmd_liveKeepSegments { get => GetText("cmd_liveKeepSegments"); }
         public static string cmd_livePipeMux { get => GetText("cmd_livePipeMux"); }
         public static string cmd_liveRecordLimit { get => GetText("cmd_liveRecordLimit"); }
         public static string cmd_taskStartAt { get => GetText("cmd_taskStartAt"); }
         public static string cmd_liveWaitTime { get => GetText("cmd_liveWaitTime"); }
+        public static string cmd_liveTakeCount { get => GetText("cmd_liveTakeCount"); }
+        public static string cmd_liveFixVttByAudio { get => GetText("cmd_liveFixVttByAudio"); }
         public static string cmd_liveRealTimeMerge { get => GetText("cmd_liveRealTimeMerge"); }
         public static string cmd_livePerformAsVod { get => GetText("cmd_livePerformAsVod"); }
         public static string cmd_muxAfterDone { get => GetText("cmd_muxAfterDone"); }

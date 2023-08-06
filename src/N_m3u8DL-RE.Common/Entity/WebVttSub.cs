@@ -15,6 +15,8 @@ namespace N_m3u8DL_RE.Common.Entity
         private static partial Regex TSValueRegex();
         [GeneratedRegex("\\s")]
         private static partial Regex SplitRegex();
+        [GeneratedRegex("<c\\..*?>([\\s\\S]*?)<\\/c>")]
+        private static partial Regex VttClassRegex();
 
         public List<SubCue> Cues { get; set; } = new List<SubCue>();
         public long MpegtsTimestamp { get; set; } = 0L;
@@ -50,6 +52,7 @@ namespace N_m3u8DL_RE.Common.Entity
             if (!text.Trim().StartsWith("WEBVTT"))
                 throw new Exception("Bad vtt!");
 
+            text += Environment.NewLine;
 
             var webSub = new WebVttSub();
             var needPayload = false;
@@ -77,6 +80,8 @@ namespace N_m3u8DL_RE.Common.Entity
                     if (string.IsNullOrEmpty(line.Trim()))
                     {
                         var payload = string.Join(Environment.NewLine, payloads);
+                        if (string.IsNullOrEmpty(payload.Trim())) continue; //没获取到payload 跳过添加
+
                         var arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
                         var startTime = ConvertToTS(arr[0]);
                         var endTime = ConvertToTS(arr[1]);
@@ -85,7 +90,7 @@ namespace N_m3u8DL_RE.Common.Entity
                         {
                             StartTime = startTime,
                             EndTime = endTime,
-                            Payload = string.Join("", payload.Where(c => c != 8203)), //Remove Zero Width Space!
+                            Payload = RemoveClassTag(string.Join("", payload.Where(c => c != 8203))), //Remove Zero Width Space!
                             Settings = style
                         });
                         payloads.Clear();
@@ -115,6 +120,18 @@ namespace N_m3u8DL_RE.Common.Entity
             }
 
             return webSub;
+        }
+
+        private static string RemoveClassTag(string text)
+        {
+            if (VttClassRegex().IsMatch(text))
+            {
+                return string.Join(Environment.NewLine, text.Split('\n').Select(line => line.TrimEnd()).Select(line =>
+                {
+                    return string.Concat(VttClassRegex().Matches(line).Select(x => x.Groups[1].Value + " "));
+                })).TrimEnd();
+            }
+            else return text;
         }
 
         /// <summary>
@@ -176,6 +193,13 @@ namespace N_m3u8DL_RE.Common.Entity
 
         private static TimeSpan ConvertToTS(string str)
         {
+            //17.0s
+            if (str.EndsWith('s'))
+            {
+                double sec = Convert.ToDouble(str[..^1]);
+                return TimeSpan.FromSeconds(sec);
+            }
+
             str = str.Replace(',', '.');
             var ms = Convert.ToInt32(str.Split('.').Last());
             var o = str.Split('.').First();
@@ -199,6 +223,22 @@ namespace N_m3u8DL_RE.Common.Entity
             }
             sb.AppendLine();
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// 字幕向前平移指定时间
+        /// </summary>
+        /// <param name="time"></param>
+        public void LeftShiftTime(TimeSpan time)
+        {
+            foreach (var cue in this.Cues)
+            {
+                if (cue.StartTime.TotalSeconds - time.TotalSeconds > 0) cue.StartTime -= time;
+                else cue.StartTime = TimeSpan.FromSeconds(0);
+
+                if (cue.EndTime.TotalSeconds - time.TotalSeconds > 0) cue.EndTime -= time;
+                else cue.EndTime = TimeSpan.FromSeconds(0);
+            }
         }
 
         public string ToVtt()

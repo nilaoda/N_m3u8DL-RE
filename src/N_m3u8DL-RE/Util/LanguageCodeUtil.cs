@@ -378,6 +378,8 @@ cmn-Hans;chi;中文（简体）;普通话
 cmn-Hant;chi;中文（繁體）;普通話
 Cantonese;chi;中文;粵語
 Mandarin;chi;中文;普通话
+Japanese;jpn;日本語;日本語
+Korean;kor;한국어;한국어
 Vietnamese;vie;Vietnamese;Vietnamese
 English;eng;English;English
 Thai;tha;Thai;Thai

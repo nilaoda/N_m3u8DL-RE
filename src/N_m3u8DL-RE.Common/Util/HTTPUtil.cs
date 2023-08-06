@@ -11,12 +11,15 @@ namespace N_m3u8DL_RE.Common.Util
         {
             AllowAutoRedirect = false,
             AutomaticDecompression = DecompressionMethods.All,
-            ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+            ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true,
+            MaxConnectionsPerServer = 1024,
         };
 
         public static readonly HttpClient AppHttpClient = new(HttpClientHandler)
         {
-            Timeout = TimeSpan.FromSeconds(100)
+            Timeout = TimeSpan.FromSeconds(100),
+            DefaultRequestVersion = HttpVersion.Version20,
+            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
         };
 
         private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
@@ -56,6 +59,7 @@ namespace N_m3u8DL_RE.Common.Util
                     
                     if (redirectedUrl != url)
                     {
+                        Logger.Extra($"Redirected => {redirectedUrl}");
                         return await DoGetAsync(redirectedUrl, headers);
                     }
                 }

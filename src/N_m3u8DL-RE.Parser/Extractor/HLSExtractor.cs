@@ -304,7 +304,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         continue;
                     }
                     //常规情况的#EXT-X-DISCONTINUITY标记，新建part
-                    if (!hasAd && segments.Count > 1)
+                    if (!hasAd && segments.Count >= 1)
                     {
                         mediaParts.Add(new MediaPart()
                         {

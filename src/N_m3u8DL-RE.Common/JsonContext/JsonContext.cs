@@ -16,6 +16,7 @@ namespace N_m3u8DL_RE.Common
     [JsonSerializable(typeof(IOrderedEnumerable<StreamSpec>))]
     [JsonSerializable(typeof(IEnumerable<MediaSegment>))]
     [JsonSerializable(typeof(List<StreamSpec>))]
+    [JsonSerializable(typeof(List<MediaSegment>))]
     [JsonSerializable(typeof(Dictionary<string, string>))]
     internal partial class JsonContext : JsonSerializerContext { }
 }

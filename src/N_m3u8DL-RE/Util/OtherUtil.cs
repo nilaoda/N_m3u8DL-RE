@@ -4,6 +4,7 @@ using N_m3u8DL_RE.Enum;
 using System.CommandLine;
 using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util
 {
@@ -92,6 +93,30 @@ namespace N_m3u8DL_RE.Util
             if (secs == -1) secs = 0;
 
             return new TimeSpan(days, hours, mins, secs);
+        }
+
+        /// <summary>
+        /// 从1h3m20s解析出总秒数
+        /// </summary>
+        /// <param name="timeStr"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static double ParseSeconds(string timeStr)
+        {
+            var pattern = new Regex(@"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$");
+
+            var match = pattern.Match(timeStr);
+
+            if (!match.Success)
+            {
+                throw new ArgumentException("时间格式无效");
+            }
+
+            int hours = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 0;
+            int minutes = match.Groups[2].Success ? int.Parse(match.Groups[2].Value) : 0;
+            int seconds = match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0;
+
+            return hours * 3600 + minutes * 60 + seconds;
         }
 
         //若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录

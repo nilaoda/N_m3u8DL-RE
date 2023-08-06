@@ -17,6 +17,14 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
         /// <summary>
+        /// See: <see cref="CommandInvoker.AdKeywords"/>.
+        /// </summary>
+        public string[]? AdKeywords { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.MaxSpeed"/>.
+        /// </summary>
+        public long? MaxSpeed { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.Keys"/>.
         /// </summary>
         public string[]? Keys { get; set; }
@@ -40,6 +48,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.NoDateInfo"/>.
         /// </summary>
         public bool NoDateInfo { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.NoLog"/>.
+        /// </summary>
+        public bool NoLog { get; set; }
         /// <summary>
         /// See: <see cref="CommandInvoker.AutoSelect"/>.
         /// </summary>
@@ -108,14 +120,6 @@ namespace N_m3u8DL_RE.CommandLine
         /// See: <see cref="CommandInvoker.MuxAfterDone"/>.
         /// </summary>
         public bool MuxAfterDone { get; set; }
-        /// <summary>
-        /// See: <see cref="CommandInvoker.MuxToMp4"/>.
-        /// </summary>
-        public bool MuxToMp4 { get; set; }
-        /// <summary>
-        /// See: <see cref="CommandInvoker.UseMkvmerge"/>.
-        /// </summary>
-        public bool UseMkvmerge { get; set; }
         /// <summary>
         /// See: <see cref="CommandInvoker.ConcurrentDownload"/>.
         /// </summary>
@@ -217,14 +221,26 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public WebProxy? CustomProxy { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.CustomRange"/>.
+        /// </summary>
+        public CustomRange? CustomRange { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.LiveWaitTime"/>.
         /// </summary>
         public int? LiveWaitTime { get; set; }
-        public bool MuxKeepFiles { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveTakeCount"/>.
+        /// </summary>
+        public int LiveTakeCount { get; set; }
+        public MuxOptions MuxOptions { get; set; }
         //public bool LiveWriteHLS { get; set; } = true;
         /// <summary>
         /// See: <see cref="CommandInvoker.LivePipeMux"/>.
         /// </summary>
         public bool LivePipeMux { get; set; }
+        /// <summary>
+        /// See: <see cref="CommandInvoker.LiveFixVttByAudio"/>.
+        /// </summary>
+        public bool LiveFixVttByAudio { get; set; }
     }
 }

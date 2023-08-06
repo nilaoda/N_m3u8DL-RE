@@ -18,6 +18,8 @@ namespace N_m3u8DL_RE.Parser
         private string rawText;
         private static SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
+        public Dictionary<string, string> RawFiles { get; set; } = new(); //存储（文件名,文件内容）
+
         public StreamExtractor()
         {
 
@@ -55,24 +57,28 @@ namespace N_m3u8DL_RE.Parser
 
         public void LoadSourceFromText(string rawText)
         {
+            var rawType = "txt";
             rawText = rawText.Trim();
             this.rawText = rawText;
             if (rawText.StartsWith(HLSTags.ext_m3u))
             {
                 Logger.InfoMarkUp(ResString.matchHLS);
                 extractor = new HLSExtractor(parserConfig);
+                rawType = "m3u8";
             }
             else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
             {
                 Logger.InfoMarkUp(ResString.matchDASH);
                 //extractor = new DASHExtractor(parserConfig);
                 extractor = new DASHExtractor2(parserConfig);
+                rawType = "mpd";
             }
             else if (rawText.Contains("</SmoothStreamingMedia>") && rawText.Contains("<SmoothStreamingMedia"))
             {
                 Logger.InfoMarkUp(ResString.matchMSS);
                 //extractor = new DASHExtractor(parserConfig);
                 extractor = new MSSExtractor(parserConfig);
+                rawType = "ism";
             }
             else if (rawText == ResString.ReLiveTs)
             {
@@ -83,6 +89,8 @@ namespace N_m3u8DL_RE.Parser
             {
                 throw new NotSupportedException(ResString.notSupported);
             }
+
+            RawFiles[$"raw.{rawType}"] = rawText;
         }
 
         /// <summary>
@@ -126,7 +134,7 @@ namespace N_m3u8DL_RE.Parser
             try
             {
                 await semaphore.WaitAsync();
-                int retryCount = 3; //增加重试
+                int retryCount = 5; //增加重试
             reGet:
                 try
                 {
@@ -137,7 +145,7 @@ namespace N_m3u8DL_RE.Parser
                     if (retryCount-- > 0)
                     {
                         Logger.WarnMarkUp($"[grey]Refresh Exception: {ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
-                        await Task.Delay(300);
+                        await Task.Delay(1000);
                         goto reGet;
                     }
                     else throw;

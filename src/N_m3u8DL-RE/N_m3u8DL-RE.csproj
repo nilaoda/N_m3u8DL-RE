@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-	<TargetFramework>net7.0</TargetFramework>
+	<TargetFramework>net8.0</TargetFramework>
     <RootNamespace>N_m3u8DL_RE</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
 	<LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
-	<Version>0.1.5.3</Version>
+	<Version>0.2.0</Version>
 	<Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 

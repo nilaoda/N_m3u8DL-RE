@@ -1,6 +1,10 @@
 # N_m3u8DL-RE
 跨平台的DASH/HLS/MSS下载工具。支持点播、直播(DASH/HLS)。
 
+[![img](https://img.shields.io/github/stars/nilaoda/N_m3u8DL-RE?label=%E7%82%B9%E8%B5%9E)](https://github.com/nilaoda/N_m3u8DL-RE)  [![img](https://img.shields.io/github/last-commit/nilaoda/N_m3u8DL-RE?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4)](https://github.com/nilaoda/N_m3u8DL-RE)  [![img](https://img.shields.io/github/release/nilaoda/N_m3u8DL-RE?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)](https://github.com/nilaoda/N_m3u8DL-RE/releases)  [![img](https://img.shields.io/github/license/nilaoda/N_m3u8DL-RE?label=%E8%AE%B8%E5%8F%AF%E8%AF%81)](https://github.com/nilaoda/N_m3u8DL-RE)   [![img](https://img.shields.io/github/downloads/nilaoda/N_m3u8DL-RE/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://github.com/nilaoda/N_m3u8DL-RE/releases)
+
+
+
 ---
 
 版本较低的Windows系统自带的终端可能不支持本程序，替代方案：在 [cmder](https://github.com/cmderdev/cmder) 中运行。
@@ -19,7 +23,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20221210
+  N_m3u8DL-RE (Beta version) 20230628
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -41,7 +45,8 @@ Options:
   --binary-merge                           二进制合并 [default: False]
   --del-after-done                         完成后删除临时文件 [default: True]
   --no-date-info                           混流时不写入日期信息 [default: False]
-  --write-meta-json                        解析后的信息是否输出json文件 [default: False]
+  --no-log                                 关闭日志文件输出 [default: False]
+  --write-meta-json                        解析后的信息是否输出json文件 [default: True]
   --append-url-params                      将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com [default: False]
   -mt, --concurrent-download               并发下载已选择的音频、视频和字幕 [default: False]
   -H, --header <header>                    为HTTP请求设置特定的请求头, 例如:
@@ -60,23 +65,24 @@ Options:
   --use-shaka-packager                     解密时使用shaka-packager替代mp4decrypt [default: False]
   --mp4-real-time-decryption               实时解密MP4分片 [default: False]
   -M, --mux-after-done <OPTIONS>           所有工作完成时尝试混流分离的音视频. 输入 "--morehelp mux-after-done" 以查看详细信息
-  --custom-hls-method <METHOD>             指定HLS加密方式
-                                           (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
+  --custom-hls-method <METHOD>             指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>       指定HLS解密KEY. 可以是文件, HEX或Base64
   --custom-hls-iv <FILE|HEX|BASE64>        指定HLS解密IV. 可以是文件, HEX或Base64
   --use-system-proxy                       使用系统默认代理 [default: True]
   --custom-proxy <URL>                     设置请求代理, 如 http://127.0.0.1:8888
+  --custom-range <RANGE>                   仅下载部分分片. 输入 "--morehelp custom-range" 以查看详细信息
   --task-start-at <yyyyMMddHHmmss>         在此时间之前不会开始执行任务
   --live-perform-as-vod                    以点播方式下载直播流 [default: False]
   --live-real-time-merge                   录制直播时实时合并 [default: False]
   --live-keep-segments                     录制直播并开启实时合并时依然保留分片 [default: True]
   --live-pipe-mux                          录制直播并开启实时合并时通过管道+ffmpeg实时混流到TS文件 [default: False]
+  --live-fix-vtt-by-audio                  通过读取音频文件的起始时间修正VTT字幕 [default: False]
   --live-record-limit <HH:mm:ss>           录制直播时的录制时长限制
   --live-wait-time <SEC>                   手动设置直播列表刷新间隔
   --mux-import <OPTIONS>                   混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
   -sv, --select-video <OPTIONS>            通过正则表达式选择符合要求的视频流. 输入 "--morehelp select-video" 以查看详细信息
   -sa, --select-audio <OPTIONS>            通过正则表达式选择符合要求的音频流. 输入 "--morehelp select-audio" 以查看详细信息
-  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看 详细信息
+  -ss, --select-subtitle <OPTIONS>         通过正则表达式选择符合要求的字幕流. 输入 "--morehelp select-subtitle" 以查看详细信息
   -dv, --drop-video <OPTIONS>              通过正则表达式去除符合要求的视频流.
   -da, --drop-audio <OPTIONS>              通过正则表达式去除符合要求的音频流.
   -ds, --drop-subtitle <OPTIONS>           通过正则表达式去除符合要求的字幕流.
@@ -98,7 +104,8 @@ More Help:
 * format=FORMAT: 指定混流容器 mkv, mp4
 * muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)
 * bin_path=PATH: 指定程序路径 (默认: 自动寻找)
-* keep=BOOL: 混流完成是否删除文件 true, false (默认: true)
+* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)
+* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)
 
 例如:
 # 混流为mp4容器
@@ -132,8 +139,9 @@ More Help:
 
 通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:
 
-id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX
-frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR
+id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX
+segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX
+plistDurMin=hms:plistDurMax=hms:for=FOR
 
 * for=FOR: 选择方式. best[number], worst[number], all (默认: best)
 
@@ -142,6 +150,8 @@ frame=REGEX:ch=REGEX:range=REGEX:url=REGEX:for=FOR
 -sv best
 # 选择4K+HEVC视频
 -sv res="3840*":codec=hvc1:for=best
+# 选择长度大于1小时20分钟30秒的视频
+-sv plistDurMin="1h20m30s":for=best
 ```
 ```
 More Help:
@@ -170,6 +180,23 @@ More Help:
 -ss all
 # 选择所有带有"中文"的字幕
 -ss name="中文":for=all
+```
+```
+More Help:
+
+  --custom-range
+
+下载点播内容时, 仅下载部分分片.
+
+例如:
+# 下载[0,10]共11个分片
+--custom-range 0-10
+# 下载从序号10开始的后续分片
+--custom-range 10-
+# 下载前100个分片
+--custom-range -99
+# 下载第5分钟到20分钟的内容
+--custom-range 05:00-20:00
 ```
 
 </details>
@@ -203,6 +230,10 @@ More Help:
 ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a -c copy 2022-09-21_19-54-42_V.ts
 ```
 在新版本(>=v0.1.5)中，可以尝试开启 `live-pipe-mux` 来代替以上命令
+
+**特别注意：如果网络环境不够稳定，请不要开启 `live-pipe-mux`。管道内数据读取由 ffmpeg 负责，在某些环境下容易丢失直播数据**
+
+在新版本(>=v0.1.8)中，能够通过设置环境变量 `RE_LIVE_PIPE_OPTIONS` 来改变 `live-pipe-mux` 时 ffmpeg 的某些选项： https://github.com/nilaoda/N_m3u8DL-RE/issues/162#issuecomment-1592462532
 
 ## 赞助
 

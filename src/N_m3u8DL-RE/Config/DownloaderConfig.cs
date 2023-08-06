@@ -11,8 +11,12 @@ namespace N_m3u8DL_RE.Config
 {
     internal class DownloaderConfig
     {
-        public required MyOption MyOptions { get; set; }  
+        public required MyOption MyOptions { get; set; }
 
+        /// <summary>
+        /// 前置阶段生成的文件夹名
+        /// </summary>
+        public required string DirPrefix { get; set; }
         /// <summary>
         /// 文件名模板
         /// </summary>
