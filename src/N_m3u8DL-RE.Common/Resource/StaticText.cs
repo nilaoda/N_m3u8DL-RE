@@ -172,6 +172,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "二進位制合併",
                 enUS: "Binary merge"
             ),
+            ["cmd_useFFmpegConcatDemuxer"] = new TextContainer
+            (
+                zhCN: "使用 ffmpeg 合并时，使用 concat 分离器而非 concat 协议",
+                zhTW: "使用 ffmpeg 合併時，使用 concat 分離器而非 concat 協議",
+                enUS: "When merging with ffmpeg, use the concat demuxer instead of the concat protocol"
+            ),
             ["cmd_checkSegmentsCount"] = new TextContainer
             (
                 zhCN: "检测实际下载的分片数量和预期数量是否匹配",

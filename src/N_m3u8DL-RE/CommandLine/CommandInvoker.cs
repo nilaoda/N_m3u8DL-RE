@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230730";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230820";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -45,6 +45,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> SkipDownload = new(new string[] { "--skip-download" }, description: ResString.cmd_skipDownload, getDefaultValue: () => false);
         private readonly static Option<bool> NoDateInfo = new(new string[] { "--no-date-info" }, description: ResString.cmd_noDateInfo, getDefaultValue: () => false);
         private readonly static Option<bool> BinaryMerge = new(new string[] { "--binary-merge" }, description: ResString.cmd_binaryMerge, getDefaultValue: () => false);
+        private readonly static Option<bool> UseFFmpegConcatDemuxer = new(new string[] { "--use-ffmpeg-concat-demuxer" }, description: ResString.cmd_useFFmpegConcatDemuxer, getDefaultValue: () => false);
         private readonly static Option<bool> DelAfterDone = new(new string[] { "--del-after-done" }, description: ResString.cmd_delAfterDone, getDefaultValue: () => true);
         private readonly static Option<bool> AutoSubtitleFix = new(new string[] { "--auto-subtitle-fix" }, description: ResString.cmd_subtitleFix, getDefaultValue: () => true);
         private readonly static Option<bool> CheckSegmentsCount = new(new string[] { "--check-segments-count" }, description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
@@ -483,6 +484,7 @@ namespace N_m3u8DL_RE.CommandLine
                     AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
                     SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
                     BinaryMerge = bindingContext.ParseResult.GetValueForOption(BinaryMerge),
+                    UseFFmpegConcatDemuxer = bindingContext.ParseResult.GetValueForOption(UseFFmpegConcatDemuxer),
                     DelAfterDone = bindingContext.ParseResult.GetValueForOption(DelAfterDone),
                     AutoSubtitleFix = bindingContext.ParseResult.GetValueForOption(AutoSubtitleFix),
                     CheckSegmentsCount = bindingContext.ParseResult.GetValueForOption(CheckSegmentsCount),
@@ -589,7 +591,7 @@ namespace N_m3u8DL_RE.CommandLine
             var rootCommand = new RootCommand(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MaxSpeed,

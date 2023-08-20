@@ -557,7 +557,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             };
                         }
                     }
-                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo);
+                    mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, useConcatDemuxer: DownloaderConfig.MyOptions.UseFFmpegConcatDemuxer);
                     if (mergeSuccess) output = ffOut;
                 }
             }
