@@ -6,8 +6,8 @@ on:
       doRelease:
         description: 'Publish new release'
         type: boolean
-        default: false
-        required: false
+        default: true
+        required: true
       tag:
         type: string
         description: 'Release version tag (e.g. v1.2.3)'
