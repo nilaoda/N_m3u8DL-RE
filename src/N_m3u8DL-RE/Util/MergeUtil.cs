@@ -110,7 +110,7 @@ namespace N_m3u8DL_RE.Util
 
         public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
             bool fastStart = false,
-            bool writeDate = true, bool useConcatDemuxer = false, string poster = "", string audioName = "", string title = "",
+            bool writeDate = true, bool useConcatDemuxer = true, string poster = "", string audioName = "", string title = "",
             string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
         {
             //改为绝对路径
