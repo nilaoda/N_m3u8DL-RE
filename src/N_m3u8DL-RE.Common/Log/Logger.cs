@@ -70,32 +70,39 @@ namespace N_m3u8DL_RE.Common.Log
 
         private static void HandleLog(string write, string subWrite = "")
         {
-            if (subWrite == "")
+            try
             {
-                AnsiConsole.MarkupLine(write);
-            }
-            else
-            {
-                AnsiConsole.Markup(write);
-                Console.WriteLine(subWrite);
-            }
-            if (IsWriteFile && File.Exists(LogFilePath))
-            {
-                var plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
-                try
+                if (subWrite == "")
                 {
-                    //进入写入
-                    LogWriteLock.EnterWriteLock();
-                    using (StreamWriter sw = File.AppendText(LogFilePath))
+                    AnsiConsole.MarkupLine(write);
+                }
+                else
+                {
+                    AnsiConsole.Markup(write);
+                    Console.WriteLine(subWrite);
+                }
+                if (IsWriteFile && File.Exists(LogFilePath))
+                {
+                    var plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
+                    try
                     {
-                        sw.WriteLine(plain);
+                        //进入写入
+                        LogWriteLock.EnterWriteLock();
+                        using (StreamWriter sw = File.AppendText(LogFilePath))
+                        {
+                            sw.WriteLine(plain);
+                        }
+                    }
+                    finally
+                    {
+                        //释放占用
+                        LogWriteLock.ExitWriteLock();
                     }
                 }
-                finally
-                {
-                    //释放占用
-                    LogWriteLock.ExitWriteLock();
-                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Failed to write: " + write);
             }
         }
 
