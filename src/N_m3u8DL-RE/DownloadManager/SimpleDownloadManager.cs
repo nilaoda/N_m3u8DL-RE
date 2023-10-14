@@ -618,6 +618,7 @@ namespace N_m3u8DL_RE.DownloadManager
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
 
             var progress = AnsiConsole.Progress().AutoClear(true);
+            progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
             //进度条的列定义
             progress.Columns(new ProgressColumn[]
