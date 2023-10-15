@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
@@ -189,10 +189,17 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         if (role != null)
                         {
                             var v = role.Attribute("value")?.Value;
-                            if (v == "subtitle")
-                                streamSpec.MediaType = MediaType.SUBTITLES;
-                            if (mType != null && mType.Contains("ttml"))
-                                streamSpec.Extension = "ttml";
+                            if (Enum.TryParse(v, true, out RoleType roleType))
+                            {
+                                streamSpec.Role = roleType;
+
+                                if (roleType == RoleType.Subtitle)
+                                {
+                                    streamSpec.MediaType = MediaType.SUBTITLES;
+                                    if (mType != null && mType.Contains("ttml"))
+                                        streamSpec.Extension = "ttml";
+                                }
+                            }
                         }
                         streamSpec.Playlist.IsLive = isLive;
                         //设置刷新间隔 timeShiftBufferDepth / 2
@@ -213,7 +220,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         {
                             streamSpec.PublishTime = DateTime.Parse(publishTime);
                         }
-                        
+
 
                         //第一种形式 SegmentBase
                         var segmentBaseElement = representation.Elements().Where(e => e.Name.LocalName == "SegmentBase").FirstOrDefault();
@@ -439,7 +446,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         //判断加密情况
-                        if (adaptationSet.Elements().Concat(representation.Elements()).Any(e => e.Name.LocalName == "ContentProtection")) 
+                        if (adaptationSet.Elements().Concat(representation.Elements()).Any(e => e.Name.LocalName == "ContentProtection"))
                         {
                             if (streamSpec.Playlist.MediaInit != null)
                             {
@@ -453,7 +460,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                         //处理同一ID分散在不同Period的情况
                         var _index = streamList.FindIndex(_f => _f.PeriodId != streamSpec.PeriodId && _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType);
-                        if (_index > -1) 
+                        if (_index > -1)
                         {
                             if (isLive)
                             {

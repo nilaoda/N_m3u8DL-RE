@@ -46,6 +46,8 @@ namespace N_m3u8DL_RE.Util
                 inputs = inputs.Where(i => i.Playlist?.TotalDuration > filter.PlaylistMinDur);
             if (filter.PlaylistMaxDur != null)
                 inputs = inputs.Where(i => i.Playlist?.TotalDuration < filter.PlaylistMaxDur);
+            if (filter.Role.HasValue)
+                inputs = inputs.Where(i => i.Role == filter.Role);
 
             var bestNumberStr = filter.For.Replace("best", "");
             var worstNumberStr = filter.For.Replace("worst", "");

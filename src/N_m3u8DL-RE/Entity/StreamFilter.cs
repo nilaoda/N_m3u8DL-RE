@@ -23,6 +23,7 @@ namespace N_m3u8DL_RE.Entity
         public long? SegmentsMaxCount { get; set; }
         public double? PlaylistMinDur {  get; set; }
         public double? PlaylistMaxDur {  get; set; }
+        public RoleType? Role { get; set; }
 
         public string For { get; set; } = "best";
 
@@ -43,6 +44,7 @@ namespace N_m3u8DL_RE.Entity
             if (SegmentsMaxCount != null) sb.Append($"SegmentsMaxCount: {SegmentsMaxCount} ");
             if (PlaylistMinDur != null) sb.Append($"PlaylistMinDur: {PlaylistMinDur} ");
             if (PlaylistMaxDur != null) sb.Append($"PlaylistMaxDur: {PlaylistMaxDur} ");
+            if (Role.HasValue) sb.Append($"Role: {Role} ");
 
             return sb.ToString() + $"For: {For}";
         }
