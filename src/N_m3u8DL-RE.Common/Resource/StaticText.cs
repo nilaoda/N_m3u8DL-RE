@@ -459,7 +459,7 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
                       "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
                       "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
-                      "plistDurMin=hms:plistDurMax=hms:for=FOR\r\n\r\n" +
+                      "plistDurMin=hms:plistDurMax=hms:role=string:for=FOR\r\n\r\n" +
                       "* for=FOR: 选择方式. best[number], worst[number], all (默认: best)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 选择最佳视频\r\n" +
@@ -467,11 +467,12 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 选择4K+HEVC视频\r\n" +
                       "-sv res=\"3840*\":codec=hvc1:for=best\r\n" +
                       "# 选择长度大于1小时20分钟30秒的视频\r\n" +
-                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n",
+                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
+                      "-sv role=\"main\":for:best\r\n",
                 zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
                       "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
                       "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
-                      "plistDurMin=hms:plistDurMax=hms:for=FOR\r\n\r\n" +
+                      "plistDurMin=hms:plistDurMax=hms:role=string:for=FOR\r\n\r\n" +
                       "* for=FOR: 選擇方式. best[number], worst[number], all (默認: best)\r\n\r\n" +
                       "例如: \r\n" +
                       "# 選擇最佳影片\r\n" +
@@ -479,11 +480,12 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 選擇4K+HEVC影片\r\n" +
                       "-sv res=\"3840*\":codec=hvc1:for=best\r\n" +
                       "# 選擇長度大於1小時20分鐘30秒的影片\r\n" +
-                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n",
+                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
+                      "-sv role=\"main\":for:best\r\n",
                 enUS: "Select video streams by regular expressions. OPTIONS is a colon separated list of:\r\n\r\n" +
                       "id=REGEX:lang=REGEX:name=REGEX:codec=REGEX:res=REGEX:frame=REGEX\r\n" +
                       "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
-                      "plistDurMin=hms:plistDurMax=hms:for=FOR\r\n\r\n" +
+                      "plistDurMin=hms:plistDurMax=hms:role=string:for=FOR\r\n\r\n" +
                       "* for=FOR: Select type. best[number], worst[number], all (Default: best)\r\n\r\n" +
                       "Examples: \r\n" +
                       "# select best video\r\n" +
@@ -491,7 +493,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# select 4K+HEVC video\r\n" +
                       "-sv res=\"3840*\":codec=hvc1:for=best\r\n" +
                       "# Select best video with duration longer than 1 hour 20 minutes 30 seconds\r\n" +
-                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n"
+                      "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
+                      "-sv role=\"main\":for:best\r\n"
             ),
             ["cmd_selectAudio"] = new TextContainer
             (
@@ -514,7 +517,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 选择最佳英语音轨\r\n" +
                       "-sa lang=en:for=best\r\n" +
                       "# 选择最佳的2条英语(或日语)音轨\r\n" +
-                      "-sa lang=\"ja|en\":for=best2\r\n",
+                      "-sa lang=\"ja|en\":for=best2\r\n" +
+                      "-sa role=\"main\":for:best\r\n",
                 zhTW: "通過正則表達式選擇符合要求的音軌. 參考 --select-video\r\n\r\n" +
                       "例如: \r\n" +
                       "# 選擇所有音訊\r\n" +
@@ -522,7 +526,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 選擇最佳英語音軌\r\n" +
                       "-sa lang=en:for=best\r\n" +
                       "# 選擇最佳的2條英語(或日語)音軌\r\n" +
-                      "-sa lang=\"ja|en\":for=best2\r\n",
+                      "-sa lang=\"ja|en\":for=best2\r\n" +
+                      "-sa role=\"main\":for:best\r\n",
                 enUS: "Select audio streams by regular expressions. ref --select-video\r\n\r\n" +
                       "Examples: \r\n" +
                       "# select all\r\n" +
@@ -530,7 +535,8 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# select best eng audio\r\n" +
                       "-sa lang=en:for=best\r\n" +
                       "# select best 2, and language is ja or en\r\n" +
-                      "-sa lang=\"ja|en\":for=best2\r\n"
+                      "-sa lang=\"ja|en\":for=best2\r\n" +
+                      "-sa role=\"main\":for:best\r\n"
             ),
             ["cmd_selectSubtitle"] = new TextContainer
             (
