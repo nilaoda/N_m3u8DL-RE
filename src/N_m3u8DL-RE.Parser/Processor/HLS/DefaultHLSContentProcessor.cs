@@ -29,6 +29,12 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 
         public override string Process(string m3u8Content, ParserConfig parserConfig)
         {
+            //处理content以\r作为换行符的情况
+            if (m3u8Content.Contains("\r") && !m3u8Content.Contains("\n"))
+            {
+                m3u8Content = m3u8Content.Replace("\r", Environment.NewLine);
+            }
+
             var m3u8Url = parserConfig.Url;
             //央视频回放
             if (m3u8Url.Contains("tlivecloud-playback-cdn.ysp.cctv.cn") && m3u8Url.Contains("endtime="))
