@@ -28,6 +28,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_appendUrlParams { get => GetText("cmd_appendUrlParams"); }
         public static string cmd_autoSelect { get => GetText("cmd_autoSelect"); }
         public static string cmd_binaryMerge { get => GetText("cmd_binaryMerge"); }
+        public static string cmd_useFFmpegConcatDemuxer { get => GetText("cmd_useFFmpegConcatDemuxer"); }
         public static string cmd_checkSegmentsCount { get => GetText("cmd_checkSegmentsCount"); }
         public static string cmd_decryptionBinaryPath { get => GetText("cmd_decryptionBinaryPath"); }
         public static string cmd_delAfterDone { get => GetText("cmd_delAfterDone"); }

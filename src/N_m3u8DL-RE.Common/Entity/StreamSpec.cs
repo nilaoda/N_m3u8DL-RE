@@ -31,6 +31,9 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? Channels { get; set; }
         public string? Extension { get; set; }
 
+        //Dash
+        public RoleType? Role { get; set; }
+
         //补充信息-色域
         public string? VideoRange { get; set; }
         //补充信息-特征
@@ -74,19 +77,19 @@ namespace N_m3u8DL_RE.Common.Entity
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")}";
+                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {Codecs}";
+                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
 
@@ -108,19 +111,19 @@ namespace N_m3u8DL_RE.Common.Entity
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")}";
+                var d = $"{(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{Language} | {Name} | {Codecs}";
+                var d = $"{Language} | {Name} | {Codecs} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
 
@@ -150,19 +153,19 @@ namespace N_m3u8DL_RE.Common.Entity
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr}";
+                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr}";
+                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr}";
+                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
 

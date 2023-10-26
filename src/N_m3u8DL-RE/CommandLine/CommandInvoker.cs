@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20230731";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20231021";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -45,6 +45,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> SkipDownload = new(new string[] { "--skip-download" }, description: ResString.cmd_skipDownload, getDefaultValue: () => false);
         private readonly static Option<bool> NoDateInfo = new(new string[] { "--no-date-info" }, description: ResString.cmd_noDateInfo, getDefaultValue: () => false);
         private readonly static Option<bool> BinaryMerge = new(new string[] { "--binary-merge" }, description: ResString.cmd_binaryMerge, getDefaultValue: () => false);
+        private readonly static Option<bool> UseFFmpegConcatDemuxer = new(new string[] { "--use-ffmpeg-concat-demuxer" }, description: ResString.cmd_useFFmpegConcatDemuxer, getDefaultValue: () => false);
         private readonly static Option<bool> DelAfterDone = new(new string[] { "--del-after-done" }, description: ResString.cmd_delAfterDone, getDefaultValue: () => true);
         private readonly static Option<bool> AutoSubtitleFix = new(new string[] { "--auto-subtitle-fix" }, description: ResString.cmd_subtitleFix, getDefaultValue: () => true);
         private readonly static Option<bool> CheckSegmentsCount = new(new string[] { "--check-segments-count" }, description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
@@ -99,7 +100,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<StreamFilter?> VideoFilter = new(new string[] { "-sv", "--select-video" }, description: ResString.cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> AudioFilter = new(new string[] { "-sa", "--select-audio" }, description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> SubtitleFilter = new(new string[] { "-ss", "--select-subtitle" }, description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
-        
+
         private readonly static Option<StreamFilter?> DropVideoFilter = new(new string[] { "-dv", "--drop-video" }, description: ResString.cmd_dropVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> DropAudioFilter = new(new string[] { "-da", "--drop-audio" }, description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
         private readonly static Option<StreamFilter?> DropSubtitleFilter = new(new string[] { "-ds", "--drop-subtitle" }, description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
@@ -178,7 +179,7 @@ namespace N_m3u8DL_RE.CommandLine
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 解析用户代理
         /// </summary>
@@ -367,6 +368,10 @@ namespace N_m3u8DL_RE.CommandLine
             if (!string.IsNullOrEmpty(plistDurMax))
                 streamFilter.PlaylistMaxDur = OtherUtil.ParseSeconds(plistDurMax);
 
+            var role = p.GetValue("role");
+            if (System.Enum.TryParse(role, true, out RoleType roleType))
+                streamFilter.Role = roleType;
+
             return streamFilter;
         }
 
@@ -484,6 +489,7 @@ namespace N_m3u8DL_RE.CommandLine
                     AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
                     SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
                     BinaryMerge = bindingContext.ParseResult.GetValueForOption(BinaryMerge),
+                    UseFFmpegConcatDemuxer = bindingContext.ParseResult.GetValueForOption(UseFFmpegConcatDemuxer),
                     DelAfterDone = bindingContext.ParseResult.GetValueForOption(DelAfterDone),
                     AutoSubtitleFix = bindingContext.ParseResult.GetValueForOption(AutoSubtitleFix),
                     CheckSegmentsCount = bindingContext.ParseResult.GetValueForOption(CheckSegmentsCount),
@@ -553,7 +559,7 @@ namespace N_m3u8DL_RE.CommandLine
 
                 //混流设置
                 var muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
-                if (muxAfterDoneValue != null) 
+                if (muxAfterDoneValue != null)
                 {
                     option.MuxAfterDone = true;
                     option.MuxOptions = muxAfterDoneValue;
@@ -571,7 +577,7 @@ namespace N_m3u8DL_RE.CommandLine
         {
             var argList = new List<string>(args);
             var index = -1;
-            if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1) 
+            if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)
             {
                 var option = argList[index + 1];
                 var msg = option switch
@@ -592,7 +598,7 @@ namespace N_m3u8DL_RE.CommandLine
             var rootCommand = new RootCommand(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-                BinaryMerge, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+                BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
                 MaxSpeed,
