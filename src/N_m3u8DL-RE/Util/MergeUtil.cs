@@ -190,7 +190,7 @@ namespace N_m3u8DL_RE.Util
         {
             var ext = mp4 ? "mp4" : "mkv";
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y ");
+            StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
 
             //INPUT
             foreach (var item in files)
