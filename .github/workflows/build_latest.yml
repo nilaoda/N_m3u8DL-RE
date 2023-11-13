@@ -32,7 +32,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
 
       - run: dotnet publish src/N_m3u8DL-RE -r win-x64 -c Release -o artifact-x64
       - run: dotnet publish src/N_m3u8DL-RE -r win-arm64 -c Release -o artifact-arm64
@@ -61,7 +60,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
       - run: apt-get install -y libicu-dev libcurl4-openssl-dev zlib1g-dev libkrb5-dev
       - run: dotnet publish src/N_m3u8DL-RE -r linux-x64 -c Release -o artifact
 
@@ -81,7 +79,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
       - run: dotnet publish src/N_m3u8DL-RE -r linux-arm64 -c Release -p:StripSymbols=true -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o artifact
 
       - name: Upload Artifact[linux-arm64]
@@ -100,7 +97,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-          include-prerelease: true
       - run: dotnet publish src/N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 
       - run: dotnet publish src/N_m3u8DL-RE -r osx-x64 -c Release -o artifact-x64 
 
