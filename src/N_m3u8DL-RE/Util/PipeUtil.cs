@@ -54,7 +54,8 @@ namespace N_m3u8DL_RE.Util
             string dateString = DateTime.Now.ToString("o");
             StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
 
-            string? customDest = Environment.GetEnvironmentVariable("RE_LIVE_PIPE_OPTIONS");
+            string customDest = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_OPTIONS");
+            string pipeDir = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_TMP_DIR", Path.GetTempPath());
 
             if (!string.IsNullOrEmpty(customDest))
             {
@@ -67,7 +68,7 @@ namespace N_m3u8DL_RE.Util
                     command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
                 else
                     //command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
-                    command.Append($" -i \"{Path.Combine(Path.GetTempPath(), item)}\" ");
+                    command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
             }
 
             for (int i = 0; i < pipeNames.Length; i++)

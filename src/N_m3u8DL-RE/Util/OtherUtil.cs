@@ -160,5 +160,10 @@ namespace N_m3u8DL_RE.Util
                 if (File.Exists(deGzipFile)) File.Delete(deGzipFile);
             }
         }
+
+        public static string GetEnvironmentVariable(string key, string defaultValue = "")
+        {
+            return Environment.GetEnvironmentVariable(key) ?? defaultValue;
+        }
     }
 }
