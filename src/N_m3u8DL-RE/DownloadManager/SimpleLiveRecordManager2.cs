@@ -801,7 +801,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 await StreamingUtil.WriteMasterListAsync(SelectedSteams, saveName, saveDir);
             }*/
 
-            var progress = AnsiConsole.Progress().AutoClear(true);
+            var progress = CustomAnsiConsole.Console.Progress().AutoClear(true);
             progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
             //进度条的列定义

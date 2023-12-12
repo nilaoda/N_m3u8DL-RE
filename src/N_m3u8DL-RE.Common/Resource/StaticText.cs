@@ -22,6 +22,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "即時解密已被強制關閉",
                 enUS: "Real-time decryption has been disabled"
             ),
+            ["force_ansi_console"] = new TextContainer
+            (
+                zhCN: "强制认定终端为支持Ansi且可交互的终端",
+                zhTW: "強制認定終端為支援Ansi且可交往的終端",
+                enUS: "Force assuming the terminal is ANSI-compatible and interactive"
+            ),
             ["customRangeWarn"] = new TextContainer
             (
                 zhCN: "请注意，自定义下载范围有时会导致音画不同步",

@@ -53,6 +53,7 @@ namespace N_m3u8DL_RE.CommandLine
         private readonly static Option<bool> AppendUrlParams = new(new string[] { "--append-url-params" }, description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
         private readonly static Option<bool> MP4RealTimeDecryption = new (new string[] { "--mp4-real-time-decryption" }, description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
         private readonly static Option<bool> UseShakaPackager = new (new string[] { "--use-shaka-packager" }, description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
+        private readonly static Option<bool> ForceAnsiConsole = new(new string[] { "--force-ansi-console" }, description: ResString.cmd_force_ansi_console);
         private readonly static Option<string?> DecryptionBinaryPath = new(new string[] { "--decryption-binary-path" }, description: ResString.cmd_decryptionBinaryPath) { ArgumentHelpName = "PATH" };
         private readonly static Option<string?> FFmpegBinaryPath = new(new string[] { "--ffmpeg-binary-path" }, description: ResString.cmd_ffmpegBinaryPath) { ArgumentHelpName = "PATH" };
         private readonly static Option<string?> BaseUrl = new(new string[] { "--base-url" }, description: ResString.cmd_baseUrl);
@@ -484,6 +485,7 @@ namespace N_m3u8DL_RE.CommandLine
                 var option = new MyOption
                 {
                     Input = bindingContext.ParseResult.GetValueForArgument(Input),
+                    ForceAnsiConsole = bindingContext.ParseResult.GetValueForOption(ForceAnsiConsole),
                     LogLevel = bindingContext.ParseResult.GetValueForOption(LogLevel),
                     AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
                     SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
@@ -594,7 +596,7 @@ namespace N_m3u8DL_RE.CommandLine
 
             var rootCommand = new RootCommand(VERSION_INFO)
             {
-                Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+                Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, ForceAnsiConsole,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
                 FFmpegBinaryPath,
                 LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
