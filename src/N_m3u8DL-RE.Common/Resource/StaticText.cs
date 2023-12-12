@@ -22,11 +22,17 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "即時解密已被強制關閉",
                 enUS: "Real-time decryption has been disabled"
             ),
-            ["force_ansi_console"] = new TextContainer
+            ["cmd_force_ansi_console"] = new TextContainer
             (
                 zhCN: "强制认定终端为支持Ansi且可交互的终端",
                 zhTW: "強制認定終端為支援Ansi且可交往的終端",
                 enUS: "Force assuming the terminal is ANSI-compatible and interactive"
+            ),
+            ["cmd_noansi"] = new TextContainer
+            (
+                zhCN: "去除ansi颜色",
+                zhTW: "關閉ansi顏色",
+                enUS: "Remove ANSI colors"
             ),
             ["customRangeWarn"] = new TextContainer
             (

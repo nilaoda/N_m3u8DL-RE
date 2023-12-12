@@ -1,6 +1,32 @@
-﻿using Spectre.Console;
+﻿using System.Text;
+using System.Text.RegularExpressions;
+using Spectre.Console;
 
 namespace N_m3u8DL_RE.Common.Log;
+
+public class NonAnsiWriter : TextWriter
+{
+    public override Encoding Encoding => Encoding.UTF8;
+
+    public override void Write(char value)
+    {
+        Console.Write(value);
+    }
+
+    public override void Write(string value)
+    {
+        RemoveAnsiEscapeSequences(value);
+    }
+
+    private void RemoveAnsiEscapeSequences(string input)
+    {
+        // Use regular expression to remove ANSI escape sequences
+        string output = Regex.Replace(input, @"\x1B\[[0-?]*[ -/]*[@-~]", "");
+
+        // Implement your custom write logic here, e.g., write to console
+        Console.Write(output);
+    }
+}
 
 /// <summary>
 /// A console capable of writing ANSI escape sequences.
@@ -11,12 +37,16 @@ public static class CustomAnsiConsole
     // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
     public static IAnsiConsole Console { get; set; }
 
-    public static void InitConsole(bool forceAnsi)
+    public static void InitConsole(bool forceAnsi, bool noansi)
     {
         if (forceAnsi)
-
         {
             var ansiConsoleSettings = new AnsiConsoleSettings();
+            if (noansi)
+            {
+                ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
+            }
+
             ansiConsoleSettings.Interactive = InteractionSupport.Yes;
             ansiConsoleSettings.Ansi = AnsiSupport.Yes;
             // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
@@ -24,7 +54,12 @@ public static class CustomAnsiConsole
         }
         else
         {
-            Console = AnsiConsole.Console;
+            var ansiConsoleSettings = new AnsiConsoleSettings();
+            if (noansi)
+            {
+                ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
+            }
+            Console = AnsiConsole.Create(ansiConsoleSettings);
         }
     }
 
@@ -45,5 +80,4 @@ public static class CustomAnsiConsole
     {
         Console.MarkupLine(value);
     }
-
 }

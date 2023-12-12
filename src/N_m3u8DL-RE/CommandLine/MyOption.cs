@@ -89,6 +89,10 @@ namespace N_m3u8DL_RE.CommandLine
         /// </summary>
         public bool ForceAnsiConsole { get; set; }
         /// <summary>
+        /// See: <see cref="CommandInvoker.Noansi"/>.
+        /// </summary>
+        public bool Noansi { get; set; }
+        /// <summary>
         /// See: <see cref="CommandInvoker.UseFFmpegConcatDemuxer"/>.
         /// </summary>
         public bool UseFFmpegConcatDemuxer { get; set; }
