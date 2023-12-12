@@ -7,8 +7,9 @@ namespace N_m3u8DL_RE.Common.Log;
 public class NonAnsiWriter : TextWriter
 {
     public override Encoding Encoding => Console.OutputEncoding;
-    
-    
+
+    private string lastOut = "";
+    private int dupCount = 0;
 
     public override void Write(char value)
     {
@@ -17,15 +18,30 @@ public class NonAnsiWriter : TextWriter
 
     public override void Write(string value)
     {
+        if (lastOut == value)
+        {
+            dupCount++;
+            return;
+        }
+
+        if (dupCount!=0)
+        {
+            Console.Write($"Suppress {dupCount} duplicate out");
+            dupCount = 0;
+        }
+        lastOut = value;
         RemoveAnsiEscapeSequences(value);
     }
 
     private void RemoveAnsiEscapeSequences(string input)
     {
         // Use regular expression to remove ANSI escape sequences
-        string output = Regex.Replace(input, @"\x1B\[([\d]+;?)+m", "");
-        output = Regex.Replace(input, @"\[\d+[AK]", "");
-
+        string output = Regex.Replace(input, @"\x1B\[(\d+;?)+m", "");
+        output = Regex.Replace(output, @"\[\??\d+[AKl]", "");
+        if (string.IsNullOrWhiteSpace(output))
+        {
+            return;
+        }
         // Implement your custom write logic here, e.g., write to console
         Console.Write(output);
     }
