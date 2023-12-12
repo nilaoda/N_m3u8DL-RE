@@ -6,7 +6,9 @@ namespace N_m3u8DL_RE.Common.Log;
 
 public class NonAnsiWriter : TextWriter
 {
-    public override Encoding Encoding => Encoding.UTF8;
+    public override Encoding Encoding => Console.OutputEncoding;
+    
+    
 
     public override void Write(char value)
     {
