@@ -21,7 +21,8 @@ public class NonAnsiWriter : TextWriter
     private void RemoveAnsiEscapeSequences(string input)
     {
         // Use regular expression to remove ANSI escape sequences
-        string output = Regex.Replace(input, @"\x1B\[[0-?]*[ -/]*[@-~]", "");
+        string output = Regex.Replace(input, @"\x1B\[([\d]+;?)+m", "");
+        output = Regex.Replace(input, @"\[\d+[AK]", "");
 
         // Implement your custom write logic here, e.g., write to console
         Console.Write(output);
