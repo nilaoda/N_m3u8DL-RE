@@ -621,7 +621,7 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
             //进度条的列定义
-            progress.Columns(new ProgressColumn[]
+            var progressColumns = new ProgressColumn[]
             {
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new ProgressBarColumn(){ Width = 30 },
@@ -630,7 +630,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
-            });
+            };
+            if (DownloaderConfig.MyOptions.Noansi)
+            {
+                progressColumns = progressColumns.SkipLast(1).ToArray();
+            }
+            progress.Columns(progressColumns);
 
             if (DownloaderConfig.MyOptions.MP4RealTimeDecryption && !DownloaderConfig.MyOptions.UseShakaPackager
                 && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0)
