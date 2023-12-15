@@ -29,7 +29,7 @@ public class NonAnsiWriter : TextWriter
     {
         // Use regular expression to remove ANSI escape sequences
         string output = Regex.Replace(input, @"\x1B\[(\d+;?)+m", "");
-        output = Regex.Replace(output, @"\[\??\d+[AKl]", "");
+        output = Regex.Replace(output, @"\[\??\d+[AKlh]", "");
         output = Regex.Replace(output,"[\r\n] +","");
         if (string.IsNullOrWhiteSpace(output))
         {
