@@ -63,6 +63,7 @@ public static class CustomAnsiConsole
             ansiConsoleSettings.Ansi = AnsiSupport.Yes;
             // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
             Console = AnsiConsole.Create(ansiConsoleSettings);
+            Console.Profile.Width = int.MaxValue;
         }
         else
         {
