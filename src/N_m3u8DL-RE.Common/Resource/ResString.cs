@@ -55,6 +55,8 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_customHLSKey { get => GetText("cmd_customHLSKey"); }
         public static string cmd_customHLSIv { get => GetText("cmd_customHLSIv"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
+        public static string cmd_force_ansi_console { get => GetText("cmd_force_ansi_console"); }
+        public static string cmd_noansi { get => GetText("cmd_noansi"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }
         public static string cmd_keyText { get => GetText("cmd_keyText"); }
         public static string cmd_loadKeyFailed { get => GetText("cmd_loadKeyFailed"); }
