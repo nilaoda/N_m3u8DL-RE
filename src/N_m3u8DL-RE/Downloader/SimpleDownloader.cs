@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Config;
@@ -33,50 +33,57 @@ namespace N_m3u8DL_RE.Downloader
         public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null)
         {
             var url = segment.Url;
-            var dResult = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
-            if (dResult != null && dResult.Success && segment.EncryptInfo != null)
+            var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
+            if (dResult != null && dResult.Success && dResult.ActualFilePath != des)
             {
-                if (segment.EncryptInfo.Method == EncryptMethod.AES_128)
+                if (segment.EncryptInfo != null)
                 {
-                    var key = segment.EncryptInfo.Key;
-                    var iv = segment.EncryptInfo.IV;
-                    AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
-                }
-                else if (segment.EncryptInfo.Method == EncryptMethod.AES_128_ECB)
-                {
-                    var key = segment.EncryptInfo.Key;
-                    var iv = segment.EncryptInfo.IV;
-                    AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
-                }
-                else if (segment.EncryptInfo.Method == EncryptMethod.CHACHA20)
-                {
-                    var key = segment.EncryptInfo.Key;
-                    var nonce = segment.EncryptInfo.IV;
+                    if (segment.EncryptInfo.Method == EncryptMethod.AES_128)
+                    {
+                        var key = segment.EncryptInfo.Key;
+                        var iv = segment.EncryptInfo.IV;
+                        AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
+                    }
+                    else if (segment.EncryptInfo.Method == EncryptMethod.AES_128_ECB)
+                    {
+                        var key = segment.EncryptInfo.Key;
+                        var iv = segment.EncryptInfo.IV;
+                        AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
+                    }
+                    else if (segment.EncryptInfo.Method == EncryptMethod.CHACHA20)
+                    {
+                        var key = segment.EncryptInfo.Key;
+                        var nonce = segment.EncryptInfo.IV;
 
-                    var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
-                    var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
-                    await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
-                }
-                else if (segment.EncryptInfo.Method == EncryptMethod.SAMPLE_AES_CTR)
-                {
-                    //throw new NotSupportedException("SAMPLE-AES-CTR");
+                        var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
+                        var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
+                        await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
+                    }
+                    else if (segment.EncryptInfo.Method == EncryptMethod.SAMPLE_AES_CTR)
+                    {
+                        //throw new NotSupportedException("SAMPLE-AES-CTR");
+                    }
+
+                    //Image头处理
+                    if (dResult.ImageHeader)
+                    {
+                        await ImageHeaderUtil.ProcessAsync(dResult.ActualFilePath);
+                    }
+                    //Gzip解压
+                    if (dResult.GzipHeader)
+                    {
+                        await OtherUtil.DeGzipFileAsync(dResult.ActualFilePath);
+                    }
                 }
 
-                //Image头处理
-                if (dResult.ImageHeader)
-                {
-                    await ImageHeaderUtil.ProcessAsync(dResult.ActualFilePath);
-                }
-                //Gzip解压
-                if (dResult.GzipHeader)
-                {
-                    await OtherUtil.DeGzipFileAsync(dResult.ActualFilePath);
-                }
+                //处理完成后改名
+                File.Move(dResult.ActualFilePath, des);
+                dResult.ActualFilePath = des;
             }
             return dResult;
         }
 
-        private async Task<DownloadResult?> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
+        private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
         {
             CancellationTokenSource? cancellationTokenSource = null;
         retry:
@@ -89,7 +96,7 @@ namespace N_m3u8DL_RE.Downloader
                 if (File.Exists(des))
                 {
                     speedContainer.Add(new FileInfo(des).Length);
-                    return new DownloadResult() { ActualContentLength = 0, ActualFilePath = des };
+                    return (des, new DownloadResult() { ActualContentLength = 0, ActualFilePath = des });
                 }
 
                 //已解密跳过
@@ -97,7 +104,7 @@ namespace N_m3u8DL_RE.Downloader
                 if (File.Exists(dec))
                 {
                     speedContainer.Add(new FileInfo(dec).Length);
-                    return new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec };
+                    return (dec, new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec });
                 }
 
                 //另起线程进行监控
@@ -118,14 +125,8 @@ namespace N_m3u8DL_RE.Downloader
 
                 //调用下载
                 var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
-                
-                //下载完成后改名
-                if (result.Success || !DownloaderConfig.CheckContentLength)
-                {
-                    File.Move(path, des);
-                    result.ActualFilePath = des;
-                    return result;
-                }
+                return (des, result);
+
                 throw new Exception("please retry");
             }
             catch (Exception ex)
@@ -144,7 +145,7 @@ namespace N_m3u8DL_RE.Downloader
                     Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
                 }
                 //throw new Exception("download failed", ex);
-                return null;
+                return default;
             }
             finally
             {
