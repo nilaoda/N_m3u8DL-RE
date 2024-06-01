@@ -3,6 +3,7 @@ using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Config;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util
 {
@@ -143,6 +144,31 @@ namespace N_m3u8DL_RE.Util
                 fs.Read(header);
                 return ReadInit(header);
             }
+        }
+
+        public static string? ReadInitShaka(string output, string bin)
+        {
+            Regex ShakaKeyIDRegex = new Regex("Key for key_id=([0-9a-f]+) was not found");
+
+            // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
+            //       - stop process
+            //       - remove {output}.tmp.webm
+            var cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
+                    $"--keys key_id={ZeroKid}:key={ZeroKid}";
+
+            using var p = new Process();
+            p.StartInfo = new ProcessStartInfo()
+            {
+                FileName = bin,
+                Arguments = cmd,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+            p.Start();
+            var errorOutput = p.StandardError.ReadToEnd();
+            p.WaitForExit();
+            return ShakaKeyIDRegex.Match(errorOutput).Groups[1].Value;
         }
     }
 }
