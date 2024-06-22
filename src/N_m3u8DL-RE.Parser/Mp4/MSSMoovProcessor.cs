@@ -62,7 +62,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         private static byte SELF_CONTAINED = 0x1;
         private static List<string> SupportedFourCC = new List<string>()
         {
-            "HVC1","HEV1","AACL","AACH","EC-3","H264","AVC1","DAVC","AVC1","TTML"
+            "HVC1","HEV1","AACL","AACH","EC-3","H264","AVC1","DAVC","AVC1","TTML","DVHE","DVH1"
         };
 
         public MSSMoovProcessor(StreamSpec streamSpec)
@@ -546,6 +546,27 @@ namespace N_m3u8DL_RE.Parser.Mp4
                         return Box("hvc1", stream.ToArray()); //HEVC Simple Entry
                     }
                 }
+                // 杜比视界也按照hevc处理
+                else if (FourCC == "DVHE" || FourCC == "DVH1")
+                {
+                    var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
+                    var vps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20).First());
+                    var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21).First());
+                    var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22).First());
+                    //make hvcC
+                    var hvcC = GetHvcC(sps, pps, vps, "dvh1");
+                    writer.Write(hvcC);
+                    if (IsProtection)
+                    {
+                        var sinfBox = GenSinf("dvh1");
+                        writer.Write(sinfBox);
+                        return Box("encv", stream.ToArray()); //Encrypted Video
+                    }
+                    else
+                    {
+                        return Box("dvh1", stream.ToArray()); //HEVC Simple Entry
+                    }
+                }
                 else
                 {
                     throw new NotSupportedException();
@@ -591,7 +612,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return Box("avcC", stream.ToArray()); //AVC Decoder Configuration Record
         }
 
-        private byte[] GetHvcC(byte[] sps, byte[] pps, byte[] vps)
+        private byte[] GetHvcC(byte[] sps, byte[] pps, byte[] vps, string code = "hvc1")
         {
             var oriSps = new List<byte>(sps);
             //https://www.itu.int/rec/dologin.asp?lang=f&id=T-REC-H.265-201504-S!!PDF-E&type=items
@@ -652,7 +673,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }*/
 
             //生成编码信息
-            var codecs = $"hvc1" +
+            var codecs = code +
                 $".{HEVC_GENERAL_PROFILE_SPACE_STRINGS[generalProfileSpace]}{generalProfileIdc}" +
                 $".{Convert.ToString(generalProfileCompatibilityFlags, 16)}" +
                 $".{(generalTierFlag == 1 ? 'H' : 'L')}{generalLevelIdc}" +
