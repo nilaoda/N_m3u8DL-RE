@@ -49,12 +49,12 @@ public static class CustomAnsiConsole
     // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
     public static IAnsiConsole Console { get; set; }
 
-    public static void InitConsole(bool forceAnsi, bool noansi)
+    public static void InitConsole(bool forceAnsi, bool noAnsiColor)
     {
         if (forceAnsi)
         {
             var ansiConsoleSettings = new AnsiConsoleSettings();
-            if (noansi)
+            if (noAnsiColor)
             {
                 ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
             }
@@ -68,7 +68,7 @@ public static class CustomAnsiConsole
         else
         {
             var ansiConsoleSettings = new AnsiConsoleSettings();
-            if (noansi)
+            if (noAnsiColor)
             {
                 ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
             }

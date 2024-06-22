@@ -814,7 +814,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 new DownloadSpeedColumn(SpeedContainerDic), //速度计算
                 new SpinnerColumn(),
             };
-            if (DownloaderConfig.MyOptions.Noansi)
+            if (DownloaderConfig.MyOptions.NoAnsiColor)
             {
                 progressColumns = progressColumns.SkipLast(1).ToArray();
             }
