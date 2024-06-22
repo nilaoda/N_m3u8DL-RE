@@ -24,14 +24,14 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_forceAnsiConsole"] = new TextContainer
             (
-                zhCN: "强制认定终端为支持Ansi且可交互的终端",
-                zhTW: "強制認定終端為支援Ansi且可交往的終端",
+                zhCN: "强制认定终端为支持ANSI且可交互的终端",
+                zhTW: "強制認定終端為支援ANSI且可交往的終端",
                 enUS: "Force assuming the terminal is ANSI-compatible and interactive"
             ),
             ["cmd_noAnsiColor"] = new TextContainer
             (
-                zhCN: "去除ansi颜色",
-                zhTW: "關閉ansi顏色",
+                zhCN: "去除ANSI颜色",
+                zhTW: "關閉ANSI顏色",
                 enUS: "Remove ANSI colors"
             ),
             ["customRangeWarn"] = new TextContainer
@@ -60,9 +60,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["consoleRedirected"] = new TextContainer
             (
-                zhCN: "输出被重定向, 将清除Ansi颜色",
-                zhTW: "輸出被重定向, 將清除Ansi顏色",
-                enUS: "Output is redirected, Ansi colors are cleared."
+                zhCN: "输出被重定向, 将清除ANSI颜色",
+                zhTW: "輸出被重定向, 將清除ANSI顏色",
+                enUS: "Output is redirected, ANSI colors are cleared."
             ),
             ["processImageSub"] = new TextContainer
             (
