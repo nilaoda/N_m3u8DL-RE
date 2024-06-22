@@ -168,6 +168,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (result != null && result.Success) 
                 {
                     currentKID = MP4DecryptUtil.ReadInit(result.ActualFilePath);
+                    // try shaka packager, which can handle WebM
+                    if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.UseShakaPackager) {
+                        currentKID = MP4DecryptUtil.ReadInitShaka(result.ActualFilePath, mp4decrypt);
+                    }
                     //从文件读取KEY
                     await SearchKeyAsync(currentKID);
                     //实时解密
@@ -235,6 +239,10 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (string.IsNullOrEmpty(currentKID))
                     {
                         currentKID = MP4DecryptUtil.ReadInit(result.ActualFilePath);
+                    }
+                    // try shaka packager, which can handle WebM
+                    if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.UseShakaPackager) {
+                        currentKID = MP4DecryptUtil.ReadInitShaka(result.ActualFilePath, mp4decrypt);
                     }
                     //从文件读取KEY
                     await SearchKeyAsync(currentKID);
@@ -577,6 +585,10 @@ namespace N_m3u8DL_RE.DownloadManager
             if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
             {
                 currentKID = MP4DecryptUtil.ReadInit(output);
+                // try shaka packager, which can handle WebM
+                if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.UseShakaPackager) {
+                    currentKID = MP4DecryptUtil.ReadInitShaka(output, mp4decrypt);
+                }
                 //从文件读取KEY
                 await SearchKeyAsync(currentKID);
             }
