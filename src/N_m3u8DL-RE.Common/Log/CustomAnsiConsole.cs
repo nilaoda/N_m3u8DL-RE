@@ -35,7 +35,6 @@ public class NonAnsiWriter : TextWriter
         {
             return;
         }
-        // Implement your custom write logic here, e.g., write to console
         Console.Write(output);
     }
 }
@@ -45,8 +44,6 @@ public class NonAnsiWriter : TextWriter
 /// </summary>
 public static class CustomAnsiConsole
 {
-    // var ansiConsoleSettings = new AnsiConsoleSettings();
-    // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
     public static IAnsiConsole Console { get; set; } = AnsiConsole.Console;
 
     public static void InitConsole(bool forceAnsi, bool noAnsiColor)
@@ -61,7 +58,6 @@ public static class CustomAnsiConsole
 
             ansiConsoleSettings.Interactive = InteractionSupport.Yes;
             ansiConsoleSettings.Ansi = AnsiSupport.Yes;
-            // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
             Console = AnsiConsole.Create(ansiConsoleSettings);
             Console.Profile.Width = int.MaxValue;
         }

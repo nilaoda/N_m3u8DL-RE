@@ -79,11 +79,11 @@ namespace N_m3u8DL_RE.Common.Log
             {
                 if (subWrite == "")
                 {
-                CustomAnsiConsole.MarkupLine(write);
+                    CustomAnsiConsole.MarkupLine(write);
                 }
                 else
                 {
-                CustomAnsiConsole.Markup(write);
+                    CustomAnsiConsole.Markup(write);
                     Console.WriteLine(subWrite);
                 }
 
