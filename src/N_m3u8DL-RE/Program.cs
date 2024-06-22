@@ -25,6 +25,7 @@ namespace N_m3u8DL_RE
             Console.CancelKeyPress += Console_CancelKeyPress;
             ServicePointManager.DefaultConnectionLimit = 1024;
             try { Console.CursorVisible = true; } catch { }
+
             string loc = "en-US";
             string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
             if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
@@ -70,7 +71,14 @@ namespace N_m3u8DL_RE
 
         static async Task DoWorkAsync(MyOption option)
         {
-            CustomAnsiConsole.InitConsole(option.ForceAnsiConsole,option.Noansi);
+            
+            if (Console.IsOutputRedirected||Console.IsErrorRedirected)
+            {
+                option.ForceAnsiConsole = true;
+                option.NoAnsiColor = true;
+                Logger.Info(ResString.consoleRedirected);
+            }
+            CustomAnsiConsole.InitConsole(option.ForceAnsiConsole,option.NoAnsiColor);
             //检测更新
             CheckUpdateAsync();
 

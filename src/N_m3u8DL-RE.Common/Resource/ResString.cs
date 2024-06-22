@@ -16,6 +16,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string customRangeFound { get => GetText("customRangeFound"); }
         public static string customAdKeywordsFound { get => GetText("customAdKeywordsFound"); }
         public static string customRangeInvalid { get => GetText("customRangeInvalid"); }
+        public static string consoleRedirected { get => GetText("consoleRedirected"); }
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
         public static string autoBinaryMerge3 { get => GetText("autoBinaryMerge3"); }

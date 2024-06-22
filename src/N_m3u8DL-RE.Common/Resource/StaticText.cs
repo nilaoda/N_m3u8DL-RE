@@ -58,6 +58,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "用戶自定義下載範圍：",
                 enUS: "User customed range: "
             ),
+            ["consoleRedirected"] = new TextContainer
+            (
+                zhCN: "输出被重定向, 将清除Ansi颜色",
+                zhTW: "輸出被重定向, 將清除Ansi顏色",
+                enUS: "Output is redirected, Ansi colors are cleared."
+            ),
             ["processImageSub"] = new TextContainer
             (
                 zhCN: "正在处理图形字幕",
