@@ -47,7 +47,7 @@ public static class CustomAnsiConsole
 {
     // var ansiConsoleSettings = new AnsiConsoleSettings();
     // ansiConsoleSettings.Ansi = AnsiSupport.Yes;
-    public static IAnsiConsole Console { get; set; }
+    public static IAnsiConsole Console { get; set; } = AnsiConsole.Console;
 
     public static void InitConsole(bool forceAnsi, bool noAnsiColor)
     {
