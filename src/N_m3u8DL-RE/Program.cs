@@ -62,11 +62,9 @@ namespace N_m3u8DL_RE
         static int GetOrder(StreamSpec streamSpec)
         {
             if (streamSpec.Channels == null) return 0;
-            else
-            {
-                var str = streamSpec.Channels.Split('/')[0];
-                return int.TryParse(str, out var order) ? order : 0;
-            }
+            
+            var str = streamSpec.Channels.Split('/')[0];
+            return int.TryParse(str, out var order) ? order : 0;
         }
 
         static async Task DoWorkAsync(MyOption option)
@@ -208,8 +206,12 @@ namespace N_m3u8DL_RE
 
             //流提取器配置
             var extractor = new StreamExtractor(parserConfig);
-            extractor.LoadSourceFromUrl(url);
-
+            // 从链接加载内容
+            await RetryUtil.WebRequestRetryAsync(async () =>
+            {
+                await extractor.LoadSourceFromUrlAsync(url);
+                return true;
+            });
             //解析流信息
             var streams = await extractor.ExtractStreamsAsync();
 

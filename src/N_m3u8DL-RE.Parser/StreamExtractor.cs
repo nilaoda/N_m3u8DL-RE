@@ -30,25 +30,25 @@ namespace N_m3u8DL_RE.Parser
             this.parserConfig = parserConfig;
         }
 
-        public void LoadSourceFromUrl(string url)
+        public async Task LoadSourceFromUrlAsync(string url)
         {
             Logger.Info(ResString.loadingUrl + url);
             if (url.StartsWith("file:"))
             {
                 var uri = new Uri(url);
-                this.rawText = File.ReadAllText(uri.LocalPath);
+                this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
                 parserConfig.OriginalUrl = parserConfig.Url = url;
             }
             else if (url.StartsWith("http"))
             {
                 parserConfig.OriginalUrl = url;
-                (this.rawText, url) = HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers).Result;
+                (this.rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
                 parserConfig.Url = url;
             }
             else if (File.Exists(url))
             {
                 url = Path.GetFullPath(url);
-                this.rawText = File.ReadAllText(url);
+                this.rawText = await File.ReadAllTextAsync(url);
                 parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
             }
             this.rawText = rawText.Trim();
@@ -134,22 +134,11 @@ namespace N_m3u8DL_RE.Parser
             try
             {
                 await semaphore.WaitAsync();
-                int retryCount = 5; //增加重试
-            reGet:
-                try
+                await RetryUtil.WebRequestRetryAsync(async () =>
                 {
                     await extractor.RefreshPlayListAsync(streamSpecs);
-                }
-                catch (Exception ex)
-                {
-                    if (retryCount-- > 0)
-                    {
-                        Logger.WarnMarkUp($"[grey]Refresh Exception: {ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
-                        await Task.Delay(1000);
-                        goto reGet;
-                    }
-                    else throw;
-                }
+                    return true;
+                }, retryDelayMilliseconds: 1000, maxRetries: 5);
             }
             finally
             {
