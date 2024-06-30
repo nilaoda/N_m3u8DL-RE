@@ -16,6 +16,7 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string customRangeFound { get => GetText("customRangeFound"); }
         public static string customAdKeywordsFound { get => GetText("customAdKeywordsFound"); }
         public static string customRangeInvalid { get => GetText("customRangeInvalid"); }
+        public static string consoleRedirected { get => GetText("consoleRedirected"); }
         public static string autoBinaryMerge { get => GetText("autoBinaryMerge"); }
         public static string autoBinaryMerge2 { get => GetText("autoBinaryMerge2"); }
         public static string autoBinaryMerge3 { get => GetText("autoBinaryMerge3"); }
@@ -55,6 +56,8 @@ namespace N_m3u8DL_RE.Common.Resource
         public static string cmd_customHLSKey { get => GetText("cmd_customHLSKey"); }
         public static string cmd_customHLSIv { get => GetText("cmd_customHLSIv"); }
         public static string cmd_Input { get => GetText("cmd_Input"); }
+        public static string cmd_forceAnsiConsole { get => GetText("cmd_forceAnsiConsole"); }
+        public static string cmd_noAnsiColor { get => GetText("cmd_noAnsiColor"); }
         public static string cmd_keys { get => GetText("cmd_keys"); }
         public static string cmd_keyText { get => GetText("cmd_keyText"); }
         public static string cmd_loadKeyFailed { get => GetText("cmd_loadKeyFailed"); }

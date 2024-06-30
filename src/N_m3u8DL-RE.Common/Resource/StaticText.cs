@@ -22,6 +22,18 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhTW: "即時解密已被強制關閉",
                 enUS: "Real-time decryption has been disabled"
             ),
+            ["cmd_forceAnsiConsole"] = new TextContainer
+            (
+                zhCN: "强制认定终端为支持ANSI且可交互的终端",
+                zhTW: "強制認定終端為支援ANSI且可交往的終端",
+                enUS: "Force assuming the terminal is ANSI-compatible and interactive"
+            ),
+            ["cmd_noAnsiColor"] = new TextContainer
+            (
+                zhCN: "去除ANSI颜色",
+                zhTW: "關閉ANSI顏色",
+                enUS: "Remove ANSI colors"
+            ),
             ["customRangeWarn"] = new TextContainer
             (
                 zhCN: "请注意，自定义下载范围有时会导致音画不同步",
@@ -45,6 +57,12 @@ namespace N_m3u8DL_RE.Common.Resource
                 zhCN: "用户自定义下载范围：",
                 zhTW: "用戶自定義下載範圍：",
                 enUS: "User customed range: "
+            ),
+            ["consoleRedirected"] = new TextContainer
+            (
+                zhCN: "输出被重定向, 将清除ANSI颜色",
+                zhTW: "輸出被重定向, 將清除ANSI顏色",
+                enUS: "Output is redirected, ANSI colors are cleared."
             ),
             ["processImageSub"] = new TextContainer
             (
