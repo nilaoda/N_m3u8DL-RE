@@ -36,7 +36,12 @@ namespace Mp4SubtitleParser
                     if (SYSTEM_ID_WIDEVINE.SequenceEqual(systemId))
                     {
                         var dataSize = box.Reader.ReadUInt32();
-                        info.PSSH = Convert.ToBase64String(box.Reader.ReadBytes((int)dataSize));
+                        var psshData = box.Reader.ReadBytes((int)dataSize);
+                        info.PSSH = Convert.ToBase64String(psshData);
+                        if (info.KID == "00000000000000000000000000000000")
+                        {
+                            info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLower();
+                        }
                     }
                 })
                 .FullBox("encv", MP4Parser.AllData(data => ReadBox(data, info)))
