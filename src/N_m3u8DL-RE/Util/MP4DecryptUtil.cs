@@ -133,25 +133,6 @@ namespace N_m3u8DL_RE.Util
             return null;
         }
 
-        public static string? ReadInit(byte[] data)
-        {
-            var info = MP4InitUtil.ReadInit(data);
-            if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
-            if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
-            if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
-            return info.KID;
-        }
-
-        public static string? ReadInit(string output)
-        {
-            using (var fs = File.OpenRead(output))
-            {
-                var header = new byte[1 * 1024 * 1024]; //1MB
-                fs.Read(header);
-                return ReadInit(header);
-            }
-        }
-
         public static ParsedMP4Info GetMP4Info(byte[] data)
         {
             var info = MP4InitUtil.ReadInit(data);
