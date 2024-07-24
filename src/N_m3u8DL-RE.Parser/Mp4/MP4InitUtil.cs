@@ -8,6 +8,7 @@ namespace Mp4SubtitleParser
         public string? PSSH;
         public string? KID;
         public string? Scheme;
+        public bool isMultiDRM;
     }
 
     public class MP4InitUtil
@@ -18,7 +19,6 @@ namespace Mp4SubtitleParser
         public static ParsedMP4Info ReadInit(byte[] data)
         {
             var info = new ParsedMP4Info();
-
 
             //parse init
             new MP4Parser()
@@ -41,6 +41,7 @@ namespace Mp4SubtitleParser
                         if (info.KID == "00000000000000000000000000000000")
                         {
                             info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLower();
+                            info.isMultiDRM = true;
                         }
                     }
                 })
