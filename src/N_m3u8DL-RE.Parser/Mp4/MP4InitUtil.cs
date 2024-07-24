@@ -8,6 +8,7 @@ namespace Mp4SubtitleParser
         public string? PSSH;
         public string? KID;
         public string? Scheme;
+        public bool isMultiDRM;
     }
 
     public class MP4InitUtil
@@ -18,7 +19,6 @@ namespace Mp4SubtitleParser
         public static ParsedMP4Info ReadInit(byte[] data)
         {
             var info = new ParsedMP4Info();
-
 
             //parse init
             new MP4Parser()
@@ -36,7 +36,13 @@ namespace Mp4SubtitleParser
                     if (SYSTEM_ID_WIDEVINE.SequenceEqual(systemId))
                     {
                         var dataSize = box.Reader.ReadUInt32();
-                        info.PSSH = Convert.ToBase64String(box.Reader.ReadBytes((int)dataSize));
+                        var psshData = box.Reader.ReadBytes((int)dataSize);
+                        info.PSSH = Convert.ToBase64String(psshData);
+                        if (info.KID == "00000000000000000000000000000000")
+                        {
+                            info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLower();
+                            info.isMultiDRM = true;
+                        }
                     }
                 })
                 .FullBox("encv", MP4Parser.AllData(data => ReadBox(data, info)))

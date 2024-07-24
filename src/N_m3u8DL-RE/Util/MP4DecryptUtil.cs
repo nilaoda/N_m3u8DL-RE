@@ -10,12 +10,18 @@ namespace N_m3u8DL_RE.Util
     internal class MP4DecryptUtil
     {
         private static string ZeroKid = "00000000000000000000000000000000";
-        public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "")
+        public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
         {
             if (keys == null || keys.Length == 0) return false;
 
             string? keyPair = null;
             string? trackId = null;
+
+            if (isMultiDRM)
+            {
+                trackId = "1";
+            }
+
             if (!string.IsNullOrEmpty(kid))
             {
                 var test = keys.Where(k => k.StartsWith(kid));
@@ -127,22 +133,22 @@ namespace N_m3u8DL_RE.Util
             return null;
         }
 
-        public static string? ReadInit(byte[] data)
+        public static ParsedMP4Info GetMP4Info(byte[] data)
         {
             var info = MP4InitUtil.ReadInit(data);
             if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
             if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
             if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
-            return info.KID;
+            return info;
         }
 
-        public static string? ReadInit(string output)
+        public static ParsedMP4Info GetMP4Info(string output)
         {
             using (var fs = File.OpenRead(output))
             {
                 var header = new byte[1 * 1024 * 1024]; //1MB
                 fs.Read(header);
-                return ReadInit(header);
+                return GetMP4Info(header);
             }
         }
 
