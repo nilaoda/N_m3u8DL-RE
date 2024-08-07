@@ -566,7 +566,7 @@ namespace N_m3u8DL_RE.CommandLine
                     option.MuxAfterDone = true;
                     option.MuxOptions = muxAfterDoneValue;
                     if (muxAfterDoneValue.UseMkvmerge) option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;
-                    else option.FFmpegBinaryPath = muxAfterDoneValue.BinPath;
+                    else option.FFmpegBinaryPath ??= muxAfterDoneValue.BinPath;
                 }
 
 
