@@ -46,6 +46,10 @@ namespace N_m3u8DL_RE.Util
                 inputs = inputs.Where(i => i.Playlist?.TotalDuration > filter.PlaylistMinDur);
             if (filter.PlaylistMaxDur != null)
                 inputs = inputs.Where(i => i.Playlist?.TotalDuration < filter.PlaylistMaxDur);
+            if (filter.BandwidthMin != null)
+                inputs = inputs.Where(i => i.Bandwidth >= filter.BandwidthMin);
+            if (filter.BandwidthMax != null)
+                inputs = inputs.Where(i => i.Bandwidth <= filter.BandwidthMax);
             if (filter.Role.HasValue)
                 inputs = inputs.Where(i => i.Role == filter.Role);
 

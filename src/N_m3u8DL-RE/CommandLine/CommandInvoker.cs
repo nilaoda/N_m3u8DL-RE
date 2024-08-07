@@ -369,6 +369,14 @@ namespace N_m3u8DL_RE.CommandLine
             if (!string.IsNullOrEmpty(plistDurMax))
                 streamFilter.PlaylistMaxDur = OtherUtil.ParseSeconds(plistDurMax);
 
+            var bwMin = p.GetValue("bwMin");
+            if (!string.IsNullOrEmpty(bwMin))
+                streamFilter.BandwidthMin = int.Parse(bwMin) * 1000;
+
+            var bwMax = p.GetValue("bwMax");
+            if (!string.IsNullOrEmpty(bwMax))
+                streamFilter.BandwidthMax = int.Parse(bwMax) * 1000;
+
             var role = p.GetValue("role");
             if (System.Enum.TryParse(role, true, out RoleType roleType))
                 streamFilter.Role = roleType;
