@@ -52,7 +52,7 @@ namespace N_m3u8DL_RE.Util
         public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
         {
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
+            StringBuilder command = new StringBuilder("-itsoffset 5 -y -fflags +genpts -loglevel quiet ");
 
             string customDest = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_OPTIONS");
             string pipeDir = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_TMP_DIR", Path.GetTempPath());
