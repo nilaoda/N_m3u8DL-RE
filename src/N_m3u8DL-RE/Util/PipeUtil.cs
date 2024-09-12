@@ -44,7 +44,6 @@ namespace N_m3u8DL_RE.Util
         {
             return await Task.Run(async () =>
             {
-                await Task.Delay(400);
                 return StartPipeMux(binary, pipeNames, outputPath);
             });
         }
@@ -52,7 +51,7 @@ namespace N_m3u8DL_RE.Util
         public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
         {
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-rtbufsize 1G -y -max_interleave_delta 100M -fflags +fastseek+ignidx+discardcorrupt+shortest+genpts -loglevel quiet ");
+            StringBuilder command = new StringBuilder("-rtbufsize 50M -y -max_interleave_delta 100M -fflags +fastseek+ignidx+discardcorrupt+shortest+genpts -loglevel quiet ");
 
             string customDest = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_OPTIONS");
             string pipeDir = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_TMP_DIR", Path.GetTempPath());
