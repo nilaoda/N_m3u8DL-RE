@@ -11,6 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="FluentAssertions" Version="6.12.1" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0"/>
         <PackageReference Include="MSTest.TestAdapter" Version="3.0.4"/>
         <PackageReference Include="MSTest.TestFramework" Version="3.0.4"/>
@@ -19,6 +20,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Extractor\SuperSpeedway_720.ism.manifest.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
