@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>N_m3u8DL_RE.Parser.Tests</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0"/>
+        <PackageReference Include="MSTest.TestAdapter" Version="3.0.4"/>
+        <PackageReference Include="MSTest.TestFramework" Version="3.0.4"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
+    </ItemGroup>
+
+</Project>
