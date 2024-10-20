@@ -163,5 +163,16 @@ namespace N_m3u8DL_RE.Util
         {
             return Environment.GetEnvironmentVariable(key) ?? defaultValue;
         }
+
+        public static string GetMuxExtension(MuxFormat muxFormat)
+        {
+            return muxFormat switch
+            {
+                MuxFormat.MP4 => ".mp4",
+                MuxFormat.MKV => ".mkv",
+                MuxFormat.TS => ".ts",
+                _ => throw new ArgumentException($"unknown format: {muxFormat}")
+            };
+        }
     }
 }
