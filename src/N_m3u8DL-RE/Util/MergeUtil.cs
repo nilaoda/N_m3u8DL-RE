@@ -1,16 +1,9 @@
 ﻿using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
+using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util
 {
@@ -186,9 +179,9 @@ namespace N_m3u8DL_RE.Util
             return code == 0;
         }
 
-        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, bool mp4, bool dateinfo)
+        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, MuxFormat muxFormat, bool dateinfo)
         {
-            var ext = mp4 ? "mp4" : "mkv";
+            var ext = OtherUtil.GetMuxExtension(muxFormat);
             string dateString = DateTime.Now.ToString("o");
             StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
 
@@ -206,10 +199,13 @@ namespace N_m3u8DL_RE.Util
 
             var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
 
-            if (mp4)
+            if (muxFormat == MuxFormat.MP4)
                 command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
-            else
+            else if (muxFormat == MuxFormat.TS)
+                command.Append($" -strict unofficial -c:a copy -c:v copy ");
+            else if (muxFormat == MuxFormat.MKV)
                 command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
+            else throw new ArgumentException($"unknown format: {muxFormat}");
 
             //CLEAN
             command.Append(" -map_metadata -1 ");
@@ -254,7 +250,7 @@ namespace N_m3u8DL_RE.Util
 
             if (dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
             command.Append($" -ignore_unknown -copy_unknown ");
-            command.Append($" \"{outputPath}.{ext}\"");
+            command.Append($" \"{outputPath}{ext}\"");
 
             var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 

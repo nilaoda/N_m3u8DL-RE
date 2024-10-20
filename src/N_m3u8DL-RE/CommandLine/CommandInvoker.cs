@@ -18,7 +18,7 @@ namespace N_m3u8DL_RE.CommandLine
 {
     internal partial class CommandInvoker
     {
-        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20240630";
+        public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20241020";
 
         [GeneratedRegex("((best|worst)\\d*|all)")]
         private static partial Regex ForStrRegex();
@@ -438,7 +438,8 @@ namespace N_m3u8DL_RE.CommandLine
             var p = new ComplexParamParser(v);
             //混流格式
             var format = p.GetValue("format") ?? v.Split(':')[0]; //若未获取到，直接:前的字符串作为format解析
-            if (format != "mp4" && format != "mkv")
+            var parseResult = System.Enum.TryParse(format.ToUpperInvariant(), out MuxFormat muxFormat);
+            if (!parseResult)
             {
                 result.ErrorMessage = $"format={format} not valid";
                 return null;
@@ -480,7 +481,7 @@ namespace N_m3u8DL_RE.CommandLine
             return new MuxOptions()
             {
                 UseMkvmerge = muxer == "mkvmerge",
-                MuxToMp4 = format == "mp4",
+                MuxFormat = muxFormat,
                 KeepFiles = keep == "true",
                 SkipSubtitle = skipSub == "true",
                 BinPath = bin_path == "auto" ? null : bin_path
