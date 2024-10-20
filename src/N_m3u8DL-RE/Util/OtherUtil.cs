@@ -143,15 +143,13 @@ namespace N_m3u8DL_RE.Util
         /// <param name="filePath"></param>
         public static async Task DeGzipFileAsync(string filePath)
         {
-            string deGzipFile = Path.ChangeExtension(filePath, ".tmp");
+            var deGzipFile = Path.ChangeExtension(filePath, ".dezip_tmp");
             try
             {
-                using (var fileToDecompressAsStream = File.OpenRead(filePath))
-                {
-                    using var decompressedStream = File.Create(deGzipFile);
-                    using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
-                    await decompressionStream.CopyToAsync(decompressedStream);
-                }
+                await using var fileToDecompressAsStream = File.OpenRead(filePath);
+                await using var decompressedStream = File.Create(deGzipFile);
+                await using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
+                await decompressionStream.CopyToAsync(decompressedStream);
                 File.Delete(filePath);
                 File.Move(deGzipFile, filePath);
             }
