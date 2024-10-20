@@ -25,7 +25,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20240630
+  N_m3u8DL-RE (Beta version) 20241020
 
 Usage:
   N_m3u8DL-RE <input> [options]

@@ -631,7 +631,7 @@ namespace N_m3u8DL_RE.Common.Resource
             ["cmd_muxAfterDone_more"] = new TextContainer
             (
                 zhCN: "所有工作完成时尝试混流分离的音视频. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
-                      "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
+                      "* format=FORMAT: 指定混流容器 mkv, mp4, ts\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
                       "* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)\r\n" +
@@ -644,7 +644,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 使用mkvmerge, 自定义程序路径\r\n" +
                       "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
                 zhTW: "所有工作完成時嘗試混流分離的影音. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
-                      "* format=FORMAT: 指定混流容器 mkv, mp4\r\n" +
+                      "* format=FORMAT: 指定混流容器 mkv, mp4, ts\r\n" +
                       "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默認: ffmpeg)\r\n" +
                       "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
                       "* skip_sub=BOOL: 是否忽略字幕文件 (默認: false)\r\n" +
@@ -657,7 +657,7 @@ namespace N_m3u8DL_RE.Common.Resource
                       "# 使用mkvmerge, 自訂程序路徑\r\n" +
                       "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
                 enUS: "When all works is done, try to mux the downloaded streams. OPTIONS is a colon separated list of:\r\n\r\n" +
-                      "* format=FORMAT: set container. mkv, mp4\r\n" +
+                      "* format=FORMAT: set container. mkv, mp4, ts\r\n" +
                       "* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)\r\n" +
                       "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
                       "* skip_sub=BOOL: set whether or not skip subtitle files (Default: false)\r\n" +
