@@ -146,10 +146,12 @@ namespace N_m3u8DL_RE.Util
             var deGzipFile = Path.ChangeExtension(filePath, ".dezip_tmp");
             try
             {
-                await using var fileToDecompressAsStream = File.OpenRead(filePath);
-                await using var decompressedStream = File.Create(deGzipFile);
-                await using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
-                await decompressionStream.CopyToAsync(decompressedStream);
+                await using (var fileToDecompressAsStream = File.OpenRead(filePath))
+                {
+                    await using var decompressedStream = File.Create(deGzipFile);
+                    await using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
+                    await decompressionStream.CopyToAsync(decompressedStream);
+                };
                 File.Delete(filePath);
                 File.Move(deGzipFile, filePath);
             }
