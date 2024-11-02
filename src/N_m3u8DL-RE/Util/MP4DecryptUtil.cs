@@ -14,6 +14,7 @@ namespace N_m3u8DL_RE.Util
         {
             if (keys == null || keys.Length == 0) return false;
 
+            var keyPairs = keys.ToList();
             string? keyPair = null;
             string? trackId = null;
 
@@ -24,17 +25,24 @@ namespace N_m3u8DL_RE.Util
 
             if (!string.IsNullOrEmpty(kid))
             {
-                var test = keys.Where(k => k.StartsWith(kid));
+                var test = keyPairs.Where(k => k.StartsWith(kid));
                 if (test.Any()) keyPair = test.First();
             }
 
-            //Apple
+            // Apple
             if (kid == ZeroKid)
             {
-                keyPair = keys.First();
+                keyPair = keyPairs.First();
                 trackId = "1";
             }
 
+            // user only input key, append kid
+            if (keyPair == null && keyPairs.Count == 1 && !keyPairs.First().Contains(':'))
+            {
+                keyPairs = keyPairs.Select(x => $"{kid}:{x}").ToList();
+                keyPair = keyPairs.First();
+            }
+            
             if (keyPair == null) return false;
 
             //shakaPackager 无法单独解密init文件
@@ -61,11 +69,11 @@ namespace N_m3u8DL_RE.Util
             {
                 if (trackId == null)
                 {
-                    cmd = string.Join(" ", keys.Select(k => $"--key {k}"));
+                    cmd = string.Join(" ", keyPairs.Select(k => $"--key {k}"));
                 }
                 else
                 {
-                    cmd = string.Join(" ", keys.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
+                    cmd = string.Join(" ", keyPairs.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
                 }
                 if (init != "")
                 {

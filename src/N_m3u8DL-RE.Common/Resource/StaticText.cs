@@ -252,9 +252,9 @@ namespace N_m3u8DL_RE.Common.Resource
             ),
             ["cmd_keys"] = new TextContainer
             (
-                zhCN: "设置解密密钥, 程序调用mp4decrpyt/shaka-packager进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2",
-                zhTW: "設置解密密鑰, 程序調用mp4decrpyt/shaka-packager進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2",
-                enUS: "Pass decryption key(s) to mp4decrypt/shaka-packager. format:\r\n--key KID1:KEY1 --key KID2:KEY2"
+                zhCN: "设置解密密钥, 程序调用mp4decrpyt/shaka-packager进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n对于KEY相同的情况可以直接输入 --key KEY",
+                zhTW: "設置解密密鑰, 程序調用mp4decrpyt/shaka-packager進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n對於KEY相同的情況可以直接輸入 --key KEY",
+                enUS: "Set decryption key(s) to mp4decrypt/shaka-packager. format:\r\n--key KID1:KEY1 --key KID2:KEY2\r\nor use --key KEY if all tracks share the same key."
             ),
             ["cmd_keyText"] = new TextContainer
             (
