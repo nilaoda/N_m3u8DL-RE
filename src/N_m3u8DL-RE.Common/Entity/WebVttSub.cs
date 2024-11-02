@@ -201,10 +201,14 @@ namespace N_m3u8DL_RE.Common.Entity
             }
 
             str = str.Replace(',', '.');
-            var ms = Convert.ToInt32(str.Split('.').Last());
-            var o = str.Split('.').First();
-            var t = o.Split(':').Reverse().ToList();
-            var time = 0L + ms;
+            long time = 0;
+            string[] parts = str.Split('.');
+            if (parts.Length > 1)
+            {
+                time += Convert.ToInt32(parts.Last());
+                str = parts.First();
+            }
+            var t = str.Split(':').Reverse().ToList();
             for (int i = 0; i < t.Count(); i++)
             {
                 time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;
