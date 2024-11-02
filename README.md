@@ -65,6 +65,7 @@ Options:
   --urlprocessor-args <urlprocessor-args>  此字符串将直接传递给URL Processor
   --key <key>                              设置解密密钥, 程序调用mp4decrpyt/shaka-packager进行解密. 格式:
                                            --key KID1:KEY1 --key KID2:KEY2
+                                           对于KEY相同的情况可以直接输入 --key KEY
   --key-text-file <key-text-file>          设置密钥文件,程序将从文件中按KID搜寻KEY以解密.(不建议使用特大文件)
   --decryption-binary-path <PATH>          MP4解密所用工具的全路径, 例如 C:\Tools\mp4decrypt.exe
   --use-shaka-packager                     解密时使用shaka-packager替代mp4decrypt [default: False]
