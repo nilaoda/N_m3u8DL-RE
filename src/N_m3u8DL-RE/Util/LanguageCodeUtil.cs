@@ -1,33 +1,19 @@
 ﻿using N_m3u8DL_RE.Entity;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util;
 
-class Language
+internal class Language(string extendCode, string code, string desc, string descA)
 {
-    public string Code;
-    public string ExtendCode;
-    public string Description;
-    public string DescriptionAudio;
-
-    public Language(string extendCode, string code, string desc, string descA)
-    {
-        Code = code;
-        ExtendCode = extendCode;
-        Description = desc;
-        DescriptionAudio = descA;
-    }
+    public readonly string Code = code;
+    public readonly string ExtendCode = extendCode;
+    public readonly string Description = desc;
+    public readonly string DescriptionAudio = descA;
 }
 
 internal static class LanguageCodeUtil
 {
 
-    private readonly static List<Language> ALL_LANGS = @"
+    private static readonly List<Language> ALL_LANGS = @"
 af;afr;Afrikaans;Afrikaans
 af-ZA;afr;Afrikaans (South Africa);Afrikaans (South Africa)
 am;amh;Amharic;Amharic
@@ -389,8 +375,8 @@ MA;msa;Melayu;Melayu
 "
         .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x =>
         {
-            var arr = x.Trim().Split(';');
-            return new Language(arr[0].Trim(), arr[1].Trim(), arr[2].Trim(), arr[3].Trim());
+            var arr = x.Trim().Split(';', StringSplitOptions.TrimEntries);
+            return new Language(arr[0], arr[1], arr[2], arr[3]);
         }).ToList();
 
     private static Dictionary<string, string> CODE_MAP = @"
@@ -504,8 +490,7 @@ sr;srp
 
     private static string ConvertTwoToThree(string input)
     {
-        if (CODE_MAP.TryGetValue(input, out var code)) return code;
-        return input;
+        return CODE_MAP.GetValueOrDefault(input, input);
     }
 
     /// <summary>
@@ -518,12 +503,12 @@ sr;srp
         if (string.IsNullOrEmpty(outputFile.LangCode)) return;
         var originalLangCode = outputFile.LangCode;
 
-        //先直接查找
+        // 先直接查找
         var lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
-        //处理特殊的扩展语言标记
+        // 处理特殊的扩展语言标记
         if (lang == null)
         {
-            //2位转3位
+            // 2位转3位
             var l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
             lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(l, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(l, StringComparison.OrdinalIgnoreCase));
         }
@@ -536,10 +521,10 @@ sr;srp
         }
         else if (outputFile.LangCode == null) 
         {
-            outputFile.LangCode = "und"; //无法识别直接置为und
+            outputFile.LangCode = "und"; // 无法识别直接置为und
         }
 
-        //无描述，则把LangCode当作描述
+        // 无描述，则把LangCode当作描述
         if (string.IsNullOrEmpty(outputFile.Description)) outputFile.Description = originalLangCode;
     }
 }

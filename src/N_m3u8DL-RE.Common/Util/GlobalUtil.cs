@@ -1,18 +1,13 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.JsonConverter;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Common.Util;
 
 public static class GlobalUtil
 {
-    private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions Options = new()
     {
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         WriteIndented = true,
@@ -27,15 +22,15 @@ public static class GlobalUtil
         {
             return JsonSerializer.Serialize(s, Context.StreamSpec);
         }
-        else if (o is IOrderedEnumerable<StreamSpec> ss)
+        if (o is IOrderedEnumerable<StreamSpec> ss)
         {
             return JsonSerializer.Serialize(ss, Context.IOrderedEnumerableStreamSpec);
         }
-        else if (o is List<StreamSpec> sList)
+        if (o is List<StreamSpec> sList)
         {
             return JsonSerializer.Serialize(sList, Context.ListStreamSpec);
         }
-        else if (o is IEnumerable<MediaSegment> mList)
+        if (o is IEnumerable<MediaSegment> mList)
         {
             return JsonSerializer.Serialize(mList, Context.IEnumerableMediaSegment);
         }
@@ -47,14 +42,14 @@ public static class GlobalUtil
         return fileSize switch
         {
             < 0 => throw new ArgumentOutOfRangeException(nameof(fileSize)),
-            >= 1024 * 1024 * 1024 => string.Format("{0:########0.00}GB", (double)fileSize / (1024 * 1024 * 1024)),
-            >= 1024 * 1024 => string.Format("{0:####0.00}MB", (double)fileSize / (1024 * 1024)),
-            >= 1024 => string.Format("{0:####0.00}KB", (double)fileSize / 1024),
-            _ => string.Format("{0:####0.00}B", fileSize)
+            >= 1024 * 1024 * 1024 => $"{fileSize / (1024 * 1024 * 1024):########0.00}GB",
+            >= 1024 * 1024 => $"{fileSize / (1024 * 1024):####0.00}MB",
+            >= 1024 => $"{fileSize / 1024:####0.00}KB",
+            _ => $"{fileSize:####0.00}B"
         };
     }
 
-    //此函数用于格式化输出时长  
+    // 此函数用于格式化输出时长  
     public static string FormatTime(int time)
     {
         TimeSpan ts = new TimeSpan(0, 0, time);
@@ -74,6 +69,6 @@ public static class GlobalUtil
         var searchPath = new[] { Environment.CurrentDirectory, Path.GetDirectoryName(Environment.ProcessPath) };
         var envPath = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ??
                       Array.Empty<string>();
-        return searchPath.Concat(envPath).Select(p => Path.Combine(p, name + fileExt)).FirstOrDefault(File.Exists);
+        return searchPath.Concat(envPath).Select(p => Path.Combine(p!, name + fileExt)).FirstOrDefault(File.Exists);
     }
 }

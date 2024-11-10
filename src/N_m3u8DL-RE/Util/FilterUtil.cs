@@ -4,12 +4,7 @@ using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -17,7 +12,7 @@ public static class FilterUtil
 {
     public static List<StreamSpec> DoFilterKeep(IEnumerable<StreamSpec> lists, StreamFilter? filter)
     {
-        if (filter == null) return new List<StreamSpec>();
+        if (filter == null) return [];
 
         var inputs = lists.Where(_ => true);
         if (filter.GroupIdReg != null)
@@ -56,13 +51,13 @@ public static class FilterUtil
         var bestNumberStr = filter.For.Replace("best", "");
         var worstNumberStr = filter.For.Replace("worst", "");
 
-        if (filter.For == "best" && inputs.Count() > 0)
+        if (filter.For == "best" && inputs.Any())
             inputs = inputs.Take(1).ToList();
-        else if (filter.For == "worst" && inputs.Count() > 0)
+        else if (filter.For == "worst" && inputs.Any())
             inputs = inputs.TakeLast(1).ToList();
-        else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Count() > 0)
+        else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Any())
             inputs = inputs.Take(bestNumber).ToList();
-        else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Count() > 0)
+        else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Any())
             inputs = inputs.TakeLast(worstNumber).ToList();
 
         return inputs.ToList();
@@ -82,15 +77,16 @@ public static class FilterUtil
 
     public static List<StreamSpec> SelectStreams(IEnumerable<StreamSpec> lists)
     {
-        if (lists.Count() == 1)
-            return new List<StreamSpec>(lists);
+        var streamSpecs = lists.ToList();
+        if (streamSpecs.Count == 1)
+            return [..streamSpecs];
 
-        //基本流
-        var basicStreams = lists.Where(x => x.MediaType == null);
-        //可选音频轨道
-        var audios = lists.Where(x => x.MediaType == MediaType.AUDIO);
-        //可选字幕轨道
-        var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
+        // 基本流
+        var basicStreams = streamSpecs.Where(x => x.MediaType == null).ToList();
+        // 可选音频轨道
+        var audios = streamSpecs.Where(x => x.MediaType == MediaType.AUDIO).ToList();
+        // 可选字幕轨道
+        var subs = streamSpecs.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
 
         var prompt = new MultiSelectionPrompt<StreamSpec>()
                 .Title(ResString.promptTitle)
@@ -107,8 +103,8 @@ public static class FilterUtil
                 .InstructionsText(ResString.promptInfo)
             ;
 
-        //默认选中第一个
-        var first = lists.First();
+        // 默认选中第一个
+        var first = streamSpecs.First();
         prompt.Select(first);
 
         if (basicStreams.Any())
@@ -119,7 +115,7 @@ public static class FilterUtil
         if (audios.Any())
         {
             prompt.AddChoiceGroup(new StreamSpec() { Name = "__Audio" }, audios);
-            //默认音轨
+            // 默认音轨
             if (first.AudioId != null)
             {
                 prompt.Select(audios.First(a => a.GroupId == first.AudioId));
@@ -128,17 +124,17 @@ public static class FilterUtil
         if (subs.Any())
         {
             prompt.AddChoiceGroup(new StreamSpec() { Name = "__Subtitle" }, subs);
-            //默认字幕轨
+            // 默认字幕轨
             if (first.SubtitleId != null)
             {
                 prompt.Select(subs.First(s => s.GroupId == first.SubtitleId));
             }
         }
 
-        //如果此时还是没有选中任何流，自动选择一个
+        // 如果此时还是没有选中任何流，自动选择一个
         prompt.Select(basicStreams.Concat(audios).Concat(subs).First());
 
-        //多选
+        // 多选
         var selectedStreams = CustomAnsiConsole.Console.Prompt(prompt);
 
         return selectedStreams;
@@ -147,11 +143,11 @@ public static class FilterUtil
     /// <summary>
     /// 直播使用。对齐各个轨道的起始。
     /// </summary>
-    /// <param name="streams"></param>
+    /// <param name="selectedSteams"></param>
     /// <param name="takeLastCount"></param>
     public static void SyncStreams(List<StreamSpec> selectedSteams, int takeLastCount = 15)
     {
-        //通过Date同步
+        // 通过Date同步
         if (selectedSteams.All(x => x.Playlist!.MediaParts[0].MediaSegments.All(x => x.DateTime != null)))
         {
             var minDate = selectedSteams.Max(s => s.Playlist!.MediaParts[0].MediaSegments.Min(s => s.DateTime))!;
@@ -159,12 +155,12 @@ public static class FilterUtil
             {
                 foreach (var part in item.Playlist!.MediaParts)
                 {
-                    //秒级同步 忽略毫秒
+                    // 秒级同步 忽略毫秒
                     part.MediaSegments = part.MediaSegments.Where(s => s.DateTime!.Value.Ticks / TimeSpan.TicksPerSecond >= minDate.Value.Ticks / TimeSpan.TicksPerSecond).ToList();
                 }
             }
         }
-        else //通过index同步
+        else // 通过index同步
         {
             var minIndex = selectedSteams.Max(s => s.Playlist!.MediaParts[0].MediaSegments.Min(s => s.Index));
             foreach (var item in selectedSteams)
@@ -176,7 +172,7 @@ public static class FilterUtil
             }
         }
 
-        //取最新的N个分片
+        // 取最新的N个分片
         if (selectedSteams.Any(x => x.Playlist!.MediaParts[0].MediaSegments.Count > takeLastCount))
         {
             var skipCount = selectedSteams.Min(x => x.Playlist!.MediaParts[0].MediaSegments.Count) - takeLastCount + 1;
@@ -198,17 +194,15 @@ public static class FilterUtil
     /// <param name="customRange"></param>
     public static void ApplyCustomRange(List<StreamSpec> selectedSteams, CustomRange? customRange)
     {
-        var resultList = selectedSteams.Select(x => 0d).ToList();
-
         if (customRange == null) return;
 
         Logger.InfoMarkUp($"{ResString.customRangeFound}[Cyan underline]{customRange.InputStr}[/]");
         Logger.WarnMarkUp($"[darkorange3_1]{ResString.customRangeWarn}[/]");
 
-        var filteByIndex = customRange.StartSegIndex != null && customRange.EndSegIndex != null;
-        var filteByTime = customRange.StartSec != null && customRange.EndSec != null;
+        var filterByIndex = customRange is { StartSegIndex: not null, EndSegIndex: not null };
+        var filterByTime = customRange is { StartSec: not null, EndSec: not null };
 
-        if (!filteByIndex && !filteByTime)
+        if (!filterByIndex && !filterByTime)
         {
             Logger.ErrorMarkUp(ResString.customRangeInvalid);
             return;
@@ -220,8 +214,8 @@ public static class FilterUtil
             if (stream.Playlist == null) continue;
             foreach (var part in stream.Playlist.MediaParts)
             {
-                var newSegments = new List<MediaSegment>();
-                if (filteByIndex)
+                List<MediaSegment> newSegments;
+                if (filterByIndex)
                     newSegments = part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex).ToList();
                 else
                     newSegments = part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
@@ -239,11 +233,11 @@ public static class FilterUtil
     /// 根据用户输入，清除广告分片
     /// </summary>
     /// <param name="selectedSteams"></param>
-    /// <param name="customRange"></param>
+    /// <param name="keywords"></param>
     public static void CleanAd(List<StreamSpec> selectedSteams, string[]? keywords)
     {
         if (keywords == null) return;
-        var regList = keywords.Select(s => new Regex(s));
+        var regList = keywords.Select(s => new Regex(s)).ToList();
         foreach ( var reg in regList)
         {
             Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
@@ -257,19 +251,16 @@ public static class FilterUtil
 
             foreach (var part in stream.Playlist.MediaParts)
             {
-                //没有找到广告分片
+                // 没有找到广告分片
                 if (part.MediaSegments.All(x => regList.All(reg => !reg.IsMatch(x.Url))))
                 {
                     continue;
                 }
-                //找到广告分片 清理
-                else
-                {
-                    part.MediaSegments = part.MediaSegments.Where(x => regList.All(reg => !reg.IsMatch(x.Url))).ToList();
-                }
+                // 找到广告分片 清理
+                part.MediaSegments = part.MediaSegments.Where(x => regList.All(reg => !reg.IsMatch(x.Url))).ToList();
             }
 
-            //清理已经为空的 part
+            // 清理已经为空的 part
             stream.Playlist.MediaParts = stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0).ToList();
 
             var countAfter = stream.SegmentsCount;

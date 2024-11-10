@@ -1,12 +1,6 @@
 ﻿using N_m3u8DL_RE.Entity;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -48,7 +42,7 @@ internal static partial class MediainfoUtil
             RedirectStandardError = true,
             UseShellExecute = false
         })!;
-        var output = p.StandardError.ReadToEnd();
+        var output = await p.StandardError.ReadToEndAsync();
         await p.WaitForExitAsync();
 
         foreach (Match stream in TextRegex().Matches(output))
@@ -87,7 +81,7 @@ internal static partial class MediainfoUtil
 
         if (result.Count == 0)
         {
-            result.Add(new Mediainfo()
+            result.Add(new Mediainfo
             {
                 Type = "Unknown"
             });

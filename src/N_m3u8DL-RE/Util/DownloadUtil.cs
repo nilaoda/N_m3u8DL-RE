@@ -2,8 +2,6 @@
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
-using System.IO;
-using System.Net;
 using System.Net.Http.Headers;
 
 namespace N_m3u8DL_RE.Util;
@@ -111,16 +109,16 @@ internal static class DownloadUtil
             size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token);
             speedContainer.Add(size);
             await stream.WriteAsync(buffer, 0, size);
-            //检测imageHeader
+            // 检测imageHeader
             bool imageHeader = ImageHeaderUtil.IsImageHeader(buffer);
-            //检测GZip（For DDP Audio）
+            // 检测GZip（For DDP Audio）
             bool gZipHeader = buffer.Length > 2 && buffer[0] == 0x1f && buffer[1] == 0x8b;
 
             while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
             {
                 speedContainer.Add(size);
                 await stream.WriteAsync(buffer, 0, size);
-                //限速策略
+                // 限速策略
                 while (speedContainer.Downloaded > speedContainer.SpeedLimit)
                 {
                     await Task.Delay(1);

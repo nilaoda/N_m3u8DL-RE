@@ -1,35 +1,29 @@
-﻿using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Log;
-using N_m3u8DL_RE.Enum;
-using System.CommandLine;
+﻿using N_m3u8DL_RE.Enum;
 using System.IO.Compression;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util;
 
-internal class OtherUtil
+internal static class OtherUtil
 {
     public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
     {
         Dictionary<string, string> dic = new();
-
-        if (headers != null)
+        if (headers == null) return dic;
+        
+        foreach (string header in headers)
         {
-            foreach (string header in headers)
+            var index = header.IndexOf(':');
+            if (index != -1)
             {
-                var index = header.IndexOf(':');
-                if (index != -1)
-                {
-                    dic[header[..index].Trim().ToLower()] = header[(index + 1)..].Trim();
-                }
+                dic[header[..index].Trim().ToLower()] = header[(index + 1)..].Trim();
             }
         }
 
         return dic;
     }
 
-    private static char[] InvalidChars = "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
+    private static readonly char[] InvalidChars = "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
         .Split(',').Select(s => (char)int.Parse(s)).ToArray();
     public static string GetValidFileName(string input, string re = ".", bool filterSlash = false)
     {
@@ -50,6 +44,7 @@ internal class OtherUtil
     /// 从输入自动获取文件名
     /// </summary>
     /// <param name="input"></param>
+    /// <param name="addSuffix"></param>
     /// <returns></returns>
     public static string GetFileNameFromInput(string input, bool addSuffix = true)
     {
@@ -119,7 +114,7 @@ internal class OtherUtil
         return hours * 3600 + minutes * 60 + seconds;
     }
 
-    //若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录
+    // 若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录
     public static void SafeDeleteDir(string dirPath)
     {
         if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))

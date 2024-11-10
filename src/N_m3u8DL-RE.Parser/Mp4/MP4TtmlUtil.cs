@@ -10,8 +10,8 @@ namespace Mp4SubtitleParser
         public string Begin { get; set; }
         public string End { get; set; }
         public string Region { get; set; }
-        public List<XmlElement> Contents { get; set; } = new List<XmlElement>();
-        public List<string> ContentStrings { get; set; } = new List<string>();
+        public List<XmlElement> Contents { get; set; } = new();
+        public List<string> ContentStrings { get; set; } = new();
 
         public override bool Equals(object? obj)
         {
@@ -43,7 +43,7 @@ namespace Mp4SubtitleParser
         {
             bool sawSTPP = false;
 
-            //parse init
+            // parse init
             new MP4Parser()
                 .Box("moov", MP4Parser.Children)
                 .Box("trak", MP4Parser.Children)
@@ -85,12 +85,12 @@ namespace Mp4SubtitleParser
                 return xmlSrc;
 
             var _div = bodyNode.SelectSingleNode("ns:div", nsMgr);
-            //Parse <p> label
+            // Parse <p> label
             foreach (XmlElement _p in _div!.SelectNodes("ns:p", nsMgr)!)
             {
                 var _begin = _p.GetAttribute("begin");
                 var _end = _p.GetAttribute("end");
-                //Handle namespace
+                // Handle namespace
                 foreach (XmlAttribute attr in _p.Attributes)
                 {
                     if (attr.LocalName == "begin") _begin = attr.Value;
@@ -98,8 +98,8 @@ namespace Mp4SubtitleParser
                 }
                 _p.SetAttribute("begin", Add(_begin));
                 _p.SetAttribute("end", Add(_end));
-                //Console.WriteLine($"{_begin} {_p.GetAttribute("begin")}");
-                //Console.WriteLine($"{_end} {_p.GetAttribute("begin")}");
+                // Console.WriteLine($"{_begin} {_p.GetAttribute("begin")}");
+                // Console.WriteLine($"{_end} {_p.GetAttribute("begin")}");
             }
 
             return xmlDoc.OuterXml;
@@ -135,7 +135,7 @@ namespace Mp4SubtitleParser
 
         public static WebVttSub ExtractFromMp4s(IEnumerable<string> items, long segTimeMs, long baseTimestamp = 0L)
         {
-            //read ttmls
+            // read ttmls
             List<string> xmls = new List<string>();
             int segIndex = 0;
             foreach (var item in items)
@@ -143,7 +143,7 @@ namespace Mp4SubtitleParser
                 var dataSeg = File.ReadAllBytes(item);
 
                 var sawMDAT = false;
-                //parse media
+                // parse media
                 new MP4Parser()
                     .Box("mdat", MP4Parser.AllData((data) =>
                     {
@@ -161,10 +161,7 @@ namespace Mp4SubtitleParser
                         else
                         {
                             var datas = SplitMultipleRootElements(Encoding.UTF8.GetString(data));
-                            foreach (var item in datas)
-                            {
-                                xmls.Add(item);
-                            }
+                            xmls.AddRange(datas);
                         }
                     }))
                     .Parse(dataSeg,/* partialOkay= */ false);
@@ -181,7 +178,7 @@ namespace Mp4SubtitleParser
 
         public static WebVttSub ExtractFromTTMLs(IEnumerable<string> items, long segTimeMs, long baseTimestamp = 0L)
         {
-            //read ttmls
+            // read ttmls
             List<string> xmls = new List<string>();
             int segIndex = 0;
             foreach (var item in items)
@@ -203,7 +200,7 @@ namespace Mp4SubtitleParser
 
         private static WebVttSub ExtractSub(List<string> xmls, long baseTimestamp)
         {
-            //parsing
+            // parsing
             var xmlDoc = new XmlDocument();
             var finalSubs = new List<SubEntity>();
             XmlNode? headNode = null;
@@ -215,7 +212,7 @@ namespace Mp4SubtitleParser
                 var xmlContent = item;
                 if (!xmlContent.Contains("<tt")) continue;
 
-                //fix non-standard xml 
+                // fix non-standard xml 
                 var xmlContentFix = xmlContent;
                 if (regex.IsMatch(xmlContent))
                 {
@@ -256,8 +253,8 @@ namespace Mp4SubtitleParser
                     continue;
 
 
-                //PNG Subs
-                var imageDic = new Dictionary<string, string>(); //id, Base64
+                // PNG Subs
+                var imageDic = new Dictionary<string, string>(); // id, Base64
                 if (ImageRegex().IsMatch(xmlDoc.InnerXml))
                 {
                     foreach (Match img in ImageRegex().Matches(xmlDoc.InnerXml))
@@ -266,7 +263,7 @@ namespace Mp4SubtitleParser
                     }
                 }
 
-                //convert <div> to <p>
+                // convert <div> to <p>
                 if (_div!.SelectNodes("ns:p", nsMgr) == null || _div!.SelectNodes("ns:p", nsMgr)!.Count == 0)
                 {
                     foreach (XmlElement _tDiv in bodyNode.SelectNodes("ns:div", nsMgr)!)
@@ -277,14 +274,14 @@ namespace Mp4SubtitleParser
                     }
                 }
 
-                //Parse <p> label
+                // Parse <p> label
                 foreach (XmlElement _p in _div!.SelectNodes("ns:p", nsMgr)!)
                 {
                     var _begin = _p.GetAttribute("begin");
                     var _end = _p.GetAttribute("end");
                     var _region = _p.GetAttribute("region");
                     var _bgImg = _p.GetAttribute("smpte:backgroundImage");
-                    //Handle namespace
+                    // Handle namespace
                     foreach (XmlAttribute attr in _p.Attributes)
                     {
                         if (attr.LocalName == "begin") _begin = attr.Value;
@@ -301,7 +298,7 @@ namespace Mp4SubtitleParser
                     if (string.IsNullOrEmpty(_bgImg))
                     {
                         var _spans = _p.ChildNodes;
-                        //Collect <span>
+                        // Collect <span>
                         foreach (XmlNode _node in _spans)
                         {
                             if (_node.NodeType == XmlNodeType.Element)
@@ -333,12 +330,12 @@ namespace Mp4SubtitleParser
                         }
                     }
                     
-                    //Check if one <p> has been splitted
+                    // Check if one <p> has been splitted
                     var index = finalSubs.FindLastIndex(s => s.End == _begin && s.Region == _region && s.ContentStrings.SequenceEqual(sub.ContentStrings));
-                    //Skip empty lines
+                    // Skip empty lines
                     if (sub.ContentStrings.Count > 0)
                     {
-                        //Extend <p> duration
+                        // Extend <p> duration
                         if (index != -1)
                             finalSubs[index].End = sub.End;
                         else if (!finalSubs.Contains(sub))
@@ -372,7 +369,7 @@ namespace Mp4SubtitleParser
             }
 
 
-            StringBuilder vtt = new StringBuilder();
+            var vtt = new StringBuilder();
             vtt.AppendLine("WEBVTT");
             foreach (var item in dic)
             {

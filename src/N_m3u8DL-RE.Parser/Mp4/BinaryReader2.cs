@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Mp4SubtitleParser
 {
-    //make BinaryReader in Big Endian
+    // make BinaryReader in Big Endian
     class BinaryReader2 : BinaryReader
     {
         public BinaryReader2(System.IO.Stream stream) : base(stream) { }

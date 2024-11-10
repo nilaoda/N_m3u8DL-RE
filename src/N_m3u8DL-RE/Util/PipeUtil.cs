@@ -1,14 +1,8 @@
 ﻿using N_m3u8DL_RE.Common.Log;
-using N_m3u8DL_RE.Common.Resource;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
 using System.IO.Pipes;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -67,7 +61,7 @@ internal static class PipeUtil
             if (OperatingSystem.IsWindows())
                 command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
             else
-                //command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
+                // command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
                 command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
         }
 
@@ -103,7 +97,7 @@ internal static class PipeUtil
             CreateNoWindow = true,
             UseShellExecute = false
         };
-        //p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
+        // p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
         p.Start();
         p.WaitForExit();
 

@@ -37,13 +37,13 @@ public static class HTTPUtil
             }
         }
         Logger.Debug(webRequest.Headers.ToString());
-        //手动处理跳转，以免自定义Headers丢失
+        // 手动处理跳转，以免自定义Headers丢失
         var webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
         if (((int)webResponse.StatusCode).ToString().StartsWith("30"))
         {
             HttpResponseHeaders respHeaders = webResponse.Headers;
             Logger.Debug(respHeaders.ToString());
-            if (respHeaders != null && respHeaders.Location != null)
+            if (respHeaders.Location != null)
             {
                 var redirectedUrl = "";
                 if (!respHeaders.Location.IsAbsoluteUri)
@@ -64,7 +64,7 @@ public static class HTTPUtil
                 }
             }
         }
-        //手动将跳转后的URL设置进去, 用于后续取用
+        // 手动将跳转后的URL设置进去, 用于后续取用
         webResponse.Headers.Location = new Uri(url);
         webResponse.EnsureSuccessStatusCode();
         return webResponse;
@@ -76,9 +76,8 @@ public static class HTTPUtil
         {
             return await File.ReadAllBytesAsync(new Uri(url).LocalPath);
         }
-        byte[] bytes = new byte[0];
         var webResponse = await DoGetAsync(url, headers);
-        bytes = await webResponse.Content.ReadAsByteArrayAsync();
+        var bytes = await webResponse.Content.ReadAsByteArrayAsync();
         Logger.Debug(HexUtil.BytesToHex(bytes, " "));
         return bytes;
     }
@@ -91,9 +90,8 @@ public static class HTTPUtil
     /// <returns></returns>
     public static async Task<string> GetWebSourceAsync(string url, Dictionary<string, string>? headers = null)
     {
-        string htmlCode = string.Empty;
         var webResponse = await DoGetAsync(url, headers);
-        htmlCode = await webResponse.Content.ReadAsStringAsync();
+        string htmlCode = await webResponse.Content.ReadAsStringAsync();
         Logger.Debug(htmlCode);
         return htmlCode;
     }
@@ -112,7 +110,7 @@ public static class HTTPUtil
     /// <returns>(Source Code, RedirectedUrl)</returns>
     public static async Task<(string, string)> GetWebSourceAndNewUrlAsync(string url, Dictionary<string, string>? headers = null)
     {
-        string htmlCode = string.Empty;
+        string htmlCode;
         var webResponse = await DoGetAsync(url, headers);
         if (CheckMPEG2TS(webResponse))
         {
@@ -128,7 +126,7 @@ public static class HTTPUtil
 
     public static async Task<string> GetPostResponseAsync(string Url, byte[] postData)
     {
-        string htmlCode = string.Empty;
+        string htmlCode;
         using HttpRequestMessage request = new(HttpMethod.Post, Url);
         request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
         request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());

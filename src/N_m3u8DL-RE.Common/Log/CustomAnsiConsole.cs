@@ -8,27 +8,27 @@ public class NonAnsiWriter : TextWriter
 {
     public override Encoding Encoding => Console.OutputEncoding;
 
-    private string lastOut = "";
+    private string? _lastOut = "";
 
     public override void Write(char value)
     {
         Console.Write(value);
     }
 
-    public override void Write(string value)
+    public override void Write(string? value)
     {
-        if (lastOut == value)
+        if (_lastOut == value)
         {
             return;
         }
-        lastOut = value;
+        _lastOut = value;
         RemoveAnsiEscapeSequences(value);
     }
 
-    private void RemoveAnsiEscapeSequences(string input)
+    private void RemoveAnsiEscapeSequences(string? input)
     {
         // Use regular expression to remove ANSI escape sequences
-        string output = Regex.Replace(input, @"\x1B\[(\d+;?)+m", "");
+        string output = Regex.Replace(input ?? "", @"\x1B\[(\d+;?)+m", "");
         output = Regex.Replace(output, @"\[\??\d+[AKlh]", "");
         output = Regex.Replace(output,"[\r\n] +","");
         if (string.IsNullOrWhiteSpace(output))

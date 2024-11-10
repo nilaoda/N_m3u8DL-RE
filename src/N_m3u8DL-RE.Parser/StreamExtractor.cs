@@ -6,144 +6,142 @@ using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Extractor;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Common.Enum;
-using Spectre.Console;
 
-namespace N_m3u8DL_RE.Parser
+namespace N_m3u8DL_RE.Parser;
+
+public class StreamExtractor
 {
-    public class StreamExtractor
+    public ExtractorType ExtractorType => extractor.ExtractorType;
+    private IExtractor extractor;
+    private ParserConfig parserConfig = new();
+    private string rawText;
+    private static SemaphoreSlim semaphore = new(1, 1);
+
+    public Dictionary<string, string> RawFiles { get; set; } = new(); // 存储（文件名,文件内容）
+
+    public StreamExtractor()
     {
-        public ExtractorType ExtractorType { get => extractor.ExtractorType; }
-        private IExtractor extractor;
-        private ParserConfig parserConfig = new ParserConfig();
-        private string rawText;
-        private static SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
-        public Dictionary<string, string> RawFiles { get; set; } = new(); //存储（文件名,文件内容）
+    }
 
-        public StreamExtractor()
+    public StreamExtractor(ParserConfig parserConfig)
+    {
+        this.parserConfig = parserConfig;
+    }
+
+    public async Task LoadSourceFromUrlAsync(string url)
+    {
+        Logger.Info(ResString.loadingUrl + url);
+        if (url.StartsWith("file:"))
         {
+            var uri = new Uri(url);
+            this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
+            parserConfig.OriginalUrl = parserConfig.Url = url;
+        }
+        else if (url.StartsWith("http"))
+        {
+            parserConfig.OriginalUrl = url;
+            (this.rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
+            parserConfig.Url = url;
+        }
+        else if (File.Exists(url))
+        {
+            url = Path.GetFullPath(url);
+            this.rawText = await File.ReadAllTextAsync(url);
+            parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
+        }
+        this.rawText = rawText.Trim();
+        LoadSourceFromText(this.rawText);
+    }
 
+    public void LoadSourceFromText(string rawText)
+    {
+        var rawType = "txt";
+        rawText = rawText.Trim();
+        this.rawText = rawText;
+        if (rawText.StartsWith(HLSTags.ext_m3u))
+        {
+            Logger.InfoMarkUp(ResString.matchHLS);
+            extractor = new HLSExtractor(parserConfig);
+            rawType = "m3u8";
+        }
+        else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
+        {
+            Logger.InfoMarkUp(ResString.matchDASH);
+            // extractor = new DASHExtractor(parserConfig);
+            extractor = new DASHExtractor2(parserConfig);
+            rawType = "mpd";
+        }
+        else if (rawText.Contains("</SmoothStreamingMedia>") && rawText.Contains("<SmoothStreamingMedia"))
+        {
+            Logger.InfoMarkUp(ResString.matchMSS);
+            // extractor = new DASHExtractor(parserConfig);
+            extractor = new MSSExtractor(parserConfig);
+            rawType = "ism";
+        }
+        else if (rawText == ResString.ReLiveTs)
+        {
+            Logger.InfoMarkUp(ResString.matchTS);
+            extractor = new LiveTSExtractor(parserConfig);
+        }
+        else
+        {
+            throw new NotSupportedException(ResString.notSupported);
         }
 
-        public StreamExtractor(ParserConfig parserConfig)
+        RawFiles[$"raw.{rawType}"] = rawText;
+    }
+
+    /// <summary>
+    /// 开始解析流媒体信息
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<StreamSpec>> ExtractStreamsAsync()
+    {
+        try
         {
-            this.parserConfig = parserConfig;
+            await semaphore.WaitAsync();
+            Logger.Info(ResString.parsingStream);
+            return await extractor.ExtractStreamsAsync(rawText);
         }
-
-        public async Task LoadSourceFromUrlAsync(string url)
+        finally
         {
-            Logger.Info(ResString.loadingUrl + url);
-            if (url.StartsWith("file:"))
-            {
-                var uri = new Uri(url);
-                this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
-                parserConfig.OriginalUrl = parserConfig.Url = url;
-            }
-            else if (url.StartsWith("http"))
-            {
-                parserConfig.OriginalUrl = url;
-                (this.rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
-                parserConfig.Url = url;
-            }
-            else if (File.Exists(url))
-            {
-                url = Path.GetFullPath(url);
-                this.rawText = await File.ReadAllTextAsync(url);
-                parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
-            }
-            this.rawText = rawText.Trim();
-            LoadSourceFromText(this.rawText);
+            semaphore.Release();
         }
+    }
 
-        public void LoadSourceFromText(string rawText)
+    /// <summary>
+    /// 根据规格说明填充媒体播放列表信息
+    /// </summary>
+    /// <param name="streamSpecs"></param>
+    public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
+    {
+        try
         {
-            var rawType = "txt";
-            rawText = rawText.Trim();
-            this.rawText = rawText;
-            if (rawText.StartsWith(HLSTags.ext_m3u))
-            {
-                Logger.InfoMarkUp(ResString.matchHLS);
-                extractor = new HLSExtractor(parserConfig);
-                rawType = "m3u8";
-            }
-            else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
-            {
-                Logger.InfoMarkUp(ResString.matchDASH);
-                //extractor = new DASHExtractor(parserConfig);
-                extractor = new DASHExtractor2(parserConfig);
-                rawType = "mpd";
-            }
-            else if (rawText.Contains("</SmoothStreamingMedia>") && rawText.Contains("<SmoothStreamingMedia"))
-            {
-                Logger.InfoMarkUp(ResString.matchMSS);
-                //extractor = new DASHExtractor(parserConfig);
-                extractor = new MSSExtractor(parserConfig);
-                rawType = "ism";
-            }
-            else if (rawText == ResString.ReLiveTs)
-            {
-                Logger.InfoMarkUp(ResString.matchTS);
-                extractor = new LiveTSExtractor(parserConfig);
-            }
-            else
-            {
-                throw new NotSupportedException(ResString.notSupported);
-            }
-
-            RawFiles[$"raw.{rawType}"] = rawText;
+            await semaphore.WaitAsync();
+            Logger.Info(ResString.parsingStream);
+            await extractor.FetchPlayListAsync(streamSpecs);
         }
-
-        /// <summary>
-        /// 开始解析流媒体信息
-        /// </summary>
-        /// <returns></returns>
-        public async Task<List<StreamSpec>> ExtractStreamsAsync()
+        finally
         {
-            try
-            {
-                await semaphore.WaitAsync();
-                Logger.Info(ResString.parsingStream);
-                return await extractor.ExtractStreamsAsync(rawText);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            semaphore.Release();
         }
+    }
 
-        /// <summary>
-        /// 根据规格说明填充媒体播放列表信息
-        /// </summary>
-        /// <param name="streamSpecs"></param>
-        public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
+    public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+    {
+        try
         {
-            try
+            await semaphore.WaitAsync();
+            await RetryUtil.WebRequestRetryAsync(async () =>
             {
-                await semaphore.WaitAsync();
-                Logger.Info(ResString.parsingStream);
-                await extractor.FetchPlayListAsync(streamSpecs);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+                await extractor.RefreshPlayListAsync(streamSpecs);
+                return true;
+            }, retryDelayMilliseconds: 1000, maxRetries: 5);
         }
-
-        public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+        finally
         {
-            try
-            {
-                await semaphore.WaitAsync();
-                await RetryUtil.WebRequestRetryAsync(async () =>
-                {
-                    await extractor.RefreshPlayListAsync(streamSpecs);
-                    return true;
-                }, retryDelayMilliseconds: 1000, maxRetries: 5);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            semaphore.Release();
         }
     }
 }

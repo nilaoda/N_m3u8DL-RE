@@ -27,18 +27,14 @@ internal static class MergeUtil
         if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
             Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
 
-        string[] inputFilePaths = files;
-        using (var outputStream = File.Create(outputFilePath))
+        var inputFilePaths = files;
+        using var outputStream = File.Create(outputFilePath);
+        foreach (var inputFilePath in inputFilePaths)
         {
-            foreach (var inputFilePath in inputFilePaths)
-            {
-                if (inputFilePath == "")
-                    continue;
-                using (var inputStream = File.OpenRead(inputFilePath))
-                {
-                    inputStream.CopyTo(outputStream);
-                }
-            }
+            if (inputFilePath == "")
+                continue;
+            using var inputStream = File.OpenRead(inputFilePath);
+            inputStream.CopyTo(outputStream);
         }
     }
 
@@ -79,18 +75,18 @@ internal static class MergeUtil
             div = 200;
 
         string outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
-        int index = 0; //序号
+        int index = 0; // 序号
 
-        //按照div的容量分割为小数组
+        // 按照div的容量分割为小数组
         string[][] li = Enumerable.Range(0, files.Count() / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
         foreach (var items in li)
         {
-            if (items.Count() == 0)
+            if (!items.Any())
                 continue;
             var output = outputName + index.ToString("0000") + ".ts";
             CombineMultipleFilesIntoSingleFile(items, output);
             newFiles.Add(output);
-            //合并后删除这些文件
+            // 合并后删除这些文件
             foreach (var item in items)
             {
                 File.Delete(item);
@@ -106,7 +102,7 @@ internal static class MergeUtil
         bool writeDate = true, bool useConcatDemuxer = false, string poster = "", string audioName = "", string title = "",
         string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
     {
-        //改为绝对路径
+        // 改为绝对路径
         outputPath = Path.GetFullPath(outputPath);
 
         string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
@@ -185,13 +181,13 @@ internal static class MergeUtil
         string dateString = DateTime.Now.ToString("o");
         StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
 
-        //INPUT
+        // INPUT
         foreach (var item in files)
         {
             command.Append($" -i \"{item.FilePath}\" ");
         }
 
-        //MAP
+        // MAP
         for (int i = 0; i < files.Length; i++)
         {
             command.Append($" -map {i} ");
@@ -200,21 +196,21 @@ internal static class MergeUtil
         var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
 
         if (muxFormat == MuxFormat.MP4)
-            command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
+            command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
         else if (muxFormat == MuxFormat.TS)
             command.Append($" -strict unofficial -c:a copy -c:v copy ");
         else if (muxFormat == MuxFormat.MKV)
             command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
         else throw new ArgumentException($"unknown format: {muxFormat}");
 
-        //CLEAN
+        // CLEAN
         command.Append(" -map_metadata -1 ");
 
-        //LANG and NAME
+        // LANG and NAME
         var streamIndex = 0;
         for (int i = 0; i < files.Length; i++)
         {
-            //转换语言代码
+            // 转换语言代码
             LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
             command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
             if (!string.IsNullOrEmpty(files[i].Description))
@@ -236,11 +232,11 @@ internal static class MergeUtil
         var audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
         var subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
         if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
-        //字幕都不设置默认
+        // 字幕都不设置默认
         if (subTracks.Any()) command.Append(" -disposition:s 0 ");
         if (audioTracks.Any())
         {
-            //音频除了第一个音轨 都不设置默认
+            // 音频除了第一个音轨 都不设置默认
             command.Append(" -disposition:a:0 default ");
             for (int i = 1; i < audioTracks.Count(); i++)
             {
@@ -265,16 +261,16 @@ internal static class MergeUtil
 
         var dFlag = false;
 
-        //LANG and NAME
+        // LANG and NAME
         for (int i = 0; i < files.Length; i++)
         {
-            //转换语言代码
+            // 转换语言代码
             LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
             command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
-            //字幕都不设置默认
+            // 字幕都不设置默认
             if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
                 command.Append($" --default-track 0:no ");
-            //音频除了第一个音轨 都不设置默认
+            // 音频除了第一个音轨 都不设置默认
             if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
             {
                 if (dFlag)

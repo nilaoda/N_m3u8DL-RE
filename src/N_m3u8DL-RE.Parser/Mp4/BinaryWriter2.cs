@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Mp4SubtitleParser
 {
-    //make BinaryWriter in Big Endian
+    // make BinaryWriter in Big Endian
     class BinaryWriter2 : BinaryWriter
     {
         private static bool IsLittleEndian = BitConverter.IsLittleEndian;

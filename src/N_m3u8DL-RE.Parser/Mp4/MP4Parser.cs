@@ -111,7 +111,7 @@ namespace Mp4SubtitleParser
             var name = TypeToString(type);
             var has64BitSize = false;
 
-            //Console.WriteLine($"Parsing MP4 box: {name}");
+            // Console.WriteLine($"Parsing MP4 box: {name}");
 
             switch (size)
             {
@@ -129,8 +129,7 @@ namespace Mp4SubtitleParser
                     break;
             }
 
-            BoxHandler boxDefinition = null;
-            this.BoxDefinitions.TryGetValue(type, out boxDefinition);
+            this.BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition);
 
             if (boxDefinition != null)
             {

@@ -9,7 +9,7 @@ namespace N_m3u8DL_RE.Util;
 
 internal static class MP4DecryptUtil
 {
-    private static string ZeroKid = "00000000000000000000000000000000";
+    private static readonly string ZeroKid = "00000000000000000000000000000000";
     public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
     {
         if (keys == null || keys.Length == 0) return false;
@@ -25,7 +25,7 @@ internal static class MP4DecryptUtil
 
         if (!string.IsNullOrEmpty(kid))
         {
-            var test = keyPairs.Where(k => k.StartsWith(kid));
+            var test = keyPairs.Where(k => k.StartsWith(kid)).ToList();
             if (test.Any()) keyPair = test.First();
         }
 
@@ -45,16 +45,16 @@ internal static class MP4DecryptUtil
             
         if (keyPair == null) return false;
 
-        //shakaPackager 无法单独解密init文件
+        // shakaPackager 无法单独解密init文件
         if (source.EndsWith("_init.mp4") && shakaPackager) return false;
 
-        var cmd = "";
+        string cmd;
 
         var tmpFile = "";
         if (shakaPackager)
         {
             var enc = source;
-            //shakaPackager 手动构造文件
+            // shakaPackager 手动构造文件
             if (init != "")
             {
                 tmpFile = Path.ChangeExtension(source, ".itmp");
@@ -101,8 +101,8 @@ internal static class MP4DecryptUtil
         {
             FileName = name,
             Arguments = arg,
-            //RedirectStandardOutput = true,
-            //RedirectStandardError = true,
+            // RedirectStandardOutput = true,
+            // RedirectStandardError = true,
             CreateNoWindow = true,
             UseShellExecute = false
         })!.WaitForExitAsync();
@@ -124,8 +124,7 @@ internal static class MP4DecryptUtil
             Logger.InfoMarkUp(ResString.searchKey);
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
             using var reader = new StreamReader(stream);
-            var line = "";
-            while ((line = await reader.ReadLineAsync()) != null)
+            while (await reader.ReadLineAsync() is { } line)
             {
                 if (line.Trim().StartsWith(kid))
                 {
@@ -152,17 +151,15 @@ internal static class MP4DecryptUtil
 
     public static ParsedMP4Info GetMP4Info(string output)
     {
-        using (var fs = File.OpenRead(output))
-        {
-            var header = new byte[1 * 1024 * 1024]; //1MB
-            fs.Read(header);
-            return GetMP4Info(header);
-        }
+        using var fs = File.OpenRead(output);
+        var header = new byte[1 * 1024 * 1024]; // 1MB
+        fs.Read(header);
+        return GetMP4Info(header);
     }
 
     public static string? ReadInitShaka(string output, string bin)
     {
-        Regex ShakaKeyIDRegex = new Regex("Key for key_id=([0-9a-f]+) was not found");
+        Regex shakaKeyIdRegex = new("Key for key_id=([0-9a-f]+) was not found");
 
         // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
         //       - stop process
@@ -182,6 +179,6 @@ internal static class MP4DecryptUtil
         p.Start();
         var errorOutput = p.StandardError.ReadToEnd();
         p.WaitForExit();
-        return ShakaKeyIDRegex.Match(errorOutput).Groups[1].Value;
+        return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;
     }
 }

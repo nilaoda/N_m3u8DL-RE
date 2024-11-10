@@ -31,7 +31,7 @@ public static class HexUtil
         var hexSpan = hex.AsSpan().Trim();
         if (hexSpan.StartsWith("0x") || hexSpan.StartsWith("0X"))
         {
-            hexSpan = hexSpan.Slice(2);
+            hexSpan = hexSpan[2..];
         }
 
         return Convert.FromHexString(hexSpan);

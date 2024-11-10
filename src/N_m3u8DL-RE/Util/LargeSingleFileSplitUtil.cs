@@ -1,13 +1,6 @@
 ﻿using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Util;
-using NiL.JS.Expressions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -15,17 +8,16 @@ internal static class LargeSingleFileSplitUtil
 {
     class Clip
     {
-        public required int index;
-        public required long from;
-        public required long to;
+        public required int Index;
+        public required long From;
+        public required long To;
     }
 
     /// <summary>
     /// URL大文件切片处理
     /// </summary>
-    /// <param name="url"></param>
+    /// <param name="segment"></param>
     /// <param name="headers"></param>
-    /// <param name="splitSegments"></param>
     /// <returns></returns>
     public static async Task<List<MediaSegment>?> SplitUrlAsync(MediaSegment segment, Dictionary<string,string> headers)
     {
@@ -43,10 +35,10 @@ internal static class LargeSingleFileSplitUtil
         {
             splitSegments.Add(new MediaSegment()
             {
-                Index = clip.index,
+                Index = clip.Index,
                 Url = url,
-                StartRange = clip.from,
-                ExpectLength = clip.to == -1 ? null : clip.to - clip.from + 1,
+                StartRange = clip.From,
+                ExpectLength = clip.To == -1 ? null : clip.To - clip.From + 1,
                 EncryptInfo = segment.EncryptInfo,
             });
         }
@@ -85,7 +77,7 @@ internal static class LargeSingleFileSplitUtil
         return totalSizeBytes;
     }
 
-    //此函数主要是切片下载逻辑
+    // 此函数主要是切片下载逻辑
     private static List<Clip> GetAllClips(string url, long fileSize)
     {
         List<Clip> clips = new();
@@ -96,11 +88,11 @@ internal static class LargeSingleFileSplitUtil
         {
             Clip c = new()
             {
-                index = index,
-                from = counter,
-                to = counter + perSize
+                Index = index,
+                From = counter,
+                To = counter + perSize
             };
-            //没到最后
+            // 没到最后
             if (fileSize - perSize > 0)
             {
                 fileSize -= perSize;
@@ -108,10 +100,10 @@ internal static class LargeSingleFileSplitUtil
                 index++;
                 clips.Add(c);
             }
-            //已到最后
+            // 已到最后
             else
             {
-                c.to = -1;
+                c.To = -1;
                 clips.Add(c);
                 break;
             }
