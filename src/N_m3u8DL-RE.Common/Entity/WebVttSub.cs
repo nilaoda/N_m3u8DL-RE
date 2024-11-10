@@ -205,7 +205,7 @@ namespace N_m3u8DL_RE.Common.Entity
             string[] parts = str.Split('.');
             if (parts.Length > 1)
             {
-                time += Convert.ToInt32(parts.Last());
+                time += Convert.ToInt32(parts.Last().PadRight(3, '0'));
                 str = parts.First();
             }
             var t = str.Split(':').Reverse().ToList();
