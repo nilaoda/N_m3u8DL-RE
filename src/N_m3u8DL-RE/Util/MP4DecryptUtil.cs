@@ -5,184 +5,183 @@ using N_m3u8DL_RE.Config;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
-namespace N_m3u8DL_RE.Util
+namespace N_m3u8DL_RE.Util;
+
+internal static class MP4DecryptUtil
 {
-    internal static class MP4DecryptUtil
+    private static string ZeroKid = "00000000000000000000000000000000";
+    public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
     {
-        private static string ZeroKid = "00000000000000000000000000000000";
-        public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
+        if (keys == null || keys.Length == 0) return false;
+
+        var keyPairs = keys.ToList();
+        string? keyPair = null;
+        string? trackId = null;
+
+        if (isMultiDRM)
         {
-            if (keys == null || keys.Length == 0) return false;
+            trackId = "1";
+        }
 
-            var keyPairs = keys.ToList();
-            string? keyPair = null;
-            string? trackId = null;
+        if (!string.IsNullOrEmpty(kid))
+        {
+            var test = keyPairs.Where(k => k.StartsWith(kid));
+            if (test.Any()) keyPair = test.First();
+        }
 
-            if (isMultiDRM)
-            {
-                trackId = "1";
-            }
+        // Apple
+        if (kid == ZeroKid)
+        {
+            keyPair = keyPairs.First();
+            trackId = "1";
+        }
 
-            if (!string.IsNullOrEmpty(kid))
-            {
-                var test = keyPairs.Where(k => k.StartsWith(kid));
-                if (test.Any()) keyPair = test.First();
-            }
-
-            // Apple
-            if (kid == ZeroKid)
-            {
-                keyPair = keyPairs.First();
-                trackId = "1";
-            }
-
-            // user only input key, append kid
-            if (keyPair == null && keyPairs.Count == 1 && !keyPairs.First().Contains(':'))
-            {
-                keyPairs = keyPairs.Select(x => $"{kid}:{x}").ToList();
-                keyPair = keyPairs.First();
-            }
+        // user only input key, append kid
+        if (keyPair == null && keyPairs.Count == 1 && !keyPairs.First().Contains(':'))
+        {
+            keyPairs = keyPairs.Select(x => $"{kid}:{x}").ToList();
+            keyPair = keyPairs.First();
+        }
             
-            if (keyPair == null) return false;
+        if (keyPair == null) return false;
 
-            //shakaPackager 无法单独解密init文件
-            if (source.EndsWith("_init.mp4") && shakaPackager) return false;
+        //shakaPackager 无法单独解密init文件
+        if (source.EndsWith("_init.mp4") && shakaPackager) return false;
 
-            var cmd = "";
+        var cmd = "";
 
-            var tmpFile = "";
-            if (shakaPackager)
+        var tmpFile = "";
+        if (shakaPackager)
+        {
+            var enc = source;
+            //shakaPackager 手动构造文件
+            if (init != "")
             {
-                var enc = source;
-                //shakaPackager 手动构造文件
-                if (init != "")
-                {
-                    tmpFile = Path.ChangeExtension(source, ".itmp");
-                    MergeUtil.CombineMultipleFilesIntoSingleFile(new string[] { init, source }, tmpFile);
-                    enc = tmpFile;
-                }
+                tmpFile = Path.ChangeExtension(source, ".itmp");
+                MergeUtil.CombineMultipleFilesIntoSingleFile(new string[] { init, source }, tmpFile);
+                enc = tmpFile;
+            }
 
-                cmd = $"--quiet --enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
-                    $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={(trackId != null ? ZeroKid : kid)}:key={keyPair.Split(':')[1]}";
+            cmd = $"--quiet --enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
+                  $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={(trackId != null ? ZeroKid : kid)}:key={keyPair.Split(':')[1]}";
+        }
+        else
+        {
+            if (trackId == null)
+            {
+                cmd = string.Join(" ", keyPairs.Select(k => $"--key {k}"));
             }
             else
             {
-                if (trackId == null)
-                {
-                    cmd = string.Join(" ", keyPairs.Select(k => $"--key {k}"));
-                }
-                else
-                {
-                    cmd = string.Join(" ", keyPairs.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
-                }
-                if (init != "")
-                {
-                    cmd += $" --fragments-info \"{init}\" ";
-                }
-                cmd += $" \"{source}\" \"{dest}\"";
+                cmd = string.Join(" ", keyPairs.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
             }
-
-            await RunCommandAsync(bin, cmd);
-
-            if (File.Exists(dest) && new FileInfo(dest).Length > 0)
+            if (init != "")
             {
-                if (tmpFile != "" && File.Exists(tmpFile)) File.Delete(tmpFile);
-                return true;
+                cmd += $" --fragments-info \"{init}\" ";
             }
-
-            return false;
+            cmd += $" \"{source}\" \"{dest}\"";
         }
 
-        private static async Task RunCommandAsync(string name, string arg)
+        await RunCommandAsync(bin, cmd);
+
+        if (File.Exists(dest) && new FileInfo(dest).Length > 0)
         {
-            Logger.DebugMarkUp($"FileName: {name}");
-            Logger.DebugMarkUp($"Arguments: {arg}");
-            await Process.Start(new ProcessStartInfo()
-            {
-                FileName = name,
-                Arguments = arg,
-                //RedirectStandardOutput = true,
-                //RedirectStandardError = true,
-                CreateNoWindow = true,
-                UseShellExecute = false
-            })!.WaitForExitAsync();
+            if (tmpFile != "" && File.Exists(tmpFile)) File.Delete(tmpFile);
+            return true;
         }
 
-        /// <summary>
-        /// 从文本文件中查询KID的KEY
-        /// </summary>
-        /// <param name="file">文本文件</param>
-        /// <param name="kid">目标KID</param>
-        /// <returns></returns>
-        public static async Task<string?> SearchKeyFromFileAsync(string? file, string? kid)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(file) || !File.Exists(file) || string.IsNullOrEmpty(kid)) 
-                    return null;
+        return false;
+    }
 
-                Logger.InfoMarkUp(ResString.searchKey);
-                using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = new StreamReader(stream);
-                var line = "";
-                while ((line = await reader.ReadLineAsync()) != null)
+    private static async Task RunCommandAsync(string name, string arg)
+    {
+        Logger.DebugMarkUp($"FileName: {name}");
+        Logger.DebugMarkUp($"Arguments: {arg}");
+        await Process.Start(new ProcessStartInfo()
+        {
+            FileName = name,
+            Arguments = arg,
+            //RedirectStandardOutput = true,
+            //RedirectStandardError = true,
+            CreateNoWindow = true,
+            UseShellExecute = false
+        })!.WaitForExitAsync();
+    }
+
+    /// <summary>
+    /// 从文本文件中查询KID的KEY
+    /// </summary>
+    /// <param name="file">文本文件</param>
+    /// <param name="kid">目标KID</param>
+    /// <returns></returns>
+    public static async Task<string?> SearchKeyFromFileAsync(string? file, string? kid)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(file) || !File.Exists(file) || string.IsNullOrEmpty(kid)) 
+                return null;
+
+            Logger.InfoMarkUp(ResString.searchKey);
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var reader = new StreamReader(stream);
+            var line = "";
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                if (line.Trim().StartsWith(kid))
                 {
-                    if (line.Trim().StartsWith(kid))
-                    {
-                        Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
-                        return line.Trim();
-                    }
+                    Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
+                    return line.Trim();
                 }
             }
-            catch (Exception ex)
-            {
-                Logger.ErrorMarkUp(ex.Message);
-            }
-            return null;
         }
-
-        public static ParsedMP4Info GetMP4Info(byte[] data)
+        catch (Exception ex)
         {
-            var info = MP4InitUtil.ReadInit(data);
-            if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
-            if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
-            if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
-            return info;
+            Logger.ErrorMarkUp(ex.Message);
         }
+        return null;
+    }
 
-        public static ParsedMP4Info GetMP4Info(string output)
+    public static ParsedMP4Info GetMP4Info(byte[] data)
+    {
+        var info = MP4InitUtil.ReadInit(data);
+        if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
+        if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
+        if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
+        return info;
+    }
+
+    public static ParsedMP4Info GetMP4Info(string output)
+    {
+        using (var fs = File.OpenRead(output))
         {
-            using (var fs = File.OpenRead(output))
-            {
-                var header = new byte[1 * 1024 * 1024]; //1MB
-                fs.Read(header);
-                return GetMP4Info(header);
-            }
+            var header = new byte[1 * 1024 * 1024]; //1MB
+            fs.Read(header);
+            return GetMP4Info(header);
         }
+    }
 
-        public static string? ReadInitShaka(string output, string bin)
+    public static string? ReadInitShaka(string output, string bin)
+    {
+        Regex ShakaKeyIDRegex = new Regex("Key for key_id=([0-9a-f]+) was not found");
+
+        // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
+        //       - stop process
+        //       - remove {output}.tmp.webm
+        var cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
+                  $"--keys key_id={ZeroKid}:key={ZeroKid}";
+
+        using var p = new Process();
+        p.StartInfo = new ProcessStartInfo()
         {
-            Regex ShakaKeyIDRegex = new Regex("Key for key_id=([0-9a-f]+) was not found");
-
-            // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
-            //       - stop process
-            //       - remove {output}.tmp.webm
-            var cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
-                    $"--keys key_id={ZeroKid}:key={ZeroKid}";
-
-            using var p = new Process();
-            p.StartInfo = new ProcessStartInfo()
-            {
-                FileName = bin,
-                Arguments = cmd,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-            p.Start();
-            var errorOutput = p.StandardError.ReadToEnd();
-            p.WaitForExit();
-            return ShakaKeyIDRegex.Match(errorOutput).Groups[1].Value;
-        }
+            FileName = bin,
+            Arguments = cmd,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        p.Start();
+        var errorOutput = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+        return ShakaKeyIDRegex.Match(errorOutput).Groups[1].Value;
     }
 }
