@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Common.Util
 {
-    public class HexUtil
+    public static class HexUtil
     {
         public static string BytesToHex(byte[] data, string split = "")
         {

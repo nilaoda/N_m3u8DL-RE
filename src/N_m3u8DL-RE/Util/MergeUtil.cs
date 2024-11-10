@@ -7,7 +7,7 @@ using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal class MergeUtil
+    internal static class MergeUtil
     {
         /// <summary>
         /// 输入一堆已存在的文件，合并到新文件

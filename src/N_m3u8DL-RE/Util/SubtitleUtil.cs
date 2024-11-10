@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal class SubtitleUtil
+    internal static class SubtitleUtil
     {
         /// <summary>
         /// 写出图形字幕PNG文件

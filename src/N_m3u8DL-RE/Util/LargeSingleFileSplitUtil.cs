@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal class LargeSingleFileSplitUtil
+    internal static class LargeSingleFileSplitUtil
     {
         class Clip
         {

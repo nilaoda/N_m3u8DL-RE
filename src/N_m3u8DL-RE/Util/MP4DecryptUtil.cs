@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal class MP4DecryptUtil
+    internal static class MP4DecryptUtil
     {
         private static string ZeroKid = "00000000000000000000000000000000";
         public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)

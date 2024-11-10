@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Util
 {
-    public class FilterUtil
+    public static class FilterUtil
     {
         public static List<StreamSpec> DoFilterKeep(IEnumerable<StreamSpec> lists, StreamFilter? filter)
         {

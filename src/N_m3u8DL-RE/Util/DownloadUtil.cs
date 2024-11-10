@@ -8,7 +8,7 @@ using System.Net.Http.Headers;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal class DownloadUtil
+    internal static class DownloadUtil
     {
         private static readonly HttpClient AppHttpClient = HTTPUtil.AppHttpClient;
 

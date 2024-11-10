@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal partial class MediainfoUtil
+    internal static partial class MediainfoUtil
     {
         [GeneratedRegex("  Stream #.*")]
         private static partial Regex TextRegex();

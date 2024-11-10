@@ -5,7 +5,7 @@ using N_m3u8DL_RE.Common.Resource;
 
 namespace N_m3u8DL_RE.Common.Util
 {
-    public class HTTPUtil
+    public static class HTTPUtil
     {
         public static readonly HttpClientHandler HttpClientHandler = new()
         {
