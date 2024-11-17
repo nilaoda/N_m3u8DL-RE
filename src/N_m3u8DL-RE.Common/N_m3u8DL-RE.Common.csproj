@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 	<OutputType>library</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>N_m3u8DL_RE.Common</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
 	<LangVersion>preview</LangVersion>
@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Spectre.Console" Version="0.47.1-preview.0.11" />
+	  <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.50" />
   </ItemGroup>
 	
 </Project>
