@@ -45,7 +45,7 @@ internal class DASHExtractor2 : IExtractor
 
     private string ExtendBaseUrl(XElement element, string oriBaseUrl)
     {
-        var target = element.Elements().Where(e => e.Name.LocalName == "BaseURL").FirstOrDefault();
+        var target = element.Elements().FirstOrDefault(e => e.Name.LocalName == "BaseURL");
         if (target != null)
         {
             oriBaseUrl = ParserUtil.CombineURL(oriBaseUrl, target.Value);
@@ -57,7 +57,7 @@ internal class DASHExtractor2 : IExtractor
     private double? GetFrameRate(XElement element)
     {
         var frameRate = element.Attribute("frameRate")?.Value;
-        if (frameRate != null && frameRate.Contains("/"))
+        if (frameRate != null && frameRate.Contains('/'))
         {
             var d = Convert.ToDouble(frameRate.Split('/')[0]) / Convert.ToDouble(frameRate.Split('/')[1]);
             frameRate = d.ToString("0.000");
@@ -100,7 +100,7 @@ internal class DASHExtractor2 : IExtractor
         var mediaPresentationDuration = mpdElement.Attribute("mediaPresentationDuration")?.Value;
 
         // 读取在MPD开头定义的<BaseURL>，并替换本身的URL
-        var baseUrlElement = mpdElement.Elements().Where(e => e.Name.LocalName == "BaseURL").FirstOrDefault();
+        var baseUrlElement = mpdElement.Elements().FirstOrDefault(e => e.Name.LocalName == "BaseURL");
         if (baseUrlElement != null)
         {
             var baseUrl = baseUrlElement.Value;
@@ -185,7 +185,7 @@ internal class DASHExtractor2 : IExtractor
                         streamSpec.MediaType = MediaType.SUBTITLES;
                     }
                     // 优化字幕场景识别
-                    var role = representation.Elements().Where(e => e.Name.LocalName == "Role").FirstOrDefault() ?? adaptationSet.Elements().Where(e => e.Name.LocalName == "Role").FirstOrDefault();
+                    var role = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "Role") ?? adaptationSet.Elements().FirstOrDefault(e => e.Name.LocalName == "Role");
                     if (role != null)
                     {
                         var v = role.Attribute("value")?.Value;
@@ -209,7 +209,7 @@ internal class DASHExtractor2 : IExtractor
                     }
 
                     // 读取声道数量
-                    var audioChannelConfiguration = adaptationSet.Elements().Concat(representation.Elements()).Where(e => e.Name.LocalName == "AudioChannelConfiguration").FirstOrDefault();
+                    var audioChannelConfiguration = adaptationSet.Elements().Concat(representation.Elements()).FirstOrDefault(e => e.Name.LocalName == "AudioChannelConfiguration");
                     if (audioChannelConfiguration != null)
                     {
                         streamSpec.Channels = audioChannelConfiguration.Attribute("value")?.Value;
@@ -223,11 +223,11 @@ internal class DASHExtractor2 : IExtractor
 
 
                     // 第一种形式 SegmentBase
-                    var segmentBaseElement = representation.Elements().Where(e => e.Name.LocalName == "SegmentBase").FirstOrDefault();
+                    var segmentBaseElement = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "SegmentBase");
                     if (segmentBaseElement != null)
                     {
                         // 处理init url
-                        var initialization = segmentBaseElement.Elements().Where(e => e.Name.LocalName == "Initialization").FirstOrDefault();
+                        var initialization = segmentBaseElement.Elements().FirstOrDefault(e => e.Name.LocalName == "Initialization");
                         if (initialization != null)
                         {
                             var sourceURL = initialization.Attribute("sourceURL")?.Value;
@@ -261,12 +261,12 @@ internal class DASHExtractor2 : IExtractor
                     }
 
                     // 第二种形式 SegmentList.SegmentList
-                    var segmentList = representation.Elements().Where(e => e.Name.LocalName == "SegmentList").FirstOrDefault();
+                    var segmentList = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "SegmentList");
                     if (segmentList != null)
                     {
                         var durationStr = segmentList.Attribute("duration")?.Value;
                         // 处理init url
-                        var initialization = segmentList.Elements().Where(e => e.Name.LocalName == "Initialization").FirstOrDefault();
+                        var initialization = segmentList.Elements().FirstOrDefault(e => e.Name.LocalName == "Initialization");
                         if (initialization != null)
                         {
                             var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
@@ -282,9 +282,9 @@ internal class DASHExtractor2 : IExtractor
                             }
                         }
                         // 处理分片
-                        var segmentURLs = segmentList.Elements().Where(e => e.Name.LocalName == "SegmentURL");
+                        var segmentURLs = segmentList.Elements().Where(e => e.Name.LocalName == "SegmentURL").ToList();
                         var timescaleStr = segmentList.Attribute("timescale")?.Value ?? "1";
-                        for (int segmentIndex = 0; segmentIndex < segmentURLs.Count(); segmentIndex++)
+                        for (int segmentIndex = 0; segmentIndex < segmentURLs.Count; segmentIndex++)
                         {
                             var segmentURL = segmentURLs.ElementAt(segmentIndex);
                             var mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value!);
@@ -338,7 +338,7 @@ internal class DASHExtractor2 : IExtractor
                         }
                         // 处理分片
                         var mediaTemplate = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
-                        var segmentTimeline = segmentTemplate.Elements().Where(e => e.Name.LocalName == "SegmentTimeline").FirstOrDefault();
+                        var segmentTimeline = segmentTemplate.Elements().FirstOrDefault(e => e.Name.LocalName == "SegmentTimeline");
                         if (segmentTimeline != null)
                         {
                             // 使用了SegmentTimeline 结果精确
