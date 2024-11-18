@@ -23,6 +23,26 @@ env:
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:
+  build-win7-x86:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+
+      - run: dotnet add src/N_m3u8DL-RE/N_m3u8DL-RE.csproj package VC-LTL --version 5.1.1
+      - run: dotnet publish src/N_m3u8DL-RE -r win-x86 -c Release -p:SupportedOSPlatformVersion=5.1 -o artifact-x86
+
+      - name: Upload Artifact[win-x86]
+        uses: actions/upload-artifact@v3.1.3
+        with:
+          name: N_m3u8DL-RE_Beta_win7-x86
+          path: artifact-x86\N_m3u8DL-RE.exe
+
   build-win-x64-arm64:
     runs-on: windows-latest
 
@@ -115,7 +135,7 @@ jobs:
   create_draft_release:
     name: Create Github draft release
     if: ${{ github.event.inputs.doRelease == 'true' }}
-    needs: [build-win-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
+    needs: [build-win7-x86,build-win-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
     runs-on: ubuntu-latest
     steps:
       - name: Audit gh version
