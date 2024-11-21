@@ -5,7 +5,6 @@ using N_m3u8DL_RE.Parser;
 using Spectre.Console;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
-using System.Globalization;
 using System.Text;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Processor;
@@ -22,11 +21,21 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
+        // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
+        if (OperatingSystem.IsWindows()) 
+        {
+            var osVersion = Environment.OSVersion.Version;
+            if (osVersion.Major < 6 || (osVersion.Major == 6 && osVersion.Minor == 0))
+            {
+                Environment.SetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
+            }
+        }
+        
         Console.CancelKeyPress += Console_CancelKeyPress;
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
 
-        string loc = "en-US";
+        string loc = ResString.CurrentLoc;
         string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
         if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
         else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
@@ -38,11 +47,8 @@ internal class Program
         {
             loc = list[index + 1];
         }
-
-        CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
-        Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
-        Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
-
+        
+        ResString.CurrentLoc = loc;
 
         await CommandInvoker.InvokeArgs(args, DoWorkAsync);
     }
