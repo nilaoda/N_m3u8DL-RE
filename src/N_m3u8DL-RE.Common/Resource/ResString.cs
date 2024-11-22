@@ -2,6 +2,8 @@
 
 public class ResString
 {
+    public static string CurrentLoc = "en-US";
+
     public static readonly string ReLiveTs = "<RE_LIVE_TS>";
     public static string singleFileRealtimeDecryptWarn => GetText("singleFileRealtimeDecryptWarn");
     public static string singleFileSplitWarn => GetText("singleFileSplitWarn");
@@ -132,10 +134,9 @@ public class ResString
         if (!StaticText.LANG_DIC.ContainsKey(key))
             return "<...LANG TEXT MISSING...>";
 
-        var current = Thread.CurrentThread.CurrentUICulture.Name;
-        if (current == "zh-CN" || current == "zh-SG" || current == "zh-Hans")
+        if (CurrentLoc == "zh-CN" || CurrentLoc == "zh-SG" || CurrentLoc == "zh-Hans")
             return StaticText.LANG_DIC[key].ZH_CN;
-        if (current.StartsWith("zh-"))
+        if (CurrentLoc.StartsWith("zh-"))
             return StaticText.LANG_DIC[key].ZH_TW;
         return StaticText.LANG_DIC[key].EN_US;
     }

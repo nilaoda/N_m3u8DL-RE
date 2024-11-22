@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<OutputType>library</OutputType>
+    <OutputType>library</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>N_m3u8DL_RE.Parser</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-	<LangVersion>preview</LangVersion>
+    <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
