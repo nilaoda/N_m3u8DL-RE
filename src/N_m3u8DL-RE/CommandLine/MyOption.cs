@@ -270,8 +270,9 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.LiveFixVttByAudio"/>.
     /// </summary>
     public bool LiveFixVttByAudio { get; set; }
-
+    
     public bool OnlyInit { get; set; }
+
     
     public DecryptEngine GetDecryptEngine()
     {

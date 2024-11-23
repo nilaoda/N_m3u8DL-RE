@@ -368,7 +368,7 @@ internal class HLSExtractor : IExtractor
             // #EXT-X-MAP
             else if (line.StartsWith(HLSTags.ext_x_map))
             {
-                if (playlist.MediaInit == null) 
+                if (playlist.MediaInit == null || hasAd) 
                 {
                     playlist.MediaInit = new MediaSegment()
                     {
