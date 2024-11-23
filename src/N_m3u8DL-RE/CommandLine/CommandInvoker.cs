@@ -36,10 +36,12 @@ internal partial class CommandInvoker
     private static readonly Option<Dictionary<string, string>> Headers = new(["-H", "--header"], description: ResString.cmd_header, parseArgument: ParseHeaders) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
     private static readonly Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
     private static readonly Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enum.SubtitleFormat.SRT);
+    private static readonly Option<bool> DisableUpdateCheck = new(["--disable-update-check"], description: ResString.cmd_disableUpdateCheck, getDefaultValue: () => false);
     private static readonly Option<bool> AutoSelect = new(["--auto-select"], description: ResString.cmd_autoSelect, getDefaultValue: () => false);
     private static readonly Option<bool> SubOnly = new(["--sub-only"], description: ResString.cmd_subOnly, getDefaultValue: () => false);
     private static readonly Option<int> ThreadCount = new(["--thread-count"], description: ResString.cmd_threadCount, getDefaultValue: () => Environment.ProcessorCount) { ArgumentHelpName = "number" };
     private static readonly Option<int> DownloadRetryCount = new(["--download-retry-count"], description: ResString.cmd_downloadRetryCount, getDefaultValue: () => 3) { ArgumentHelpName = "number" };
+    private static readonly Option<double> HttpRequestTimeout = new(["--http-request-timeout"], description: ResString.cmd_httpRequestTimeout, getDefaultValue: () => 100) { ArgumentHelpName = "seconds" };
     private static readonly Option<bool> SkipMerge = new(["--skip-merge"], description: ResString.cmd_skipMerge, getDefaultValue: () => false);
     private static readonly Option<bool> SkipDownload = new(["--skip-download"], description: ResString.cmd_skipDownload, getDefaultValue: () => false);
     private static readonly Option<bool> NoDateInfo = new(["--no-date-info"], description: ResString.cmd_noDateInfo, getDefaultValue: () => false);
@@ -498,6 +500,7 @@ internal partial class CommandInvoker
                 NoAnsiColor = bindingContext.ParseResult.GetValueForOption(NoAnsiColor),
                 LogLevel = bindingContext.ParseResult.GetValueForOption(LogLevel),
                 AutoSelect = bindingContext.ParseResult.GetValueForOption(AutoSelect),
+                DisableUpdateCheck = bindingContext.ParseResult.GetValueForOption(DisableUpdateCheck),
                 SkipMerge = bindingContext.ParseResult.GetValueForOption(SkipMerge),
                 BinaryMerge = bindingContext.ParseResult.GetValueForOption(BinaryMerge),
                 UseFFmpegConcatDemuxer = bindingContext.ParseResult.GetValueForOption(UseFFmpegConcatDemuxer),
@@ -523,6 +526,7 @@ internal partial class CommandInvoker
                 FFmpegBinaryPath = bindingContext.ParseResult.GetValueForOption(FFmpegBinaryPath),
                 KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
                 DownloadRetryCount = bindingContext.ParseResult.GetValueForOption(DownloadRetryCount),
+                HttpRequestTimeout = bindingContext.ParseResult.GetValueForOption(HttpRequestTimeout),
                 BaseUrl = bindingContext.ParseResult.GetValueForOption(BaseUrl),
                 MuxImports = bindingContext.ParseResult.GetValueForOption(MuxImports),
                 ConcurrentDownload = bindingContext.ParseResult.GetValueForOption(ConcurrentDownload),
@@ -606,7 +610,7 @@ internal partial class CommandInvoker
 
         var rootCommand = new RootCommand(VERSION_INFO)
         {
-            Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+            Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
@@ -614,7 +618,7 @@ internal partial class CommandInvoker
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
-            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, MoreHelp
+            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, DisableUpdateCheck, MoreHelp
         };
 
         rootCommand.TreatUnmatchedTokensAsErrors = true;

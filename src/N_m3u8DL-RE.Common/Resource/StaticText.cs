@@ -184,6 +184,12 @@ internal class StaticText
             zhTW: "自動選擇所有類型的最佳軌道",
             enUS: "Automatically selects the best tracks of all types"
         ),
+        ["cmd_disableUpdateCheck"] = new TextContainer
+        (
+            zhCN: "禁用版本更新检测",
+            zhTW: "禁用版本更新檢測",
+            enUS: "Disable version update check"
+        ),
         ["cmd_binaryMerge"] = new TextContainer
         (
             zhCN: "二进制合并",
@@ -207,6 +213,12 @@ internal class StaticText
             zhCN: "每个分片下载异常时的重试次数",
             zhTW: "每個分片下載異常時的重試次數",
             enUS: "The number of retries when download segment error"
+        ),
+        ["cmd_httpRequestTimeout"] = new TextContainer
+        (
+            zhCN: "HTTP请求的超时时间(秒)",
+            zhTW: "HTTP請求的超時時間(秒)",
+            enUS: "Timeout duration for HTTP requests (in seconds)"
         ),
         ["cmd_decryptionBinaryPath"] = new TextContainer
         (

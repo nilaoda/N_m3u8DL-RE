@@ -75,7 +75,7 @@ internal class Program
 
     static async Task DoWorkAsync(MyOption option)
     {
-            
+        HTTPUtil.AppHttpClient.Timeout = TimeSpan.FromSeconds(option.HttpRequestTimeout);
         if (Console.IsOutputRedirected || Console.IsErrorRedirected)
         {
             option.ForceAnsiConsole = true;
@@ -83,8 +83,10 @@ internal class Program
             Logger.Info(ResString.consoleRedirected);
         }
         CustomAnsiConsole.InitConsole(option.ForceAnsiConsole, option.NoAnsiColor);
+        
         // 检测更新
-        _ = CheckUpdateAsync();
+        if (!option.DisableUpdateCheck)
+            _ = CheckUpdateAsync();
 
         Logger.IsWriteFile = !option.NoLog;
         Logger.InitLogFile();
