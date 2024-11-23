@@ -1,16 +1,16 @@
 ﻿using Mp4SubtitleParser;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
-using N_m3u8DL_RE.Config;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util;
 
 internal static class MP4DecryptUtil
 {
     private static readonly string ZeroKid = "00000000000000000000000000000000";
-    public static async Task<bool> DecryptAsync(bool shakaPackager, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
+    public static async Task<bool> DecryptAsync(DecryptEngine decryptEngine, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
     {
         if (keys == null || keys.Length == 0) return false;
 
@@ -45,27 +45,27 @@ internal static class MP4DecryptUtil
             
         if (keyPair == null) return false;
 
-        // shakaPackager 无法单独解密init文件
-        if (source.EndsWith("_init.mp4") && shakaPackager) return false;
+        // shakaPackager/ffmpeg 无法单独解密init文件
+        if (source.EndsWith("_init.mp4") && decryptEngine != DecryptEngine.MP4DECRYPT) return false;
 
         string cmd;
 
         var tmpFile = "";
-        if (shakaPackager)
+        if (decryptEngine == DecryptEngine.SHAKA_PACKAGE)
         {
             var enc = source;
             // shakaPackager 手动构造文件
             if (init != "")
             {
                 tmpFile = Path.ChangeExtension(source, ".itmp");
-                MergeUtil.CombineMultipleFilesIntoSingleFile(new string[] { init, source }, tmpFile);
+                MergeUtil.CombineMultipleFilesIntoSingleFile([init, source], tmpFile);
                 enc = tmpFile;
             }
 
             cmd = $"--quiet --enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
                   $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={(trackId != null ? ZeroKid : kid)}:key={keyPair.Split(':')[1]}";
         }
-        else
+        else if (decryptEngine == DecryptEngine.MP4DECRYPT)
         {
             if (trackId == null)
             {
@@ -80,6 +80,19 @@ internal static class MP4DecryptUtil
                 cmd += $" --fragments-info \"{init}\" ";
             }
             cmd += $" \"{source}\" \"{dest}\"";
+        }
+        else
+        {
+            var enc = source;
+            // ffmpeg实时解密 手动构造文件
+            if (init != "")
+            {
+                tmpFile = Path.ChangeExtension(source, ".itmp");
+                MergeUtil.CombineMultipleFilesIntoSingleFile([init, source], tmpFile);
+                enc = tmpFile;
+            }
+            
+            cmd = $"-loglevel error -nostdin -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy \"{dest}\"";
         }
 
         await RunCommandAsync(bin, cmd);
@@ -153,7 +166,7 @@ internal static class MP4DecryptUtil
     {
         using var fs = File.OpenRead(output);
         var header = new byte[1 * 1024 * 1024]; // 1MB
-        fs.Read(header);
+        _ = fs.Read(header);
         return GetMP4Info(header);
     }
 

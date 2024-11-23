@@ -14,6 +14,7 @@ internal static class LanguageCodeUtil
 {
 
     private static readonly List<Language> ALL_LANGS = @"
+default;und;default;default
 af;afr;Afrikaans;Afrikaans
 af-ZA;afr;Afrikaans (South Africa);Afrikaans (South Africa)
 am;amh;Amharic;Amharic

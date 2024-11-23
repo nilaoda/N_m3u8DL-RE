@@ -77,6 +77,7 @@ public class ResString
     public static string cmd_uiLanguage => GetText("cmd_uiLanguage");
     public static string cmd_urlProcessorArgs => GetText("cmd_urlProcessorArgs");
     public static string cmd_useShakaPackager => GetText("cmd_useShakaPackager");
+    public static string cmd_useMp4decrypt => GetText("cmd_useMp4decrypt");
     public static string cmd_concurrentDownload => GetText("cmd_concurrentDownload");
     public static string cmd_useSystemProxy => GetText("cmd_useSystemProxy");
     public static string cmd_customProxy => GetText("cmd_customProxy");

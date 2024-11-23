@@ -24,7 +24,7 @@ internal static class DownloadUtil
         else
         {
             var buffer = new byte[expect];
-            await inputStream.ReadAsync(buffer);
+            _ = await inputStream.ReadAsync(buffer);
             await outputStream.WriteAsync(buffer, 0, buffer.Length);
             speedContainer.Add(buffer.Length);
         }

@@ -54,6 +54,7 @@ internal partial class CommandInvoker
     private static readonly Option<bool> AppendUrlParams = new(["--append-url-params"], description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
     private static readonly Option<bool> MP4RealTimeDecryption = new (["--mp4-real-time-decryption"], description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
     private static readonly Option<bool> UseShakaPackager = new (["--use-shaka-packager"], description: ResString.cmd_useShakaPackager, getDefaultValue: () => false);
+    private static readonly Option<bool> UseMp4Decrypt = new (["--use-mp4decrypt"], description: ResString.cmd_useMp4decrypt, getDefaultValue: () => false);
     private static readonly Option<bool> ForceAnsiConsole = new(["--force-ansi-console"], description: ResString.cmd_forceAnsiConsole);
     private static readonly Option<bool> NoAnsiColor = new(["--no-ansi-color"], description: ResString.cmd_noAnsiColor);
     private static readonly Option<string?> DecryptionBinaryPath = new(["--decryption-binary-path"], description: ResString.cmd_decryptionBinaryPath) { ArgumentHelpName = "PATH" };
@@ -523,6 +524,7 @@ internal partial class CommandInvoker
                 UrlProcessorArgs = bindingContext.ParseResult.GetValueForOption(UrlProcessorArgs),
                 MP4RealTimeDecryption = bindingContext.ParseResult.GetValueForOption(MP4RealTimeDecryption),
                 UseShakaPackager = bindingContext.ParseResult.GetValueForOption(UseShakaPackager),
+                UseMp4Decrypt = bindingContext.ParseResult.GetValueForOption(UseMp4Decrypt),
                 DecryptionBinaryPath = bindingContext.ParseResult.GetValueForOption(DecryptionBinaryPath),
                 FFmpegBinaryPath = bindingContext.ParseResult.GetValueForOption(FFmpegBinaryPath),
                 KeyTextFile = bindingContext.ParseResult.GetValueForOption(KeyTextFile),
@@ -615,7 +617,7 @@ internal partial class CommandInvoker
             Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
-            LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
+            LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, UseMp4Decrypt, MP4RealTimeDecryption,
             MaxSpeed,
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,

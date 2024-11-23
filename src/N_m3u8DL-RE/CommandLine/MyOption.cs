@@ -141,6 +141,10 @@ internal class MyOption
     /// </summary>
     public bool UseShakaPackager { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.UseMp4Decrypt"/>.
+    /// </summary>
+    public bool UseMp4Decrypt { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.MuxAfterDone"/>.
     /// </summary>
     public bool MuxAfterDone { get; set; }
@@ -266,4 +270,13 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.LiveFixVttByAudio"/>.
     /// </summary>
     public bool LiveFixVttByAudio { get; set; }
+    
+    public DecryptEngine GetDecryptEngine()
+    {
+        if (UseShakaPackager)
+            return DecryptEngine.SHAKA_PACKAGE;
+        if (UseMp4Decrypt)
+            return DecryptEngine.MP4DECRYPT;
+        return DecryptEngine.FFMPEG;
+    }
 }
