@@ -12,8 +12,10 @@ public class ParserConfig
     public string OriginalUrl { get; set; }
 
     public string BaseUrl { get; set; }
+    
+    public Dictionary<string, string> CustomParserArgs { get; } = new();
 
-    public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
+    public Dictionary<string, string> Headers { get; init; } = new();
 
     /// <summary>
     /// 内容前置处理器. 调用顺序与列表顺序相同

@@ -53,6 +53,10 @@ internal class MyOption
     /// </summary>
     public bool NoLog { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.AllowHlsMultiExtMap"/>.
+    /// </summary>
+    public bool AllowHlsMultiExtMap { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.AutoSelect"/>.
     /// </summary>
     public bool AutoSelect { get; set; }
