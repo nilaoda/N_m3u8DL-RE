@@ -133,7 +133,7 @@ public class ResString
     public static string noStreamsToDownload => GetText("noStreamsToDownload");
     public static string newVersionFound => GetText("newVersionFound");
     public static string processImageSub => GetText("processImageSub");
-    public static string onlyInit => GetText("onlyInit")
+    public static string onlyInit => GetText("onlyInit");
 
     private static string GetText(string key)
     {
