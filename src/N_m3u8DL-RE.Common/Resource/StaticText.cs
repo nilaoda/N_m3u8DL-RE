@@ -946,6 +946,12 @@ internal class StaticText
             zhTW: "沒有找到需要下載的流",
             enUS: "No stream found to download"
         ),
+        ["onlyInit"] = new TextContainer
+        (
+            zhCN: "仅下载初始化文件",
+            zhTW: "仅下载初始化文件",
+            enUS: "Download only init file"
+        )
 
     };
 }
