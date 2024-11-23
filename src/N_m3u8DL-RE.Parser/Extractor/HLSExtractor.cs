@@ -221,7 +221,13 @@ internal class HLSExtractor : IExtractor
     {
         // 标记是否已清除广告分片
         bool hasAd = false;
-
+        ;
+        bool allowHlsMultiExtMap = ParserConfig.CustomParserArgs.TryGetValue("AllowHlsMultiExtMap", out var allMultiExtMap) && allMultiExtMap == "true";
+        if (allowHlsMultiExtMap)
+        {
+            Logger.WarnMarkUp($"[darkorange3_1]{ResString.allowHlsMultiExtMap}[/]");
+        }
+        
         using StringReader sr = new StringReader(M3u8Content);
         string? line;
         bool expectSegment = false;
@@ -395,8 +401,11 @@ internal class HLSExtractor : IExtractor
                         });
                     }
                     segments = new();
-                    isEndlist = true;
-                    break;
+                    if (!allowHlsMultiExtMap)
+                    {
+                        isEndlist = true;
+                        break;
+                    }
                 }
             }
             // 评论行不解析

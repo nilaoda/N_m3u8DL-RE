@@ -172,6 +172,12 @@ internal class StaticText
             zhTW: "關閉日誌文件輸出",
             enUS: "Disable log file output"
         ),
+        ["cmd_allowHlsMultiExtMap"] = new TextContainer
+        (
+            zhCN: "允许HLS中的多个#EXT-X-MAP(实验性)",
+            zhTW: "允許HLS中的多個#EXT-X-MAP(實驗性)",
+            enUS: "Allow multiple #EXT-X-MAP in HLS (experimental)"
+        ),
         ["cmd_appendUrlParams"] = new TextContainer
         (
             zhCN: "将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com",
@@ -819,6 +825,12 @@ internal class StaticText
             zhCN: "检测到Master列表，开始解析全部流信息",
             zhTW: "檢測到Master列表，開始解析全部流訊息",
             enUS: "Master List detected, try parse all streams"
+        ),
+        ["allowHlsMultiExtMap"] = new TextContainer
+        (
+            zhCN: "已经允许识别多个#EXT-X-MAP标签, 本软件可能无法正确处理, 请手动确认内容完整性",
+            zhTW: "已經允許識別多個#EXT-X-MAP標籤, 本軟件可能無法正確處理, 請手動確認內容完整性",
+            enUS: "Multiple #EXT-X-MAP tags are now allowed for detection. However, this software may not handle them correctly. Please manually verify the content's integrity"
         ),
         ["matchTS"] = new TextContainer
         (

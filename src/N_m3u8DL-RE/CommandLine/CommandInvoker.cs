@@ -17,7 +17,7 @@ namespace N_m3u8DL_RE.CommandLine;
 
 internal partial class CommandInvoker
 {
-    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20241117";
+    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20241123";
 
     [GeneratedRegex("((best|worst)\\d*|all)")]
     private static partial Regex ForStrRegex();
@@ -61,6 +61,7 @@ internal partial class CommandInvoker
     private static readonly Option<string?> BaseUrl = new(["--base-url"], description: ResString.cmd_baseUrl);
     private static readonly Option<bool> ConcurrentDownload = new(["-mt", "--concurrent-download"], description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
     private static readonly Option<bool> NoLog = new(["--no-log"], description: ResString.cmd_noLog, getDefaultValue: () => false);
+    private static readonly Option<bool> AllowHlsMultiExtMap = new(["--allow-hls-multi-ext-map"], description: ResString.cmd_allowHlsMultiExtMap, getDefaultValue: () => false);
     private static readonly Option<string[]?> AdKeywords = new(["--ad-keyword"], description: ResString.cmd_adKeyword) { ArgumentHelpName = "REG" };
     private static readonly Option<long?> MaxSpeed = new(["-R", "--max-speed"], description: ResString.cmd_maxSpeed, parseArgument: ParseSpeedLimit) { ArgumentHelpName = "SPEED" };
 
@@ -550,6 +551,7 @@ internal partial class CommandInvoker
                 LiveTakeCount = bindingContext.ParseResult.GetValueForOption(LiveTakeCount),
                 NoDateInfo = bindingContext.ParseResult.GetValueForOption(NoDateInfo),
                 NoLog = bindingContext.ParseResult.GetValueForOption(NoLog),
+                AllowHlsMultiExtMap = bindingContext.ParseResult.GetValueForOption(AllowHlsMultiExtMap),
                 AdKeywords = bindingContext.ParseResult.GetValueForOption(AdKeywords),
                 MaxSpeed = bindingContext.ParseResult.GetValueForOption(MaxSpeed),
             };
@@ -618,7 +620,7 @@ internal partial class CommandInvoker
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
-            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, DisableUpdateCheck, MoreHelp
+            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
         };
 
         rootCommand.TreatUnmatchedTokensAsErrors = true;

@@ -65,6 +65,7 @@ public class ResString
     public static string cmd_skipDownload => GetText("cmd_skipDownload");
     public static string cmd_noDateInfo => GetText("cmd_noDateInfo");
     public static string cmd_noLog => GetText("cmd_noLog");
+    public static string cmd_allowHlsMultiExtMap => GetText("cmd_allowHlsMultiExtMap");
     public static string cmd_skipMerge => GetText("cmd_skipMerge");
     public static string cmd_subFormat => GetText("cmd_subFormat");
     public static string cmd_subOnly => GetText("cmd_subOnly");
@@ -111,6 +112,7 @@ public class ResString
     public static string liveFound => GetText("liveFound");
     public static string loadingUrl => GetText("loadingUrl");
     public static string masterM3u8Found => GetText("masterM3u8Found");
+    public static string allowHlsMultiExtMap => GetText("allowHlsMultiExtMap");
     public static string matchDASH => GetText("matchDASH");
     public static string matchMSS => GetText("matchMSS");
     public static string matchTS => GetText("matchTS");

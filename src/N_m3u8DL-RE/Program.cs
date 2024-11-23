@@ -106,21 +106,20 @@ internal class Program
 
         // 检查互斥的选项
 
-        if (!option.MuxAfterDone && option.MuxImports != null && option.MuxImports.Count > 0)
+        if (option is { MuxAfterDone: false, MuxImports.Count: > 0 })
         {
             throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
         }
 
         // LivePipeMux开启时 LiveRealTimeMerge必须开启
-        if (option.LivePipeMux && !option.LiveRealTimeMerge)
+        if (option is { LivePipeMux: true, LiveRealTimeMerge: false })
         {
             Logger.WarnMarkUp("LivePipeMux detected, forced enable LiveRealTimeMerge");
             option.LiveRealTimeMerge = true;
         }
 
         // 预先检查ffmpeg
-        if (option.FFmpegBinaryPath == null)
-            option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
+        option.FFmpegBinaryPath ??= GlobalUtil.FindExecutable("ffmpeg");
 
         if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
         {
@@ -132,8 +131,7 @@ internal class Program
         // 预先检查mkvmerge
         if (option.MuxOptions != null && option.MuxOptions.UseMkvmerge && option.MuxAfterDone)
         {
-            if (option.MkvmergeBinaryPath == null)
-                option.MkvmergeBinaryPath = GlobalUtil.FindExecutable("mkvmerge");
+            option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
             if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
             {
                 throw new FileNotFoundException("mkvmerge not found");
@@ -142,7 +140,7 @@ internal class Program
         }
 
         // 预先检查
-        if ((option.Keys != null && option.Keys.Length > 0) || option.KeyTextFile != null)
+        if (option.Keys is { Length: > 0 } || option.KeyTextFile != null)
         {
             if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
             {
@@ -193,6 +191,11 @@ internal class Program
             CustomeIV = option.CustomHLSIv,
         };
 
+        if (option.AllowHlsMultiExtMap)
+        {
+            parserConfig.CustomParserArgs.Add("AllowHlsMultiExtMap", "true");
+        }
+
         // demo1
         parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
         // demo2
@@ -225,13 +228,13 @@ internal class Program
 
 
         // 全部媒体
-        var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder);
+        var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder).ToList();
         // 基本流
-        var basicStreams = lists.Where(x => x.MediaType == null || x.MediaType == MediaType.VIDEO);
+        var basicStreams = lists.Where(x => x.MediaType is null or MediaType.VIDEO).ToList();
         // 可选音频轨道
-        var audios = lists.Where(x => x.MediaType == MediaType.AUDIO);
+        var audios = lists.Where(x => x.MediaType == MediaType.AUDIO).ToList();
         // 可选字幕轨道
-        var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
+        var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
 
         // 尝试从URL或文件读取文件名
         if (string.IsNullOrEmpty(option.SaveName))
@@ -246,7 +249,7 @@ internal class Program
         // 写出文件
         await WriteRawFilesAsync(option, extractor, tmpDir);
 
-        Logger.Info(ResString.streamsInfo, lists.Count(), basicStreams.Count(), audios.Count(), subs.Count());
+        Logger.Info(ResString.streamsInfo, lists.Count, basicStreams.Count, audios.Count, subs.Count);
 
         foreach (var item in lists)
         {
@@ -259,7 +262,7 @@ internal class Program
             basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
             audios = FilterUtil.DoFilterDrop(audios, option.DropAudioFilter);
             subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
-            lists = basicStreams.Concat(audios).Concat(subs).OrderBy(x => true);
+            lists = basicStreams.Concat(audios).Concat(subs).ToList();
         }
 
         if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
