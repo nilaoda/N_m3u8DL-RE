@@ -270,9 +270,9 @@ internal class StaticText
         ),
         ["cmd_keys"] = new TextContainer
         (
-            zhCN: "设置解密密钥, 程序调用mp4decrpyt/shaka-packager进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n对于KEY相同的情况可以直接输入 --key KEY",
-            zhTW: "設置解密密鑰, 程序調用mp4decrpyt/shaka-packager進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n對於KEY相同的情況可以直接輸入 --key KEY",
-            enUS: "Set decryption key(s) to mp4decrypt/shaka-packager. format:\r\n--key KID1:KEY1 --key KID2:KEY2\r\nor use --key KEY if all tracks share the same key."
+            zhCN: "设置解密密钥, 程序调用mp4decrpyt/shaka-packager/ffmpeg进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n对于KEY相同的情况可以直接输入 --key KEY",
+            zhTW: "設置解密密鑰, 程序調用mp4decrpyt/shaka-packager/ffmpeg進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n對於KEY相同的情況可以直接輸入 --key KEY",
+            enUS: "Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg. format:\r\n--key KID1:KEY1 --key KID2:KEY2\r\nor use --key KEY if all tracks share the same key."
         ),
         ["cmd_keyText"] = new TextContainer
         (
@@ -468,9 +468,15 @@ internal class StaticText
         ),
         ["cmd_useShakaPackager"] = new TextContainer
         (
-            zhCN: "解密时使用shaka-packager替代mp4decrypt",
-            zhTW: "解密時使用shaka-packager替代mp4decrypt",
-            enUS: "Use shaka-packager instead of mp4decrypt to decrypt"
+            zhCN: "解密时使用shaka-packager替代ffmpeg",
+            zhTW: "解密時使用shaka-packager替代ffmpeg",
+            enUS: "Use shaka-packager instead of ffmpeg to decrypt"
+        ),
+        ["cmd_useMp4decrypt"] = new TextContainer
+        (
+            zhCN: "解密时使用mp4decrypt替代ffmpeg",
+            zhTW: "解密時使用mp4decrypt替代ffmpeg",
+            enUS: "Use mp4decrypt instead of ffmpeg to decrypt"
         ),
         ["cmd_concurrentDownload"] = new TextContainer
         (
@@ -744,9 +750,9 @@ internal class StaticText
         ),
         ["realTimeDecMessage"] = new TextContainer
         (
-            zhCN: "启用实时解密时，建议用shaka-packager而非mp4decrypt",
-            zhTW: "啟用即時解密時，建議用shaka-packager而非mp4decrypt",
-            enUS: "When enabling real-time decryption, it is recommended to use shaka-packager instead of mp4decrypt"
+            zhCN: "启用实时解密时，建议用shaka-packager而非mp4decrypt/ffmpeg",
+            zhTW: "啟用即時解密時，建議用shaka-packager而非mp4decrypt/ffmpeg",
+            enUS: "When enabling real-time decryption, it is recommended to use shaka-packager instead of mp4decrypt/ffmpeg"
         ),
         ["liveLimitReached"] = new TextContainer
         (

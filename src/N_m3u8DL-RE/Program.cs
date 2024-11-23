@@ -105,10 +105,14 @@ internal class Program
         }
 
         // 检查互斥的选项
-
         if (option is { MuxAfterDone: false, MuxImports.Count: > 0 })
         {
             throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
+        }
+        
+        if (option is { UseShakaPackager: true, UseMp4Decrypt: true })
+        {
+            throw new ArgumentException("UseShakaPackager and UseMp4Decrypt cannot be enabled simultaneously!");
         }
 
         // LivePipeMux开启时 LiveRealTimeMerge必须开启
@@ -154,12 +158,16 @@ internal class Program
                     option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
                     Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                 }
-                else
+                else if (option.UseMp4Decrypt)
                 {
                     var file = GlobalUtil.FindExecutable("mp4decrypt");
                     if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
                     option.DecryptionBinaryPath = file;
                     Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
+                }
+                else
+                {
+                    option.DecryptionBinaryPath = option.FFmpegBinaryPath;
                 }
             }
             else if (!File.Exists(option.DecryptionBinaryPath))
