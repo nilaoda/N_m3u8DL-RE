@@ -23,6 +23,7 @@ public class ResString
     public static string checkingLast => GetText("checkingLast");
     public static string cmd_appendUrlParams => GetText("cmd_appendUrlParams");
     public static string cmd_autoSelect => GetText("cmd_autoSelect");
+    public static string cmd_disableUpdateCheck => GetText("cmd_disableUpdateCheck");
     public static string cmd_binaryMerge => GetText("cmd_binaryMerge");
     public static string cmd_useFFmpegConcatDemuxer => GetText("cmd_useFFmpegConcatDemuxer");
     public static string cmd_checkSegmentsCount => GetText("cmd_checkSegmentsCount");
@@ -70,6 +71,7 @@ public class ResString
     public static string cmd_subtitleFix => GetText("cmd_subtitleFix");
     public static string cmd_threadCount => GetText("cmd_threadCount");
     public static string cmd_downloadRetryCount => GetText("cmd_downloadRetryCount");
+    public static string cmd_httpRequestTimeout => GetText("cmd_httpRequestTimeout");
     public static string cmd_tmpDir => GetText("cmd_tmpDir");
     public static string cmd_uiLanguage => GetText("cmd_uiLanguage");
     public static string cmd_urlProcessorArgs => GetText("cmd_urlProcessorArgs");

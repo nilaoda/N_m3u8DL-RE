@@ -57,6 +57,10 @@ internal class MyOption
     /// </summary>
     public bool AutoSelect { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.DisableUpdateCheck"/>.
+    /// </summary>
+    public bool DisableUpdateCheck { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.SubOnly"/>.
     /// </summary>
     public bool SubOnly { get; set; }
@@ -68,6 +72,10 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.DownloadRetryCount"/>.
     /// </summary>
     public int DownloadRetryCount { get; set; }
+    /// <summary>
+    /// See: <see cref="CommandInvoker.HttpRequestTimeout"/>.
+    /// </summary>
+    public double HttpRequestTimeout { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.LiveRecordLimit"/>.
     /// </summary>
