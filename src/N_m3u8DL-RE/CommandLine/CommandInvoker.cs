@@ -109,7 +109,7 @@ internal partial class CommandInvoker
     private static readonly Option<StreamFilter?> DropAudioFilter = new(["-da", "--drop-audio"], description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
     private static readonly Option<StreamFilter?> DropSubtitleFilter = new(["-ds", "--drop-subtitle"], description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
     
-    private static readonly Option<bool?> OnlyInit = new(["-oi", "--only-init"], description: ResString.onlyInit, getDefaultValue: () => false) ;
+    private static readonly Option<bool> OnlyInit = new(["-oi", "--only-init"], description: ResString.onlyInit, getDefaultValue: () => false) ;
     /// <summary>
     /// 解析录制直播时长限制
     /// </summary>
