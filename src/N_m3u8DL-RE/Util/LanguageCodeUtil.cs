@@ -520,7 +520,7 @@ sr;srp
             if (string.IsNullOrEmpty(outputFile.Description))
                 outputFile.Description = outputFile.MediaType == Common.Enum.MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
         }
-        else if (outputFile.LangCode == null) 
+        else
         {
             outputFile.LangCode = "und"; // 无法识别直接置为und
         }
