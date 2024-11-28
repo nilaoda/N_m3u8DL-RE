@@ -1,4 +1,6 @@
-﻿namespace N_m3u8DL_RE.Common.Entity;
+﻿using N_m3u8DL_RE.Common.Enum;
+
+namespace N_m3u8DL_RE.Common.Entity;
 
 public class MediaSegment
 {
@@ -11,7 +13,9 @@ public class MediaSegment
     public long? StopRange => (StartRange != null && ExpectLength != null) ? StartRange + ExpectLength - 1 : null;
     public long? ExpectLength { get; set; }
 
-    public EncryptInfo EncryptInfo { get; set; } = new EncryptInfo();
+    public EncryptInfo EncryptInfo { get; set; } = new();
+    
+    public bool IsEncrypted => EncryptInfo.Method != EncryptMethod.NONE;
 
     public string Url { get; set; }
 
