@@ -51,7 +51,7 @@ internal static class MP4DecryptUtil
         string cmd;
 
         var tmpFile = "";
-        if (decryptEngine == DecryptEngine.SHAKA_PACKAGE)
+        if (decryptEngine == DecryptEngine.SHAKA_PACKAGER)
         {
             var enc = source;
             // shakaPackager 手动构造文件

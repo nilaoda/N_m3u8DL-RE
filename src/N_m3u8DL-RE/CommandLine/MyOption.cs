@@ -274,7 +274,7 @@ internal class MyOption
     public DecryptEngine GetDecryptEngine()
     {
         if (UseShakaPackager)
-            return DecryptEngine.SHAKA_PACKAGE;
+            return DecryptEngine.SHAKA_PACKAGER;
         if (UseMp4Decrypt)
             return DecryptEngine.MP4DECRYPT;
         return DecryptEngine.FFMPEG;
