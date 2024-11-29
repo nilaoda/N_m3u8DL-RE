@@ -108,7 +108,8 @@ internal partial class CommandInvoker
     private static readonly Option<StreamFilter?> DropVideoFilter = new(["-dv", "--drop-video"], description: ResString.cmd_dropVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
     private static readonly Option<StreamFilter?> DropAudioFilter = new(["-da", "--drop-audio"], description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
     private static readonly Option<StreamFilter?> DropSubtitleFilter = new(["-ds", "--drop-subtitle"], description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
-
+    
+    private static readonly Option<bool> OnlyInit = new(["-oi", "--only-init"], description: ResString.onlyInit, getDefaultValue: () => false) ;
     /// <summary>
     /// 解析录制直播时长限制
     /// </summary>
@@ -556,6 +557,7 @@ internal partial class CommandInvoker
                 AllowHlsMultiExtMap = bindingContext.ParseResult.GetValueForOption(AllowHlsMultiExtMap),
                 AdKeywords = bindingContext.ParseResult.GetValueForOption(AdKeywords),
                 MaxSpeed = bindingContext.ParseResult.GetValueForOption(MaxSpeed),
+                OnlyInit = bindingContext.ParseResult.GetValueForOption(OnlyInit)
             };
 
             if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
@@ -618,7 +620,7 @@ internal partial class CommandInvoker
             BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionBinaryPath, UseShakaPackager, UseMp4Decrypt, MP4RealTimeDecryption,
-            MaxSpeed,
+            MaxSpeed, OnlyInit,
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,

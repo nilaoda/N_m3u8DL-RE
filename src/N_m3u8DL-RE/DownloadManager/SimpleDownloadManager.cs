@@ -165,6 +165,12 @@ internal class SimpleDownloadManager
             mp4InitFile = result.ActualFilePath;
             task.Increment(1);
 
+            if (DownloaderConfig.MyOptions.OnlyInit) 
+            {
+                Logger.InfoMarkUp($"OnlyInit flag, downloaded init file, exiting....");
+                Environment.Exit(0);
+            }
+
             // 读取mp4信息
             if (result != null && result.Success) 
             {

@@ -271,6 +271,9 @@ internal class MyOption
     /// </summary>
     public bool LiveFixVttByAudio { get; set; }
     
+    public bool OnlyInit { get; set; }
+
+    
     public DecryptEngine GetDecryptEngine()
     {
         if (UseShakaPackager)
