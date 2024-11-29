@@ -61,7 +61,7 @@ internal class Program
         { 
             Console.CursorVisible = true;
             if (!OperatingSystem.IsWindows())
-                System.Diagnostics.Process.Start("stty", "echo");
+                System.Diagnostics.Process.Start("tput", "cnorm");
         } catch { }
         Environment.Exit(0);
     }
