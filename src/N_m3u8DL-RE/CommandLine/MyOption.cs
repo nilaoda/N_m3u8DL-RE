@@ -139,11 +139,12 @@ internal class MyOption
     /// <summary>
     /// See: <see cref="CommandInvoker.UseShakaPackager"/>.
     /// </summary>
+    [Obsolete("Use DecryptionEngine instead")]
     public bool UseShakaPackager { get; set; }
     /// <summary>
-    /// See: <see cref="CommandInvoker.UseMp4Decrypt"/>.
+    /// See: <see cref="CommandInvoker.DecryptionEngine"/>.
     /// </summary>
-    public bool UseMp4Decrypt { get; set; }
+    public DecryptEngine DecryptionEngine { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.MuxAfterDone"/>.
     /// </summary>
@@ -270,13 +271,4 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.LiveFixVttByAudio"/>.
     /// </summary>
     public bool LiveFixVttByAudio { get; set; }
-    
-    public DecryptEngine GetDecryptEngine()
-    {
-        if (UseShakaPackager)
-            return DecryptEngine.SHAKA_PACKAGER;
-        if (UseMp4Decrypt)
-            return DecryptEngine.MP4DECRYPT;
-        return DecryptEngine.FFMPEG;
-    }
 }

@@ -468,15 +468,15 @@ internal class StaticText
         ),
         ["cmd_useShakaPackager"] = new TextContainer
         (
-            zhCN: "解密时使用shaka-packager替代ffmpeg",
-            zhTW: "解密時使用shaka-packager替代ffmpeg",
-            enUS: "Use shaka-packager instead of ffmpeg to decrypt"
+            zhCN: "解密时使用shaka-packager替代mp4decrypt",
+            zhTW: "解密時使用shaka-packager替代mp4decrypt",
+            enUS: "Use shaka-packager instead of mp4decrypt to decrypt"
         ),
-        ["cmd_useMp4decrypt"] = new TextContainer
+        ["cmd_decryptionEngine"] = new TextContainer
         (
-            zhCN: "解密时使用mp4decrypt替代ffmpeg",
-            zhTW: "解密時使用mp4decrypt替代ffmpeg",
-            enUS: "Use mp4decrypt instead of ffmpeg to decrypt"
+            zhCN: "设置解密时使用的第三方程序",
+            zhTW: "設置解密時使用的第三方程序",
+            enUS: "Set the third-party program used for decryption"
         ),
         ["cmd_concurrentDownload"] = new TextContainer
         (

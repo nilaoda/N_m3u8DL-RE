@@ -164,7 +164,7 @@ internal class SimpleLiveRecordManager2
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
         var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
         var headers = DownloaderConfig.Headers;
-        var decryptEngine = DownloaderConfig.MyOptions.GetDecryptEngine();
+        var decryptEngine = DownloaderConfig.MyOptions.DecryptionEngine;
 
         Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}");
 
@@ -840,7 +840,7 @@ internal class SimpleLiveRecordManager2
             DownloaderConfig.MyOptions.ConcurrentDownload = true;
             DownloaderConfig.MyOptions.MP4RealTimeDecryption = true;
             DownloaderConfig.MyOptions.LiveRecordLimit = DownloaderConfig.MyOptions.LiveRecordLimit ?? TimeSpan.MaxValue;
-            if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, UseShakaPackager: false, Keys.Length: > 0 })
+            if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
             var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
             if (limit != TimeSpan.MaxValue)

@@ -14,6 +14,7 @@ using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
 using System.Net.Http.Headers;
+using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE;
 
@@ -109,10 +110,15 @@ internal class Program
         {
             throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
         }
-        
-        if (option is { UseShakaPackager: true, UseMp4Decrypt: true })
+
+        if (option.UseShakaPackager) 
         {
-            throw new ArgumentException("UseShakaPackager and UseMp4Decrypt cannot be enabled simultaneously!");
+            option.DecryptionEngine = DecryptEngine.SHAKA_PACKAGER;
+        }
+        
+        if (option is { UseShakaPackager: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER })
+        {
+            throw new ArgumentException("UseShakaPackager and Mp4DecryptEngine not match!");
         }
 
         // LivePipeMux开启时 LiveRealTimeMerge必须开启
@@ -148,7 +154,7 @@ internal class Program
         {
             if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
             {
-                if (option.UseShakaPackager)
+                if (option.DecryptionEngine is DecryptEngine.SHAKA_PACKAGER)
                 {
                     var file = GlobalUtil.FindExecutable("shaka-packager");
                     var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
@@ -158,7 +164,7 @@ internal class Program
                     option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
                     Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                 }
-                else if (option.UseMp4Decrypt)
+                else if (option.DecryptionEngine is DecryptEngine.MP4DECRYPT)
                 {
                     var file = GlobalUtil.FindExecutable("mp4decrypt");
                     if (file == null) throw new FileNotFoundException("mp4decrypt not found!");

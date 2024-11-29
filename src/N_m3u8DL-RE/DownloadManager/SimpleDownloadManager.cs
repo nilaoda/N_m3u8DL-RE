@@ -111,7 +111,7 @@ internal class SimpleDownloadManager
         var headers = DownloaderConfig.Headers;
 
         var decryptionBinaryPath = DownloaderConfig.MyOptions.DecryptionBinaryPath!;
-        var decryptEngine = DownloaderConfig.MyOptions.GetDecryptEngine();
+        var decryptEngine = DownloaderConfig.MyOptions.DecryptionEngine;
         var mp4InitFile = "";
         var currentKID = "";
         var readInfo = false; // 是否读取过
@@ -171,7 +171,7 @@ internal class SimpleDownloadManager
                 mp4Info = MP4DecryptUtil.GetMP4Info(result.ActualFilePath);
                 currentKID = mp4Info.KID;
                 // try shaka packager, which can handle WebM
-                if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.UseShakaPackager) {
+                if (string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER) {
                     currentKID = MP4DecryptUtil.ReadInitShaka(result.ActualFilePath, decryptionBinaryPath);
                 }
                 // 从文件读取KEY
@@ -243,7 +243,7 @@ internal class SimpleDownloadManager
                     currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
                 }
                 // try shaka packager, which can handle WebM
-                if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.UseShakaPackager) {
+                if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER) {
                     currentKID = MP4DecryptUtil.ReadInitShaka(result.ActualFilePath, decryptionBinaryPath);
                 }
                 // 从文件读取KEY
@@ -590,7 +590,7 @@ internal class SimpleDownloadManager
         {
             currentKID = MP4DecryptUtil.GetMP4Info(output).KID;
             // try shaka packager, which can handle WebM
-            if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.UseShakaPackager) {
+            if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER) {
                 currentKID = MP4DecryptUtil.ReadInitShaka(output, decryptionBinaryPath);
             }
             // 从文件读取KEY
@@ -654,7 +654,7 @@ internal class SimpleDownloadManager
         }
         progress.Columns(progressColumns);
 
-        if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, UseShakaPackager: false, Keys.Length: > 0 })
+        if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
 
         await progress.StartAsync(async ctx =>
