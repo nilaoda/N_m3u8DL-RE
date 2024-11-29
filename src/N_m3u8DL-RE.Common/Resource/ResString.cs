@@ -1,6 +1,6 @@
 ﻿namespace N_m3u8DL_RE.Common.Resource;
 
-public class ResString
+public static class ResString
 {
     public static string CurrentLoc = "en-US";
 
@@ -125,6 +125,7 @@ public class ResString
     public static string promptTitle => GetText("promptTitle");
     public static string readingInfo => GetText("readingInfo");
     public static string searchKey => GetText("searchKey");
+    public static string decryptionFailed => GetText("decryptionFailed");
     public static string segmentCountCheckNotPass => GetText("segmentCountCheckNotPass");
     public static string selectedStream => GetText("selectedStream");
     public static string startDownloading => GetText("startDownloading");
