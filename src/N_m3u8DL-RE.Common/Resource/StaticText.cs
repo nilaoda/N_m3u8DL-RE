@@ -910,6 +910,12 @@ internal class StaticText
             zhTW: "正在嘗試從文本文件搜尋KEY...",
             enUS: "Trying to search for KEY from text file..."
         ),
+        ["decryptionFailed"] = new TextContainer
+        (
+            zhCN: "解密失败",
+            zhTW: "解密失敗",
+            enUS: "Decryption failed"
+        ),
         ["segmentCountCheckNotPass"] = new TextContainer
         (
             zhCN: "分片数量校验不通过, 共{}个,已下载{}.",

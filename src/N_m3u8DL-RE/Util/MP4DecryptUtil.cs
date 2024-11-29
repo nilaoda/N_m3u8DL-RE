@@ -17,6 +17,9 @@ internal static class MP4DecryptUtil
         var keyPairs = keys.ToList();
         string? keyPair = null;
         string? trackId = null;
+        string? tmpEncFile = null;
+        string? tmpDecFile = null;
+        string? workDir = null;
 
         if (isMultiDRM)
         {
@@ -75,11 +78,17 @@ internal static class MP4DecryptUtil
             {
                 cmd = string.Join(" ", keyPairs.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
             }
+            // 解决mp4decrypt中文问题 切换到源文件所在目录并改名再解密
+            workDir = Path.GetDirectoryName(source)!;
+            tmpEncFile = Path.Combine(workDir, $"{Guid.NewGuid()}{Path.GetExtension(source)}");
+            tmpDecFile = Path.Combine(workDir, $"{Path.GetFileNameWithoutExtension(tmpEncFile)}_dec{Path.GetExtension(tmpEncFile)}");
+            File.Move(source, tmpEncFile);
             if (init != "")
             {
-                cmd += $" --fragments-info \"{init}\" ";
+                var infoFile = Path.GetDirectoryName(init) == workDir ? Path.GetFileName(init) : init;
+                cmd += $" --fragments-info \"{infoFile}\" ";
             }
-            cmd += $" \"{source}\" \"{dest}\"";
+            cmd += $" \"{Path.GetFileName(tmpEncFile)}\" \"{Path.GetFileName(tmpDecFile)}\"";
         }
         else
         {
@@ -95,30 +104,41 @@ internal static class MP4DecryptUtil
             cmd = $"-loglevel error -nostdin -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy \"{dest}\"";
         }
 
-        await RunCommandAsync(bin, cmd);
+        var isSuccess = await RunCommandAsync(bin, cmd, workDir);
+        
+        // mp4decrypt 还原文件改名操作
+        if (workDir is not null)
+        {
+            if (File.Exists(tmpEncFile)) File.Move(tmpEncFile, source);
+            if (File.Exists(tmpDecFile)) File.Move(tmpDecFile, dest);
+        }
 
-        if (File.Exists(dest) && new FileInfo(dest).Length > 0)
+        if (isSuccess)
         {
             if (tmpFile != "" && File.Exists(tmpFile)) File.Delete(tmpFile);
             return true;
         }
-
+        
+        Logger.Error(ResString.decryptionFailed);
         return false;
     }
 
-    private static async Task RunCommandAsync(string name, string arg)
+    private static async Task<bool> RunCommandAsync(string name, string arg, string? workDir = null)
     {
         Logger.DebugMarkUp($"FileName: {name}");
         Logger.DebugMarkUp($"Arguments: {arg}");
-        await Process.Start(new ProcessStartInfo()
+        var process = Process.Start(new ProcessStartInfo()
         {
             FileName = name,
             Arguments = arg,
             // RedirectStandardOutput = true,
             // RedirectStandardError = true,
             CreateNoWindow = true,
-            UseShellExecute = false
-        })!.WaitForExitAsync();
+            UseShellExecute = false,
+            WorkingDirectory = workDir
+        });
+        await process!.WaitForExitAsync();
+        return process.ExitCode == 0;
     }
 
     /// <summary>
