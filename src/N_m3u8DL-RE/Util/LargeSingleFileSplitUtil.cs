@@ -80,7 +80,7 @@ internal static class LargeSingleFileSplitUtil
     // 此函数主要是切片下载逻辑
     private static List<Clip> GetAllClips(string url, long fileSize)
     {
-        List<Clip> clips = new();
+        List<Clip> clips = [];
         int index = 0;
         long counter = 0;
         int perSize = 10 * 1024 * 1024;

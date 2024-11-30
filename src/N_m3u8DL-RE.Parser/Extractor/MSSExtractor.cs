@@ -6,14 +6,7 @@ using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Parser.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace N_m3u8DL_RE.Parser.Extractor;
@@ -46,10 +39,7 @@ internal partial class MSSExtractor : IExtractor
     private void SetInitUrl()
     {
         this.IsmUrl = ParserConfig.Url ?? string.Empty;
-        if (!string.IsNullOrEmpty(ParserConfig.BaseUrl))
-            this.BaseUrl = ParserConfig.BaseUrl;
-        else
-            this.BaseUrl = this.IsmUrl;
+        this.BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : this.IsmUrl;
     }
 
     public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
@@ -248,20 +238,17 @@ internal partial class MSSExtractor : IExtractor
         }
 
         // 为视频设置默认轨道
-        var aL = streamList.Where(s => s.MediaType == MediaType.AUDIO);
-        var sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES);
-        foreach (var item in streamList)
+        var aL = streamList.Where(s => s.MediaType == MediaType.AUDIO).ToList();
+        var sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
+        foreach (var item in streamList.Where(item => !string.IsNullOrEmpty(item.Resolution)))
         {
-            if (!string.IsNullOrEmpty(item.Resolution))
+            if (aL.Count != 0)
             {
-                if (aL.Any())
-                {
-                    item.AudioId = aL.First().GroupId;
-                }
-                if (sL.Any())
-                {
-                    item.SubtitleId = sL.First().GroupId;
-                }
+                item.AudioId = aL.First().GroupId;
+            }
+            if (sL.Count != 0)
+            {
+                item.SubtitleId = sL.First().GroupId;
             }
         }
 
@@ -318,22 +305,21 @@ internal partial class MSSExtractor : IExtractor
 
     private Task ProcessUrlAsync(List<StreamSpec> streamSpecs)
     {
-        for (int i = 0; i < streamSpecs.Count; i++)
+        foreach (var streamSpec in streamSpecs)
         {
-            var playlist = streamSpecs[i].Playlist;
-            if (playlist != null)
+            var playlist = streamSpec.Playlist;
+            if (playlist == null) continue;
+            
+            if (playlist.MediaInit != null)
             {
-                if (playlist.MediaInit != null)
+                playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
+            }
+            for (var ii = 0; ii < playlist!.MediaParts.Count; ii++)
+            {
+                var part = playlist.MediaParts[ii];
+                foreach (var segment in part.MediaSegments)
                 {
-                    playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
-                }
-                for (int ii = 0; ii < playlist!.MediaParts.Count; ii++)
-                {
-                    var part = playlist.MediaParts[ii];
-                    for (int iii = 0; iii < part.MediaSegments.Count; iii++)
-                    {
-                        part.MediaSegments[iii].Url = PreProcessUrl(part.MediaSegments[iii].Url);
-                    }
+                    segment.Url = PreProcessUrl(segment.Url);
                 }
             }
         }

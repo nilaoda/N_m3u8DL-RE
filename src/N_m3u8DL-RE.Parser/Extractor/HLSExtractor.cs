@@ -5,12 +5,6 @@ using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Parser.Util;
 using N_m3u8DL_RE.Parser.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using N_m3u8DL_RE.Common.Util;
 
 namespace N_m3u8DL_RE.Parser.Extractor;
@@ -26,8 +20,6 @@ internal class HLSExtractor : IExtractor
 
     public ParserConfig ParserConfig { get; set; }
 
-    private HLSExtractor() { }
-
     public HLSExtractor(ParserConfig parserConfig)
     {
         this.ParserConfig = parserConfig;
@@ -37,14 +29,7 @@ internal class HLSExtractor : IExtractor
 
     private void SetBaseUrl()
     {
-        if (!string.IsNullOrEmpty(ParserConfig.BaseUrl))
-        {
-            this.BaseUrl = ParserConfig.BaseUrl;
-        }
-        else
-        {
-            this.BaseUrl = this.M3u8Url;
-        }
+        this.BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : this.M3u8Url;
     }
 
     /// <summary>
@@ -87,7 +72,7 @@ internal class HLSExtractor : IExtractor
     {
         MasterM3u8Flag = true;
 
-        List<StreamSpec> streams = new List<StreamSpec>();
+        List<StreamSpec> streams = [];
 
         using StringReader sr = new StringReader(M3u8Content);
         string? line;
@@ -201,7 +186,7 @@ internal class HLSExtractor : IExtractor
 
                 streams.Add(streamSpec);
             }
-            else if (line.StartsWith("#"))
+            else if (line.StartsWith('#'))
             {
                 continue;
             }
@@ -237,22 +222,22 @@ internal class HLSExtractor : IExtractor
         long startIndex;
 
         Playlist playlist = new();
-        List<MediaPart> mediaParts = new();
+        List<MediaPart> mediaParts = [];
 
         // 当前的加密信息
         EncryptInfo currentEncryptInfo = new();
         if (ParserConfig.CustomMethod != null)
             currentEncryptInfo.Method = ParserConfig.CustomMethod.Value;
-        if (ParserConfig.CustomeKey != null && ParserConfig.CustomeKey.Length > 0) 
+        if (ParserConfig.CustomeKey is { Length: > 0 }) 
             currentEncryptInfo.Key = ParserConfig.CustomeKey;
-        if (ParserConfig.CustomeIV != null && ParserConfig.CustomeIV.Length > 0)
+        if (ParserConfig.CustomeIV is { Length: > 0 })
             currentEncryptInfo.IV = ParserConfig.CustomeIV;
         // 上次读取到的加密行，#EXT-X-KEY:……
         string lastKeyLine = "";
 
         MediaPart mediaPart = new();
         MediaSegment segment = new();
-        List<MediaSegment> segments = new();
+        List<MediaSegment> segments = [];
 
 
         while ((line = sr.ReadLine()) != null)
@@ -304,20 +289,19 @@ internal class HLSExtractor : IExtractor
                 // 修复YK去除广告后的遗留问题
                 if (hasAd && mediaParts.Count > 0)
                 {
-                    segments = mediaParts[mediaParts.Count - 1].MediaSegments;
+                    segments = mediaParts[^1].MediaSegments;
                     mediaParts.RemoveAt(mediaParts.Count - 1);
                     hasAd = false;
                     continue;
                 }
                 // 常规情况的#EXT-X-DISCONTINUITY标记，新建part
-                if (!hasAd && segments.Count >= 1)
+                if (hasAd || segments.Count < 1) continue;
+                
+                mediaParts.Add(new MediaPart
                 {
-                    mediaParts.Add(new MediaPart()
-                    {
-                        MediaSegments = segments,
-                    });
-                    segments = new();
-                }
+                    MediaSegments = segments,
+                });
+                segments = new();
             }
             // 解析KEY
             else if (line.StartsWith(HLSTags.ext_x_key))
@@ -382,13 +366,11 @@ internal class HLSExtractor : IExtractor
                         playlist.MediaInit.ExpectLength = n;
                         playlist.MediaInit.StartRange = o ?? 0L;
                     }
-                    // 是否有加密，有的话写入KEY和IV
-                    if (currentEncryptInfo.Method != EncryptMethod.NONE)
-                    {
-                        playlist.MediaInit.EncryptInfo.Method = currentEncryptInfo.Method;
-                        playlist.MediaInit.EncryptInfo.Key = currentEncryptInfo.Key;
-                        playlist.MediaInit.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
-                    }
+                    if (currentEncryptInfo.Method == EncryptMethod.NONE) continue;
+                    // 有加密的话写入KEY和IV
+                    playlist.MediaInit.EncryptInfo.Method = currentEncryptInfo.Method;
+                    playlist.MediaInit.EncryptInfo.Key = currentEncryptInfo.Key;
+                    playlist.MediaInit.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
                 }
                 // 遇到了其他的map，说明已经不是一个视频了，全部丢弃即可
                 else
@@ -409,7 +391,7 @@ internal class HLSExtractor : IExtractor
                 }
             }
             // 评论行不解析
-            else if (line.StartsWith("#")) continue;
+            else if (line.StartsWith('#')) continue;
             // 空白行不解析
             else if (line.StartsWith("\r\n")) continue;
             // 解析分片的地址
@@ -488,15 +470,15 @@ internal class HLSExtractor : IExtractor
         }
 
         var playlist = await ParseListAsync();
-        return new List<StreamSpec>
-        {
+        return
+        [
             new()
             {
                 Url = ParserConfig.Url,
                 Playlist = playlist,
                 Extension = playlist.MediaInit != null ? "mp4" : "ts"
             }
-        };
+        ];
     }
 
     private async Task LoadM3u8FromUrlAsync(string url)
@@ -539,11 +521,10 @@ internal class HLSExtractor : IExtractor
         foreach (var l in lists)
         {
             var match = newStreams.Where(n => n.ToShortString() == l.ToShortString()).ToList();
-            if (match.Any())
-            {
-                Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
-                l.Url = match.First().Url;
-            }
+            if (match.Count == 0) continue;
+            
+            Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
+            l.Url = match.First().Url;
         }
     }
 
@@ -556,7 +537,7 @@ internal class HLSExtractor : IExtractor
                 // 直接重新加载m3u8
                 await LoadM3u8FromUrlAsync(lists[i].Url!);
             }
-            catch (HttpRequestException) when (MasterM3u8Flag == true)
+            catch (HttpRequestException) when (MasterM3u8Flag)
             {
                 Logger.WarnMarkUp("Can not load m3u8. Try refreshing url from master url...");
                 // 当前URL无法加载 尝试从Master链接中刷新URL

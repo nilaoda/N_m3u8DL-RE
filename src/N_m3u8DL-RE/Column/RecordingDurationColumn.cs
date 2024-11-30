@@ -25,9 +25,6 @@ internal class RecordingDurationColumn : ProgressColumn
     {
         if (_refreshedDurDic == null)
             return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}", MyStyle).LeftJustified();
-        else
-        {                
-            return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}/{GlobalUtil.FormatTime(_refreshedDurDic[task.Id])}", GreyStyle);
-        }
+        return new Text($"{GlobalUtil.FormatTime(_recodingDurDic[task.Id])}/{GlobalUtil.FormatTime(_refreshedDurDic[task.Id])}", GreyStyle);
     }
 }

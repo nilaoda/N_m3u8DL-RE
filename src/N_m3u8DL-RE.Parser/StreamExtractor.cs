@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Parser.Config;
+﻿using System.Diagnostics.CodeAnalysis;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -18,11 +19,6 @@ public class StreamExtractor
     private static SemaphoreSlim semaphore = new(1, 1);
 
     public Dictionary<string, string> RawFiles { get; set; } = new(); // 存储（文件名,文件内容）
-
-    public StreamExtractor()
-    {
-
-    }
 
     public StreamExtractor(ParserConfig parserConfig)
     {
@@ -54,7 +50,8 @@ public class StreamExtractor
         LoadSourceFromText(this.rawText);
     }
 
-    public void LoadSourceFromText(string rawText)
+    [MemberNotNull(nameof(this.rawText), nameof(this.extractor))]
+    private void LoadSourceFromText(string rawText)
     {
         var rawType = "txt";
         rawText = rawText.Trim();

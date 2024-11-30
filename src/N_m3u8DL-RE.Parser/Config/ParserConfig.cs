@@ -7,11 +7,11 @@ namespace N_m3u8DL_RE.Parser.Config;
 
 public class ParserConfig
 {
-    public string Url { get; set; }
+    public string Url { get; set; } = string.Empty;
 
-    public string OriginalUrl { get; set; }
+    public string OriginalUrl { get; set; } = string.Empty;
 
-    public string BaseUrl { get; set; }
+    public string BaseUrl { get; set; } = string.Empty;
     
     public Dictionary<string, string> CustomParserArgs { get; } = new();
 

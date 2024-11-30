@@ -46,6 +46,6 @@ public class StreamFilter
         if (BandwidthMax != null) sb.Append($"{nameof(BandwidthMax)}: {BandwidthMax} ");
         if (Role.HasValue) sb.Append($"Role: {Role} ");
 
-        return sb.ToString() + $"For: {For}";
+        return sb + $"For: {For}";
     }
 }

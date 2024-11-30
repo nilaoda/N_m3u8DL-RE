@@ -3,9 +3,9 @@ using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Parser.Util;
 
-public partial class ParserUtil
+public static partial class ParserUtil
 {
-    [GeneratedRegex("\\$Number%([^$]+)d\\$")]
+    [GeneratedRegex(@"\$Number%([^$]+)d\$")]
     private static partial Regex VarsNumberRegex();
 
     /// <summary>
@@ -33,8 +33,7 @@ public partial class ParserUtil
         {
             var startIndex = index + (key + "=").Length;
             var endIndex = startIndex + line[startIndex..].IndexOf(',');
-            if (endIndex >= startIndex) result = line[startIndex..endIndex];
-            else result = line[startIndex..];
+            result = endIndex >= startIndex ? line[startIndex..endIndex] : line[startIndex..];
         }
 
         return result;
@@ -49,18 +48,13 @@ public partial class ParserUtil
     public static (long, long?) GetRange(string input)
     {
         var t = input.Split('@');
-        if (t.Length > 0)
+        return t.Length switch
         {
-            if (t.Length == 1)
-            {
-                return (Convert.ToInt64(t[0]), null);
-            }
-            if (t.Length == 2)
-            {
-                return (Convert.ToInt64(t[0]), Convert.ToInt64(t[1]));
-            }
-        }
-        return (0, null);
+            <= 0 => (0, null),
+            1 => (Convert.ToInt64(t[0]), null),
+            2 => (Convert.ToInt64(t[0]), Convert.ToInt64(t[1])),
+            _ => (0, null)
+        };
     }
 
     /// <summary>
@@ -111,8 +105,8 @@ public partial class ParserUtil
         if (string.IsNullOrEmpty(baseurl))
             return url;
 
-        Uri uri1 = new Uri(baseurl);  // 这里直接传完整的URL即可
-        Uri uri2 = new Uri(uri1, url);
+        var uri1 = new Uri(baseurl);  // 这里直接传完整的URL即可
+        var uri2 = new Uri(uri1, url);
         url = uri2.ToString();
 
         return url;

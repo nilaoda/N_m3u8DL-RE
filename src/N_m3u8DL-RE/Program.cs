@@ -13,7 +13,6 @@ using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
-using System.Net.Http.Headers;
 using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE;
@@ -26,7 +25,7 @@ internal class Program
         if (OperatingSystem.IsWindows()) 
         {
             var osVersion = Environment.OSVersion.Version;
-            if (osVersion.Major < 6 || (osVersion.Major == 6 && osVersion.Minor == 0))
+            if (osVersion.Major < 6 || osVersion is { Major: 6, Minor: 0 })
             {
                 Environment.SetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
             }
@@ -38,7 +37,7 @@ internal class Program
 
         string loc = ResString.CurrentLoc;
         string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
-        if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
+        if (currLoc is "zh-CN" or "zh-SG") loc = "zh-CN";
         else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
 
         // 处理用户-h等请求
@@ -147,33 +146,36 @@ internal class Program
         // 预先检查
         if (option.Keys is { Length: > 0 } || option.KeyTextFile != null)
         {
-            if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
+            if (!string.IsNullOrEmpty(option.DecryptionBinaryPath) && !File.Exists(option.DecryptionBinaryPath))
             {
-                if (option.DecryptionEngine is DecryptEngine.SHAKA_PACKAGER)
+                throw new FileNotFoundException(option.DecryptionBinaryPath);
+            }
+            switch (option.DecryptionEngine)
+            {
+                case DecryptEngine.SHAKA_PACKAGER:
                 {
                     var file = GlobalUtil.FindExecutable("shaka-packager");
                     var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
                     var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
                     var file4 = GlobalUtil.FindExecutable("packager-win-x64");
-                    if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                    if (file == null && file2 == null && file3 == null && file4 == null)
+                        throw new FileNotFoundException(ResString.shakaPackagerNotFound);
                     option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
                     Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
+                    break;
                 }
-                else if (option.DecryptionEngine is DecryptEngine.MP4DECRYPT)
+                case DecryptEngine.MP4DECRYPT:
                 {
                     var file = GlobalUtil.FindExecutable("mp4decrypt");
                     if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
                     option.DecryptionBinaryPath = file;
                     Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
+                    break;
                 }
-                else
-                {
+                case DecryptEngine.FFMPEG:
+                default:
                     option.DecryptionBinaryPath = option.FFmpegBinaryPath;
-                }
-            }
-            else if (!File.Exists(option.DecryptionBinaryPath))
-            {
-                throw new FileNotFoundException(option.DecryptionBinaryPath);
+                    break;
             }
         }
 
@@ -283,7 +285,7 @@ internal class Program
 
         if (option.AutoSelect)
         {
-            if (basicStreams.Any())
+            if (basicStreams.Count != 0)
                 selectedStreams.Add(basicStreams.First());
             var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
             foreach (var lang in langs)
@@ -309,7 +311,7 @@ internal class Program
             selectedStreams = FilterUtil.SelectStreams(lists);
         }
 
-        if (!selectedStreams.Any())
+        if (selectedStreams.Count == 0)
             throw new Exception(ResString.noStreamsToDownload);
 
         // HLS: 选中流中若有没加载出playlist的，加载playlist
@@ -363,7 +365,7 @@ internal class Program
         Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 
         // 开始MuxAfterDone后自动使用二进制版
-        if (!option.BinaryMerge && option.MuxAfterDone)
+        if (option is { BinaryMerge: false, MuxAfterDone: true })
         {
             option.BinaryMerge = true;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge6}[/]");
@@ -446,24 +448,21 @@ internal class Program
     static async Task<string> Get302Async(string url)
     {
         // this allows you to set the settings so that we can get the redirect url
-        var handler = new HttpClientHandler()
+        var handler = new HttpClientHandler
         {
             AllowAutoRedirect = false
         };
-        string redirectedUrl = "";
-        using (HttpClient client = new(handler))
-        using (HttpResponseMessage response = await client.GetAsync(url))
-        using (HttpContent content = response.Content)
+        var redirectedUrl = "";
+        using var client = new HttpClient(handler);
+        using var response = await client.GetAsync(url);
+        using var content = response.Content;
+        // ... Read the response to see if we have the redirected url
+        if (response.StatusCode != HttpStatusCode.Found) return redirectedUrl;
+        
+        var headers = response.Headers;
+        if (headers.Location != null)
         {
-            // ... Read the response to see if we have the redirected url
-            if (response.StatusCode == System.Net.HttpStatusCode.Found)
-            {
-                HttpResponseHeaders headers = response.Headers;
-                if (headers != null && headers.Location != null)
-                {
-                    redirectedUrl = headers.Location.AbsoluteUri;
-                }
-            }
+            redirectedUrl = headers.Location.AbsoluteUri;
         }
 
         return redirectedUrl;

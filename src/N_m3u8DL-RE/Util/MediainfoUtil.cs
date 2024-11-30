@@ -8,23 +8,23 @@ internal static partial class MediainfoUtil
 {
     [GeneratedRegex("  Stream #.*")]
     private static partial Regex TextRegex();
-    [GeneratedRegex("#0:\\d(\\[0x\\w+?\\])")]
+    [GeneratedRegex(@"#0:\d(\[0x\w+?\])")]
     private static partial Regex IdRegex();
     [GeneratedRegex(": (\\w+): (.*)")]
     private static partial Regex TypeRegex();
     [GeneratedRegex("(.*?)(,|$)")]
     private static partial Regex BaseInfoRegex();
-    [GeneratedRegex(" \\/ 0x\\w+")]
+    [GeneratedRegex(@" \/ 0x\w+")]
     private static partial Regex ReplaceRegex();
-    [GeneratedRegex("\\d{2,}x\\d+")]
+    [GeneratedRegex(@"\d{2,}x\d+")]
     private static partial Regex ResRegex();
-    [GeneratedRegex("\\d+ kb\\/s")]
+    [GeneratedRegex(@"\d+ kb\/s")]
     private static partial Regex BitrateRegex();
-    [GeneratedRegex("(\\d+(\\.\\d+)?) fps")]
+    [GeneratedRegex(@"(\d+(\.\d+)?) fps")]
     private static partial Regex FpsRegex();
-    [GeneratedRegex("DOVI configuration record.*profile: (\\d).*compatibility id: (\\d)")]
+    [GeneratedRegex(@"DOVI configuration record.*profile: (\d).*compatibility id: (\d)")]
     private static partial Regex DoViRegex();
-    [GeneratedRegex("Duration.*?start: (\\d+\\.?\\d{0,3})")]
+    [GeneratedRegex(@"Duration.*?start: (\d+\.?\d{0,3})")]
     private static partial Regex StartRegex();
 
     public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)

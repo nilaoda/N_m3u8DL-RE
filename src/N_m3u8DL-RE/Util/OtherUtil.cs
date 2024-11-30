@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util;
 
-internal static class OtherUtil
+internal static partial class OtherUtil
 {
     public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
     {
@@ -25,13 +25,9 @@ internal static class OtherUtil
 
     private static readonly char[] InvalidChars = "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
         .Split(',').Select(s => (char)int.Parse(s)).ToArray();
-    public static string GetValidFileName(string input, string re = ".", bool filterSlash = false)
+    public static string GetValidFileName(string input, string re = "_", bool filterSlash = false)
     {
-        string title = input;
-        foreach (char invalidChar in InvalidChars)
-        {
-            title = title.Replace(invalidChar.ToString(), re);
-        }
+        var title = InvalidChars.Aggregate(input, (current, invalidChar) => current.Replace(invalidChar.ToString(), re));
         if (filterSlash)
         {
             title = title.Replace("/", re);
@@ -98,7 +94,7 @@ internal static class OtherUtil
     /// <exception cref="ArgumentException"></exception>
     public static double ParseSeconds(string timeStr)
     {
-        var pattern = new Regex(@"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$");
+        var pattern = TimeStrRegex();
 
         var match = pattern.Match(timeStr);
 
@@ -171,4 +167,7 @@ internal static class OtherUtil
             _ => throw new ArgumentException($"unknown format: {muxFormat}")
         };
     }
+
+    [GeneratedRegex(@"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")]
+    private static partial Regex TimeStrRegex();
 }

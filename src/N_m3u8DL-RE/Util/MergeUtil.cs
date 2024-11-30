@@ -68,20 +68,16 @@ internal static class MergeUtil
     public static string[] PartialCombineMultipleFiles(string[] files)
     {
         var newFiles = new List<string>();
-        int div = 0;
-        if (files.Length <= 90000)
-            div = 100;
-        else
-            div = 200;
+        var div = files.Length <= 90000 ? 100 : 200;
 
-        string outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
-        int index = 0; // 序号
+        var outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
+        var index = 0; // 序号
 
         // 按照div的容量分割为小数组
-        string[][] li = Enumerable.Range(0, files.Count() / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
+        var li = Enumerable.Range(0, files.Length / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
         foreach (var items in li)
         {
-            if (!items.Any())
+            if (items.Length == 0)
                 continue;
             var output = outputName + index.ToString("0000") + ".ts";
             CombineMultipleFilesIntoSingleFile(items, output);

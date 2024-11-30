@@ -65,7 +65,7 @@ public static class FilterUtil
 
     public static List<StreamSpec> DoFilterDrop(IEnumerable<StreamSpec> lists, StreamFilter? filter)
     {
-        if (filter == null) return new List<StreamSpec>(lists);
+        if (filter == null) return [..lists];
 
         var inputs = lists.Where(_ => true);
         var selected = DoFilterKeep(lists, filter);
@@ -93,9 +93,8 @@ public static class FilterUtil
                 .UseConverter(x =>
                 {
                     if (x.Name != null && x.Name.StartsWith("__"))
-                        return $"[darkslategray1]{x.Name.Substring(2)}[/]";
-                    else
-                        return x.ToString().EscapeMarkup().RemoveMarkup();
+                        return $"[darkslategray1]{x.Name[2..]}[/]";
+                    return x.ToString().EscapeMarkup().RemoveMarkup();
                 })
                 .Required()
                 .PageSize(10)
@@ -107,12 +106,12 @@ public static class FilterUtil
         var first = streamSpecs.First();
         prompt.Select(first);
 
-        if (basicStreams.Any())
+        if (basicStreams.Count != 0)
         {
             prompt.AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
         }
 
-        if (audios.Any())
+        if (audios.Count != 0)
         {
             prompt.AddChoiceGroup(new StreamSpec() { Name = "__Audio" }, audios);
             // 默认音轨
@@ -121,7 +120,7 @@ public static class FilterUtil
                 prompt.Select(audios.First(a => a.GroupId == first.AudioId));
             }
         }
-        if (subs.Any())
+        if (subs.Count != 0)
         {
             prompt.AddChoiceGroup(new StreamSpec() { Name = "__Subtitle" }, subs);
             // 默认字幕轨

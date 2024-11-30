@@ -27,7 +27,7 @@ internal sealed class DownloadSpeedColumn : ProgressColumn
         var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         var flag = task.IsFinished || !task.IsStarted;
         // 单文件下载汇报进度
-        if (!flag && speedContainer.SingleSegment && speedContainer.ResponseLength != null)
+        if (!flag && speedContainer is { SingleSegment: true, ResponseLength: not null })
         {
             task.MaxValue = (double)speedContainer.ResponseLength;
             task.Value = speedContainer.RDownloaded;

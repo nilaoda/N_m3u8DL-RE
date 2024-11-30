@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Mp4SubtitleParser;
 
-public class MP4VttUtil
+public static class MP4VttUtil
 {
     public static (bool, uint) CheckInit(byte[] data)
     {
@@ -15,16 +15,16 @@ public class MP4VttUtil
             .Box("moov", MP4Parser.Children)
             .Box("trak", MP4Parser.Children)
             .Box("mdia", MP4Parser.Children)
-            .FullBox("mdhd", (box) =>
+            .FullBox("mdhd", box =>
             {
-                if (!(box.Version == 0 || box.Version == 1))
+                if (box.Version is not (0 or 1))
                     throw new Exception("MDHD version can only be 0 or 1");
                 timescale = MP4Parser.ParseMDHD(box.Reader, box.Version);
             })
             .Box("minf", MP4Parser.Children)
             .Box("stbl", MP4Parser.Children)
             .FullBox("stsd", MP4Parser.SampleDescription)
-            .Box("wvtt", (box) => {
+            .Box("wvtt", _ => {
                 // A valid vtt init segment, though we have no actual subtitles yet.
                 sawWVTT = true;
             })
@@ -38,7 +38,7 @@ public class MP4VttUtil
         if (timescale == 0)
             throw new Exception("Missing timescale for VTT content!");
 
-        List<SubCue> cues = new();
+        List<SubCue> cues = [];
 
         foreach (var item in files)
         {
@@ -50,27 +50,27 @@ public class MP4VttUtil
             byte[]? rawPayload = null;
             ulong baseTime = 0;
             ulong defaultDuration = 0;
-            List<Sample> presentations = new();
+            List<Sample> presentations = [];
 
 
             // parse media
             new MP4Parser()
                 .Box("moof", MP4Parser.Children)
                 .Box("traf", MP4Parser.Children)
-                .FullBox("tfdt", (box) =>
+                .FullBox("tfdt", box =>
                 {
                     sawTFDT = true;
-                    if (!(box.Version == 0 || box.Version == 1))
+                    if (box.Version is not (0 or 1))
                         throw new Exception("TFDT version can only be 0 or 1");
                     baseTime = MP4Parser.ParseTFDT(box.Reader, box.Version);
                 })
-                .FullBox("tfhd", (box) =>
+                .FullBox("tfhd", box =>
                 {
                     if (box.Flags == 1000)
                         throw new Exception("A TFHD box should have a valid flags value");
                     defaultDuration = MP4Parser.ParseTFHD(box.Reader, box.Flags).DefaultSampleDuration;
                 })
-                .FullBox("trun", (box) =>
+                .FullBox("trun", box =>
                 {
                     sawTRUN = true;
                     if (box.Version == 1000)
@@ -79,7 +79,7 @@ public class MP4VttUtil
                         throw new Exception("A TRUN box should have a valid flags value");
                     presentations = MP4Parser.ParseTRUN(box.Reader, box.Version, box.Flags).SampleData;
                 })
-                .Box("mdat", MP4Parser.AllData((data) =>
+                .Box("mdat", MP4Parser.AllData(data =>
                 {
                     if (sawMDAT)
                         throw new Exception("VTT cues in mp4 with multiple MDAT are not currently supported");
@@ -139,8 +139,6 @@ public class MP4VttUtil
                     {
                         if (payload != null)
                         {
-                            if (timescale == 0)
-                                throw new Exception("Timescale should not be zero!");
                             var cue = ParseVTTC(
                                 payload,
                                 0 + (double)startTime / timescale,
@@ -192,15 +190,15 @@ public class MP4VttUtil
         string id = string.Empty;
         string settings = string.Empty;
         new MP4Parser()
-            .Box("payl", MP4Parser.AllData((data) =>
+            .Box("payl", MP4Parser.AllData(data =>
             {
                 payload = Encoding.UTF8.GetString(data);
             }))
-            .Box("iden", MP4Parser.AllData((data) =>
+            .Box("iden", MP4Parser.AllData(data =>
             {
                 id = Encoding.UTF8.GetString(data);
             }))
-            .Box("sttg", MP4Parser.AllData((data) =>
+            .Box("sttg", MP4Parser.AllData(data =>
             {
                 settings = Encoding.UTF8.GetString(data);
             }))

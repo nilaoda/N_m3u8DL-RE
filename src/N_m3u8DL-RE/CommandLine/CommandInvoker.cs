@@ -15,14 +15,16 @@ using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.CommandLine;
 
-internal partial class CommandInvoker
+internal static partial class CommandInvoker
 {
-    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20241130";
+    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20241201";
 
     [GeneratedRegex("((best|worst)\\d*|all)")]
     private static partial Regex ForStrRegex();
-    [GeneratedRegex("(\\d*)-(\\d*)")]
+    [GeneratedRegex(@"(\d*)-(\d*)")]
     private static partial Regex RangeRegex();
+    [GeneratedRegex(@"([\d\\.]+)(M|K)")]
+    private static partial Regex SpeedStrRegex();
 
     private static readonly Argument<string> Input = new(name: "input", description: ResString.cmd_Input);
     private static readonly Option<string?> TmpDir = new(["--tmp-dir"], description: ResString.cmd_tmpDir);
@@ -110,23 +112,22 @@ internal partial class CommandInvoker
     private static readonly Option<StreamFilter?> DropSubtitleFilter = new(["-ds", "--drop-subtitle"], description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
     /// <summary>
-    /// 解析录制直播时长限制
+    /// 解析下载速度限制
     /// </summary>
     /// <param name="result"></param>
     /// <returns></returns>
     private static long? ParseSpeedLimit(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value.ToUpper();
+        var input = result.Tokens[0].Value.ToUpper();
         try
         {
-            var reg = new Regex("([\\d\\\\.]+)(M|K)");
-            if (!reg.IsMatch(input)) throw new ArgumentException();
+            var reg = SpeedStrRegex();
+            if (!reg.IsMatch(input)) throw new ArgumentException($"Invalid Speed Limit: {input}");
 
             var number = double.Parse(reg.Match(input).Groups[1].Value);
             if (reg.Match(input).Groups[2].Value == "M")
                 return (long)(number * 1024 * 1024);
-            else
-                return (long)(number * 1024);
+            return (long)(number * 1024);
         }
         catch (Exception)
         {
@@ -143,7 +144,7 @@ internal partial class CommandInvoker
     /// <exception cref="ArgumentException"></exception>
     private static CustomRange? ParseCustomRange(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         // 支持的种类 0-100; 01:00:00-02:30:00; -300; 300-; 05:00-; -03:00;
         try
         {
@@ -154,7 +155,7 @@ internal partial class CommandInvoker
             if (arr.Length != 2)
                 throw new ArgumentException("Bad format!");
 
-            if (input.Contains(":"))
+            if (input.Contains(':'))
             {
                 return new CustomRange()
                 {
@@ -163,7 +164,8 @@ internal partial class CommandInvoker
                     EndSec = arr[1] == "" ? double.MaxValue : OtherUtil.ParseDur(arr[1]).TotalSeconds,
                 };
             }
-            else if (RangeRegex().IsMatch(input))
+
+            if (RangeRegex().IsMatch(input))
             {
                 var left = RangeRegex().Match(input).Groups[1].Value;
                 var right = RangeRegex().Match(input).Groups[2].Value;
@@ -192,7 +194,7 @@ internal partial class CommandInvoker
     /// <exception cref="ArgumentException"></exception>
     private static WebProxy? ParseProxy(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         try
         {
             if (string.IsNullOrEmpty(input))
@@ -221,17 +223,16 @@ internal partial class CommandInvoker
     /// <returns></returns>
     private static byte[]? ParseHLSCustomKey(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         try
         {
             if (string.IsNullOrEmpty(input))
                 return null;
             if (File.Exists(input))
                 return File.ReadAllBytes(input);
-            else if (HexUtil.TryParseHexString(input, out byte[]? bytes))
+            if (HexUtil.TryParseHexString(input, out byte[]? bytes))
                 return bytes;
-            else
-                return Convert.FromBase64String(input);
+            return Convert.FromBase64String(input);
         }
         catch (Exception)
         {
@@ -247,7 +248,7 @@ internal partial class CommandInvoker
     /// <returns></returns>
     private static TimeSpan? ParseLiveLimit(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         try
         {
             return OtherUtil.ParseDur(input);
@@ -266,7 +267,7 @@ internal partial class CommandInvoker
     /// <returns></returns>
     private static DateTime? ParseStartTime(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         try
         {
             CultureInfo provider = CultureInfo.InvariantCulture;
@@ -281,7 +282,7 @@ internal partial class CommandInvoker
 
     private static string? ParseSaveName(ArgumentResult result)
     {
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         var newName = OtherUtil.GetValidFileName(input);
         if (string.IsNullOrEmpty(newName))
         {
@@ -299,7 +300,7 @@ internal partial class CommandInvoker
     private static StreamFilter? ParseStreamFilter(ArgumentResult result)
     {
         var streamFilter = new StreamFilter();
-        var input = result.Tokens.First().Value;
+        var input = result.Tokens[0].Value;
         var p = new ComplexParamParser(input);
 
 
@@ -437,7 +438,7 @@ internal partial class CommandInvoker
     /// <returns></returns>
     private static MuxOptions? ParseMuxAfterDone(ArgumentResult result)
     {
-        var v = result.Tokens.First().Value;
+        var v = result.Tokens[0].Value;
         var p = new ComplexParamParser(v);
         // 混流格式
         var format = p.GetValue("format") ?? v.Split(':')[0]; // 若未获取到，直接:前的字符串作为format解析
@@ -577,14 +578,12 @@ internal partial class CommandInvoker
 
             // 混流设置
             var muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
-            if (muxAfterDoneValue != null)
-            {
-                option.MuxAfterDone = true;
-                option.MuxOptions = muxAfterDoneValue;
-                if (muxAfterDoneValue.UseMkvmerge) option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;
-                else option.FFmpegBinaryPath ??= muxAfterDoneValue.BinPath;
-            }
-
+            if (muxAfterDoneValue == null) return option;
+            
+            option.MuxAfterDone = true;
+            option.MuxOptions = muxAfterDoneValue;
+            if (muxAfterDoneValue.UseMkvmerge) option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;
+            else option.FFmpegBinaryPath ??= muxAfterDoneValue.BinPath;
 
             return option;
         }
@@ -626,7 +625,7 @@ internal partial class CommandInvoker
         };
 
         rootCommand.TreatUnmatchedTokensAsErrors = true;
-        rootCommand.SetHandler(async (myOption) => await action(myOption), new MyOptionBinder());
+        rootCommand.SetHandler(async myOption => await action(myOption), new MyOptionBinder());
 
         var parser = new CommandLineBuilder(rootCommand)
             .UseDefaults()

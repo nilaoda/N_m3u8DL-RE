@@ -17,7 +17,7 @@ public class MediaSegment
     
     public bool IsEncrypted => EncryptInfo.Method != EncryptMethod.NONE;
 
-    public string Url { get; set; }
+    public string Url { get; set; } = string.Empty;
 
     public string? NameFromVar { get; set; } // MPD分段文件名
 

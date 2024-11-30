@@ -23,7 +23,7 @@ internal class SimpleDownloadManager
     DownloaderConfig DownloaderConfig;
     StreamExtractor StreamExtractor;
     List<StreamSpec> SelectedSteams;
-    List<OutputFile> OutputFiles = new();
+    List<OutputFile> OutputFiles = [];
 
     public SimpleDownloadManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor) 
     { 
@@ -48,13 +48,13 @@ internal class SimpleDownloadManager
 
     private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
     {
-        if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison == true))
+        if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
         {
             DownloaderConfig.MyOptions.BinaryMerge = true;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
         }
 
-        if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison == true))
+        if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison))
         {
             DownloaderConfig.MyOptions.MuxAfterDone = false;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]");
@@ -72,7 +72,7 @@ internal class SimpleDownloadManager
         else if (mediainfos.All(m => m.Type == "Subtitle"))
         {
             streamSpec.MediaType = MediaType.SUBTITLES;
-            if (streamSpec.Extension == null || streamSpec.Extension == "ts")
+            if (streamSpec.Extension is null or "ts")
                 streamSpec.Extension = "vtt";
         }
     }
@@ -81,7 +81,7 @@ internal class SimpleDownloadManager
     {
         speedContainer.ResetVars();
         bool useAACFilter = false; // ffmpeg合并flag
-        List<Mediainfo> mediaInfos = new();
+        List<Mediainfo> mediaInfos = [];
         ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
 
         var segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
@@ -158,7 +158,7 @@ internal class SimpleDownloadManager
             var path = Path.Combine(tmpDir, "_init.mp4.tmp");
             var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
             FileDic[streamSpec.Playlist.MediaInit] = result;
-            if (result == null || !result.Success)
+            if (result is not { Success: true })
             {
                 throw new Exception("Download init file failed!");
             }
@@ -166,7 +166,7 @@ internal class SimpleDownloadManager
             task.Increment(1);
 
             // 读取mp4信息
-            if (result != null && result.Success) 
+            if (result is { Success: true }) 
             {
                 mp4Info = MP4DecryptUtil.GetMP4Info(result.ActualFilePath);
                 currentKID = mp4Info.KID;
@@ -212,12 +212,12 @@ internal class SimpleDownloadManager
             var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
             var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
             FileDic[seg] = result;
-            if (result == null || !result.Success)
+            if (result is not { Success: true })
             {
                 throw new Exception("Download first segment failed!");
             }
             task.Increment(1);
-            if (result != null && result.Success)
+            if (result is { Success: true })
             {
                 // 修复MSS init
                 if (StreamExtractor.ExtractorType == ExtractorType.MSS)
@@ -284,10 +284,10 @@ internal class SimpleDownloadManager
             var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
             var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
             FileDic[seg] = result;
-            if (result != null && result.Success)
+            if (result is { Success: true })
                 task.Increment(1);
             // 实时解密
-            if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result != null && result.Success && !string.IsNullOrEmpty(currentKID)) 
+            if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID)) 
             {
                 var enc = result.ActualFilePath;
                 var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -304,13 +304,12 @@ internal class SimpleDownloadManager
         // 修改输出后缀
         var outputExt = "." + streamSpec.Extension;
         if (streamSpec.Extension == null) outputExt = ".ts";
-        else if (streamSpec.MediaType == MediaType.AUDIO && (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4")) outputExt = ".m4a";
-        else if (streamSpec.MediaType != MediaType.SUBTITLES && (streamSpec.Extension == "m4s" || streamSpec.Extension == "mp4")) outputExt = ".mp4";
+        else if (streamSpec is { MediaType: MediaType.AUDIO, Extension: "m4s" or "mp4" }) outputExt = ".m4a";
+        else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension is "m4s" or "mp4") outputExt = ".mp4";
 
         if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
         {
-            if (DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT) outputExt = ".srt";
-            else outputExt = ".vtt";
+            outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT ? ".srt" : ".vtt";
         }
         var output = Path.Combine(saveDir, saveName + outputExt);
 
@@ -320,7 +319,7 @@ internal class SimpleDownloadManager
             Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
         }
 
-        if (!string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.MP4RealTimeDecryption && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0 && mp4InitFile != "")
+        if (!string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, Keys.Length: > 0 } && mp4InitFile != "")
         {
             File.Delete(mp4InitFile);
             // shaka/ffmpeg实时解密不需要init文件用于合并
@@ -333,7 +332,7 @@ internal class SimpleDownloadManager
         // 校验分片数量
         if (DownloaderConfig.MyOptions.CheckSegmentsCount && FileDic.Values.Any(s => s == null))
         {
-            Logger.ErrorMarkUp(ResString.segmentCountCheckNotPass, totalCount, FileDic.Values.Where(s => s != null).Count());
+            Logger.ErrorMarkUp(ResString.segmentCountCheckNotPass, totalCount, FileDic.Values.Count(s => s != null));
             return false;
         }
 
@@ -351,8 +350,7 @@ internal class SimpleDownloadManager
         }
 
         // 自动修复VTT raw字幕
-        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES 
-                                                       && streamSpec.Extension != null && streamSpec.Extension.Contains("vtt")) 
+        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt")) 
         {
             Logger.WarnMarkUp(ResString.fixingVTT);
             // 排序字幕并修正时间戳
@@ -398,7 +396,7 @@ internal class SimpleDownloadManager
         if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                                                        && streamSpec.Codecs != "stpp" && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s"))
         {
-            var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
+            var initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init"));
             var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
             var (sawVtt, timescale) = MP4VttUtil.CheckInit(iniFileBytes);
             if (sawVtt)
@@ -432,8 +430,7 @@ internal class SimpleDownloadManager
         }
 
         // 自动修复TTML raw字幕
-        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
-                                                       && streamSpec.Extension != null && streamSpec.Extension.Contains("ttml"))
+        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
         {
             Logger.WarnMarkUp(ResString.fixingTTML);
             var first = true;
@@ -479,9 +476,8 @@ internal class SimpleDownloadManager
         }
 
         // 自动修复TTML mp4字幕
-        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
-                                                       && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s")
-                                                       && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp")) 
+        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
+            && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp")) 
         {
             Logger.WarnMarkUp(ResString.fixingTTMLmp4);
             // sawTtml暂时不判断
@@ -575,7 +571,7 @@ internal class SimpleDownloadManager
         }
 
         // 删除临时文件夹
-        if (!DownloaderConfig.MyOptions.SkipMerge && DownloaderConfig.MyOptions.DelAfterDone && mergeSuccess)
+        if (DownloaderConfig.MyOptions is { SkipMerge: false, DelAfterDone: true } && mergeSuccess)
         {
             var files = FileDic.Values.Select(v => v!.ActualFilePath);
             foreach (var file in files)
@@ -598,7 +594,7 @@ internal class SimpleDownloadManager
         }
 
         // 调用mp4decrypt解密
-        if (mergeSuccess && File.Exists(output) && !string.IsNullOrEmpty(currentKID) && !DownloaderConfig.MyOptions.MP4RealTimeDecryption && DownloaderConfig.MyOptions.Keys != null && DownloaderConfig.MyOptions.Keys.Length > 0)
+        if (mergeSuccess && File.Exists(output) && !string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions is { MP4RealTimeDecryption: false, Keys.Length: > 0 })
         {
             var enc = output;
             var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -700,7 +696,7 @@ internal class SimpleDownloadManager
         var success = Results.Values.All(v => v == true);
 
         // 删除临时文件夹
-        if (!DownloaderConfig.MyOptions.SkipMerge && DownloaderConfig.MyOptions.DelAfterDone && success)
+        if (DownloaderConfig.MyOptions is { SkipMerge: false, DelAfterDone: true } && success)
         {
             foreach (var item in StreamExtractor.RawFiles)
             {

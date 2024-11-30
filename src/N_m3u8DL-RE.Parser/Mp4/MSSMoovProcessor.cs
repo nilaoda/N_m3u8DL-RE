@@ -13,7 +13,7 @@ namespace N_m3u8DL_RE.Parser.Mp4;
 
 public partial class MSSMoovProcessor
 {
-    [GeneratedRegex("\\<KID\\>(.*?)\\<")]
+    [GeneratedRegex(@"\<KID\>(.*?)\<")]
     private static partial Regex KIDRegex();
 
     private static string StartCode = "00000001";
@@ -23,7 +23,7 @@ public partial class MSSMoovProcessor
     private string CodecPrivateData;
     private int Timesacle;
     private long Duration;
-    private string Language { get => StreamSpec.Language ?? "und"; }
+    private string Language => StreamSpec.Language ?? "und";
     private int Width => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').First());
     private int Height => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').Last());
     private string StreamType;
@@ -36,8 +36,8 @@ public partial class MSSMoovProcessor
     private bool IsProtection;
     private string ProtectionSystemId;
     private string ProtectionData;
-    private string ProtecitonKID;
-    private string ProtecitonKID_PR;
+    private string? ProtecitonKID;
+    private string? ProtecitonKID_PR;
     private byte[] UnityMatrix
     {
         get
@@ -60,10 +60,9 @@ public partial class MSSMoovProcessor
     private static byte TRACK_IN_MOVIE = 0x2;
     private static byte TRACK_IN_PREVIEW = 0x4;
     private static byte SELF_CONTAINED = 0x1;
-    private static List<string> SupportedFourCC = new()
-    {
-        "HVC1","HEV1","AACL","AACH","EC-3","H264","AVC1","DAVC","AVC1","TTML","DVHE","DVH1"
-    };
+
+    private static List<string> SupportedFourCC =
+        ["HVC1", "HEV1", "AACL", "AACH", "EC-3", "H264", "AVC1", "DAVC", "AVC1", "TTML", "DVHE", "DVH1"];
 
     public MSSMoovProcessor(StreamSpec streamSpec)
     {
@@ -95,7 +94,7 @@ public partial class MSSMoovProcessor
         }
     }
 
-    private static string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = new string[] { "", "A", "B", "C" };
+    private static string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = ["", "A", "B", "C"];
     private int SamplingFrequencyIndex(int samplingRate) => samplingRate switch
     {
         96000 => 0x0,
@@ -169,8 +168,8 @@ public partial class MSSMoovProcessor
             // save kid for playready
             this.ProtecitonKID_PR = HexUtil.BytesToHex(kidBytes);
             // fix byte order
-            var reverse1 = new byte[4] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
-            var reverse2 = new byte[4] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
+            var reverse1 = new[] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
+            var reverse2 = new[] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
             Array.Copy(reverse1, 0, kidBytes, 0, reverse1.Length);
             Array.Copy(reverse2, 0, kidBytes, 4, reverse1.Length);
             this.ProtecitonKID = HexUtil.BytesToHex(kidBytes);
@@ -217,13 +216,13 @@ public partial class MSSMoovProcessor
 
         var schmPayload = new List<byte>();
         schmPayload.AddRange(Encoding.ASCII.GetBytes("cenc")); // scheme_type 'cenc' => common encryption
-        schmPayload.AddRange(new byte[] { 0, 1, 0, 0 }); // scheme_version Major version 1, Minor version 0
+        schmPayload.AddRange([0, 1, 0, 0]); // scheme_version Major version 1, Minor version 0
         var schmBox = FullBox("schm", 0, 0, schmPayload.ToArray());
 
         sinfPayload.AddRange(schmBox);
 
         var tencPayload = new List<byte>();
-        tencPayload.AddRange(new byte[] { 0, 0 });
+        tencPayload.AddRange([0, 0]);
         tencPayload.Add(0x1); // default_IsProtected
         tencPayload.Add(0x8); // default_Per_Sample_IV_size
         tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID)); // default_KID
@@ -368,7 +367,7 @@ public partial class MSSMoovProcessor
         }
         else if (StreamType == "text")
         {
-            minfPayload.AddRange(FullBox("sthd", 0, 0, new byte[0])); // Subtitle Media Header
+            minfPayload.AddRange(FullBox("sthd", 0, 0, [])); // Subtitle Media Header
         }
         else
         {
@@ -377,7 +376,7 @@ public partial class MSSMoovProcessor
 
         var drefPayload = new List<byte>();
         drefPayload.Add(0); drefPayload.Add(0); drefPayload.Add(0); drefPayload.Add(1); // entry count
-        drefPayload.AddRange(FullBox("url ", 0, SELF_CONTAINED, new byte[0])); // Data Entry URL Box
+        drefPayload.AddRange(FullBox("url ", 0, SELF_CONTAINED, [])); // Data Entry URL Box
 
         var dinfPayload = FullBox("dref", 0, 0, drefPayload.ToArray()); // Data Reference Box
         minfPayload.AddRange(Box("dinf", dinfPayload.ToArray())); // Data Information Box
@@ -466,10 +465,7 @@ public partial class MSSMoovProcessor
                     writer.Write(sinfBox);
                     return Box("enca", stream.ToArray()); // Encrypted Audio
                 }
-                else
-                {
-                    return Box("mp4a", stream.ToArray());
-                }
+                return Box("mp4a", stream.ToArray());
             }
             if (FourCC == "EC-3")
             {
@@ -479,10 +475,7 @@ public partial class MSSMoovProcessor
                     writer.Write(sinfBox);
                     return Box("enca", stream.ToArray()); // Encrypted Audio
                 }
-                else
-                {
-                    return Box("ec-3", stream.ToArray());
-                }
+                return Box("ec-3", stream.ToArray());
             }
         }
         else if (StreamType == "video")
@@ -507,11 +500,11 @@ public partial class MSSMoovProcessor
 
             var codecPrivateData = HexUtil.HexToBytes(CodecPrivateData);
 
-            if (FourCC == "H264" || FourCC == "AVC1" || FourCC == "DAVC" || FourCC == "AVC1")
+            if (FourCC is "H264" or "AVC1" or "DAVC")
             {
-                var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 7).First());
-                var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 8).First());
+                var arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
+                var sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 7));
+                var pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 8));
                 // make avcC
                 var avcC = GetAvcC(sps, pps);
                 writer.Write(avcC);
@@ -521,17 +514,14 @@ public partial class MSSMoovProcessor
                     writer.Write(sinfBox);
                     return Box("encv", stream.ToArray()); // Encrypted Video
                 }
-                else
-                {
-                    return Box("avc1", stream.ToArray()); // AVC Simple Entry
-                }
+                return Box("avc1", stream.ToArray()); // AVC Simple Entry
             }
-            else if (FourCC == "HVC1" || FourCC == "HEV1")
+            if (FourCC is "HVC1" or "HEV1")
             {
-                var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                var vps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20).First());
-                var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21).First());
-                var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22).First());
+                var arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
+                var vps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20));
+                var sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21));
+                var pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22));
                 // make hvcC
                 var hvcC = GetHvcC(sps, pps, vps);
                 writer.Write(hvcC);
@@ -541,18 +531,15 @@ public partial class MSSMoovProcessor
                     writer.Write(sinfBox);
                     return Box("encv", stream.ToArray()); // Encrypted Video
                 }
-                else
-                {
-                    return Box("hvc1", stream.ToArray()); // HEVC Simple Entry
-                }
+                return Box("hvc1", stream.ToArray()); // HEVC Simple Entry
             }
             // 杜比视界也按照hevc处理
-            else if (FourCC == "DVHE" || FourCC == "DVH1")
+            if (FourCC is "DVHE" or "DVH1")
             {
-                var arr = CodecPrivateData.Split(new[] { StartCode }, StringSplitOptions.RemoveEmptyEntries);
-                var vps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20).First());
-                var sps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21).First());
-                var pps = HexUtil.HexToBytes(arr.Where(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22).First());
+                var arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
+                var vps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20));
+                var sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21));
+                var pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22));
                 // make hvcC
                 var hvcC = GetHvcC(sps, pps, vps, "dvh1");
                 writer.Write(hvcC);
@@ -562,15 +549,10 @@ public partial class MSSMoovProcessor
                     writer.Write(sinfBox);
                     return Box("encv", stream.ToArray()); // Encrypted Video
                 }
-                else
-                {
-                    return Box("dvh1", stream.ToArray()); // HEVC Simple Entry
-                }
+                return Box("dvh1", stream.ToArray()); // HEVC Simple Entry
             }
-            else
-            {
-                throw new NotSupportedException();
-            }
+
+            throw new NotSupportedException();
         }
         else if (StreamType == "text")
         {
@@ -581,10 +563,7 @@ public partial class MSSMoovProcessor
                 writer.Write("\0"); // auxilary mime types(??)
                 return Box("stpp", stream.ToArray()); // TTML Simple Entry
             }
-            else
-            {
-                throw new NotSupportedException();
-            }
+            throw new NotSupportedException();
         }
         else
         {
@@ -635,7 +614,7 @@ public partial class MSSMoovProcessor
             while (_reader.BaseStream.Position < _reader.BaseStream.Length)
             {
                 encList.Add(_reader.ReadByte());
-                if (encList.Count >= 3 && encList[encList.Count - 3] == 0x00 && encList[encList.Count - 2] == 0x00 && encList[encList.Count - 1] == 0x03)
+                if (encList is [.., 0x00, 0x00, 0x03])
                 {
                     encList.RemoveAt(encList.Count - 1);
                 }
@@ -805,7 +784,7 @@ public partial class MSSMoovProcessor
         new MP4Parser()
             .Box("moof", MP4Parser.Children)
             .Box("traf", MP4Parser.Children)
-            .FullBox("tfhd", (box) =>
+            .FullBox("tfhd", box =>
             {
                 TrackId = (int)box.Reader.ReadUInt32();
             })

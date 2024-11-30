@@ -83,12 +83,11 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             encryptInfo.Method = EncryptMethod.UNKNOWN;
         }
 
+        if (parserConfig.CustomMethod == null) return encryptInfo;
+        
         // 处理自定义加密方式
-        if (parserConfig.CustomMethod != null)
-        {
-            encryptInfo.Method = parserConfig.CustomMethod.Value;
-            Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
-        }
+        encryptInfo.Method = parserConfig.CustomMethod.Value;
+        Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
 
         return encryptInfo;
     }

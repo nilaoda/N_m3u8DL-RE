@@ -1,12 +1,7 @@
 ﻿using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Parser.Processor.HLS;
 
@@ -16,13 +11,13 @@ public partial class DefaultHLSContentProcessor : ContentProcessor
     private static partial Regex YkDVRegex();
     [GeneratedRegex("#EXT-X-MAP:URI=\\\".*?BUMPER/[\\s\\S]+?#EXT-X-DISCONTINUITY")]
     private static partial Regex DNSPRegex();
-    [GeneratedRegex("#EXTINF:.*?,\\s+.*BUMPER.*\\s+?#EXT-X-DISCONTINUITY")]
+    [GeneratedRegex(@"#EXTINF:.*?,\s+.*BUMPER.*\s+?#EXT-X-DISCONTINUITY")]
     private static partial Regex DNSPSubRegex();
     [GeneratedRegex("(#EXTINF.*)(\\s+)(#EXT-X-KEY.*)")]
     private static partial Regex OrderFixRegex();
-    [GeneratedRegex("#EXT-X-MAP.*\\.apple\\.com/")]
+    [GeneratedRegex(@"#EXT-X-MAP.*\.apple\.com/")]
     private static partial Regex ATVRegex();
-    [GeneratedRegex("(#EXT-X-KEY:[\\s\\S]*?)(#EXT-X-DISCONTINUITY|#EXT-X-ENDLIST)")]
+    [GeneratedRegex(@"(#EXT-X-KEY:[\s\S]*?)(#EXT-X-DISCONTINUITY|#EXT-X-ENDLIST)")]
     private static partial Regex ATVRegex2();
 
     public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig) => extractorType == ExtractorType.HLS;
@@ -30,7 +25,7 @@ public partial class DefaultHLSContentProcessor : ContentProcessor
     public override string Process(string m3u8Content, ParserConfig parserConfig)
     {
         // 处理content以\r作为换行符的情况
-        if (m3u8Content.Contains("\r") && !m3u8Content.Contains("\n"))
+        if (m3u8Content.Contains('\r') && !m3u8Content.Contains('\n'))
         {
             m3u8Content = m3u8Content.Replace("\r", Environment.NewLine);
         }
@@ -51,7 +46,7 @@ public partial class DefaultHLSContentProcessor : ContentProcessor
         // 针对YK #EXT-X-VERSION:7杜比视界片源修正
         if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Content.Contains("ott.cibntv.net") && m3u8Content.Contains("ccode="))
         {
-            Regex ykmap = YkDVRegex();
+            var ykmap = YkDVRegex();
             foreach (Match m in ykmap.Matches(m3u8Content))
             {
                 m3u8Content = m3u8Content.Replace(m.Value, $"#EXTINF:0.000000,\n#EXT-X-BYTERANGE:{m.Groups[2].Value}\n{m.Groups[1].Value}");

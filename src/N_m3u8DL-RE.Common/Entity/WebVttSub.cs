@@ -11,10 +11,10 @@ public partial class WebVttSub
     private static partial Regex TSValueRegex();
     [GeneratedRegex("\\s")]
     private static partial Regex SplitRegex();
-    [GeneratedRegex("<c\\..*?>([\\s\\S]*?)<\\/c>")]
+    [GeneratedRegex(@"<c\..*?>([\s\S]*?)<\/c>")]
     private static partial Regex VttClassRegex();
 
-    public List<SubCue> Cues { get; set; } = new List<SubCue>();
+    public List<SubCue> Cues { get; set; } = [];
     public long MpegtsTimestamp { get; set; } = 0L;
 
     /// <summary>
@@ -71,47 +71,45 @@ public partial class WebVttSub
                 continue;
             }
 
-            if (needPayload)
+            if (!needPayload) continue;
+            
+            if (string.IsNullOrEmpty(line.Trim()))
             {
-                if (string.IsNullOrEmpty(line.Trim()))
-                {
-                    var payload = string.Join(Environment.NewLine, payloads);
-                    if (string.IsNullOrEmpty(payload.Trim())) continue; // 没获取到payload 跳过添加
+                var payload = string.Join(Environment.NewLine, payloads);
+                if (string.IsNullOrEmpty(payload.Trim())) continue; // 没获取到payload 跳过添加
 
-                    var arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                    var startTime = ConvertToTS(arr[0]);
-                    var endTime = ConvertToTS(arr[1]);
-                    var style = arr.Count > 2 ? string.Join(" ", arr.Skip(2)) : "";
-                    webSub.Cues.Add(new SubCue()
-                    {
-                        StartTime = startTime,
-                        EndTime = endTime,
-                        Payload = RemoveClassTag(string.Join("", payload.Where(c => c != 8203))), // Remove Zero Width Space!
-                        Settings = style
-                    });
-                    payloads.Clear();
-                    needPayload = false;
-                }
-                else
+                var arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                var startTime = ConvertToTS(arr[0]);
+                var endTime = ConvertToTS(arr[1]);
+                var style = arr.Count > 2 ? string.Join(" ", arr.Skip(2)) : "";
+                webSub.Cues.Add(new SubCue()
                 {
-                    payloads.Add(line.Trim());
-                }
+                    StartTime = startTime,
+                    EndTime = endTime,
+                    Payload = RemoveClassTag(string.Join("", payload.Where(c => c != 8203))), // Remove Zero Width Space!
+                    Settings = style
+                });
+                payloads.Clear();
+                needPayload = false;
+            }
+            else
+            {
+                payloads.Add(line.Trim());
             }
         }
 
-        if (BaseTimestamp != 0)
+        if (BaseTimestamp == 0) return webSub;
+        
+        foreach (var item in webSub.Cues)
         {
-            foreach (var item in webSub.Cues)
+            if (item.StartTime.TotalMilliseconds - BaseTimestamp >= 0)
             {
-                if (item.StartTime.TotalMilliseconds - BaseTimestamp >= 0)
-                {
-                    item.StartTime = TimeSpan.FromMilliseconds(item.StartTime.TotalMilliseconds - BaseTimestamp);
-                    item.EndTime = TimeSpan.FromMilliseconds(item.EndTime.TotalMilliseconds - BaseTimestamp);
-                }
-                else
-                {
-                    break;
-                }
+                item.StartTime = TimeSpan.FromMilliseconds(item.StartTime.TotalMilliseconds - BaseTimestamp);
+                item.EndTime = TimeSpan.FromMilliseconds(item.EndTime.TotalMilliseconds - BaseTimestamp);
+            }
+            else
+            {
+                break;
             }
         }
 
@@ -127,7 +125,7 @@ public partial class WebVttSub
                 return string.Concat(VttClassRegex().Matches(line).Select(x => x.Groups[1].Value + " "));
             })).TrimEnd();
         }
-        else return text;
+        return text;
     }
 
     /// <summary>
@@ -140,18 +138,17 @@ public partial class WebVttSub
         FixTimestamp(webSub, this.MpegtsTimestamp);
         foreach (var item in webSub.Cues)
         {
-            if (!this.Cues.Contains(item))
+            if (this.Cues.Contains(item)) continue;
+            
+            // 如果相差只有1ms，且payload相同，则拼接
+            var last = this.Cues.LastOrDefault();
+            if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload) 
             {
-                // 如果相差只有1ms，且payload相同，则拼接
-                var last = this.Cues.LastOrDefault();
-                if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload) 
-                {
-                    last.EndTime = item.EndTime;
-                }
-                else
-                {
-                    this.Cues.Add(item);
-                }
+                last.EndTime = item.EndTime;
+            }
+            else
+            {
+                this.Cues.Add(item);
             }
         }
         return this;
@@ -173,10 +170,10 @@ public partial class WebVttSub
             // 当前预添加的字幕的起始时间小于实际上已经走过的时间(如offset已经是100秒，而字幕起始却是2秒)，才修复
             if (sub.Cues.Count > 0 && sub.Cues.First().StartTime < offset)
             {
-                for (int i = 0; i < sub.Cues.Count; i++)
+                foreach (var subCue in sub.Cues)
                 {
-                    sub.Cues[i].StartTime += offset;
-                    sub.Cues[i].EndTime += offset;
+                    subCue.StartTime += offset;
+                    subCue.EndTime += offset;
                 }
             }
         }
@@ -205,7 +202,7 @@ public partial class WebVttSub
             str = parts.First();
         }
         var t = str.Split(':').Reverse().ToList();
-        for (int i = 0; i < t.Count(); i++)
+        for (int i = 0; i < t.Count; i++)
         {
             time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;
         }
@@ -214,7 +211,7 @@ public partial class WebVttSub
 
     public override string ToString()
     {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         foreach (var c in GetCues())  // 输出时去除空串
         {
             sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);

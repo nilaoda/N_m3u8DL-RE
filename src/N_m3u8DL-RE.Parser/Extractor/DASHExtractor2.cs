@@ -4,19 +4,14 @@ using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace N_m3u8DL_RE.Parser.Extractor;
 
 // https://blog.csdn.net/leek5533/article/details/117750191
-internal class DASHExtractor2 : IExtractor
+internal partial class DASHExtractor2 : IExtractor
 {
     private static EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
 
@@ -37,10 +32,7 @@ internal class DASHExtractor2 : IExtractor
     private void SetInitUrl()
     {
         this.MpdUrl = ParserConfig.Url ?? string.Empty;
-        if (!string.IsNullOrEmpty(ParserConfig.BaseUrl))
-            this.BaseUrl = ParserConfig.BaseUrl;
-        else
-            this.BaseUrl = this.MpdUrl;
+        this.BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : this.MpdUrl;
     }
 
     private string ExtendBaseUrl(XElement element, string oriBaseUrl)
@@ -57,13 +49,11 @@ internal class DASHExtractor2 : IExtractor
     private double? GetFrameRate(XElement element)
     {
         var frameRate = element.Attribute("frameRate")?.Value;
-        if (frameRate != null && frameRate.Contains('/'))
-        {
-            var d = Convert.ToDouble(frameRate.Split('/')[0]) / Convert.ToDouble(frameRate.Split('/')[1]);
-            frameRate = d.ToString("0.000");
-            return Convert.ToDouble(frameRate);
-        }
-        return null;
+        if (frameRate == null || !frameRate.Contains('/')) return null;
+        
+        var d = Convert.ToDouble(frameRate.Split('/')[0]) / Convert.ToDouble(frameRate.Split('/')[1]);
+        frameRate = d.ToString("0.000");
+        return Convert.ToDouble(frameRate);
     }
 
     public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
@@ -180,7 +170,7 @@ internal class DASHExtractor2 : IExtractor
                         streamSpec.Extension = mTypeSplit.Length == 2 ? mTypeSplit[1] : null;
                     }
                     // 优化字幕场景识别
-                    if (streamSpec.Codecs == "stpp" || streamSpec.Codecs == "wvtt")
+                    if (streamSpec.Codecs is "stpp" or "wvtt")
                     {
                         streamSpec.MediaType = MediaType.SUBTITLES;
                     }
@@ -493,7 +483,7 @@ internal class DASHExtractor2 : IExtractor
                     else
                     {
                         // 修复mp4类型字幕
-                        if (streamSpec.MediaType == MediaType.SUBTITLES && streamSpec.Extension == "mp4")
+                        if (streamSpec is { MediaType: MediaType.SUBTITLES, Extension: "mp4" })
                         {
                             streamSpec.Extension = "m4s";
                         }
@@ -513,20 +503,17 @@ internal class DASHExtractor2 : IExtractor
         }
 
         // 为视频设置默认轨道
-        var aL = streamList.Where(s => s.MediaType == MediaType.AUDIO);
-        var sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES);
-        foreach (var item in streamList)
+        var aL = streamList.Where(s => s.MediaType == MediaType.AUDIO).ToList();
+        var sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
+        foreach (var item in streamList.Where(item => !string.IsNullOrEmpty(item.Resolution)))
         {
-            if (!string.IsNullOrEmpty(item.Resolution))
+            if (aL.Count != 0)
             {
-                if (aL.Any())
-                {
-                    item.AudioId = aL.OrderByDescending(x => x.Bandwidth).First().GroupId;
-                }
-                if (sL.Any())
-                {
-                    item.SubtitleId = sL.OrderByDescending(x => x.Bandwidth).First().GroupId;
-                }
+                item.AudioId = aL.OrderByDescending(x => x.Bandwidth).First().GroupId;
+            }
+            if (sL.Count != 0)
+            {
+                item.SubtitleId = sL.OrderByDescending(x => x.Bandwidth).First().GroupId;
             }
         }
 
@@ -541,8 +528,7 @@ internal class DASHExtractor2 : IExtractor
     private string? FilterLanguage(string? v)
     {
         if (v == null) return null;
-        if (Regex.IsMatch(v, "^[\\w_\\-\\d]+$")) return v;
-        return "und";
+        return LangCodeRegex().IsMatch(v) ? v : "und";
     }
 
     public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
@@ -581,22 +567,21 @@ internal class DASHExtractor2 : IExtractor
 
     private Task ProcessUrlAsync(List<StreamSpec> streamSpecs)
     {
-        for (int i = 0; i < streamSpecs.Count; i++)
+        foreach (var streamSpec in streamSpecs)
         {
-            var playlist = streamSpecs[i].Playlist;
-            if (playlist != null)
+            var playlist = streamSpec.Playlist;
+            if (playlist == null) continue;
+            
+            if (playlist.MediaInit != null)
             {
-                if (playlist.MediaInit != null)
+                playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
+            }
+            for (var ii = 0; ii < playlist!.MediaParts.Count; ii++)
+            {
+                var part = playlist.MediaParts[ii];
+                foreach (var mediaSegment in part.MediaSegments)
                 {
-                    playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
-                }
-                for (int ii = 0; ii < playlist!.MediaParts.Count; ii++)
-                {
-                    var part = playlist.MediaParts[ii];
-                    for (int iii = 0; iii < part.MediaSegments.Count; iii++)
-                    {
-                        part.MediaSegments[iii].Url = PreProcessUrl(part.MediaSegments[iii].Url);
-                    }
+                    mediaSegment.Url = PreProcessUrl(mediaSegment.Url);
                 }
             }
         }
@@ -633,4 +618,7 @@ internal class DASHExtractor2 : IExtractor
             }
         }
     }
+
+    [GeneratedRegex(@"^[\w_\-\d]+$")]
+    private static partial Regex LangCodeRegex();
 }

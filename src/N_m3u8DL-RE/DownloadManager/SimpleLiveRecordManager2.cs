@@ -27,7 +27,7 @@ internal class SimpleLiveRecordManager2
     StreamExtractor StreamExtractor;
     List<StreamSpec> SelectedSteams;
     ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
-    List<OutputFile> OutputFiles = new();
+    List<OutputFile> OutputFiles = [];
     DateTime? PublishDateTime;
     bool STOP_FLAG = false;
     int WAIT_SEC = 0; // 刷新间隔
@@ -41,7 +41,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
 
-    private readonly object lockObj = new object();
+    private readonly Lock lockObj = new();
     TimeSpan? audioStart = null;
 
     public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
@@ -60,9 +60,9 @@ internal class SimpleLiveRecordManager2
         if (_key != null)
         {
             if (DownloaderConfig.MyOptions.Keys == null)
-                DownloaderConfig.MyOptions.Keys = new string[] { _key };
+                DownloaderConfig.MyOptions.Keys = [_key];
             else
-                DownloaderConfig.MyOptions.Keys = DownloaderConfig.MyOptions.Keys.Concat(new string[] { _key }).ToArray();
+                DownloaderConfig.MyOptions.Keys = [..DownloaderConfig.MyOptions.Keys, _key];
         }
     }
 
@@ -111,13 +111,13 @@ internal class SimpleLiveRecordManager2
 
     private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
     {
-        if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison == true))
+        if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
         {
             DownloaderConfig.MyOptions.BinaryMerge = true;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
         }
 
-        if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison == true))
+        if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison))
         {
             DownloaderConfig.MyOptions.MuxAfterDone = false;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]");
@@ -136,7 +136,7 @@ internal class SimpleLiveRecordManager2
         {
             streamSpec.MediaType = MediaType.SUBTITLES;
 
-            if (streamSpec.Extension == null || streamSpec.Extension == "ts")
+            if (streamSpec.Extension is null or "ts")
                 streamSpec.Extension = "vtt";
         }
     }
@@ -151,7 +151,7 @@ internal class SimpleLiveRecordManager2
         bool useAACFilter = false; // ffmpeg合并flag
         bool initDownloaded = false; // 是否下载过init文件
         ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
-        List<Mediainfo> mediaInfos = new();
+        List<Mediainfo> mediaInfos = [];
         Stream? fileOutputStream = null;
         WebVttSub currentVtt = new(); // 字幕流始终维护一个实例
         bool firstSub = true;
@@ -197,7 +197,7 @@ internal class SimpleLiveRecordManager2
                 var path = Path.Combine(tmpDir, "_init.mp4.tmp");
                 var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
                 FileDic[streamSpec.Playlist.MediaInit] = result;
-                if (result == null || !result.Success)
+                if (result is not { Success: true })
                 {
                     throw new Exception("Download init file failed!");
                 }
@@ -205,7 +205,7 @@ internal class SimpleLiveRecordManager2
                 task.Increment(1);
 
                 // 读取mp4信息
-                if (result != null && result.Success)
+                if (result is { Success: true })
                 {
                     currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
                     // 从文件读取KEY
@@ -257,12 +257,12 @@ internal class SimpleLiveRecordManager2
                 var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                 var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
-                if (result == null || !result.Success)
+                if (result is not { Success: true })
                 {
                     throw new Exception("Download first segment failed!");
                 }
                 task.Increment(1);
-                if (result != null && result.Success)
+                if (result is { Success: true })
                 {
                     // 修复MSS init
                     if (StreamExtractor.ExtractorType == ExtractorType.MSS)
@@ -330,10 +330,10 @@ internal class SimpleLiveRecordManager2
                 var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
                 var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
-                if (result != null && result.Success)
+                if (result is { Success: true })
                     task.Increment(1);
                 // 实时解密
-                if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result != null && result.Success && !string.IsNullOrEmpty(currentKID))
+                if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID))
                 {
                     var enc = result.ActualFilePath;
                     var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -347,14 +347,13 @@ internal class SimpleLiveRecordManager2
             });
 
             // 自动修复VTT raw字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
-                                                           && streamSpec.Extension != null && streamSpec.Extension.Contains("vtt"))
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
             {
                 // 排序字幕并修正时间戳
-                var keys = FileDic.Keys.OrderBy(k => k.Index);
+                var keys = FileDic.Keys.OrderBy(k => k.Index).ToList();
                 foreach (var seg in keys)
                 {
-                    var vttContent = File.ReadAllText(FileDic[seg]!.ActualFilePath);
+                    var vttContent = await File.ReadAllTextAsync(FileDic[seg]!.ActualFilePath);
                     var waitCount = 0;
                     while (DownloaderConfig.MyOptions.LiveFixVttByAudio && audioStart == null && waitCount++ < 5)
                     {
@@ -376,7 +375,7 @@ internal class SimpleLiveRecordManager2
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
                                                            && streamSpec.Codecs != "stpp" && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s"))
             {
-                var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
+                var initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init"));
                 var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                 var (sawVtt, timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                 if (sawVtt)
@@ -396,10 +395,9 @@ internal class SimpleLiveRecordManager2
             }
 
             // 自动修复TTML raw字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
-                                                           && streamSpec.Extension != null && streamSpec.Extension.Contains("ttml"))
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
             {
-                var keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
+                var keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key).ToList();
                 if (firstSub)
                 {
                     if (baseTimestamp != 0)
@@ -437,9 +435,8 @@ internal class SimpleLiveRecordManager2
             }
 
             // 自动修复TTML mp4字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
-                                                           && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s")
-                                                           && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
+                && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
             {
                 // sawTtml暂时不判断
                 // var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
@@ -498,12 +495,11 @@ internal class SimpleLiveRecordManager2
                 // 合并
                 var outputExt = "." + streamSpec.Extension;
                 if (streamSpec.Extension == null) outputExt = ".ts";
-                else if (streamSpec.MediaType == MediaType.AUDIO && streamSpec.Extension == "m4s") outputExt = ".m4a";
+                else if (streamSpec is { MediaType: MediaType.AUDIO, Extension: "m4s" }) outputExt = ".m4a";
                 else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
                 else if (streamSpec.MediaType == MediaType.SUBTITLES)
                 {
-                    if (DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT) outputExt = ".srt";
-                    else outputExt = ".vtt";
+                    outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT ? ".srt" : ".vtt";
                 }
 
                 var output = Path.Combine(saveDir, saveName + outputExt);
@@ -536,7 +532,7 @@ internal class SimpleLiveRecordManager2
                         fileOutputStream = PipeUtil.CreatePipe(pipeName);
                         Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
                         PipeSteamNamesDic[task.Id] = pipeName;
-                        if (PipeSteamNamesDic.Count == SelectedSteams.Where(x => x.MediaType != MediaType.SUBTITLES).Count()) 
+                        if (PipeSteamNamesDic.Count == SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES)) 
                         {
                             var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
                             Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
@@ -622,24 +618,23 @@ internal class SimpleLiveRecordManager2
                 break;
         }
 
-        if (fileOutputStream != null)
+        if (fileOutputStream == null) return true;
+        
+        if (!DownloaderConfig.MyOptions.LivePipeMux)
         {
-            if (!DownloaderConfig.MyOptions.LivePipeMux)
+            // 记录所有文件信息
+            OutputFiles.Add(new OutputFile()
             {
-                // 记录所有文件信息
-                OutputFiles.Add(new OutputFile()
-                {
-                    Index = task.Id,
-                    FilePath = (fileOutputStream as FileStream)!.Name,
-                    LangCode = streamSpec.Language,
-                    Description = streamSpec.Name,
-                    Mediainfos = mediaInfos,
-                    MediaType = streamSpec.MediaType,
-                });
-            }
-            fileOutputStream.Close();
-            fileOutputStream.Dispose();
+                Index = task.Id,
+                FilePath = (fileOutputStream as FileStream)!.Name,
+                LangCode = streamSpec.Language,
+                Description = streamSpec.Name,
+                Mediainfos = mediaInfos,
+                MediaType = streamSpec.MediaType,
+            });
         }
+        fileOutputStream.Close();
+        fileOutputStream.Dispose();
 
         return true;
     }
@@ -648,78 +643,76 @@ internal class SimpleLiveRecordManager2
     {
         while (!STOP_FLAG)
         {
-            if (WAIT_SEC != 0)
+            if (WAIT_SEC == 0) continue;
+            
+            // 1. MPD 所有URL相同 单次请求即可获得所有轨道的信息
+            // 2. M3U8 所有URL不同 才需要多次请求
+            await Parallel.ForEachAsync(dic, async (dic, _) =>
             {
-                // 1. MPD 所有URL相同 单次请求即可获得所有轨道的信息
-                // 2. M3U8 所有URL不同 才需要多次请求
+                var streamSpec = dic.Key;
+                var task = dic.Value;
 
-                await Parallel.ForEachAsync(dic, async (dic, _) =>
+                // 达到上限时 不需要刷新了
+                if (RecordLimitReachedDic[task.Id])
+                    return;
+
+                var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
+                if (!SamePathDic.ContainsKey(task.Id))
                 {
-                    var streamSpec = dic.Key;
-                    var task = dic.Value;
-
-                    // 达到上限时 不需要刷新了
-                    if (RecordLimitReachedDic[task.Id])
-                        return;
-
-                    var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
-                    if (!SamePathDic.ContainsKey(task.Id))
-                    {
-                        var allName = streamSpec.Playlist!.MediaParts[0].MediaSegments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
-                        var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
-                        SamePathDic[task.Id] = allSamePath;
-                    }
-                    // 过滤不需要下载的片段
-                    FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
-                    var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
-                    if (newList.Count > 0)
-                    {
-                        task.MaxValue += newList.Count;
-                        // 推送给消费者
-                        await BlockDic[task.Id].SendAsync(newList);
-                        // 更新最新链接
-                        LastFileNameDic[task.Id] = GetSegmentName(newList.Last(), allHasDatetime, SamePathDic[task.Id]);
-                        // 尝试更新时间戳
-                        var dt = newList.Last().DateTime;
-                        DateTimeDic[task.Id] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
-                        // 累加已获取到的时长
-                        RefreshedDurDic[task.Id] += (int)newList.Sum(s => s.Duration);
-                    }
-
-                    if (!STOP_FLAG && RefreshedDurDic[task.Id] >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds)
-                    {
-                        RecordLimitReachedDic[task.Id] = true;
-                    }
-
-                    // 检测时长限制
-                    if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x == true))
-                    {
-                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
-                        STOP_FLAG = true;
-                        CancellationTokenSource.Cancel();
-                    }
-                });
-
-                try
-                {
-                    // Logger.WarnMarkUp($"wait {waitSec}s");
-                    if (!STOP_FLAG) await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
-                    // 刷新列表
-                    if (!STOP_FLAG) await StreamExtractor.RefreshPlayListAsync(dic.Keys.ToList());
+                    var allName = streamSpec.Playlist!.MediaParts[0].MediaSegments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
+                    var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
+                    SamePathDic[task.Id] = allSamePath;
                 }
-                catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
+                // 过滤不需要下载的片段
+                FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
+                var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
+                if (newList.Count > 0)
                 {
-                    // 不需要做事
+                    task.MaxValue += newList.Count;
+                    // 推送给消费者
+                    await BlockDic[task.Id].SendAsync(newList);
+                    // 更新最新链接
+                    LastFileNameDic[task.Id] = GetSegmentName(newList.Last(), allHasDatetime, SamePathDic[task.Id]);
+                    // 尝试更新时间戳
+                    var dt = newList.Last().DateTime;
+                    DateTimeDic[task.Id] = dt != null ? GetUnixTimestamp(dt.Value) : 0L;
+                    // 累加已获取到的时长
+                    RefreshedDurDic[task.Id] += (int)newList.Sum(s => s.Duration);
                 }
-                catch (Exception e)
+
+                if (!STOP_FLAG && RefreshedDurDic[task.Id] >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds)
                 {
-                    Logger.ErrorMarkUp(e);
+                    RecordLimitReachedDic[task.Id] = true;
+                }
+
+                // 检测时长限制
+                if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
+                {
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
                     STOP_FLAG = true;
-                    // 停止所有Block
-                    foreach (var target in BlockDic.Values)
-                    {
-                        target.Complete();
-                    }
+                    CancellationTokenSource.Cancel();
+                }
+            });
+
+            try
+            {
+                // Logger.WarnMarkUp($"wait {waitSec}s");
+                if (!STOP_FLAG) await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
+                // 刷新列表
+                if (!STOP_FLAG) await StreamExtractor.RefreshPlayListAsync(dic.Keys.ToList());
+            }
+            catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
+            {
+                // 不需要做事
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorMarkUp(e);
+                STOP_FLAG = true;
+                // 停止所有Block
+                foreach (var target in BlockDic.Values)
+                {
+                    target.Complete();
                 }
             }
         }
@@ -783,7 +776,7 @@ internal class SimpleLiveRecordManager2
             Logger.WarnMarkUp($"set refresh interval to {WAIT_SEC} seconds");
         }
         // 如果没有选中音频 取消通过音频修复vtt时间轴
-        if (!SelectedSteams.Any(x => x.MediaType == MediaType.AUDIO))
+        if (SelectedSteams.All(x => x.MediaType != MediaType.AUDIO))
         {
             DownloaderConfig.MyOptions.LiveFixVttByAudio = false;
         }
@@ -839,7 +832,7 @@ internal class SimpleLiveRecordManager2
 
             DownloaderConfig.MyOptions.ConcurrentDownload = true;
             DownloaderConfig.MyOptions.MP4RealTimeDecryption = true;
-            DownloaderConfig.MyOptions.LiveRecordLimit = DownloaderConfig.MyOptions.LiveRecordLimit ?? TimeSpan.MaxValue;
+            DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
             if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
             var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
@@ -865,7 +858,7 @@ internal class SimpleLiveRecordManager2
         var success = Results.Values.All(v => v == true);
 
         // 删除临时文件夹
-        if (!DownloaderConfig.MyOptions.SkipMerge && DownloaderConfig.MyOptions.DelAfterDone && success)
+        if (DownloaderConfig.MyOptions is { SkipMerge: false, DelAfterDone: true } && success)
         {
             foreach (var item in StreamExtractor.RawFiles)
             {

@@ -9,5 +9,5 @@ internal class OutputFile
     public required string FilePath { get; set; }
     public string? LangCode { get; set; }
     public string? Description { get; set; }
-    public List<Mediainfo> Mediainfos { get; set; } = new();
+    public List<Mediainfo> Mediainfos { get; set; } = [];
 }

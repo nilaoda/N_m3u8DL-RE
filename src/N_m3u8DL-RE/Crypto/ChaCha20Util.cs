@@ -2,7 +2,7 @@
 
 namespace N_m3u8DL_RE.Crypto;
 
-internal class ChaCha20Util
+internal static class ChaCha20Util
 {
     public static byte[] DecryptPer1024Bytes(byte[] encryptedBuff, byte[] keyBytes, byte[] nonceBytes)
     {

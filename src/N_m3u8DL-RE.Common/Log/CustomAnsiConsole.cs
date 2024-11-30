@@ -4,7 +4,7 @@ using Spectre.Console;
 
 namespace N_m3u8DL_RE.Common.Log;
 
-public class NonAnsiWriter : TextWriter
+public partial class NonAnsiWriter : TextWriter
 {
     public override Encoding Encoding => Console.OutputEncoding;
 
@@ -28,15 +28,22 @@ public class NonAnsiWriter : TextWriter
     private void RemoveAnsiEscapeSequences(string? input)
     {
         // Use regular expression to remove ANSI escape sequences
-        string output = Regex.Replace(input ?? "", @"\x1B\[(\d+;?)+m", "");
-        output = Regex.Replace(output, @"\[\??\d+[AKlh]", "");
-        output = Regex.Replace(output,"[\r\n] +","");
+        var output = MyRegex().Replace(input ?? "", "");
+        output = MyRegex1().Replace(output, "");
+        output = MyRegex2().Replace(output, "");
         if (string.IsNullOrWhiteSpace(output))
         {
             return;
         }
         Console.Write(output);
     }
+
+    [GeneratedRegex(@"\x1B\[(\d+;?)+m")]
+    private static partial Regex MyRegex();
+    [GeneratedRegex(@"\[\??\d+[AKlh]")]
+    private static partial Regex MyRegex1();
+    [GeneratedRegex("[\r\n] +")]
+    private static partial Regex MyRegex2();
 }
 
 /// <summary>

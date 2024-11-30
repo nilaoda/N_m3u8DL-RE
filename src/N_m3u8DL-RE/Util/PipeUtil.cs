@@ -14,24 +14,22 @@ internal static class PipeUtil
         {
             return new NamedPipeServerStream(pipeName, PipeDirection.InOut);
         }
-        else
+
+        var path = Path.Combine(Path.GetTempPath(), pipeName);
+        using var p = new Process();
+        p.StartInfo = new ProcessStartInfo()
         {
-            var path = Path.Combine(Path.GetTempPath(), pipeName);
-            using var p = new Process();
-            p.StartInfo = new ProcessStartInfo()
-            {
-                FileName = "mkfifo",
-                Arguments = path,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-            };
-            p.Start();
-            p.WaitForExit();
-            Thread.Sleep(200);
-            return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-        }
+            FileName = "mkfifo",
+            Arguments = path,
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+        };
+        p.Start();
+        p.WaitForExit();
+        Thread.Sleep(200);
+        return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
     }
 
     public static async Task<bool> StartPipeMuxAsync(string binary, string[] pipeNames, string outputPath)
@@ -77,7 +75,7 @@ internal static class PipeUtil
 
         if (!string.IsNullOrEmpty(customDest))
         {
-            if (customDest.Trim().StartsWith("-"))
+            if (customDest.Trim().StartsWith('-'))
                 command.Append(customDest);
             else
                 command.Append($" -f mpegts -shortest \"{customDest}\"");

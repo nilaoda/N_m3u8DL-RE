@@ -25,7 +25,7 @@ internal static class DownloadUtil
         {
             var buffer = new byte[expect];
             _ = await inputStream.ReadAsync(buffer);
-            await outputStream.WriteAsync(buffer, 0, buffer.Length);
+            await outputStream.WriteAsync(buffer);
             speedContainer.Add(buffer.Length);
         }
         return new DownloadResult()
@@ -81,7 +81,7 @@ internal static class DownloadUtil
             {
                 HttpResponseHeaders respHeaders = response.Headers;
                 Logger.Debug(respHeaders.ToString());
-                if (respHeaders != null && respHeaders.Location != null)
+                if (respHeaders.Location != null)
                 {
                     var redirectedUrl = "";
                     if (!respHeaders.Location.IsAbsoluteUri)
@@ -108,7 +108,7 @@ internal static class DownloadUtil
 
             size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token);
             speedContainer.Add(size);
-            await stream.WriteAsync(buffer, 0, size);
+            await stream.WriteAsync(buffer.AsMemory(0, size));
             // 检测imageHeader
             bool imageHeader = ImageHeaderUtil.IsImageHeader(buffer);
             // 检测GZip（For DDP Audio）
@@ -117,7 +117,7 @@ internal static class DownloadUtil
             while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
             {
                 speedContainer.Add(size);
-                await stream.WriteAsync(buffer, 0, size);
+                await stream.WriteAsync(buffer.AsMemory(0, size));
                 // 限速策略
                 while (speedContainer.Downloaded > speedContainer.SpeedLimit)
                 {

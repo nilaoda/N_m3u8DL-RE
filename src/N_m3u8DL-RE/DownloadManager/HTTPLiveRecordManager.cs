@@ -20,7 +20,7 @@ internal class HTTPLiveRecordManager
     DownloaderConfig DownloaderConfig;
     StreamExtractor StreamExtractor;
     List<StreamSpec> SelectedSteams;
-    List<OutputFile> OutputFiles = new();
+    List<OutputFile> OutputFiles = [];
     DateTime NowDateTime;
     DateTime? PublishDateTime;
     bool STOP_FLAG = false;
@@ -107,7 +107,7 @@ internal class HTTPLiveRecordManager
             await Task.Delay(200);
             if (InfoBuffer.Count < 188 * 5000) continue;
 
-            UInt16 ConvertToUint16(IEnumerable<byte> bytes)
+            ushort ConvertToUint16(IEnumerable<byte> bytes)
             {
                 if (BitConverter.IsLittleEndian)
                     bytes = bytes.Reverse();
@@ -217,7 +217,7 @@ internal class HTTPLiveRecordManager
                 return (item, task);
             }).ToDictionary(item => item.item, item => item.task);
 
-            DownloaderConfig.MyOptions.LiveRecordLimit = DownloaderConfig.MyOptions.LiveRecordLimit ?? TimeSpan.MaxValue;
+            DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
             var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
             if (limit != TimeSpan.MaxValue)
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");

@@ -1,13 +1,4 @@
-﻿using NiL.JS.Statements;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace N_m3u8DL_RE.Entity;
+﻿namespace N_m3u8DL_RE.Entity;
 
 internal class SpeedContainer
 {
@@ -24,7 +15,7 @@ internal class SpeedContainer
 
     private long _downloaded = 0;
     private long _Rdownloaded = 0;
-    public long Downloaded { get => _downloaded; }
+    public long Downloaded => _downloaded;
 
     public int AddLowSpeedCount()
     {

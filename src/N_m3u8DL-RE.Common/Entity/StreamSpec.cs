@@ -46,12 +46,12 @@ public class StreamSpec
     /// <summary>
     /// URL
     /// </summary>
-    public string Url { get; set; }
+    public string Url { get; set; } = string.Empty;
 
     /// <summary>
     /// 原始URL
     /// </summary>
-    public string OriginalUrl { get; set; }
+    public string OriginalUrl { get; set; } = string.Empty;
 
     public Playlist? Playlist { get; set; }
 

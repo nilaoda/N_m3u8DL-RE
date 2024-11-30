@@ -25,23 +25,25 @@ internal class SimpleDownloader : IDownloader
     {
         var url = segment.Url;
         var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
-        if (dResult != null && dResult.Success && dResult.ActualFilePath != des)
+        if (dResult is { Success: true } && dResult.ActualFilePath != des)
         {
-            if (segment.EncryptInfo != null)
+            switch (segment.EncryptInfo.Method)
             {
-                if (segment.EncryptInfo.Method == EncryptMethod.AES_128)
+                case EncryptMethod.AES_128:
                 {
                     var key = segment.EncryptInfo.Key;
                     var iv = segment.EncryptInfo.IV;
                     AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
+                    break;
                 }
-                else if (segment.EncryptInfo.Method == EncryptMethod.AES_128_ECB)
+                case EncryptMethod.AES_128_ECB:
                 {
                     var key = segment.EncryptInfo.Key;
                     var iv = segment.EncryptInfo.IV;
                     AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
+                    break;
                 }
-                else if (segment.EncryptInfo.Method == EncryptMethod.CHACHA20)
+                case EncryptMethod.CHACHA20:
                 {
                     var key = segment.EncryptInfo.Key;
                     var nonce = segment.EncryptInfo.IV;
@@ -49,22 +51,22 @@ internal class SimpleDownloader : IDownloader
                     var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
                     var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
                     await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
+                    break;
                 }
-                else if (segment.EncryptInfo.Method == EncryptMethod.SAMPLE_AES_CTR)
-                {
+                case EncryptMethod.SAMPLE_AES_CTR:
                     // throw new NotSupportedException("SAMPLE-AES-CTR");
-                }
+                    break;
+            }
 
-                // Image头处理
-                if (dResult.ImageHeader)
-                {
-                    await ImageHeaderUtil.ProcessAsync(dResult.ActualFilePath);
-                }
-                // Gzip解压
-                if (dResult.GzipHeader)
-                {
-                    await OtherUtil.DeGzipFileAsync(dResult.ActualFilePath);
-                }
+            // Image头处理
+            if (dResult.ImageHeader)
+            {
+                await ImageHeaderUtil.ProcessAsync(dResult.ActualFilePath);
+            }
+            // Gzip解压
+            if (dResult.GzipHeader)
+            {
+                await OtherUtil.DeGzipFileAsync(dResult.ActualFilePath);
             }
 
             // 处理完成后改名
@@ -99,14 +101,15 @@ internal class SimpleDownloader : IDownloader
             }
 
             // 另起线程进行监控
+            var cts = cancellationTokenSource;
             using var watcher = Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
-                    if (cancellationTokenSource == null || cancellationTokenSource.IsCancellationRequested) break;
+                    if (cts.IsCancellationRequested) break;
                     if (speedContainer.ShouldStop)
                     {
-                        cancellationTokenSource.Cancel();
+                        cts.Cancel();
                         Logger.DebugMarkUp("Cancel...");
                         break;
                     }
@@ -123,7 +126,7 @@ internal class SimpleDownloader : IDownloader
         catch (Exception ex)
         {
             Logger.DebugMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
-            Logger.Debug(url + " " + ex.ToString());
+            Logger.Debug(url + " " + ex);
             Logger.Extra($"Ah oh!{Environment.NewLine}RetryCount => {retryCount}{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
             if (retryCount-- > 0)
             {

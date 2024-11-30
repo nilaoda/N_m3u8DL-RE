@@ -99,7 +99,7 @@ public static class HTTPUtil
     private static bool CheckMPEG2TS(HttpResponseMessage? webResponse)
     {
         var mediaType = webResponse?.Content.Headers.ContentType?.MediaType?.ToLower();
-        return mediaType == "video/ts" || mediaType == "video/mp2t" || mediaType == "video/mpeg";
+        return mediaType is "video/ts" or "video/mp2t" or "video/mpeg";
     }
 
     /// <summary>

@@ -3,5 +3,5 @@
 // 主要处理 EXT-X-DISCONTINUITY
 public class MediaPart
 {
-    public List<MediaSegment> MediaSegments { get; set; } = new List<MediaSegment>();
+    public List<MediaSegment> MediaSegments { get; set; } = [];
 }

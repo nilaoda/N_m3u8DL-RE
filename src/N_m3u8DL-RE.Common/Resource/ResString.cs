@@ -2,7 +2,7 @@
 
 public static class ResString
 {
-    public static string CurrentLoc = "en-US";
+    public static string CurrentLoc { get; set; } = "en-US";
 
     public static readonly string ReLiveTs = "<RE_LIVE_TS>";
     public static string singleFileRealtimeDecryptWarn => GetText("singleFileRealtimeDecryptWarn");
@@ -140,13 +140,11 @@ public static class ResString
 
     private static string GetText(string key)
     {
-        if (!StaticText.LANG_DIC.ContainsKey(key))
+        if (!StaticText.LANG_DIC.TryGetValue(key, out var textObj))
             return "<...LANG TEXT MISSING...>";
 
-        if (CurrentLoc == "zh-CN" || CurrentLoc == "zh-SG" || CurrentLoc == "zh-Hans")
-            return StaticText.LANG_DIC[key].ZH_CN;
-        if (CurrentLoc.StartsWith("zh-"))
-            return StaticText.LANG_DIC[key].ZH_TW;
-        return StaticText.LANG_DIC[key].EN_US;
+        if (CurrentLoc is "zh-CN" or "zh-SG" or "zh-Hans")
+            return textObj.ZH_CN;
+        return CurrentLoc.StartsWith("zh-") ? textObj.ZH_TW : textObj.EN_US;
     }
 }

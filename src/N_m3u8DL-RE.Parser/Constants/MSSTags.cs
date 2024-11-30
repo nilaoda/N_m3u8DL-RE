@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace N_m3u8DL_RE.Parser.Constants;
 
-namespace N_m3u8DL_RE.Parser.Constants;
-
-internal class MSSTags
+internal static class MSSTags
 {
-    public static string Bitrate = "{Bitrate}";
-    public static string Bitrate_BK = "{bitrate}";
-    public static string StartTime = "{start_time}";
-    public static string StartTime_BK = "{start time}";
+    public const string Bitrate = "{Bitrate}";
+    public const string Bitrate_BK = "{bitrate}";
+    public const string StartTime = "{start_time}";
+    public const string StartTime_BK = "{start time}";
 }

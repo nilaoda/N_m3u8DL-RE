@@ -4,7 +4,7 @@ namespace N_m3u8DL_RE.CommandLine;
 
 internal class ComplexParamParser
 {
-    private string _arg;
+    private readonly string _arg;
     public ComplexParamParser(string arg)
     {
         _arg = arg;
@@ -16,7 +16,7 @@ internal class ComplexParamParser
 
         try
         {
-            var index = _arg.IndexOf(key + "=");
+            var index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
             if (index == -1) return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
 
             var chars = _arg[(index + key.Length + 1)..].ToCharArray();

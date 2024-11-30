@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace N_m3u8DL_RE.Common.Resource;
 
-namespace N_m3u8DL_RE.Common.Resource;
-
-internal class StaticText
+internal static class StaticText
 {
-    public static Dictionary<string, TextContainer> LANG_DIC = new()
+    public static readonly Dictionary<string, TextContainer> LANG_DIC = new()
     {
         ["singleFileSplitWarn"] = new TextContainer
         (
@@ -228,9 +222,9 @@ internal class StaticText
         ),
         ["cmd_decryptionBinaryPath"] = new TextContainer
         (
-            zhCN: "MP4解密所用工具的全路径, 例如 C:\\Tools\\mp4decrypt.exe",
-            zhTW: "MP4解密所用工具的全路徑, 例如 C:\\Tools\\mp4decrypt.exe",
-            enUS: "Full path to the tool used for MP4 decryption, like C:\\Tools\\mp4decrypt.exe"
+            zhCN: @"MP4解密所用工具的全路径, 例如 C:\Tools\mp4decrypt.exe",
+            zhTW: @"MP4解密所用工具的全路徑, 例如 C:\Tools\mp4decrypt.exe",
+            enUS: @"Full path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe"
         ),
         ["cmd_delAfterDone"] = new TextContainer
         (
@@ -240,15 +234,15 @@ internal class StaticText
         ),
         ["cmd_ffmpegBinaryPath"] = new TextContainer
         (
-            zhCN: "ffmpeg可执行程序全路径, 例如 C:\\Tools\\ffmpeg.exe",
-            zhTW: "ffmpeg可執行程序全路徑, 例如 C:\\Tools\\ffmpeg.exe",
-            enUS: "Full path to the ffmpeg binary, like C:\\Tools\\ffmpeg.exe"
+            zhCN: @"ffmpeg可执行程序全路径, 例如 C:\Tools\ffmpeg.exe",
+            zhTW: @"ffmpeg可執行程序全路徑, 例如 C:\Tools\ffmpeg.exe",
+            enUS: @"Full path to the ffmpeg binary, like C:\Tools\ffmpeg.exe"
         ),
         ["cmd_mkvmergeBinaryPath"] = new TextContainer
         (
-            zhCN: "mkvmerge可执行程序全路径, 例如 C:\\Tools\\mkvmerge.exe",
-            zhTW: "mkvmerge可執行程序全路徑, 例如 C:\\Tools\\mkvmerge.exe",
-            enUS: "Full path to the mkvmerge binary, like C:\\Tools\\mkvmerge.exe"
+            zhCN: @"mkvmerge可执行程序全路径, 例如 C:\Tools\mkvmerge.exe",
+            zhTW: @"mkvmerge可執行程序全路徑, 例如 C:\Tools\mkvmerge.exe",
+            enUS: @"Full path to the mkvmerge binary, like C:\Tools\mkvmerge.exe"
         ),
         ["cmd_liveFixVttByAudio"] = new TextContainer
         (

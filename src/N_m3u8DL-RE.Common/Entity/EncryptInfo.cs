@@ -1,9 +1,4 @@
 ﻿using N_m3u8DL_RE.Common.Enum;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace N_m3u8DL_RE.Common.Entity;
 
@@ -34,9 +29,6 @@ public class EncryptInfo
         {
             return m;
         }
-        else
-        {
-            return EncryptMethod.UNKNOWN;
-        }
+        return EncryptMethod.UNKNOWN;
     }
 }

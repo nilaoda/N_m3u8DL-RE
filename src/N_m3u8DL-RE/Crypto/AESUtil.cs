@@ -2,7 +2,7 @@
 
 namespace N_m3u8DL_RE.Crypto;
 
-internal class AESUtil
+internal static class AESUtil
 {
     /// <summary>
     /// AES-128解密，解密后原地替换文件

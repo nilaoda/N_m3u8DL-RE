@@ -7,7 +7,7 @@ using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util;
 
-internal static class MP4DecryptUtil
+internal static partial class MP4DecryptUtil
 {
     private static readonly string ZeroKid = "00000000000000000000000000000000";
     public static async Task<bool> DecryptAsync(DecryptEngine decryptEngine, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
@@ -29,7 +29,7 @@ internal static class MP4DecryptUtil
         if (!string.IsNullOrEmpty(kid))
         {
             var test = keyPairs.Where(k => k.StartsWith(kid)).ToList();
-            if (test.Any()) keyPair = test.First();
+            if (test.Count != 0) keyPair = test.First();
         }
 
         // Apple
@@ -159,11 +159,10 @@ internal static class MP4DecryptUtil
             using var reader = new StreamReader(stream);
             while (await reader.ReadLineAsync() is { } line)
             {
-                if (line.Trim().StartsWith(kid))
-                {
-                    Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
-                    return line.Trim();
-                }
+                if (!line.Trim().StartsWith(kid)) continue;
+                
+                Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
+                return line.Trim();
             }
         }
         catch (Exception ex)
@@ -192,7 +191,7 @@ internal static class MP4DecryptUtil
 
     public static string? ReadInitShaka(string output, string bin)
     {
-        Regex shakaKeyIdRegex = new("Key for key_id=([0-9a-f]+) was not found");
+        Regex shakaKeyIdRegex = KidOutputRegex();
 
         // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
         //       - stop process
@@ -214,4 +213,7 @@ internal static class MP4DecryptUtil
         p.WaitForExit();
         return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;
     }
+
+    [GeneratedRegex("Key for key_id=([0-9a-f]+) was not found")]
+    private static partial Regex KidOutputRegex();
 }
