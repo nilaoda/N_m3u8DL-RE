@@ -105,6 +105,9 @@ public static class ResString
     public static string fetch => GetText("fetch");
     public static string ffmpegMerge => GetText("ffmpegMerge");
     public static string ffmpegNotFound => GetText("ffmpegNotFound");
+    public static string mkvmergeNotFound => GetText("mkvmergeNotFound");
+    public static string mp4decryptNotFound => GetText("mp4decryptNotFound");
+    public static string shakaPackagerNotFound => GetText("shakaPackagerNotFound");
     public static string fixingTTML => GetText("fixingTTML");
     public static string fixingTTMLmp4 => GetText("fixingTTMLmp4");
     public static string fixingVTT => GetText("fixingVTT");

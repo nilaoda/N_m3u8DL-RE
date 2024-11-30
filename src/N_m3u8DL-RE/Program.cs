@@ -139,7 +139,7 @@ internal class Program
             option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
             if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
             {
-                throw new FileNotFoundException("mkvmerge not found");
+                throw new FileNotFoundException(ResString.mkvmergeNotFound);
             }
             Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
         }
@@ -155,14 +155,14 @@ internal class Program
                     var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
                     var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
                     var file4 = GlobalUtil.FindExecutable("packager-win-x64");
-                    if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException("shaka-packager not found!");
+                    if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException(ResString.shakaPackagerNotFound);
                     option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
                     Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                 }
                 else if (option.DecryptionEngine is DecryptEngine.MP4DECRYPT)
                 {
                     var file = GlobalUtil.FindExecutable("mp4decrypt");
-                    if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
+                    if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
                     option.DecryptionBinaryPath = file;
                     Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
                 }

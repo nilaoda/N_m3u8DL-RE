@@ -784,6 +784,24 @@ internal class StaticText
             zhTW: "找不到ffmpeg，請自行下載：https://ffmpeg.org/download.html",
             enUS: "ffmpeg not found, please download at: https://ffmpeg.org/download.html"
         ),
+        ["mkvmergeNotFound"] = new TextContainer
+        (
+            zhCN: "找不到mkvmerge，请自行下载：https://mkvtoolnix.download/downloads.html",
+            zhTW: "找不到mkvmerge，請自行下載：https://mkvtoolnix.download/downloads.html",
+            enUS: "mkvmerge not found, please download at: https://mkvtoolnix.download/downloads.html"
+        ),
+        ["shakaPackagerNotFound"] = new TextContainer
+        (
+            zhCN: "找不到shaka-packager，请自行下载：https://github.com/shaka-project/shaka-packager/releases",
+            zhTW: "找不到shaka-packager，請自行下載：https://github.com/shaka-project/shaka-packager/releases",
+            enUS: "shaka-packager not found, please download at: https://github.com/shaka-project/shaka-packager/releases"
+        ),
+        ["mp4decryptNotFound"] = new TextContainer
+        (
+            zhCN: "找不到mp4decrypt，请自行下载：https://www.bento4.com/downloads/",
+            zhTW: "找不到mp4decrypt，請自行下載：https://www.bento4.com/downloads/",
+            enUS: "mp4decrypt not found, please download at: https://www.bento4.com/downloads/"
+        ),
         ["fixingTTML"] = new TextContainer
         (
             zhCN: "正在提取TTML(raw)字幕...",
