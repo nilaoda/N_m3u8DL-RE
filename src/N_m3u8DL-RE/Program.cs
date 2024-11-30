@@ -115,11 +115,6 @@ internal class Program
         {
             option.DecryptionEngine = DecryptEngine.SHAKA_PACKAGER;
         }
-        
-        if (option is { UseShakaPackager: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER })
-        {
-            throw new ArgumentException("UseShakaPackager and Mp4DecryptEngine not match!");
-        }
 
         // LivePipeMux开启时 LiveRealTimeMerge必须开启
         if (option is { LivePipeMux: true, LiveRealTimeMerge: false })
@@ -139,7 +134,7 @@ internal class Program
         Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
 
         // 预先检查mkvmerge
-        if (option.MuxOptions != null && option.MuxOptions.UseMkvmerge && option.MuxAfterDone)
+        if (option is { MuxOptions.UseMkvmerge: true, MuxAfterDone: true })
         {
             option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
             if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
