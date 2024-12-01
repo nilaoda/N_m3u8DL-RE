@@ -55,13 +55,13 @@ jobs:
       - name: Package [win-x86]
         run: |
           cd artifact-x86
-          zip ../N_m3u8DL-RE_Beta_win-NT6.0-x86_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
+          zip ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_win-NT6.0-x86_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
 
       - name: Upload Artifact[win-x86]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: win-NT6.0-x86
-          path: N_m3u8DL-RE_Beta_win-NT6.0-x86_${{ needs.set-date.outputs.date }}.zip
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_win-NT6.0-x86_${{ needs.set-date.outputs.date }}.zip
 
   build-win-x64-arm64:
     runs-on: windows-latest
@@ -84,21 +84,21 @@ jobs:
       - name: Package [win]
         run: |
           cd artifact-x64
-          zip ../N_m3u8DL-RE_Beta_win-x64_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
+          zip ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_win-x64_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
           cd ../artifact-arm64
-          zip ../N_m3u8DL-RE_Beta_win-arm64_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
+          zip ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_win-arm64_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
 
       - name: Upload Artifact [win-x64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: win-x64
-          path: N_m3u8DL-RE_Beta_win-x64_${{ needs.set-date.outputs.date }}.zip
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_win-x64_${{ needs.set-date.outputs.date }}.zip
 
       - name: Upload Artifact [win-arm64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: win-arm64
-          path: N_m3u8DL-RE_Beta_win-arm64_${{ needs.set-date.outputs.date }}.zip
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_win-arm64_${{ needs.set-date.outputs.date }}.zip
 
   build-linux-x64-arm64:
     runs-on: ubuntu-latest
@@ -130,21 +130,21 @@ jobs:
       - name: Package [linux]
         run: |
           cd artifact
-          tar -czvf ../N_m3u8DL-RE_Beta_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
           cd ../artifact-arm64
-          tar -czvf ../N_m3u8DL-RE_Beta_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-x64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: linux-x64
-          path: N_m3u8DL-RE_Beta_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
       - name: Upload Artifact[linux-arm64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: linux-arm64
-          path: N_m3u8DL-RE_Beta_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz
 
   build-android-bionic-x64-arm64:
     runs-on: windows-latest
@@ -175,21 +175,21 @@ jobs:
       - name: Package [linux-bionic]
         run: |
           cd artifact
-          tar -czvf ../N_m3u8DL-RE_Beta_android-bionic-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_android-bionic-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
           cd ../artifact-arm64
-          tar -czvf ../N_m3u8DL-RE_Beta_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-bionic-x64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: android-bionic-x64
-          path: N_m3u8DL-RE_Beta_android-bionic-x64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_android-bionic-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
       - name: Upload Artifact[linux-bionic-arm64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: android-bionic-arm64
-          path: N_m3u8DL-RE_Beta_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz
 
   build-linux-musl-x64:
     runs-on: ubuntu-latest
@@ -205,13 +205,13 @@ jobs:
       - name: Package [linux-musl-x64]
         run: |
           cd artifact
-          tar -czvf ../N_m3u8DL-RE_Beta_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-musl-x64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: linux-musl-x64
-          path: N_m3u8DL-RE_Beta_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
   build-linux-musl-arm64:
     runs-on: ubuntu-latest
@@ -233,13 +233,13 @@ jobs:
       - name: Package [linux-musl-arm64]
         run: |
           cd artifact
-          tar -czvf ../N_m3u8DL-RE_Beta_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-musl-arm64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: linux-musl-arm64
-          path: N_m3u8DL-RE_Beta_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz
 
   build-mac-x64-arm64:
     runs-on: macos-latest
@@ -258,21 +258,21 @@ jobs:
       - name: Package [osx]
         run: |
           cd artifact-x64
-          tar -czvf ../N_m3u8DL-RE_Beta_osx-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_osx-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
           cd ../artifact-arm64
-          tar -czvf ../N_m3u8DL-RE_Beta_osx-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ github.event.inputs.tag }}_osx-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [osx-x64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: osx-x64
-          path: N_m3u8DL-RE_Beta_osx-x64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_osx-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
       - name: Upload Artifact[osx-arm64]
         uses: actions/upload-artifact@v3.1.3
         with:
           name: osx-arm64
-          path: N_m3u8DL-RE_Beta_osx-arm64_${{ needs.set-date.outputs.date }}.tar.gz
+          path: N_m3u8DL-RE_${{ github.event.inputs.tag }}_osx-arm64_${{ needs.set-date.outputs.date }}.tar.gz
 
   create_release:
     name: Create release
