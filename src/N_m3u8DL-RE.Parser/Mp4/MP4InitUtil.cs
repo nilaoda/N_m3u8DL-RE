@@ -72,7 +72,7 @@ namespace Mp4SubtitleParser
             // if (info.Scheme != "cenc") return;
 
             // find KID
-            byte[] tencBytes = [0x74, 0x65, 0x6E, 0x6];
+            byte[] tencBytes = [0x74, 0x65, 0x6E, 0x63];
             var tencIndex = -1;
             for (int i = 0; i < data.Length - 4; i++)
             {
