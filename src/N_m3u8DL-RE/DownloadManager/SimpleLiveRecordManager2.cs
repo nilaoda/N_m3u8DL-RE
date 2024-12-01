@@ -552,7 +552,7 @@ internal class SimpleLiveRecordManager2
                     if (initResult != null && mp4InitFile != "")
                     {
                         // shaka/ffmpeg实时解密不需要init文件用于合并，mp4decrpyt需要
-                        if (decryptEngine != DecryptEngine.MP4DECRYPT)
+                        if (string.IsNullOrEmpty(currentKID) || decryptEngine == DecryptEngine.MP4DECRYPT)
                         {
                             files = [initResult.ActualFilePath, ..files];
                         }
