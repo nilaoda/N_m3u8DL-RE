@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Parser.Config;
+﻿using System.Globalization;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser;
@@ -49,6 +50,17 @@ internal class Program
         }
         
         ResString.CurrentLoc = loc;
+
+        try
+        {
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
+            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
+        }
+        catch 
+        {
+            // Culture not work on NT6.0, so catch the exception
+        }
 
         await CommandInvoker.InvokeArgs(args, DoWorkAsync);
     }
