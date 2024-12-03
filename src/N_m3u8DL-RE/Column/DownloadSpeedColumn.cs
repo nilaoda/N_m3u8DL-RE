@@ -43,6 +43,6 @@ internal sealed class DownloadSpeedColumn : ProgressColumn
         }
         DateTimeStringDic[taskId] = now;
         var style = flag ? Style.Plain : MyStyle;
-        return flag ? new Text("-", style).Centered() : new Text(GlobalUtil.FormatFileSize(speedContainer.NowSpeed) + (speedContainer.LowSpeedCount > 0 ? $"({speedContainer.LowSpeedCount})" : ""), style).Centered();
+        return flag ? new Text("-", style).Centered() : new Text(GlobalUtil.FormatFileSize(speedContainer.NowSpeed) + "ps" + (speedContainer.LowSpeedCount > 0 ? $"({speedContainer.LowSpeedCount})" : ""), style).Centered();
     }
 }
