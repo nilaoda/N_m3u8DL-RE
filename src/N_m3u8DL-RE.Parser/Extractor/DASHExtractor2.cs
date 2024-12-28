@@ -178,8 +178,8 @@ internal partial class DASHExtractor2 : IExtractor
                     var role = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "Role") ?? adaptationSet.Elements().FirstOrDefault(e => e.Name.LocalName == "Role");
                     if (role != null)
                     {
-                        var v = role.Attribute("value")?.Value;
-                        if (Enum.TryParse(v, true, out RoleType roleType))
+                        var roleValue = role.Attribute("value")?.Value;
+                        if (Enum.TryParse(roleValue, true, out RoleType roleType))
                         {
                             streamSpec.Role = roleType;
 
@@ -188,6 +188,21 @@ internal partial class DASHExtractor2 : IExtractor
                                 streamSpec.MediaType = MediaType.SUBTITLES;
                                 if (mType != null && mType.Contains("ttml"))
                                     streamSpec.Extension = "ttml";
+                            }
+                        }
+                        else if (roleValue != null && roleValue.Contains('-'))
+                        {
+                            roleValue = roleValue.Replace("-", "");
+                            if (Enum.TryParse(roleValue, true, out RoleType roleType_))
+                            {
+                                streamSpec.Role = roleType_;
+
+                                if (roleType_ == RoleType.ForcedSubtitle)
+                                {
+                                    streamSpec.MediaType = MediaType.SUBTITLES; // or maybe MediaType.CLOSED_CAPTIONS?
+                                    if (mType != null && mType.Contains("ttml"))
+                                        streamSpec.Extension = "ttml";
+                                }
                             }
                         }
                     }
