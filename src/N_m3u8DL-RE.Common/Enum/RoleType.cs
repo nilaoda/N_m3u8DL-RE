@@ -11,4 +11,5 @@ public enum RoleType
     Description = 6,
     Sign = 7,
     Metadata = 8,
+    ForcedSubtitle = 9
 }
