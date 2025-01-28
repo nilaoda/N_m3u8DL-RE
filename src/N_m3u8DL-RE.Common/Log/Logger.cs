@@ -22,7 +22,7 @@ public static partial class Logger
     /// <summary>
     /// 本次运行日志文件所在位置
     /// </summary>
-    private static string? LogFilePath { get; set; }
+    public static string? LogFilePath { get; set; }
 
     // 读写锁
     static ReaderWriterLockSlim LogWriteLock = new ReaderWriterLockSlim();
@@ -33,26 +33,30 @@ public static partial class Logger
 
         try
         {
-            var logDir = Path.GetDirectoryName(Environment.ProcessPath) + "/Logs";
+            var logDir = Path.GetDirectoryName(LogFilePath) ?? (Path.GetDirectoryName(Environment.ProcessPath) + "/Logs");
             if (!Directory.Exists(logDir))
             {
                 Directory.CreateDirectory(logDir);
             }
 
             var now = DateTime.Now;
-            LogFilePath = Path.Combine(logDir, now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".log");
-            int index = 1;
-            var fileName = Path.GetFileNameWithoutExtension(LogFilePath);
+            if (string.IsNullOrEmpty(LogFilePath))
+            {
+                LogFilePath = Path.Combine(logDir, now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".log");
+                int index = 1;
+                var fileName = Path.GetFileNameWithoutExtension(LogFilePath);
+                // 若文件存在则加序号
+                while (File.Exists(LogFilePath))
+                {
+                    LogFilePath = Path.Combine(Path.GetDirectoryName(LogFilePath)!, $"{fileName}-{index++}.log");
+                }
+            }
+
             string init = "LOG " + now.ToString("yyyy/MM/dd") + Environment.NewLine
                           + "Save Path: " + Path.GetDirectoryName(LogFilePath) + Environment.NewLine
                           + "Task Start: " + now.ToString("yyyy/MM/dd HH:mm:ss") + Environment.NewLine
                           + "Task CommandLine: " + Environment.CommandLine;
             init += $"{Environment.NewLine}{Environment.NewLine}";
-            // 若文件存在则加序号
-            while (File.Exists(LogFilePath))
-            {
-                LogFilePath = Path.Combine(Path.GetDirectoryName(LogFilePath)!, $"{fileName}-{index++}.log");
-            }
             File.WriteAllText(LogFilePath, init, Encoding.UTF8);
         }
         catch (Exception ex)
