@@ -547,10 +547,14 @@ internal class HLSExtractor : IExtractor
 
             var newPlaylist = await ParseListAsync();
             if (lists[i].Playlist?.MediaInit != null)
+            {
                 lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
+                lists[i].Playlist!.IsLive = newPlaylist.IsLive;
+            }
             else
+            {
                 lists[i].Playlist = newPlaylist;
-
+            }
             if (lists[i].MediaType == MediaType.SUBTITLES)
             {
                 var a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));

@@ -97,6 +97,7 @@ public static class ResString
     public static string liveLimit => GetText("liveLimit");
     public static string realTimeDecMessage => GetText("realTimeDecMessage");
     public static string liveLimitReached => GetText("liveLimitReached");
+    public static string liveFinished => GetText("liveFinished");
     public static string saveName => GetText("saveName");
     public static string taskStartAt => GetText("taskStartAt");
     public static string namedPipeCreated => GetText("namedPipeCreated");
