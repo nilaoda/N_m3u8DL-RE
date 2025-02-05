@@ -296,8 +296,18 @@ internal static partial class CommandInvoker
     private static string? ParseFilePath(ArgumentResult result)
     {
         var input = result.Tokens[0].Value;
-        var dir = Path.GetDirectoryName(input);
-        var filename = Path.GetFileName(input);
+        var path = "";
+        try
+        {
+            path = Path.GetFullPath(input);
+        }
+        catch (Exception e)
+        {
+            result.ErrorMessage = "Invalid log path!";
+            return null;
+        }
+        var dir = Path.GetDirectoryName(path);
+        var filename = Path.GetFileName(path);
         var newName = OtherUtil.GetValidFileName(filename);
         if (string.IsNullOrEmpty(newName))
         {
