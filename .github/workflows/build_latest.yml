@@ -71,7 +71,7 @@ jobs:
           zip ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_win-NT6.0-x86_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
 
       - name: Upload Artifact[win-x86]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: win-NT6.0-x86
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_win-NT6.0-x86_${{ needs.set-date.outputs.date }}.zip
@@ -102,13 +102,13 @@ jobs:
           zip ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_win-arm64_${{ needs.set-date.outputs.date }}.zip N_m3u8DL-RE.exe
 
       - name: Upload Artifact [win-x64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: win-x64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_win-x64_${{ needs.set-date.outputs.date }}.zip
 
       - name: Upload Artifact [win-arm64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: win-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_win-arm64_${{ needs.set-date.outputs.date }}.zip
@@ -148,13 +148,13 @@ jobs:
           tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-x64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-x64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
       - name: Upload Artifact[linux-arm64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz
@@ -193,13 +193,13 @@ jobs:
           tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-bionic-x64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: android-bionic-x64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_android-bionic-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
       - name: Upload Artifact[linux-bionic-arm64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: android-bionic-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz
@@ -221,7 +221,7 @@ jobs:
           tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-musl-x64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-musl-x64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz
@@ -249,7 +249,7 @@ jobs:
           tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [linux-musl-arm64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-musl-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz
@@ -276,13 +276,13 @@ jobs:
           tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_osx-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
       - name: Upload Artifact [osx-x64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: osx-x64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_osx-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
       - name: Upload Artifact[osx-arm64]
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4
         with:
           name: osx-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_osx-arm64_${{ needs.set-date.outputs.date }}.tar.gz
@@ -297,7 +297,7 @@ jobs:
     
     steps:
       - name: Fetch artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
