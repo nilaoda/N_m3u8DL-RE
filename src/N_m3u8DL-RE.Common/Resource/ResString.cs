@@ -62,6 +62,7 @@ public static class ResString
     public static string cmd_saveDir => GetText("cmd_saveDir");
     public static string cmd_saveName => GetText("cmd_saveName");
     public static string cmd_savePattern => GetText("cmd_savePattern");
+    public static string cmd_logFilePath => GetText("cmd_logFilePath");
     public static string cmd_skipDownload => GetText("cmd_skipDownload");
     public static string cmd_noDateInfo => GetText("cmd_noDateInfo");
     public static string cmd_noLog => GetText("cmd_noLog");

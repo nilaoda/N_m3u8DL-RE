@@ -31,6 +31,7 @@ internal static partial class CommandInvoker
     private static readonly Option<string?> SaveDir = new(["--save-dir"], description: ResString.cmd_saveDir);
     private static readonly Option<string?> SaveName = new(["--save-name"], description: ResString.cmd_saveName, parseArgument: ParseSaveName);
     private static readonly Option<string?> SavePattern = new(["--save-pattern"], description: ResString.cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
+    private static readonly Option<string?> LogFilePath = new(["--log-file-path"], description: ResString.cmd_logFilePath, parseArgument: ParseFilePath);
     private static readonly Option<string?> UILanguage = new Option<string?>(["--ui-language"], description: ResString.cmd_uiLanguage).FromAmong("en-US", "zh-CN", "zh-TW");
     private static readonly Option<string?> UrlProcessorArgs = new(["--urlprocessor-args"], description: ResString.cmd_urlProcessorArgs);
     private static readonly Option<string[]?> Keys = new(["--key"], description: ResString.cmd_keys) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
@@ -292,6 +293,30 @@ internal static partial class CommandInvoker
         return newName;
     }
 
+    private static string? ParseFilePath(ArgumentResult result)
+    {
+        var input = result.Tokens[0].Value;
+        var path = "";
+        try
+        {
+            path = Path.GetFullPath(input);
+        }
+        catch (Exception e)
+        {
+            result.ErrorMessage = "Invalid log path!";
+            return null;
+        }
+        var dir = Path.GetDirectoryName(path);
+        var filename = Path.GetFileName(path);
+        var newName = OtherUtil.GetValidFileName(filename);
+        if (string.IsNullOrEmpty(newName))
+        {
+            result.ErrorMessage = "Invalid log file name!";
+            return null;
+        }
+        return Path.Combine(dir!, newName);
+    }
+
     /// <summary>
     /// 流过滤器
     /// </summary>
@@ -515,6 +540,7 @@ internal static partial class CommandInvoker
                 TmpDir = bindingContext.ParseResult.GetValueForOption(TmpDir),
                 SaveDir = bindingContext.ParseResult.GetValueForOption(SaveDir),
                 SaveName = bindingContext.ParseResult.GetValueForOption(SaveName),
+                LogFilePath = bindingContext.ParseResult.GetValueForOption(LogFilePath),
                 ThreadCount = bindingContext.ParseResult.GetValueForOption(ThreadCount),
                 UILanguage = bindingContext.ParseResult.GetValueForOption(UILanguage),
                 SkipDownload = bindingContext.ParseResult.GetValueForOption(SkipDownload),
@@ -613,7 +639,7 @@ internal static partial class CommandInvoker
 
         var rootCommand = new RootCommand(VERSION_INFO)
         {
-            Input, TmpDir, SaveDir, SaveName, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+            Input, TmpDir, SaveDir, SaveName, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,

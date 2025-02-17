@@ -101,6 +101,7 @@ internal class Program
             _ = CheckUpdateAsync();
 
         Logger.IsWriteFile = !option.NoLog;
+        Logger.LogFilePath = option.LogFilePath;
         Logger.InitLogFile();
         Logger.LogLevel = option.LogLevel;
         Logger.Info(CommandInvoker.VERSION_INFO);

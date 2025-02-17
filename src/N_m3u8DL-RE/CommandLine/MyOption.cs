@@ -190,6 +190,10 @@ internal class MyOption
     /// </summary>
     public string? SavePattern { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.LogFilePath"/>.
+    /// </summary>
+    public string? LogFilePath { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.UILanguage"/>.
     /// </summary>
     public string? UILanguage { get; set; }

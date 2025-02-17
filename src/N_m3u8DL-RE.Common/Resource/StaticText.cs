@@ -310,6 +310,12 @@ internal static class StaticText
             zhTW: "",
             enUS: ""
         ),
+        ["cmd_logFilePath"] = new TextContainer
+        (
+            zhCN: "设置日志文件路径",
+            zhTW: "設定日誌檔案路徑",
+            enUS: "Set log file path"
+        ),
         ["cmd_skipDownload"] = new TextContainer
         (
             zhCN: "跳过下载",
