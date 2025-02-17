@@ -36,6 +36,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
     ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
+    ConcurrentDictionary<int, bool> LiveFinishedDic = new(); // 各流是否已完成
     ConcurrentDictionary<int, string> LastFileNameDic = new(); // 上次下载的文件名
     ConcurrentDictionary<int, long> MaxIndexDic = new(); // 最大Index
     ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
@@ -644,7 +645,6 @@ internal class SimpleLiveRecordManager2
         while (!STOP_FLAG)
         {
             if (WAIT_SEC == 0) continue;
-            
             // 1. MPD 所有URL相同 单次请求即可获得所有轨道的信息
             // 2. M3U8 所有URL不同 才需要多次请求
             await Parallel.ForEachAsync(dic, async (dic, _) =>
@@ -653,7 +653,7 @@ internal class SimpleLiveRecordManager2
                 var task = dic.Value;
 
                 // 达到上限时 不需要刷新了
-                if (RecordLimitReachedDic[task.Id])
+                if (RecordLimitReachedDic[task.Id] || LiveFinishedDic[task.Id])
                     return;
 
                 var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
@@ -679,10 +679,16 @@ internal class SimpleLiveRecordManager2
                     // 累加已获取到的时长
                     RefreshedDurDic[task.Id] += (int)newList.Sum(s => s.Duration);
                 }
+                else if (!streamSpec.Playlist!.IsLive && BlockDic[task.Id].Count == 0)
+                {
+                    LiveFinishedDic[task.Id] = true;
+                    BlockDic[task.Id].Complete();
+                }
 
                 if (!STOP_FLAG && RefreshedDurDic[task.Id] >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds)
                 {
                     RecordLimitReachedDic[task.Id] = true;
+                    BlockDic[task.Id].Complete();
                 }
 
                 // 检测时长限制
@@ -691,6 +697,13 @@ internal class SimpleLiveRecordManager2
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
                     STOP_FLAG = true;
                     CancellationTokenSource.Cancel();
+                }
+
+                // 检测直播是否已结束
+                if (!STOP_FLAG && LiveFinishedDic.Values.All(x => x))
+                {
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveFinished}[/]");
+                    STOP_FLAG = true;
                 }
             });
 
@@ -822,6 +835,7 @@ internal class SimpleLiveRecordManager2
                 }
                 LastFileNameDic[task.Id] = "";
                 RecordLimitReachedDic[task.Id] = false;
+                LiveFinishedDic[task.Id] = false;
                 DateTimeDic[task.Id] = 0L;
                 RecordedDurDic[task.Id] = 0;
                 RefreshedDurDic[task.Id] = 0;
