@@ -537,6 +537,15 @@ internal class SimpleLiveRecordManager2
                             var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
                             Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
                             var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, names, output);
+                            t.ContinueWith(task =>
+                            {
+                                if (task.IsFaulted)
+                                {
+                                    Logger.ErrorMarkUp($"Pipe mux error: {task.Exception!.InnerException!.Message}, exiting...");
+                                    Environment.Exit(1);
+                                }
+                            });
+
                         }
 
                         // Windows only

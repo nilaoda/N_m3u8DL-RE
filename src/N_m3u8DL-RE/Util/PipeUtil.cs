@@ -43,6 +43,20 @@ internal static class PipeUtil
 
     public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
     {
+        Process p = CreatePipeMux(binary, pipeNames, outputPath);
+        p.Start();
+        p.WaitForExit();
+        bool exitNormally = p.ExitCode == 0;
+        p.Dispose();
+        if (!exitNormally)
+        {
+            throw new Exception("FFmpeg pipe mux exit with non-zero exit code");
+        }
+        return exitNormally;
+    }
+
+    public static Process CreatePipeMux(string binary, string[] pipeNames, string outputPath)
+    {
         string dateString = DateTime.Now.ToString("o");
         StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
 
@@ -86,7 +100,7 @@ internal static class PipeUtil
             command.Append($" -f mpegts -shortest \"{outputPath}\"");
         }
 
-        using var p = new Process();
+        var p = new Process();
         p.StartInfo = new ProcessStartInfo()
         {
             WorkingDirectory = Environment.CurrentDirectory,
@@ -96,9 +110,6 @@ internal static class PipeUtil
             UseShellExecute = false
         };
         // p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
-        p.Start();
-        p.WaitForExit();
-
-        return p.ExitCode == 0;
+        return p;
     }
 }
