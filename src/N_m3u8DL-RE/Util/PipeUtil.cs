@@ -50,7 +50,7 @@ internal static class PipeUtil
         p.Dispose();
         if (!exitNormally)
         {
-            throw new Exception("FFmpeg pipe muxer exit with non-zero exit code");
+            throw new Exception("FFmpeg pipe mux exit with non-zero exit code");
         }
         return exitNormally;
     }
