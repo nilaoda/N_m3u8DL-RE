@@ -72,15 +72,19 @@ public static class SampleAesUtil
                     var streamType = pidMap[first.Header.Pid];
                     switch (streamType)
                     {
+                        case StreamType.H264:
                         case (StreamType)0xDB:
                             pesPacket.DecryptH264Video(aes);
                             break;
+                        case StreamType.Mpeg2AdtsAac:
                         case (StreamType)0xCF:
                             pesPacket.DecryptAacAudio(aes);
                             break;
+                        case StreamType.DolbyDigital:
                         case (StreamType)0xC1:
                             pesPacket.DecryptAc3Audio(aes);
                             break;
+                        case StreamType.DolbyDigitalPlus:
                         case (StreamType)0xC2:
                             pesPacket.DecryptEac3Audio(aes);
                             break;
