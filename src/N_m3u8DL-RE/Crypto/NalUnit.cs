@@ -7,11 +7,34 @@ class NalUnit
 {
     private static readonly byte[] SyncByteSeqStart = [0x00, 0x00, 0x00, 0x01];
     private static readonly byte[] SyncByteSeq = [0x00, 0x00, 0x01];
-    
-    public required NalUnitType Type { get; init; }
-    public required byte[] Data { get; set; }
-    public required int Length { get; set; }
-    public required int StartCodeLength { get; init; }
+
+    public NalUnitType Type;
+    public byte[] Data;
+    public int Length;
+    public int StartCodeLength;
+
+    public NalUnit(ref byte[] data)
+    {
+        var startCodeLength = GetStartCodeLength(data);
+        
+        var next = data.AsSpan(startCodeLength);
+
+        var index1 = next.IndexOf(SyncByteSeqStart.AsSpan());
+        var index2 = next.IndexOf(SyncByteSeq.AsSpan());
+        
+        var nextPos = index1 != -1 ? index1 + startCodeLength : index2 != -1 ? index2 + startCodeLength : data.Length;
+
+        next = data.AsSpan(nextPos).ToArray();
+        
+        var payload = data.AsSpan(startCodeLength, nextPos - startCodeLength);
+        Type = (NalUnitType)(payload[0] & 0x1f);
+        Data = payload.ToArray();
+        
+        Length = nextPos - startCodeLength;
+        StartCodeLength = startCodeLength;
+
+        data = next.ToArray();
+    }
     
     private static int GetStartCodeLength(ReadOnlySpan<byte> input)
     {
@@ -27,30 +50,7 @@ class NalUnit
             _ => throw new InvalidOperationException($"Invalid Start Code, {Convert.ToHexString(input[..4])}")
         };
     }
-    
-    public static (NalUnit Unit, byte[] Data) GetNext(byte[] data)
-    {
-        var startCodeLength = GetStartCodeLength(data);
-        
-        var next = data.AsSpan(startCodeLength);
 
-        var index1 = next.IndexOf(SyncByteSeqStart.AsSpan());
-        var index2 = next.IndexOf(SyncByteSeq.AsSpan());
-        
-        var nextPos = index1 != -1 ? index1 + startCodeLength : index2 != -1 ? index2 + startCodeLength : data.Length;
-
-        next = data.AsSpan(nextPos);
-        var payload = data.AsSpan(startCodeLength, nextPos - startCodeLength);
-
-        return (new NalUnit
-        {
-            Type = (NalUnitType)(payload[0] & 0x1f),
-            Data = payload.ToArray(),
-            Length = nextPos - startCodeLength,
-            StartCodeLength = startCodeLength
-        }, next.ToArray());
-    }
-    
     private void RemoveScep3Bytes()
     {
         int i = 0, j = 0;

@@ -108,18 +108,16 @@ public static class SampleAesUtil
     private static void DecryptH264Video(this PesPacket packet, Aes aes)
     {
         var bytes = new List<byte>();
-        
         var data = packet.Data!;
-        while (data.Length != 0 && NalUnit.GetNext(data) is var next)
+        
+        while (data.Length != 0 && new NalUnit(ref data) is var next)
         {
-            data = next.Data;
-            
-            if (next.Unit.Type is NalUnitType.CodedSliceNonIdr or NalUnitType.CodedSliceIdr)
+            if (next.Type is NalUnitType.CodedSliceNonIdr or NalUnitType.CodedSliceIdr)
             {
-                next.Unit.Decrypt(aes);
+                next.Decrypt(aes);
             }
 
-            bytes.AddRange(next.Unit.Write());
+            bytes.AddRange(next.Write());
         }
 
         packet.Data = bytes.ToArray();
