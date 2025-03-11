@@ -5,7 +5,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>N_m3u8DL_RE.Parser</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>preview</LangVersion>
+    <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

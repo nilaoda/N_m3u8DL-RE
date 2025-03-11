@@ -5,7 +5,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>N_m3u8DL_RE</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>preview</LangVersion>
+    <!-- 
+      When enabling LangVersion preview, that enables first class span's which then prefers MemoryExtensions.Contains over Enumerable.Contains
+      See details: https://github.com/dotnet/runtime/issues/109757
+    -->
+    <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
     <Version>0.3.0</Version>
     <Platforms>AnyCPU;x64</Platforms>
