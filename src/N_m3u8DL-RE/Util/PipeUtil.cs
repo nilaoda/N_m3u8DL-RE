@@ -3,6 +3,7 @@ using Spectre.Console;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
+using N_m3u8DL_RE.Config;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -43,11 +44,11 @@ internal static class PipeUtil
 
     public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
     {
-        string dateString = DateTime.Now.ToString("o");
-        StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
+        var dateString = DateTime.Now.ToString("o");
+        var command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
 
-        string customDest = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_OPTIONS");
-        string pipeDir = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_TMP_DIR", Path.GetTempPath());
+        var customDest = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeOptions);
+        var pipeDir = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeTmpDir, Path.GetTempPath());
 
         if (!string.IsNullOrEmpty(customDest))
         {
@@ -63,7 +64,7 @@ internal static class PipeUtil
                 command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
         }
 
-        for (int i = 0; i < pipeNames.Length; i++)
+        for (var i = 0; i < pipeNames.Length; i++)
         {
             command.Append($" -map {i} ");
         }

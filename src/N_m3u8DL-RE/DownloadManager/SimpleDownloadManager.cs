@@ -454,7 +454,9 @@ internal class SimpleDownloadManager
             // 处理图形字幕
             await SubtitleUtil.TryWriteImagePngsAsync(finalVtt, tmpDir);
 
-            foreach (var item in files) File.Delete(item);
+            var keepSegments = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReKeepImageSegments);
+            if (keepSegments != "1")
+                foreach (var item in files) File.Delete(item);
             FileDic.Clear();
             var index = 0;
             var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
@@ -506,7 +508,9 @@ internal class SimpleDownloadManager
             // 处理图形字幕
             await SubtitleUtil.TryWriteImagePngsAsync(finalVtt, tmpDir);
 
-            foreach (var item in files) File.Delete(item);
+            var keepSegments = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReKeepImageSegments);
+            if (keepSegments != "1")
+                foreach (var item in files) File.Delete(item);
             FileDic.Clear();
             var index = 0;
             var path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
