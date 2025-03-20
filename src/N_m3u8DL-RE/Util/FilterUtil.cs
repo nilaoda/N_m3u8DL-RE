@@ -70,9 +70,56 @@ public static class FilterUtil
         if (filter == null) return [..lists];
 
         var inputs = lists.Where(_ => true);
-        var selected = DoFilterKeep(lists, filter);
 
-        inputs = inputs.Where(i => selected.All(s => s.ToString() != i.ToString()));
+        //var selected = DoFilterKeep(lists, filter);
+        //inputs = inputs.Where(i => selected.All(s => s.ToString() != i.ToString()));
+
+        if (filter.GroupIdReg != null)
+            inputs = inputs.Where(i => i.GroupId == null || !filter.GroupIdReg.IsMatch(i.GroupId));
+        if (filter.LanguageReg != null)
+            inputs = inputs.Where(i => i.Language == null || !filter.LanguageReg.IsMatch(i.Language));
+        if (filter.NameReg != null)
+            inputs = inputs.Where(i => i.Name == null || !filter.NameReg.IsMatch(i.Name));
+        if (filter.CodecsReg != null)
+            inputs = inputs.Where(i => i.Codecs == null || !filter.CodecsReg.IsMatch(i.Codecs));
+        if (filter.ResolutionReg != null)
+            inputs = inputs.Where(i => i.Resolution == null || !filter.ResolutionReg.IsMatch(i.Resolution));
+        if (filter.FrameRateReg != null)
+            inputs = inputs.Where(i => i.FrameRate == null || !filter.FrameRateReg.IsMatch($"{i.FrameRate}"));
+        if (filter.ChannelsReg != null)
+            inputs = inputs.Where(i => i.Channels == null || !filter.ChannelsReg.IsMatch(i.Channels));
+        if (filter.VideoRangeReg != null)
+            inputs = inputs.Where(i => i.VideoRange == null || !filter.VideoRangeReg.IsMatch(i.VideoRange));
+        if (filter.UrlReg != null)
+            inputs = inputs.Where(i => i.Url == null || !filter.UrlReg.IsMatch(i.Url));
+        if (filter.PeriodReg != null)
+            inputs = inputs.Where(i => i.PeriodId == null || !filter.PeriodReg.IsMatch(i.PeriodId));
+        if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0))
+            inputs = inputs.Where(i => i.SegmentsCount >= filter.SegmentsMaxCount);
+        if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
+            inputs = inputs.Where(i => i.SegmentsCount <= filter.SegmentsMinCount);
+        if (filter.PlaylistMinDur != null)
+            inputs = inputs.Where(i => i.Playlist?.TotalDuration <= filter.PlaylistMinDur);
+        if (filter.PlaylistMaxDur != null)
+            inputs = inputs.Where(i => i.Playlist?.TotalDuration >= filter.PlaylistMaxDur);
+        if (filter.BandwidthMin != null)
+            inputs = inputs.Where(i => i.Bandwidth < filter.BandwidthMin);
+        if (filter.BandwidthMax != null)
+            inputs = inputs.Where(i => i.Bandwidth > filter.BandwidthMax);
+        if (filter.Role.HasValue)
+            inputs = inputs.Where(i => i.Role != filter.Role);
+
+        var bestNumberStr = filter.For.Replace("best", "");
+        var worstNumberStr = filter.For.Replace("worst", "");
+
+        if (filter.For == "best" && inputs.Any())
+            inputs = inputs.Take(1).ToList();
+        else if (filter.For == "worst" && inputs.Any())
+            inputs = inputs.TakeLast(1).ToList();
+        else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Any())
+            inputs = inputs.Take(bestNumber).ToList();
+        else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Any())
+            inputs = inputs.TakeLast(worstNumber).ToList();
 
         return inputs.ToList();
     }
