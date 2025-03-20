@@ -382,6 +382,10 @@ internal static partial class CommandInvoker
         if (!string.IsNullOrEmpty(url))
             streamFilter.UrlReg = new Regex(url);
 
+        var period = p.GetValue("period");
+        if (!string.IsNullOrEmpty(period))
+            streamFilter.PeriodReg = new Regex(period);
+
         var segsMin = p.GetValue("segsMin");
         if (!string.IsNullOrEmpty(segsMin))
             streamFilter.SegmentsMinCount = long.Parse(segsMin);

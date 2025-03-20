@@ -33,6 +33,8 @@ public static class FilterUtil
             inputs = inputs.Where(i => i.VideoRange != null && filter.VideoRangeReg.IsMatch(i.VideoRange));
         if (filter.UrlReg != null)
             inputs = inputs.Where(i => i.Url != null && filter.UrlReg.IsMatch(i.Url));
+        if (filter.PeriodReg != null)
+            inputs = inputs.Where(i => i.PeriodId != null && filter.PeriodReg.IsMatch(i.PeriodId));
         if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0)) 
             inputs = inputs.Where(i => i.SegmentsCount < filter.SegmentsMaxCount);
         if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
