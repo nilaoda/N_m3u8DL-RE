@@ -32,7 +32,7 @@ public static partial class MP4TtmlUtil
 {
     [GeneratedRegex(" \\w+:\\w+=\\\"[^\\\"]*\\\"")]
     private static partial Regex AttrRegex();
-    [GeneratedRegex("<p.*?>(.+?)<\\/p>")]
+    [GeneratedRegex("<p.*?>((.|\n)+?)<\\/p>")]
     private static partial Regex LabelFixRegex();
     [GeneratedRegex(@"\<tt[\s\S]*?\<\/tt\>")]
     private static partial Regex MultiElementsFixRegex();
