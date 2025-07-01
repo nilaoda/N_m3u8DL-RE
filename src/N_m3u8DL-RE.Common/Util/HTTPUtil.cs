@@ -99,7 +99,9 @@ public static class HTTPUtil
     private static bool CheckMPEG2TS(HttpResponseMessage? webResponse)
     {
         var mediaType = webResponse?.Content.Headers.ContentType?.MediaType?.ToLower();
-        return mediaType is "video/ts" or "video/mp2t" or "video/mpeg";
+        if (webResponse?.Content.Headers.ContentLength != null)
+            return false;
+        return mediaType is "video/ts" or "video/mp2t" or "video/mpeg" or "application/octet-stream";
     }
 
     /// <summary>
