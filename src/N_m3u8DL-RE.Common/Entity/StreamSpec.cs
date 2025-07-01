@@ -148,19 +148,19 @@ public class StreamSpec
         if (MediaType == Enum.MediaType.AUDIO)
         {
             prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-            var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr} | {Role}";
+            var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {(PeriodId != null ? PeriodId : "")} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr} | {Role}";
             returnStr = d.EscapeMarkup();
         }
         else if (MediaType == Enum.MediaType.SUBTITLES)
         {
             prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-            var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr} | {Role}";
+            var d = $"{GroupId} | {Language} | {Name} | {(PeriodId != null ? PeriodId : "")} | {Codecs} | {Characteristics} | {segmentsCountStr} | {Role}";
             returnStr = d.EscapeMarkup();
         }
         else
         {
             prefixStr = $"[aqua]Vid[/] {encStr}";
-            var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {Role}";
+            var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {(PeriodId != null ? PeriodId : "")} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {Role}";
             returnStr = d.EscapeMarkup();
         }
 
