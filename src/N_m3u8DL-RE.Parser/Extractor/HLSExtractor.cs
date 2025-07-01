@@ -254,6 +254,10 @@ internal class HLSExtractor : IExtractor
                 segment.StartRange = o ?? segments.Last().StartRange + segments.Last().ExpectLength;
                 expectSegment = true;
             }
+            else if (line.StartsWith(HLSTags.ext_x_playlist_type))
+            {
+                isEndlist = line.Trim().EndsWith("VOD");
+            }
             // 国家地理去广告
             else if (line.StartsWith("#UPLYNK-SEGMENT"))
             {
