@@ -85,7 +85,7 @@ public static partial class Logger
             }
 
             if (!IsWriteFile || !File.Exists(LogFilePath)) return;
-            
+
             var plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
             try
             {
@@ -121,7 +121,7 @@ public static partial class Logger
     public static void Info(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.INFO) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : ";
         HandleLog(write, data);
@@ -130,7 +130,7 @@ public static partial class Logger
     public static void InfoMarkUp(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.INFO) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : " + data;
         HandleLog(write);
@@ -139,7 +139,7 @@ public static partial class Logger
     public static void Debug(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.DEBUG) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: ";
         HandleLog(write, data);
@@ -148,7 +148,7 @@ public static partial class Logger
     public static void DebugMarkUp(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.DEBUG) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: " + data;
         HandleLog(write);
@@ -157,7 +157,7 @@ public static partial class Logger
     public static void Warn(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.WARN) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : ";
         HandleLog(write, data);
@@ -166,7 +166,7 @@ public static partial class Logger
     public static void WarnMarkUp(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.WARN) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : " + data;
         HandleLog(write);
@@ -175,7 +175,7 @@ public static partial class Logger
     public static void Error(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.ERROR) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: ";
         HandleLog(write, data);
@@ -184,7 +184,7 @@ public static partial class Logger
     public static void ErrorMarkUp(string data, params object[] ps)
     {
         if (LogLevel < LogLevel.ERROR) return;
-        
+
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: " + data;
         HandleLog(write);
@@ -209,7 +209,7 @@ public static partial class Logger
     public static void Extra(string data, params object[] ps)
     {
         if (!IsWriteFile || !File.Exists(LogFilePath)) return;
-        
+
         data = ReplaceVars(data, ps);
         var plain = GetCurrTime() + " " + "EXTRA: " + data.RemoveMarkup();
         try

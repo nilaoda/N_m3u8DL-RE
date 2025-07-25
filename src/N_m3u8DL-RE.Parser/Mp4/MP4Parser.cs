@@ -89,7 +89,7 @@ namespace Mp4SubtitleParser
         {
             var reader = new BinaryReader2(new MemoryStream(data));
             this.Done = false;
-            while (reader.HasMoreData() && !this.Done) 
+            while (reader.HasMoreData() && !this.Done)
             {
                 this.ParseNext(0, reader, partialOkay, stopOnPartial);
             }
@@ -212,7 +212,8 @@ namespace Mp4SubtitleParser
             if (name.Length != 4)
                 throw new Exception("Mp4 box names must be 4 characters long");
             var code = 0;
-            foreach (var chr in name) {
+            foreach (var chr in name)
+            {
                 code = (code << 8) | chr;
             }
             return code;
@@ -262,7 +263,7 @@ namespace Mp4SubtitleParser
             uint defaultSampleSize = 0;
 
             // Skip "base_data_offset" if present.
-            if ((flags & 0x000001) != 0) 
+            if ((flags & 0x000001) != 0)
             {
                 reader.ReadBytes(8);
             }
@@ -294,7 +295,7 @@ namespace Mp4SubtitleParser
             trun.SampleCount = reader.ReadUInt32();
 
             // Skip "data_offset" if present.
-            if ((flags & 0x000001) != 0) 
+            if ((flags & 0x000001) != 0)
             {
                 reader.ReadBytes(4);
             }

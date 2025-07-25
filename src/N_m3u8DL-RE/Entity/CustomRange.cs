@@ -7,7 +7,7 @@ public class CustomRange
     public double? EndSec { get; set; }
 
     public long? StartSegIndex { get; set; }
-    public long? EndSegIndex { get; set;}
+    public long? EndSegIndex { get; set; }
 
     public override string? ToString()
     {

@@ -9,12 +9,12 @@ public static class EnvConfigKey
     /// 当此值为1时, 在图形字幕处理逻辑中PNG生成后不再删除m4s文件
     /// </summary>
     public const string ReKeepImageSegments = "RE_KEEP_IMAGE_SEGMENTS";
-    
+
     /// <summary>
     /// 控制启用PipeMux时, 具体ffmpeg命令行
     /// </summary>
     public const string ReLivePipeOptions = "RE_LIVE_PIPE_OPTIONS";
-    
+
     /// <summary>
     /// 控制启用PipeMux时, 非Windows环境下命名管道文件的生成目录
     /// </summary>

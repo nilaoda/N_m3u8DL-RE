@@ -30,7 +30,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             encryptInfo.IV = HexUtil.HexToBytes(iv);
         }
         // 自定义IV
-        if (parserConfig.CustomeIV is { Length: > 0 }) 
+        if (parserConfig.CustomeIV is { Length: > 0 })
         {
             encryptInfo.IV = parserConfig.CustomeIV;
         }
@@ -62,7 +62,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             {
                 var retryCount = parserConfig.KeyRetryCount;
                 var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
-                getHttpKey:
+            getHttpKey:
                 try
                 {
                     var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
@@ -84,7 +84,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
         }
 
         if (parserConfig.CustomMethod == null) return encryptInfo;
-        
+
         // 处理自定义加密方式
         encryptInfo.Method = parserConfig.CustomMethod.Value;
         Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);

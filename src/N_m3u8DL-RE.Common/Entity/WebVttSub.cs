@@ -72,7 +72,7 @@ public partial class WebVttSub
             }
 
             if (!needPayload) continue;
-            
+
             if (string.IsNullOrEmpty(line.Trim()))
             {
                 var payload = string.Join(Environment.NewLine, payloads);
@@ -99,7 +99,7 @@ public partial class WebVttSub
         }
 
         if (BaseTimestamp == 0) return webSub;
-        
+
         foreach (var item in webSub.Cues)
         {
             if (item.StartTime.TotalMilliseconds - BaseTimestamp >= 0)
@@ -139,10 +139,10 @@ public partial class WebVttSub
         foreach (var item in webSub.Cues)
         {
             if (this.Cues.Contains(item)) continue;
-            
+
             // 如果相差只有1ms，且payload相同，则拼接
             var last = this.Cues.LastOrDefault();
-            if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload) 
+            if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload)
             {
                 last.EndTime = item.EndTime;
             }

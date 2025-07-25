@@ -33,7 +33,7 @@ public static class FilterUtil
             inputs = inputs.Where(i => i.VideoRange != null && filter.VideoRangeReg.IsMatch(i.VideoRange));
         if (filter.UrlReg != null)
             inputs = inputs.Where(i => i.Url != null && filter.UrlReg.IsMatch(i.Url));
-        if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0)) 
+        if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0))
             inputs = inputs.Where(i => i.SegmentsCount < filter.SegmentsMaxCount);
         if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
             inputs = inputs.Where(i => i.SegmentsCount > filter.SegmentsMinCount);
@@ -65,7 +65,7 @@ public static class FilterUtil
 
     public static List<StreamSpec> DoFilterDrop(IEnumerable<StreamSpec> lists, StreamFilter? filter)
     {
-        if (filter == null) return [..lists];
+        if (filter == null) return [.. lists];
 
         var inputs = lists.Where(_ => true);
         var selected = DoFilterKeep(lists, filter);
@@ -79,7 +79,7 @@ public static class FilterUtil
     {
         var streamSpecs = lists.ToList();
         if (streamSpecs.Count == 1)
-            return [..streamSpecs];
+            return [.. streamSpecs];
 
         // 基本流
         var basicStreams = streamSpecs.Where(x => x.MediaType == null).ToList();
@@ -237,7 +237,7 @@ public static class FilterUtil
     {
         if (keywords == null) return;
         var regList = keywords.Select(s => new Regex(s)).ToList();
-        foreach ( var reg in regList)
+        foreach (var reg in regList)
         {
             Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
         }

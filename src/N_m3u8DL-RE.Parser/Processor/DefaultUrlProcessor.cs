@@ -12,7 +12,7 @@ public class DefaultUrlProcessor : UrlProcessor
     public override string Process(string oriUrl, ParserConfig paserConfig)
     {
         if (!oriUrl.StartsWith("http")) return oriUrl;
-        
+
         var uriFromConfig = new Uri(paserConfig.Url);
         var uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
 
@@ -27,7 +27,7 @@ public class DefaultUrlProcessor : UrlProcessor
         }
 
         if (string.IsNullOrEmpty(newQuery.ToString())) return oriUrl;
-        
+
         Logger.Debug("Before: " + oriUrl);
         oriUrl = (oldUri.GetLeftPart(UriPartial.Path) + "?" + newQuery).TrimEnd('?');
         Logger.Debug("After: " + oriUrl);

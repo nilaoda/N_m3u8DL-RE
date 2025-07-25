@@ -83,7 +83,7 @@ public static partial class ParserUtil
 
         // 处理特殊形式数字 如 $Number%05d$
         var regex = VarsNumberRegex();
-        if (regex.IsMatch(text) && keyValuePairs.TryGetValue(DASHTags.TemplateNumber, out var keyValuePair)) 
+        if (regex.IsMatch(text) && keyValuePairs.TryGetValue(DASHTags.TemplateNumber, out var keyValuePair))
         {
             foreach (Match m in regex.Matches(text))
             {

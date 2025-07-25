@@ -20,7 +20,7 @@ internal class NowehoryzontyUrlProcessor : UrlProcessor
     private static Function? Function = null;
     public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig parserConfig)
     {
-        if (extractorType == ExtractorType.MPEG_DASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START)) 
+        if (extractorType == ExtractorType.MPEG_DASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START))
         {
             if (!LOG)
             {

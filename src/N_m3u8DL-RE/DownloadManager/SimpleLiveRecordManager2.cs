@@ -62,7 +62,7 @@ internal class SimpleLiveRecordManager2
             if (DownloaderConfig.MyOptions.Keys == null)
                 DownloaderConfig.MyOptions.Keys = [_key];
             else
-                DownloaderConfig.MyOptions.Keys = [..DownloaderConfig.MyOptions.Keys, _key];
+                DownloaderConfig.MyOptions.Keys = [.. DownloaderConfig.MyOptions.Keys, _key];
         }
     }
 
@@ -184,7 +184,7 @@ internal class SimpleLiveRecordManager2
             Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
             // 下载init
-            if (!initDownloaded && streamSpec.Playlist?.MediaInit != null) 
+            if (!initDownloaded && streamSpec.Playlist?.MediaInit != null)
             {
                 task.MaxValue += 1;
                 // 对于fMP4，自动开启二进制合并
@@ -524,7 +524,7 @@ internal class SimpleLiveRecordManager2
                     {
                         fileOutputStream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
                     }
-                    else 
+                    else
                     {
                         // 创建管道
                         output = Path.ChangeExtension(output, ".ts");
@@ -532,7 +532,7 @@ internal class SimpleLiveRecordManager2
                         fileOutputStream = PipeUtil.CreatePipe(pipeName);
                         Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
                         PipeSteamNamesDic[task.Id] = pipeName;
-                        if (PipeSteamNamesDic.Count == SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES)) 
+                        if (PipeSteamNamesDic.Count == SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES))
                         {
                             var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
                             Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
@@ -554,7 +554,7 @@ internal class SimpleLiveRecordManager2
                         // shaka/ffmpeg实时解密不需要init文件用于合并，mp4decrpyt需要
                         if (string.IsNullOrEmpty(currentKID) || decryptEngine == DecryptEngine.MP4DECRYPT)
                         {
-                            files = [initResult.ActualFilePath, ..files];
+                            files = [initResult.ActualFilePath, .. files];
                         }
                     }
                     foreach (var inputFilePath in files)
@@ -614,12 +614,12 @@ internal class SimpleLiveRecordManager2
                 }
             }
 
-            if (STOP_FLAG && source.Count == 0) 
+            if (STOP_FLAG && source.Count == 0)
                 break;
         }
 
         if (fileOutputStream == null) return true;
-        
+
         if (!DownloaderConfig.MyOptions.LivePipeMux)
         {
             // 记录所有文件信息
@@ -644,7 +644,7 @@ internal class SimpleLiveRecordManager2
         while (!STOP_FLAG)
         {
             if (WAIT_SEC == 0) continue;
-            
+
             // 1. MPD 所有URL相同 单次请求即可获得所有轨道的信息
             // 2. M3U8 所有URL不同 才需要多次请求
             await Parallel.ForEachAsync(dic, async (dic, _) =>
@@ -727,7 +727,7 @@ internal class SimpleLiveRecordManager2
         var lastName = LastFileNameDic[task.Id];
 
         // 优先使用dateTime判断
-        if (dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null)) 
+        if (dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null))
         {
             index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetUnixTimestamp(s.DateTime!.Value) == dateTime);
         }
@@ -791,7 +791,7 @@ internal class SimpleLiveRecordManager2
 
         var progress = CustomAnsiConsole.Console.Progress().AutoClear(true);
         progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
-            
+
         // 进度条的列定义
         var progressColumns = new ProgressColumn[]
         {

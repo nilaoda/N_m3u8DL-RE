@@ -9,7 +9,7 @@ internal class LiveTSExtractor : IExtractor
 {
     public ExtractorType ExtractorType => ExtractorType.HTTP_LIVE;
 
-    public ParserConfig ParserConfig {get; set;}
+    public ParserConfig ParserConfig { get; set; }
 
     public LiveTSExtractor(ParserConfig parserConfig)
     {

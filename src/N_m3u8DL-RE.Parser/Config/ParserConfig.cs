@@ -12,7 +12,7 @@ public class ParserConfig
     public string OriginalUrl { get; set; } = string.Empty;
 
     public string BaseUrl { get; set; } = string.Empty;
-    
+
     public Dictionary<string, string> CustomParserArgs { get; } = new();
 
     public Dictionary<string, string> Headers { get; init; } = new();

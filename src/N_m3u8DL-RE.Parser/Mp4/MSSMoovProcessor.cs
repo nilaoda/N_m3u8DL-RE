@@ -140,7 +140,7 @@ public partial class MSSMoovProcessor
             this.CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
             this.CodecPrivateData += HexUtil.BytesToHex(BitConverter.GetBytes(arr16[1])).PadLeft(16, '0');
         }
-        else if (FourCC.StartsWith("AAC")) 
+        else if (FourCC.StartsWith("AAC"))
         {
             // 2 bytes :     XXXXX         XXXX          XXXX              XXX
             //           ' ObjectType' 'Freq Index' 'Channels value'   'GAS = 000'
@@ -409,18 +409,18 @@ public partial class MSSMoovProcessor
         writer.WriteByte(0x40); // objectTypeIndication = 0x40 (MPEG-4 AAC)
         writer.WriteByte((0x05 << 2) | (0 << 1) | 1); // reserved = 1
         writer.WriteByte(0xFF); // buffersizeDB = undefined
-        writer.WriteByte(0xFF); 
+        writer.WriteByte(0xFF);
         writer.WriteByte(0xFF);
 
         var bandwidth = StreamSpec.Bandwidth!;
         writer.WriteByte((byte)((bandwidth & 0xFF000000) >> 24)); // maxBitrate
         writer.WriteByte((byte)((bandwidth & 0x00FF0000) >> 16));
         writer.WriteByte((byte)((bandwidth & 0x0000FF00) >> 8));
-        writer.WriteByte((byte)(bandwidth  & 0x000000FF));
+        writer.WriteByte((byte)(bandwidth & 0x000000FF));
         writer.WriteByte((byte)((bandwidth & 0xFF000000) >> 24)); // avgbitrate
-        writer.WriteByte((byte)((bandwidth & 0x00FF0000) >> 16)); 
+        writer.WriteByte((byte)((bandwidth & 0x00FF0000) >> 16));
         writer.WriteByte((byte)((bandwidth & 0x0000FF00) >> 8));
-        writer.WriteByte((byte)(bandwidth  & 0x000000FF));
+        writer.WriteByte((byte)(bandwidth & 0x000000FF));
 
         // DecoderSpecificInfo (see ISO/IEC 14496-1 (Systems))
         writer.WriteByte(0x05); // tag = 0x05 (DecSpecificInfoTag)
@@ -457,7 +457,7 @@ public partial class MSSMoovProcessor
             var esdsBox = GenEsds(audioSpecificConfig);
             writer.Write(esdsBox);
 
-            if (FourCC.StartsWith("AAC")) 
+            if (FourCC.StartsWith("AAC"))
             {
                 if (IsProtection)
                 {
@@ -681,7 +681,7 @@ public partial class MSSMoovProcessor
         writer.WriteUShort(0); // avgFrameRate
         writer.WriteByte((byte)(0 << 6 | 0 << 3 | 0 << 2 | (NalUnitLengthField - 1))); // constantFrameRate + numTemporalLayers + temporalIdNested + lengthSizeMinusOne
         writer.WriteByte(0x03); // numOfArrays (vps sps pps)
-            
+
         sps = oriSps.ToArray();
         writer.WriteByte(0x20); // array_completeness + reserved + NAL_unit_type
         writer.WriteUShort(1); // numNalus 
@@ -691,7 +691,7 @@ public partial class MSSMoovProcessor
         writer.WriteUShort(1); // numNalus
         writer.WriteUShort(sps.Length);
         writer.Write(sps);
-        writer.WriteByte(0x22); 
+        writer.WriteByte(0x22);
         writer.WriteUShort(1); // numNalus
         writer.WriteUShort(pps.Length);
         writer.Write(pps);

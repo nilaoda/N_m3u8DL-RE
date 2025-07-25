@@ -24,7 +24,8 @@ public static class MP4VttUtil
             .Box("minf", MP4Parser.Children)
             .Box("stbl", MP4Parser.Children)
             .FullBox("stsd", MP4Parser.SampleDescription)
-            .Box("wvtt", _ => {
+            .Box("wvtt", _ =>
+            {
                 // A valid vtt init segment, though we have no actual subtitles yet.
                 sawWVTT = true;
             })

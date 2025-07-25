@@ -20,7 +20,7 @@ internal partial class MSSExtractor : IExtractor
     private static partial Regex VCodecsRegex();
 
     ////////////////////////////////////////
-        
+
     private static EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
 
     public ExtractorType ExtractorType => ExtractorType.MSS;
@@ -217,7 +217,7 @@ internal partial class MSSExtractor : IExtractor
                     var header = processor.GenHeader(); // trackId可能不正确
                     streamSpec.Playlist!.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";
                     // 为音视频写入加密信息
-                    if (isProtection && type != "text") 
+                    if (isProtection && type != "text")
                     {
                         if (streamSpec.Playlist.MediaInit != null)
                         {
@@ -289,7 +289,7 @@ internal partial class MSSExtractor : IExtractor
         {
             mpProfile = 5; // High Efficiency AAC Profile
         }
-        else if (!string.IsNullOrEmpty(privateData)) 
+        else if (!string.IsNullOrEmpty(privateData))
         {
             mpProfile = (Convert.ToByte(privateData[..2], 16) & 0xF8) >> 3;
         }
@@ -309,7 +309,7 @@ internal partial class MSSExtractor : IExtractor
         {
             var playlist = streamSpec.Playlist;
             if (playlist == null) continue;
-            
+
             if (playlist.MediaInit != null)
             {
                 playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);

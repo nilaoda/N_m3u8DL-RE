@@ -51,7 +51,8 @@ public static partial class MP4TtmlUtil
             .Box("minf", MP4Parser.Children)
             .Box("stbl", MP4Parser.Children)
             .FullBox("stsd", MP4Parser.SampleDescription)
-            .Box("stpp", box => {
+            .Box("stpp", box =>
+            {
                 sawSTPP = true;
             })
             .Parse(data);
@@ -114,7 +115,7 @@ public static partial class MP4TtmlUtil
             {
                 sb.Append(item.InnerText.Trim());
             }
-            else if(item is { NodeType: XmlNodeType.Element, Name: "br" })
+            else if (item is { NodeType: XmlNodeType.Element, Name: "br" })
             {
                 sb.AppendLine();
             }
@@ -321,7 +322,7 @@ public static partial class MP4TtmlUtil
                         sub.ContentStrings.Add(_span.OuterXml);
                     }
                 }
-                    
+
                 // Check if one <p> has been splitted
                 var index = finalSubs.FindLastIndex(s => s.End == _begin && s.Region == _region && s.ContentStrings.SequenceEqual(sub.ContentStrings));
                 // Skip empty lines

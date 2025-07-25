@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Util;
 internal static partial class MP4DecryptUtil
 {
     private static readonly string ZeroKid = "00000000000000000000000000000000";
-    public static async Task<bool> DecryptAsync(DecryptEngine decryptEngine, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM=false)
+    public static async Task<bool> DecryptAsync(DecryptEngine decryptEngine, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM = false)
     {
         if (keys == null || keys.Length == 0) return false;
 
@@ -45,7 +45,7 @@ internal static partial class MP4DecryptUtil
             keyPairs = keyPairs.Select(x => $"{kid}:{x}").ToList();
             keyPair = keyPairs.First();
         }
-            
+
         if (keyPair == null) return false;
 
         // shakaPackager/ffmpeg 无法单独解密init文件
@@ -100,12 +100,12 @@ internal static partial class MP4DecryptUtil
                 MergeUtil.CombineMultipleFilesIntoSingleFile([init, source], tmpFile);
                 enc = tmpFile;
             }
-            
+
             cmd = $"-loglevel error -nostdin -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy \"{dest}\"";
         }
 
         var isSuccess = await RunCommandAsync(bin, cmd, workDir);
-        
+
         // mp4decrypt 还原文件改名操作
         if (workDir is not null)
         {
@@ -118,7 +118,7 @@ internal static partial class MP4DecryptUtil
             if (tmpFile != "" && File.Exists(tmpFile)) File.Delete(tmpFile);
             return true;
         }
-        
+
         Logger.Error(ResString.decryptionFailed);
         return false;
     }
@@ -151,7 +151,7 @@ internal static partial class MP4DecryptUtil
     {
         try
         {
-            if (string.IsNullOrEmpty(file) || !File.Exists(file) || string.IsNullOrEmpty(kid)) 
+            if (string.IsNullOrEmpty(file) || !File.Exists(file) || string.IsNullOrEmpty(kid))
                 return null;
 
             Logger.InfoMarkUp(ResString.searchKey);
@@ -160,7 +160,7 @@ internal static partial class MP4DecryptUtil
             while (await reader.ReadLineAsync() is { } line)
             {
                 if (!line.Trim().StartsWith(kid)) continue;
-                
+
                 Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
                 return line.Trim();
             }

@@ -24,7 +24,7 @@ public static class HTTPUtil
 
     private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
     {
-        Logger.Debug(ResString.fetch + url); 
+        Logger.Debug(ResString.fetch + url);
         using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
         webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
         webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
@@ -56,7 +56,7 @@ public static class HTTPUtil
                 {
                     redirectedUrl = respHeaders.Location.AbsoluteUri;
                 }
-                    
+
                 if (redirectedUrl != url)
                 {
                     Logger.Extra($"Redirected => {redirectedUrl}");

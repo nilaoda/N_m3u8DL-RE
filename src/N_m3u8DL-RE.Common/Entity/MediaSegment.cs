@@ -14,7 +14,7 @@ public class MediaSegment
     public long? ExpectLength { get; set; }
 
     public EncryptInfo EncryptInfo { get; set; } = new();
-    
+
     public bool IsEncrypted => EncryptInfo.Method != EncryptMethod.NONE;
 
     public string Url { get; set; } = string.Empty;

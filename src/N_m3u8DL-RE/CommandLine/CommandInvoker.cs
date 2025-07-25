@@ -55,9 +55,9 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> CheckSegmentsCount = new(["--check-segments-count"], description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
     private static readonly Option<bool> WriteMetaJson = new(["--write-meta-json"], description: ResString.cmd_writeMetaJson, getDefaultValue: () => true);
     private static readonly Option<bool> AppendUrlParams = new(["--append-url-params"], description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
-    private static readonly Option<bool> MP4RealTimeDecryption = new (["--mp4-real-time-decryption"], description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
-    private static readonly Option<bool> UseShakaPackager = new (["--use-shaka-packager"], description: ResString.cmd_useShakaPackager, getDefaultValue: () => false) { IsHidden = true };
-    private static readonly Option<DecryptEngine> DecryptionEngine = new (["--decryption-engine"], description: ResString.cmd_decryptionEngine, getDefaultValue: () => DecryptEngine.MP4DECRYPT);
+    private static readonly Option<bool> MP4RealTimeDecryption = new(["--mp4-real-time-decryption"], description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
+    private static readonly Option<bool> UseShakaPackager = new(["--use-shaka-packager"], description: ResString.cmd_useShakaPackager, getDefaultValue: () => false) { IsHidden = true };
+    private static readonly Option<DecryptEngine> DecryptionEngine = new(["--decryption-engine"], description: ResString.cmd_decryptionEngine, getDefaultValue: () => DecryptEngine.MP4DECRYPT);
     private static readonly Option<bool> ForceAnsiConsole = new(["--force-ansi-console"], description: ResString.cmd_forceAnsiConsole);
     private static readonly Option<bool> NoAnsiColor = new(["--no-ansi-color"], description: ResString.cmd_noAnsiColor);
     private static readonly Option<string?> DecryptionBinaryPath = new(["--decryption-binary-path"], description: ResString.cmd_decryptionBinaryPath) { ArgumentHelpName = "PATH" };
@@ -605,7 +605,7 @@ internal static partial class CommandInvoker
             // 混流设置
             var muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
             if (muxAfterDoneValue == null) return option;
-            
+
             option.MuxAfterDone = true;
             option.MuxOptions = muxAfterDoneValue;
             if (muxAfterDoneValue.UseMkvmerge) option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;

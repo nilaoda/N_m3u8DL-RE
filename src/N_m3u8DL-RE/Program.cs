@@ -23,7 +23,7 @@ internal class Program
     static async Task Main(string[] args)
     {
         // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
-        if (OperatingSystem.IsWindows()) 
+        if (OperatingSystem.IsWindows())
         {
             var osVersion = Environment.OSVersion.Version;
             if (osVersion.Major < 6 || osVersion is { Major: 6, Minor: 0 })
@@ -31,7 +31,7 @@ internal class Program
                 Environment.SetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
             }
         }
-        
+
         Console.CancelKeyPress += Console_CancelKeyPress;
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
@@ -48,7 +48,7 @@ internal class Program
         {
             loc = list[index + 1];
         }
-        
+
         ResString.CurrentLoc = loc;
 
         try
@@ -57,7 +57,7 @@ internal class Program
             Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
             Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
         }
-        catch 
+        catch
         {
             // Culture not work on NT6.0, so catch the exception
         }
@@ -68,19 +68,20 @@ internal class Program
     private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
     {
         Logger.WarnMarkUp("Force Exit...");
-        try 
-        { 
+        try
+        {
             Console.CursorVisible = true;
             if (!OperatingSystem.IsWindows())
                 System.Diagnostics.Process.Start("tput", "cnorm");
-        } catch { }
+        }
+        catch { }
         Environment.Exit(0);
     }
 
     static int GetOrder(StreamSpec streamSpec)
     {
         if (streamSpec.Channels == null) return 0;
-            
+
         var str = streamSpec.Channels.Split('/')[0];
         return int.TryParse(str, out var order) ? order : 0;
     }
@@ -95,7 +96,7 @@ internal class Program
             Logger.Info(ResString.consoleRedirected);
         }
         CustomAnsiConsole.InitConsole(option.ForceAnsiConsole, option.NoAnsiColor);
-        
+
         // 检测更新
         if (!option.DisableUpdateCheck)
             _ = CheckUpdateAsync();
@@ -123,7 +124,7 @@ internal class Program
             throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
         }
 
-        if (option.UseShakaPackager) 
+        if (option.UseShakaPackager)
         {
             option.DecryptionEngine = DecryptEngine.SHAKA_PACKAGER;
         }
@@ -166,25 +167,25 @@ internal class Program
             switch (option.DecryptionEngine)
             {
                 case DecryptEngine.SHAKA_PACKAGER:
-                {
-                    var file = GlobalUtil.FindExecutable("shaka-packager");
-                    var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
-                    var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
-                    var file4 = GlobalUtil.FindExecutable("packager-win-x64");
-                    if (file == null && file2 == null && file3 == null && file4 == null)
-                        throw new FileNotFoundException(ResString.shakaPackagerNotFound);
-                    option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
-                    Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
-                    break;
-                }
+                    {
+                        var file = GlobalUtil.FindExecutable("shaka-packager");
+                        var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
+                        var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
+                        var file4 = GlobalUtil.FindExecutable("packager-win-x64");
+                        if (file == null && file2 == null && file3 == null && file4 == null)
+                            throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                        option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
+                        Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
+                        break;
+                    }
                 case DecryptEngine.MP4DECRYPT:
-                {
-                    var file = GlobalUtil.FindExecutable("mp4decrypt");
-                    if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
-                    option.DecryptionBinaryPath = file;
-                    Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
-                    break;
-                }
+                    {
+                        var file = GlobalUtil.FindExecutable("mp4decrypt");
+                        if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
+                        option.DecryptionBinaryPath = file;
+                        Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
+                        break;
+                    }
                 case DecryptEngine.FFMPEG:
                 default:
                     option.DecryptionBinaryPath = option.FFmpegBinaryPath;
@@ -471,7 +472,7 @@ internal class Program
         using var content = response.Content;
         // ... Read the response to see if we have the redirected url
         if (response.StatusCode != HttpStatusCode.Found) return redirectedUrl;
-        
+
         var headers = response.Headers;
         if (headers.Location != null)
         {

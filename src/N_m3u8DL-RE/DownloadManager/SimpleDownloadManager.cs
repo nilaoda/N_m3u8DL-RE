@@ -25,8 +25,8 @@ internal class SimpleDownloadManager
     List<StreamSpec> SelectedSteams;
     List<OutputFile> OutputFiles = [];
 
-    public SimpleDownloadManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor) 
-    { 
+    public SimpleDownloadManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
+    {
         this.DownloaderConfig = downloaderConfig;
         this.SelectedSteams = selectedSteams;
         this.StreamExtractor = streamExtractor;
@@ -42,7 +42,7 @@ internal class SimpleDownloadManager
             if (DownloaderConfig.MyOptions.Keys == null)
                 DownloaderConfig.MyOptions.Keys = [_key];
             else
-                DownloaderConfig.MyOptions.Keys = [..DownloaderConfig.MyOptions.Keys, _key];
+                DownloaderConfig.MyOptions.Keys = [.. DownloaderConfig.MyOptions.Keys, _key];
         }
     }
 
@@ -166,12 +166,13 @@ internal class SimpleDownloadManager
             task.Increment(1);
 
             // 读取mp4信息
-            if (result is { Success: true }) 
+            if (result is { Success: true })
             {
                 mp4Info = MP4DecryptUtil.GetMP4Info(result.ActualFilePath);
                 currentKID = mp4Info.KID;
                 // try shaka packager, which can handle WebM
-                if (string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER) {
+                if (string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER)
+                {
                     currentKID = MP4DecryptUtil.ReadInitShaka(result.ActualFilePath, decryptionBinaryPath);
                 }
                 // 从文件读取KEY
@@ -243,7 +244,8 @@ internal class SimpleDownloadManager
                     currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
                 }
                 // try shaka packager, which can handle WebM
-                if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER) {
+                if (string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER)
+                {
                     currentKID = MP4DecryptUtil.ReadInitShaka(result.ActualFilePath, decryptionBinaryPath);
                 }
                 // 从文件读取KEY
@@ -287,7 +289,7 @@ internal class SimpleDownloadManager
             if (result is { Success: true })
                 task.Increment(1);
             // 实时解密
-            if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID)) 
+            if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID))
             {
                 var enc = result.ActualFilePath;
                 var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
@@ -344,13 +346,13 @@ internal class SimpleDownloadManager
         }
 
         // 校验完整性
-        if (DownloaderConfig.CheckContentLength && FileDic.Values.Any(a => a!.Success == false)) 
+        if (DownloaderConfig.CheckContentLength && FileDic.Values.Any(a => a!.Success == false))
         {
             return false;
         }
 
         // 自动修复VTT raw字幕
-        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt")) 
+        if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
         {
             Logger.WarnMarkUp(ResString.fixingVTT);
             // 排序字幕并修正时间戳
@@ -479,7 +481,7 @@ internal class SimpleDownloadManager
 
         // 自动修复TTML mp4字幕
         if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
-            && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp")) 
+            && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
         {
             Logger.WarnMarkUp(ResString.fixingTTMLmp4);
             // sawTtml暂时不判断
@@ -590,7 +592,8 @@ internal class SimpleDownloadManager
         {
             currentKID = MP4DecryptUtil.GetMP4Info(output).KID;
             // try shaka packager, which can handle WebM
-            if (string.IsNullOrEmpty(currentKID) &&  DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER) {
+            if (string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions.DecryptionEngine == DecryptEngine.SHAKA_PACKAGER)
+            {
                 currentKID = MP4DecryptUtil.ReadInitShaka(output, decryptionBinaryPath);
             }
             // 从文件读取KEY
@@ -633,7 +636,7 @@ internal class SimpleDownloadManager
     {
         ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); // 速度计算
         ConcurrentDictionary<StreamSpec, bool?> Results = new();
-            
+
         var progress = CustomAnsiConsole.Console.Progress().AutoClear(true);
         progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
@@ -711,7 +714,7 @@ internal class SimpleDownloadManager
         }
 
         // 混流
-        if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0) 
+        if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0)
         {
             OutputFiles = OutputFiles.OrderBy(o => o.Index).ToList();
             // 是否跳过字幕

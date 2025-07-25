@@ -130,7 +130,7 @@ internal static class DownloadUtil
                 ActualContentLength = stream.Length,
                 RespContentLength = contentLength,
                 ActualFilePath = path,
-                ImageHeader= imageHeader,
+                ImageHeader = imageHeader,
                 GzipHeader = gZipHeader
             };
         }

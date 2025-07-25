@@ -19,7 +19,7 @@ internal static class LargeSingleFileSplitUtil
     /// <param name="segment"></param>
     /// <param name="headers"></param>
     /// <returns></returns>
-    public static async Task<List<MediaSegment>?> SplitUrlAsync(MediaSegment segment, Dictionary<string,string> headers)
+    public static async Task<List<MediaSegment>?> SplitUrlAsync(MediaSegment segment, Dictionary<string, string> headers)
     {
         var url = segment.Url;
         if (!await CanSplitAsync(url, headers)) return null;

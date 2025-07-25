@@ -10,7 +10,7 @@ internal static partial class OtherUtil
     {
         Dictionary<string, string> dic = new();
         if (headers == null) return dic;
-        
+
         foreach (string header in headers)
         {
             var index = header.IndexOf(':');
@@ -142,11 +142,12 @@ internal static partial class OtherUtil
                 await using var decompressedStream = File.Create(deGzipFile);
                 await using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
                 await decompressionStream.CopyToAsync(decompressedStream);
-            };
+            }
+            ;
             File.Delete(filePath);
             File.Move(deGzipFile, filePath);
         }
-        catch 
+        catch
         {
             if (File.Exists(deGzipFile)) File.Delete(deGzipFile);
         }

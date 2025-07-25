@@ -12,7 +12,7 @@ internal class DemoProcessor2 : KeyProcessor
 {
     public override bool CanProcess(ExtractorType extractorType, string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
     {
-        return extractorType == ExtractorType.HLS  && parserConfig.Url.Contains("playertest.longtailvideo.com");
+        return extractorType == ExtractorType.HLS && parserConfig.Url.Contains("playertest.longtailvideo.com");
     }
 
     public override EncryptInfo Process(string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)

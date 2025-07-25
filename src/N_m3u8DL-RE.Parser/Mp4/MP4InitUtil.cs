@@ -33,12 +33,12 @@ namespace Mp4SubtitleParser
                         throw new Exception("PSSH version can only be 0 or 1");
                     var systemId = box.Reader.ReadBytes(16);
                     if (!SYSTEM_ID_WIDEVINE.SequenceEqual(systemId)) return;
-                    
+
                     var dataSize = box.Reader.ReadUInt32();
                     var psshData = box.Reader.ReadBytes((int)dataSize);
                     info.PSSH = Convert.ToBase64String(psshData);
                     if (info.KID != "00000000000000000000000000000000") return;
-                    
+
                     info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLower();
                     info.isMultiDRM = true;
                 })
@@ -56,7 +56,7 @@ namespace Mp4SubtitleParser
             // find schm 
             byte[] schmBytes = [0x73, 0x63, 0x68, 0x6d];
             var schmIndex = 0;
-            for (var i = 0; i < data.Length - 4; i++) 
+            for (var i = 0; i < data.Length - 4; i++)
             {
                 if (new[] { data[i], data[i + 1], data[i + 2], data[i + 3] }.SequenceEqual(schmBytes))
                 {
@@ -82,7 +82,7 @@ namespace Mp4SubtitleParser
                     break;
                 }
             }
-            if (tencIndex != -1 && tencIndex + 12 < data.Length) 
+            if (tencIndex != -1 && tencIndex + 12 < data.Length)
             {
                 info.KID = HexUtil.BytesToHex(data[tencIndex..][12..28]).ToLower();
             }

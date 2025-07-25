@@ -17,8 +17,8 @@ public class StreamFilter
     public Regex? UrlReg { get; set; }
     public long? SegmentsMinCount { get; set; }
     public long? SegmentsMaxCount { get; set; }
-    public double? PlaylistMinDur {  get; set; }
-    public double? PlaylistMaxDur {  get; set; }
+    public double? PlaylistMinDur { get; set; }
+    public double? PlaylistMaxDur { get; set; }
     public int? BandwidthMin { get; set; }
     public int? BandwidthMax { get; set; }
     public RoleType? Role { get; set; }

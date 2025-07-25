@@ -30,29 +30,29 @@ internal class SimpleDownloader : IDownloader
             switch (segment.EncryptInfo.Method)
             {
                 case EncryptMethod.AES_128:
-                {
-                    var key = segment.EncryptInfo.Key;
-                    var iv = segment.EncryptInfo.IV;
-                    AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
-                    break;
-                }
+                    {
+                        var key = segment.EncryptInfo.Key;
+                        var iv = segment.EncryptInfo.IV;
+                        AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
+                        break;
+                    }
                 case EncryptMethod.AES_128_ECB:
-                {
-                    var key = segment.EncryptInfo.Key;
-                    var iv = segment.EncryptInfo.IV;
-                    AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
-                    break;
-                }
+                    {
+                        var key = segment.EncryptInfo.Key;
+                        var iv = segment.EncryptInfo.IV;
+                        AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
+                        break;
+                    }
                 case EncryptMethod.CHACHA20:
-                {
-                    var key = segment.EncryptInfo.Key;
-                    var nonce = segment.EncryptInfo.IV;
+                    {
+                        var key = segment.EncryptInfo.Key;
+                        var nonce = segment.EncryptInfo.IV;
 
-                    var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
-                    var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
-                    await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
-                    break;
-                }
+                        var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
+                        var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
+                        await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
+                        break;
+                    }
                 case EncryptMethod.SAMPLE_AES_CTR:
                     // throw new NotSupportedException("SAMPLE-AES-CTR");
                     break;
@@ -79,7 +79,7 @@ internal class SimpleDownloader : IDownloader
     private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
     {
         CancellationTokenSource? cancellationTokenSource = null;
-        retry:
+    retry:
         try
         {
             cancellationTokenSource = new();

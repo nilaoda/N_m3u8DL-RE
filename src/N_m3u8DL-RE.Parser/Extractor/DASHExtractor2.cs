@@ -50,7 +50,7 @@ internal partial class DASHExtractor2 : IExtractor
     {
         var frameRate = element.Attribute("frameRate")?.Value;
         if (frameRate == null || !frameRate.Contains('/')) return null;
-        
+
         var d = Convert.ToDouble(frameRate.Split('/')[0]) / Convert.ToDouble(frameRate.Split('/')[1]);
         frameRate = d.ToString("0.000");
         return Convert.ToDouble(frameRate);
@@ -555,7 +555,7 @@ internal partial class DASHExtractor2 : IExtractor
         {
             (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.Url, ParserConfig.Headers);
         }
-        catch (HttpRequestException) when (ParserConfig.Url!= ParserConfig.OriginalUrl)
+        catch (HttpRequestException) when (ParserConfig.Url != ParserConfig.OriginalUrl)
         {
             // 当URL无法访问时，再请求原始URL
             (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
@@ -586,7 +586,7 @@ internal partial class DASHExtractor2 : IExtractor
         {
             var playlist = streamSpec.Playlist;
             if (playlist == null) continue;
-            
+
             if (playlist.MediaInit != null)
             {
                 playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
