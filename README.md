@@ -1,11 +1,12 @@
 # N_m3u8DL-RE
+
+[See English version here](README.en.md)
+
 跨平台的DASH/HLS/MSS下载工具。支持点播、直播(DASH/HLS)。
 
 [![img](https://img.shields.io/github/stars/nilaoda/N_m3u8DL-RE?label=%E7%82%B9%E8%B5%9E)](https://github.com/nilaoda/N_m3u8DL-RE)  [![img](https://img.shields.io/github/last-commit/nilaoda/N_m3u8DL-RE?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4)](https://github.com/nilaoda/N_m3u8DL-RE)  [![img](https://img.shields.io/github/release/nilaoda/N_m3u8DL-RE?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)](https://github.com/nilaoda/N_m3u8DL-RE/releases)  [![img](https://img.shields.io/github/license/nilaoda/N_m3u8DL-RE?label=%E8%AE%B8%E5%8F%AF%E8%AF%81)](https://github.com/nilaoda/N_m3u8DL-RE)   [![img](https://img.shields.io/github/downloads/nilaoda/N_m3u8DL-RE/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://github.com/nilaoda/N_m3u8DL-RE/releases)
 
-
 遇到 BUG 请首先确认软件是否为最新版本（如果是 Release 版本，建议到 [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions) 页面下载最新自动构建版本后查看问题是否已经被修复），如果确认版本最新且问题依旧存在，可以到 [Issues](https://github.com/nilaoda/N_m3u8DL-RE/issues) 中查找是否有人遇到过相关问题，没有的话再进行询问。
-
 
 ---
 
@@ -20,9 +21,11 @@ yay -Syu n-m3u8dl-re-bin
 # Arch Linux 及其衍生版安装 N_m3u8DL-RE 开发版 (该源非本人维护)
 yay -Syu n-m3u8dl-re-git
 ```
+
 ---
 
-# 命令行参数
+## 命令行参数
+
 ```
 Description:
   N_m3u8DL-RE (Beta version) 20241201
@@ -104,7 +107,7 @@ Options:
 ```
 
 <details>
-<summary>点击查看More Help</summary> 
+<summary>点击查看More Help</summary>
 
 ```
 More Help:
@@ -127,6 +130,7 @@ More Help:
 # 使用mkvmerge, 自定义程序路径
 -M format=mkv:muxer=mkvmerge:bin_path="C\:\Program Files\MKVToolNix\mkvmerge.exe"
 ```
+
 ```
 More Help:
 
@@ -144,6 +148,7 @@ More Help:
 # 引入外部音轨+字幕
 --mux-import path="D\:\media\atmos.m4a":lang=eng:name="English Description Audio" --mux-import path="D\:\media\eng.vtt":lang=eng:name="English (Description)"
 ```
+
 ```
 More Help:
 
@@ -165,6 +170,7 @@ plistDurMin=hms:plistDurMax=hms:for=FOR
 # 选择长度大于1小时20分钟30秒的视频
 -sv plistDurMin="1h20m30s":for=best
 ```
+
 ```
 More Help:
 
@@ -180,6 +186,7 @@ More Help:
 # 选择最佳的2条英语(或日语)音轨
 -sa lang="ja|en":for=best2
 ```
+
 ```
 More Help:
 
@@ -193,6 +200,7 @@ More Help:
 # 选择所有带有"中文"的字幕
 -ss name="中文":for=all
 ```
+
 ```
 More Help:
 
@@ -213,21 +221,17 @@ More Help:
 
 </details>
 
+## 运行截图
 
-
-
-# 运行截图
-
-## 点播
+### 点播
 
 ![RE1](img/RE.gif)
 
 还可以并行下载+自动混流
 
-
 ![RE2](img/RE2.gif)
 
-## 直播
+### 直播
 
 录制TS直播源：
 
@@ -238,14 +242,17 @@ More Help:
 [click to show gif](http://pan.iqiyi.com/file/paopao/nmAV5MOh0yIyHhnxdgM_6th_p2nqrFsM4k-o3cUPwUa8Eh8QOU4uyPkLa_BlBrMa3GBnKWSk8rOaUwbsjKN14g.gif)
 
 录制过程中，借助ffmpeg完成对音视频的实时混流
+
 ```
 ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a -c copy 2022-09-21_19-54-42_V.ts
 ```
-在新版本(>=v0.1.5)中，可以尝试开启 `live-pipe-mux` 来代替以上命令
 
-**特别注意：如果网络环境不够稳定，请不要开启 `live-pipe-mux`。管道内数据读取由 ffmpeg 负责，在某些环境下容易丢失直播数据**
+从 v0.1.5 开始，可以尝试开启 `live-pipe-mux` 来代替以上命令
 
-在新版本(>=v0.1.8)中，能够通过设置环境变量 `RE_LIVE_PIPE_OPTIONS` 来改变 `live-pipe-mux` 时 ffmpeg 的某些选项： https://github.com/nilaoda/N_m3u8DL-RE/issues/162#issuecomment-1592462532
+> [!NOTE]
+> 如果网络环境不够稳定，请不要开启 `live-pipe-mux`。管道内数据读取由 ffmpeg 负责，在某些环境下容易丢失直播数据。
+
+从 v0.1.8 开始，能够通过设置环境变量 `RE_LIVE_PIPE_OPTIONS` 来改变 `live-pipe-mux` 时 ffmpeg 的某些选项： <https://github.com/nilaoda/N_m3u8DL-RE/issues/162#issuecomment-1592462532>
 
 ## 赞助
 
