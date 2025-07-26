@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.JsonConverter;
+using N_m3u8DL_RE.Common.CommonEnumerations;
 
 namespace N_m3u8DL_RE.Common.Util
 {
@@ -13,7 +14,12 @@ namespace N_m3u8DL_RE.Common.Util
             Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Converters = { new JsonStringEnumConverter(), new BytesBase64Converter() }
+            Converters = {
+                new JsonStringEnumConverter<MediaType>(),
+                new JsonStringEnumConverter<EncryptMethod>(),
+                new JsonStringEnumConverter<ExtractorType>(),
+                new BytesBase64Converter()
+            }
         };
         private static readonly JsonContext Context = new(Options);
 
