@@ -9,7 +9,7 @@ internal static partial class OtherUtil
 {
     public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
     {
-        Dictionary<string, string> dic = new();
+        Dictionary<string, string> dic = [];
         if (headers == null) return dic;
 
         foreach (string header in headers)
@@ -24,8 +24,8 @@ internal static partial class OtherUtil
         return dic;
     }
 
-    private static readonly char[] InvalidChars = "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
-        .Split(',').Select(s => (char)int.Parse(s)).ToArray();
+    private static readonly char[] InvalidChars = [.. "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
+        .Split(',').Select(s => (char)int.Parse(s))];
     public static string GetValidFileName(string input, string re = "_", bool filterSlash = false)
     {
         var title = InvalidChars.Aggregate(input, (current, invalidChar) => current.Replace(invalidChar.ToString(), re));

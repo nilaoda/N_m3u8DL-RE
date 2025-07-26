@@ -145,8 +145,10 @@ internal partial class MSSExtractor : IExtractor
 
                 var currentTime = 0L;
                 var segIndex = 0;
-                var varDic = new Dictionary<string, object?>();
-                varDic[MSSTags.Bitrate] = bitrate;
+                var varDic = new Dictionary<string, object?>
+                {
+                    [MSSTags.Bitrate] = bitrate
+                };
 
                 foreach (var c in cElements)
                 {

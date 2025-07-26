@@ -62,7 +62,7 @@ public static class FilterUtil
         else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Any())
             inputs = inputs.TakeLast(worstNumber).ToList();
 
-        return inputs.ToList();
+        return [.. inputs];
     }
 
     public static List<StreamSpec> DoFilterDrop(IEnumerable<StreamSpec> lists, StreamFilter? filter)
@@ -74,7 +74,7 @@ public static class FilterUtil
 
         inputs = inputs.Where(i => selected.All(s => s.ToString() != i.ToString()));
 
-        return inputs.ToList();
+        return [.. inputs];
     }
 
     public static List<StreamSpec> SelectStreams(IEnumerable<StreamSpec> lists)
@@ -157,7 +157,7 @@ public static class FilterUtil
                 foreach (var part in item.Playlist!.MediaParts)
                 {
                     // 秒级同步 忽略毫秒
-                    part.MediaSegments = part.MediaSegments.Where(s => s.DateTime!.Value.Ticks / TimeSpan.TicksPerSecond >= minDate.Value.Ticks / TimeSpan.TicksPerSecond).ToList();
+                    part.MediaSegments = [.. part.MediaSegments.Where(s => s.DateTime!.Value.Ticks / TimeSpan.TicksPerSecond >= minDate.Value.Ticks / TimeSpan.TicksPerSecond)];
                 }
             }
         }
@@ -168,7 +168,7 @@ public static class FilterUtil
             {
                 foreach (var part in item.Playlist!.MediaParts)
                 {
-                    part.MediaSegments = part.MediaSegments.Where(s => s.Index >= minIndex).ToList();
+                    part.MediaSegments = [.. part.MediaSegments.Where(s => s.Index >= minIndex)];
                 }
             }
         }
@@ -182,7 +182,7 @@ public static class FilterUtil
             {
                 foreach (var part in item.Playlist!.MediaParts)
                 {
-                    part.MediaSegments = part.MediaSegments.Skip(skipCount).ToList();
+                    part.MediaSegments = [.. part.MediaSegments.Skip(skipCount)];
                 }
             }
         }
@@ -217,10 +217,10 @@ public static class FilterUtil
             {
                 List<MediaSegment> newSegments;
                 if (filterByIndex)
-                    newSegments = part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex).ToList();
+                    newSegments = [.. part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex)];
                 else
-                    newSegments = part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
-                                                                  && stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) <= customRange.EndSec).ToList();
+                    newSegments = [.. part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
+                                                                  && stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) <= customRange.EndSec)];
 
                 if (newSegments.Count > 0)
                     skippedDur += part.MediaSegments.Where(seg => seg.Index < newSegments.First().Index).Sum(x => x.Duration);
@@ -258,11 +258,11 @@ public static class FilterUtil
                     continue;
                 }
                 // 找到广告分片 清理
-                part.MediaSegments = part.MediaSegments.Where(x => regList.All(reg => !reg.IsMatch(x.Url))).ToList();
+                part.MediaSegments = [.. part.MediaSegments.Where(x => regList.All(reg => !reg.IsMatch(x.Url)))];
             }
 
             // 清理已经为空的 part
-            stream.Playlist.MediaParts = stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0).ToList();
+            stream.Playlist.MediaParts = [.. stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0)];
 
             var countAfter = stream.SegmentsCount;
 

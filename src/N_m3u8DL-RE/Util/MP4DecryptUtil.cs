@@ -44,7 +44,7 @@ internal static partial class MP4DecryptUtil
         // user only input key, append kid
         if (keyPair == null && keyPairs.Count == 1 && !keyPairs.First().Contains(':'))
         {
-            keyPairs = keyPairs.Select(x => $"{kid}:{x}").ToList();
+            keyPairs = [.. keyPairs.Select(x => $"{kid}:{x}")];
             keyPair = keyPairs.First();
         }
 

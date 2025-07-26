@@ -11,7 +11,7 @@ internal static class ChaCha20Util
         if (nonceBytes.Length != 12 && nonceBytes.Length != 8)
             throw new Exception("Key must be 12 or 8 bytes!");
         if (nonceBytes.Length == 8)
-            nonceBytes = (new byte[4] { 0, 0, 0, 0 }).Concat(nonceBytes).ToArray();
+            nonceBytes = [.. (new byte[4] { 0, 0, 0, 0 }), .. nonceBytes];
 
         var decStream = new MemoryStream();
         using BinaryReader reader = new BinaryReader(new MemoryStream(encryptedBuff));

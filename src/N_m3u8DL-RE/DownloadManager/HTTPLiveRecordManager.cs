@@ -125,7 +125,7 @@ internal class HTTPLiveRecordManager
                 if (data[i] == 0x47 && (i + 188) < data.Length && data[i + 188] == 0x47)
                 {
                     var tsData = data.Skip(i).Take(188);
-                    var tsHeaderInt = BitConverter.ToUInt32(BitConverter.IsLittleEndian ? tsData.Take(4).Reverse().ToArray() : tsData.Take(4).ToArray(), 0);
+                    var tsHeaderInt = BitConverter.ToUInt32(BitConverter.IsLittleEndian ? [.. tsData.Take(4).Reverse()] : [.. tsData.Take(4)], 0);
                     var pid = (tsHeaderInt & 0x1fff00) >> 8;
                     var tsPayload = tsData.Skip(4);
                     // PAT
@@ -146,9 +146,9 @@ internal class HTTPLiveRecordManager
                             var descriptorsLoopLength = (ConvertToUint16(dscripData.Skip(3).Take(2))) & 0xfff;
                             var descriptorsData = dscripData.Skip(5).Take(descriptorsLoopLength);
                             var serviceProviderLength = (int)descriptorsData.Skip(3).First();
-                            serviceProvider = Encoding.UTF8.GetString(descriptorsData.Skip(4).Take(serviceProviderLength).ToArray());
+                            serviceProvider = Encoding.UTF8.GetString([.. descriptorsData.Skip(4).Take(serviceProviderLength)]);
                             var serviceNameLength = (int)descriptorsData.Skip(4 + serviceProviderLength).First();
-                            serviceName = Encoding.UTF8.GetString(descriptorsData.Skip(5 + serviceProviderLength).Take(serviceNameLength).ToArray());
+                            serviceName = Encoding.UTF8.GetString([.. descriptorsData.Skip(5 + serviceProviderLength).Take(serviceNameLength)]);
                         }
                     }
                     if (programId != "" && (serviceName != "" || serviceProvider != ""))
@@ -203,7 +203,7 @@ internal class HTTPLiveRecordManager
         };
         if (DownloaderConfig.MyOptions.NoAnsiColor)
         {
-            progressColumns = progressColumns.SkipLast(1).ToArray();
+            progressColumns = [.. progressColumns.SkipLast(1)];
         }
         progress.Columns(progressColumns);
 

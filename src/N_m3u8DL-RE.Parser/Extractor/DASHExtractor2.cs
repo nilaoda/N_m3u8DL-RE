@@ -323,9 +323,11 @@ internal partial class DASHExtractor2 : IExtractor
                         // 优先使用最近的元素
                         var segmentTemplate = (segmentTemplateElements.FirstOrDefault() ?? segmentTemplateElementsOuter.FirstOrDefault())!;
                         var segmentTemplateOuter = (segmentTemplateElementsOuter.FirstOrDefault() ?? segmentTemplateElements.FirstOrDefault())!;
-                        var varDic = new Dictionary<string, object?>();
-                        varDic[DASHTags.TemplateRepresentationID] = streamSpec.GroupId;
-                        varDic[DASHTags.TemplateBandwidth] = bandwidth?.Value;
+                        var varDic = new Dictionary<string, object?>
+                        {
+                            [DASHTags.TemplateRepresentationID] = streamSpec.GroupId,
+                            [DASHTags.TemplateBandwidth] = bandwidth?.Value
+                        };
                         // presentationTimeOffset
                         var presentationTimeOffsetStr = segmentTemplate.Attribute("presentationTimeOffset")?.Value ?? segmentTemplateOuter.Attribute("presentationTimeOffset")?.Value ?? "0";
                         // timesacle

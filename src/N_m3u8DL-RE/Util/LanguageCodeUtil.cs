@@ -13,7 +13,7 @@ internal class Language(string extendCode, string code, string desc, string desc
 internal static class LanguageCodeUtil
 {
 
-    private static readonly List<Language> ALL_LANGS = @"
+    private static readonly List<Language> ALL_LANGS = [.. @"
 default;und;default;default
 af;afr;Afrikaans;Afrikaans
 af-ZA;afr;Afrikaans (South Africa);Afrikaans (South Africa)
@@ -378,7 +378,7 @@ MA;msa;Melayu;Melayu
         {
             var arr = x.Trim().Split(';', StringSplitOptions.TrimEntries);
             return new Language(arr[0], arr[1], arr[2], arr[3]);
-        }).ToList();
+        })];
 
     private static Dictionary<string, string> CODE_MAP = @"
 iv;IVL

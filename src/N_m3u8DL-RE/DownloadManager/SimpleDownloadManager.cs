@@ -656,7 +656,7 @@ internal class SimpleDownloadManager
         };
         if (DownloaderConfig.MyOptions.NoAnsiColor)
         {
-            progressColumns = progressColumns.SkipLast(1).ToArray();
+            progressColumns = [.. progressColumns.SkipLast(1)];
         }
         progress.Columns(progressColumns);
 
@@ -719,11 +719,11 @@ internal class SimpleDownloadManager
         // 混流
         if (success && DownloaderConfig.MyOptions.MuxAfterDone && OutputFiles.Count > 0)
         {
-            OutputFiles = OutputFiles.OrderBy(o => o.Index).ToList();
+            OutputFiles = [.. OutputFiles.OrderBy(o => o.Index)];
             // 是否跳过字幕
             if (DownloaderConfig.MyOptions.MuxOptions!.SkipSubtitle)
             {
-                OutputFiles = OutputFiles.Where(o => o.MediaType != MediaType.SUBTITLES).ToList();
+                OutputFiles = [.. OutputFiles.Where(o => o.MediaType != MediaType.SUBTITLES)];
             }
             if (DownloaderConfig.MyOptions.MuxImports != null)
             {
@@ -737,8 +737,8 @@ internal class SimpleDownloadManager
             var outPath = Path.Combine(saveDir, outName);
             Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
             var result = false;
-            if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
-            else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
+            if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath);
+            else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
             // 完成后删除各轨道文件
             if (result)
             {

@@ -92,7 +92,7 @@ internal static class MergeUtil
             index++;
         }
 
-        return newFiles.ToArray();
+        return [.. newFiles];
     }
 
     public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,

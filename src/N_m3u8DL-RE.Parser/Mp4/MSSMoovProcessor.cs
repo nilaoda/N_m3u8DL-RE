@@ -219,7 +219,7 @@ public partial class MSSMoovProcessor
         var schmPayload = new List<byte>();
         schmPayload.AddRange(Encoding.ASCII.GetBytes("cenc")); // scheme_type 'cenc' => common encryption
         schmPayload.AddRange([0, 1, 0, 0]); // scheme_version Major version 1, Minor version 0
-        var schmBox = FullBox("schm", 0, 0, schmPayload.ToArray());
+        var schmBox = FullBox("schm", 0, 0, [.. schmPayload]);
 
         sinfPayload.AddRange(schmBox);
 
@@ -230,12 +230,12 @@ public partial class MSSMoovProcessor
         tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID)); // default_KID
         // tencPayload.Add(0x8);// default_constant_IV_size
         // tencPayload.AddRange(new byte[8]);// default_constant_IV
-        var tencBox = FullBox("tenc", 0, 0, tencPayload.ToArray());
+        var tencBox = FullBox("tenc", 0, 0, [.. tencPayload]);
 
         var schiBox = Box("schi", tencBox);
         sinfPayload.AddRange(schiBox);
 
-        var sinfBox = Box("sinf", sinfPayload.ToArray());
+        var sinfBox = Box("sinf", [.. sinfPayload]);
 
         return sinfBox;
     }
@@ -353,19 +353,31 @@ public partial class MSSMoovProcessor
         var minfPayload = new List<byte>();
         if (StreamType == "audio")
         {
-            var smhd = new List<byte>();
-            smhd.Add(0); smhd.Add(0); // balance
-            smhd.Add(0); smhd.Add(0); // reserved
+            var smhd = new List<byte>
+            {
+                0,
+                0, // balance
+                0,
+                0 // reserved
+            };
 
-            minfPayload.AddRange(FullBox("smhd", 0, 0, smhd.ToArray())); // Sound Media Header
+            minfPayload.AddRange(FullBox("smhd", 0, 0, [.. smhd])); // Sound Media Header
         }
         else if (StreamType == "video")
         {
-            var vmhd = new List<byte>();
-            vmhd.Add(0); vmhd.Add(0); // graphics mode
-            vmhd.Add(0); vmhd.Add(0); vmhd.Add(0); vmhd.Add(0); vmhd.Add(0); vmhd.Add(0);// opcolor
+            var vmhd = new List<byte>
+            {
+                0,
+                0, // graphics mode
+                0,
+                0,
+                0,
+                0,
+                0,
+                0// opcolor
+            };
 
-            minfPayload.AddRange(FullBox("vmhd", 0, 1, vmhd.ToArray())); // Video Media Header
+            minfPayload.AddRange(FullBox("vmhd", 0, 1, [.. vmhd])); // Video Media Header
         }
         else if (StreamType == "text")
         {
@@ -376,14 +388,19 @@ public partial class MSSMoovProcessor
             throw new NotSupportedException();
         }
 
-        var drefPayload = new List<byte>();
-        drefPayload.Add(0); drefPayload.Add(0); drefPayload.Add(0); drefPayload.Add(1); // entry count
+        var drefPayload = new List<byte>
+        {
+            0,
+            0,
+            0,
+            1 // entry count
+        };
         drefPayload.AddRange(FullBox("url ", 0, SELF_CONTAINED, [])); // Data Entry URL Box
 
-        var dinfPayload = FullBox("dref", 0, 0, drefPayload.ToArray()); // Data Reference Box
-        minfPayload.AddRange(Box("dinf", dinfPayload.ToArray())); // Data Information Box
+        var dinfPayload = FullBox("dref", 0, 0, [.. drefPayload]); // Data Reference Box
+        minfPayload.AddRange(Box("dinf", [.. dinfPayload])); // Data Information Box
 
-        return minfPayload.ToArray();
+        return [.. minfPayload];
     }
 
     private byte[] GenEsds(byte[] audioSpecificConfig)
@@ -622,7 +639,7 @@ public partial class MSSMoovProcessor
                 }
             }
         }
-        sps = encList.ToArray();
+        sps = [.. encList];
 
         using var reader = new BinaryReader2(new MemoryStream(sps));
         reader.ReadBytes(2); // Skip 2 bytes unit header
@@ -658,7 +675,7 @@ public partial class MSSMoovProcessor
                      $".{HEVC_GENERAL_PROFILE_SPACE_STRINGS[generalProfileSpace]}{generalProfileIdc}" +
                      $".{Convert.ToString(generalProfileCompatibilityFlags, 16)}" +
                      $".{(generalTierFlag == 1 ? 'H' : 'L')}{generalLevelIdc}" +
-                     $".{HexUtil.BytesToHex(constraintBytes.Where(b => b != 0).ToArray())}";
+                     $".{HexUtil.BytesToHex([.. constraintBytes.Where(b => b != 0)])}";
         StreamSpec.Codecs = codecs;
 
 
@@ -684,7 +701,7 @@ public partial class MSSMoovProcessor
         writer.WriteByte((byte)(0 << 6 | 0 << 3 | 0 << 2 | (NalUnitLengthField - 1))); // constantFrameRate + numTemporalLayers + temporalIdNested + lengthSizeMinusOne
         writer.WriteByte(0x03); // numOfArrays (vps sps pps)
 
-        sps = oriSps.ToArray();
+        sps = [.. oriSps];
         writer.WriteByte(0x20); // array_completeness + reserved + NAL_unit_type
         writer.WriteUShort(1); // numNalus 
         writer.WriteUShort(vps.Length);
@@ -830,33 +847,33 @@ public partial class MSSMoovProcessor
         var stsdPayload = GetStsd();
         var stsdBox = FullBox("stsd", 0, 0, stsdPayload); // Sample Description Box
 
-        stblPayload = stblPayload.Concat(stscBox).Concat(stcoBox).Concat(stszBox).Concat(stsdBox).ToArray();
+        stblPayload = [.. stblPayload, .. stscBox, .. stcoBox, .. stszBox, .. stsdBox];
 
 
         var stblBox = Box("stbl", stblPayload); // Sample Table Box
-        minfPayload = minfPayload.Concat(stblBox).ToArray();
+        minfPayload = [.. minfPayload, .. stblBox];
 
         var minfBox = Box("minf", minfPayload); // Media Information Box
-        mdiaPayload = mdiaPayload.Concat(minfBox).ToArray();
+        mdiaPayload = [.. mdiaPayload, .. minfBox];
 
         var mdiaBox = Box("mdia", mdiaPayload); // Media Box
-        trakPayload = trakPayload.Concat(mdiaBox).ToArray();
+        trakPayload = [.. trakPayload, .. mdiaBox];
 
         var trakBox = Box("trak", trakPayload); // Track Box
-        moovPayload = moovPayload.Concat(trakBox).ToArray();
+        moovPayload = [.. moovPayload, .. trakBox];
 
         var mvexPayload = GetMehd();
         var trexBox = GetTrex();
-        mvexPayload = mvexPayload.Concat(trexBox).ToArray();
+        mvexPayload = [.. mvexPayload, .. trexBox];
 
         var mvexBox = Box("mvex", mvexPayload); // Movie Extends Box
-        moovPayload = moovPayload.Concat(mvexBox).ToArray();
+        moovPayload = [.. moovPayload, .. mvexBox];
 
         if (IsProtection)
         {
             var psshBox1 = GenPsshBoxForPlayReady();
             var psshBox2 = GenPsshBoxForWideVine();
-            moovPayload = moovPayload.Concat(psshBox1).Concat(psshBox2).ToArray();
+            moovPayload = [.. moovPayload, .. psshBox1, .. psshBox2];
         }
 
         var moovBox = Box("moov", moovPayload); // Movie Box

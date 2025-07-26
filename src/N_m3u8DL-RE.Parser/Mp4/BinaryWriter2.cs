@@ -51,7 +51,7 @@ class BinaryWriter2 : BinaryWriter
             Array.Reverse(arr);
         while (padding > 0)
         {
-            arr = arr.Concat(new byte[] { 0x00 }).ToArray();
+            arr = [.. arr, .. new byte[] { 0x00 }];
             padding--;
         }
         BaseStream.Write(arr);
@@ -64,7 +64,7 @@ class BinaryWriter2 : BinaryWriter
             Array.Reverse(arr);
         while (padding > 0)
         {
-            arr = arr.Concat(new byte[] { 0x00 }).ToArray();
+            arr = [.. arr, .. new byte[] { 0x00 }];
             padding--;
         }
         BaseStream.Write(arr);
@@ -75,7 +75,7 @@ class BinaryWriter2 : BinaryWriter
         var arr = new byte[] { n };
         while (padding > 0)
         {
-            arr = arr.Concat(new byte[] { 0x00 }).ToArray();
+            arr = [.. arr, .. new byte[] { 0x00 }];
             padding--;
         }
         BaseStream.Write(arr);

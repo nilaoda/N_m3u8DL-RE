@@ -126,7 +126,7 @@ public static partial class MP4TtmlUtil
 
     private static List<string> SplitMultipleRootElements(string xml)
     {
-        return !MultiElementsFixRegex().IsMatch(xml) ? [] : MultiElementsFixRegex().Matches(xml).Select(m => m.Value).ToList();
+        return !MultiElementsFixRegex().IsMatch(xml) ? [] : [.. MultiElementsFixRegex().Matches(xml).Select(m => m.Value)];
     }
 
     public static WebVttSub ExtractFromMp4(string item, long segTimeMs, long baseTimestamp = 0L)

@@ -289,7 +289,7 @@ internal class Program
             basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
             audios = FilterUtil.DoFilterDrop(audios, option.DropAudioFilter);
             subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
-            lists = basicStreams.Concat(audios).Concat(subs).ToList();
+            lists = [.. basicStreams, .. audios, .. subs];
         }
 
         if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
@@ -319,7 +319,7 @@ internal class Program
             basicStreams = FilterUtil.DoFilterKeep(basicStreams, option.VideoFilter);
             audios = FilterUtil.DoFilterKeep(audios, option.AudioFilter);
             subs = FilterUtil.DoFilterKeep(subs, option.SubtitleFilter);
-            selectedStreams = basicStreams.Concat(audios).Concat(subs).ToList();
+            selectedStreams = [.. basicStreams, .. audios, .. subs];
         }
         else
         {

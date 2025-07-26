@@ -21,5 +21,5 @@ internal class DownloaderConfig
     /// <summary>
     /// 请求头
     /// </summary>
-    public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
+    public Dictionary<string, string> Headers { get; set; } = [];
 }

@@ -19,7 +19,7 @@ public class StreamExtractor
     private string rawText;
     private static SemaphoreSlim semaphore = new(1, 1);
 
-    public Dictionary<string, string> RawFiles { get; set; } = new(); // 存储（文件名,文件内容）
+    public Dictionary<string, string> RawFiles { get; set; } = []; // 存储（文件名,文件内容）
 
     public StreamExtractor(ParserConfig parserConfig)
     {

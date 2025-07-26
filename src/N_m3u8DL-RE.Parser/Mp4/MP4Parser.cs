@@ -47,8 +47,8 @@ namespace Mp4SubtitleParser
     class MP4Parser
     {
         public bool Done { get; set; } = false;
-        public Dictionary<long, int> Headers { get; set; } = new Dictionary<long, int>();
-        public Dictionary<long, BoxHandler> BoxDefinitions { get; set; } = new Dictionary<long, BoxHandler>();
+        public Dictionary<long, int> Headers { get; set; } = [];
+        public Dictionary<long, BoxHandler> BoxDefinitions { get; set; } = [];
 
         public delegate void BoxHandler(ParsedBox box);
         public delegate void DataHandler(byte[] data);

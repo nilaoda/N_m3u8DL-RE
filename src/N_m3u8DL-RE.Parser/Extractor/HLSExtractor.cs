@@ -305,7 +305,7 @@ internal class HLSExtractor : IExtractor
                 {
                     MediaSegments = segments,
                 });
-                segments = new();
+                segments = [];
             }
             // 解析KEY
             else if (line.StartsWith(HLSTags.ext_x_key))
@@ -350,7 +350,7 @@ internal class HLSExtractor : IExtractor
                         MediaSegments = segments
                     });
                 }
-                segments = new();
+                segments = [];
                 isEndlist = true;
             }
             // #EXT-X-MAP
@@ -386,7 +386,7 @@ internal class HLSExtractor : IExtractor
                             MediaSegments = segments
                         });
                     }
-                    segments = new();
+                    segments = [];
                     if (!allowHlsMultiExtMap)
                     {
                         isEndlist = true;
@@ -469,7 +469,7 @@ internal class HLSExtractor : IExtractor
         {
             Logger.Warn(ResString.masterM3u8Found);
             var lists = await ParseMasterListAsync();
-            lists = lists.DistinctBy(p => p.Url).ToList();
+            lists = [.. lists.DistinctBy(p => p.Url)];
             return lists;
         }
 
@@ -521,7 +521,7 @@ internal class HLSExtractor : IExtractor
         // 重新加载master m3u8, 刷新选中流的URL
         await LoadM3u8FromUrlAsync(ParserConfig.Url);
         var newStreams = await ParseMasterListAsync();
-        newStreams = newStreams.DistinctBy(p => p.Url).ToList();
+        newStreams = [.. newStreams.DistinctBy(p => p.Url)];
         foreach (var l in lists)
         {
             var match = newStreams.Where(n => n.ToShortString() == l.ToShortString()).ToList();
