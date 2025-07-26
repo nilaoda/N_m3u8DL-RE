@@ -12,7 +12,7 @@ namespace N_m3u8DL_RE.Common.Util
         {
             int retryCount = 0;
             T? result = default;
-            Exception currentException = new();
+            Exception? currentException = null;
 
             while (retryCount < maxRetries)
             {
@@ -31,7 +31,7 @@ namespace N_m3u8DL_RE.Common.Util
             }
 
             return retryCount == maxRetries
-                ? throw new Exception($"Failed to execute action after {maxRetries} retries.", currentException)
+                ? throw new InvalidOperationException($"Failed to execute action after {maxRetries} retries.", currentException)
                 : result;
         }
     }
