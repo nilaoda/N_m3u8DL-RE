@@ -132,9 +132,11 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 codecPrivateData[2] = (byte)((extensionSamplingFrequencyIndex << 7) | (0x02 << 2)); // origin object type equals to 2 => AAC Main Low Complexity
                 codecPrivateData[3] = 0x0; // alignment bits
 
-                ushort[] arr16 = new ushort[2];
-                arr16[0] = (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]);
-                arr16[1] = (ushort)((codecPrivateData[2] << 8) + codecPrivateData[3]);
+                ushort[] arr16 =
+                [
+                    (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]),
+                    (ushort)((codecPrivateData[2] << 8) + codecPrivateData[3]),
+                ];
 
                 // convert decimal to hex value
                 CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
@@ -144,13 +146,14 @@ namespace N_m3u8DL_RE.Parser.Mp4
             {
                 // 2 bytes :     XXXXX         XXXX          XXXX              XXX
                 //           ' ObjectType' 'Freq Index' 'Channels value'   'GAS = 000'
-                byte[] codecPrivateData = new byte[2];
-                // Freq Index is present for 3 bits in the first byte, last bit is in the second
-                codecPrivateData[0] = (byte)((objectType << 3) | (indexFreq >> 1));
-                codecPrivateData[1] = (byte)((indexFreq << 7) | (Channels << 3));
+                byte[] codecPrivateData =
+                [
+                    // Freq Index is present for 3 bits in the first byte, last bit is in the second
+                    (byte)((objectType << 3) | (indexFreq >> 1)),
+                    (byte)((indexFreq << 7) | (Channels << 3)),
+                ];
                 // put the 2 bytes in an 16 bits array
-                ushort[] arr16 = new ushort[1];
-                arr16[0] = (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]);
+                ushort[] arr16 = [(ushort)((codecPrivateData[0] << 8) + codecPrivateData[1])];
 
                 // convert decimal to hex value
                 CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
@@ -168,8 +171,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 // save kid for playready
                 ProtecitonKID_PR = HexUtil.BytesToHex(kidBytes);
                 // fix byte order
-                byte[] reverse1 = new[] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
-                byte[] reverse2 = new[] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
+                byte[] reverse1 = [kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0]];
+                byte[] reverse2 = [kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6]];
                 Array.Copy(reverse1, 0, kidBytes, 0, reverse1.Length);
                 Array.Copy(reverse2, 0, kidBytes, 4, reverse1.Length);
                 ProtecitonKID = HexUtil.BytesToHex(kidBytes);
@@ -849,16 +852,16 @@ namespace N_m3u8DL_RE.Parser.Mp4
             byte[] minfPayload = GenMinf();
 
 
-            byte[] sttsPayload = new byte[] { 0, 0, 0, 0 }; // entry count
+            byte[] sttsPayload = [0, 0, 0, 0]; // entry count
             byte[] stblPayload = FullBox("stts", 0, 0, sttsPayload); // Decoding Time to Sample Box
 
-            byte[] stscPayload = new byte[] { 0, 0, 0, 0 }; // entry count
+            byte[] stscPayload = [0, 0, 0, 0]; // entry count
             byte[] stscBox = FullBox("stsc", 0, 0, stscPayload); // Sample To Chunk Box
 
-            byte[] stcoPayload = new byte[] { 0, 0, 0, 0 }; // entry count
+            byte[] stcoPayload = [0, 0, 0, 0]; // entry count
             byte[] stcoBox = FullBox("stco", 0, 0, stcoPayload); // Chunk Offset Box
 
-            byte[] stszPayload = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }; // sample size, sample count
+            byte[] stszPayload = [0, 0, 0, 0, 0, 0, 0, 0]; // sample size, sample count
             byte[] stszBox = FullBox("stsz", 0, 0, stszPayload); // Sample Size Box
 
             byte[] stsdPayload = GetStsd();

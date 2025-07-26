@@ -867,15 +867,15 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
             // 进度条的列定义
-            ProgressColumn[] progressColumns = new ProgressColumn[]
-            {
+            ProgressColumn[] progressColumns =
+            [
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new RecordingDurationColumn(RecordedDurDic, RefreshedDurDic), // 时长显示
                 new RecordingStatusColumn(),
                 new PercentageColumn(),
                 new DownloadSpeedColumn(SpeedContainerDic), // 速度计算
                 new SpinnerColumn(),
-            };
+            ];
             if (DownloaderConfig.MyOptions.NoAnsiColor)
             {
                 progressColumns = [.. progressColumns.SkipLast(1)];

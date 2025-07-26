@@ -706,8 +706,8 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
             // 进度条的列定义
-            ProgressColumn[] progressColumns = new ProgressColumn[]
-            {
+            ProgressColumn[] progressColumns =
+            [
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new ProgressBarColumn(){ Width = 30 },
                 new MyPercentageColumn(),
@@ -715,7 +715,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 new DownloadSpeedColumn(SpeedContainerDic), // 速度计算
                 new RemainingTimeColumn(),
                 new SpinnerColumn(),
-            };
+            ];
             if (DownloaderConfig.MyOptions.NoAnsiColor)
             {
                 progressColumns = [.. progressColumns.SkipLast(1)];

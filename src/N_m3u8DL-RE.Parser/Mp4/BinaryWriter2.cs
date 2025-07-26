@@ -94,7 +94,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         public void WriteByte(byte n, int padding = 0)
         {
-            byte[] arr = new byte[] { n };
+            byte[] arr = [n];
             while (padding > 0)
             {
                 arr = [.. arr, .. new byte[] { 0x00 }];

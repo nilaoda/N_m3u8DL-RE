@@ -198,13 +198,13 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         public static string TypeToString(long type)
         {
-            return Encoding.UTF8.GetString(new byte[]
-            {
+            return Encoding.UTF8.GetString(
+            [
                  (byte)((type >> 24) & 0xff),
                  (byte)((type >> 16) & 0xff),
                  (byte)((type >> 8) & 0xff),
                  (byte)(type & 0xff)
-            });
+            ]);
         }
 
         private static int TypeFromString(string name)
