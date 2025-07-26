@@ -121,7 +121,7 @@ namespace N_m3u8DL_RE.Util
             StringBuilder command = new("-loglevel warning -nostdin ");
             string ddpAudio = string.Empty;
             string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
-            ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
+            ddpAudio = File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "";
             if (!string.IsNullOrEmpty(ddpAudio))
             {
                 useAACFilter = false;
@@ -147,7 +147,7 @@ namespace N_m3u8DL_RE.Util
 
             switch (muxFormat.ToUpper())
             {
-                case ("MP4"):
+                case "MP4":
                     command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));
                     command.Append(" " + (string.IsNullOrEmpty(ddpAudio) ? "" : "-i \"" + ddpAudio + "\""));
                     command.Append(
@@ -164,25 +164,25 @@ namespace N_m3u8DL_RE.Util
 
                     command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
                     break;
-                case ("MKV"):
+                case "MKV":
                     command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mkv\"");
                     break;
-                case ("FLV"):
+                case "FLV":
                     command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".flv\"");
                     break;
-                case ("M4A"):
+                case "M4A":
                     command.Append("\" -map 0  -c copy -f mp4 -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".m4a\"");
                     break;
-                case ("TS"):
+                case "TS":
                     command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
                     break;
-                case ("EAC3"):
+                case "EAC3":
                     command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
                     break;
-                case ("AAC"):
+                case "AAC":
                     command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".m4a\"");
                     break;
-                case ("AC3"):
+                case "AC3":
                     command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
                     break;
             }

@@ -16,7 +16,7 @@
 
             if (nonceBytes.Length == 8)
             {
-                nonceBytes = [.. (new byte[4] { 0, 0, 0, 0 }), .. nonceBytes];
+                nonceBytes = [.. new byte[4] { 0, 0, 0, 0 }, .. nonceBytes];
             }
 
             MemoryStream decStream = new();
