@@ -166,7 +166,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         private void ExtractKID()
         {
             // playready
-            if (ProtectionSystemId.ToUpper() == "9A04F079-9840-4286-AB92-E65BE0885F95")
+            if (ProtectionSystemId.Equals("9A04F079-9840-4286-AB92-E65BE0885F95", StringComparison.CurrentCultureIgnoreCase))
             {
                 byte[] bytes = HexUtil.HexToBytes(ProtectionData.Replace("00", ""));
                 string text = Encoding.ASCII.GetString(bytes);
@@ -181,7 +181,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 ProtecitonKID = HexUtil.BytesToHex(kidBytes);
             }
             // widevine
-            else if (ProtectionSystemId.ToUpper() == "EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED")
+            else if (ProtectionSystemId.Equals("EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED", StringComparison.CurrentCultureIgnoreCase))
             {
                 throw new NotSupportedException();
             }
