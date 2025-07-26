@@ -23,11 +23,9 @@ namespace N_m3u8DL_RE.Common.Util
             {
                 return JsonSerializer.Serialize(s, Context.StreamSpec);
             }
-            if (o is IOrderedEnumerable<StreamSpec> ss)
-            {
-                return JsonSerializer.Serialize(ss, Context.IOrderedEnumerableStreamSpec);
-            }
-            return o is List<StreamSpec> sList
+            return o is IOrderedEnumerable<StreamSpec> ss
+                ? JsonSerializer.Serialize(ss, Context.IOrderedEnumerableStreamSpec)
+                : o is List<StreamSpec> sList
                 ? JsonSerializer.Serialize(sList, Context.ListStreamSpec)
                 : o is IEnumerable<MediaSegment> mList ? JsonSerializer.Serialize(mList, Context.IEnumerableMediaSegment) : "{NOT SUPPORTED}";
         }

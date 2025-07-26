@@ -235,12 +235,9 @@ namespace N_m3u8DL_RE.CommandLine
             string input = result.Tokens[0].Value;
             try
             {
-                if (string.IsNullOrEmpty(input))
-                {
-                    return null;
-                }
-
-                return File.Exists(input)
+                return string.IsNullOrEmpty(input)
+                    ? null
+                    : File.Exists(input)
                     ? File.ReadAllBytes(input)
                     : HexUtil.TryParseHexString(input, out byte[]? bytes) ? bytes : Convert.FromBase64String(input);
             }
