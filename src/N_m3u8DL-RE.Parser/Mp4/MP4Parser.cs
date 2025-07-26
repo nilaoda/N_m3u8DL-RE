@@ -200,9 +200,9 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             return Encoding.UTF8.GetString(new byte[]
             {
-                 (byte)(type >> 24 & 0xff),
-                 (byte)(type >> 16 & 0xff),
-                 (byte)(type >> 8 & 0xff),
+                 (byte)((type >> 24) & 0xff),
+                 (byte)((type >> 16) & 0xff),
+                 (byte)((type >> 8) & 0xff),
                  (byte)(type & 0xff)
             });
         }
@@ -217,7 +217,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             int code = 0;
             foreach (char chr in name)
             {
-                code = code << 8 | chr;
+                code = (code << 8) | chr;
             }
             return code;
         }

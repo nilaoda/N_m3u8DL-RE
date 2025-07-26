@@ -147,7 +147,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 byte[] codecPrivateData = new byte[2];
                 // Freq Index is present for 3 bits in the first byte, last bit is in the second
                 codecPrivateData[0] = (byte)((objectType << 3) | (indexFreq >> 1));
-                codecPrivateData[1] = (byte)((indexFreq << 7) | Channels << 3);
+                codecPrivateData[1] = (byte)((indexFreq << 7) | (Channels << 3));
                 // put the 2 bytes in an 16 bits array
                 ushort[] arr16 = new ushort[1];
                 arr16[0] = (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]);
@@ -325,7 +325,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             writer.WriteULong(CreationTime); // modification_time
             writer.WriteUInt(Timesacle); // timescale
             writer.WriteULong(Duration); // duration
-            writer.WriteUShort((Language[0] - 0x60) << 10 | (Language[1] - 0x60) << 5 | (Language[2] - 0x60)); // language
+            writer.WriteUShort(((Language[0] - 0x60) << 10) | ((Language[1] - 0x60) << 5) | (Language[2] - 0x60)); // language
             writer.WriteUShort(0); // pre defined
 
             return FullBox("mdhd", 1, 0, stream.ToArray());
@@ -705,7 +705,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             // var reserved1 = 0xF;
 
             writer.WriteByte(1); // configuration version
-            writer.WriteByte((byte)((generalProfileSpace << 6) + (generalTierFlag == 1 ? 0x20 : 0) | generalProfileIdc)); // general_profile_space + general_tier_flag + general_profile_idc
+            writer.WriteByte((byte)(((generalProfileSpace << 6) + (generalTierFlag == 1 ? 0x20 : 0)) | generalProfileIdc)); // general_profile_space + general_tier_flag + general_profile_idc
             writer.WriteUInt(generalProfileCompatibilityFlags); // general_profile_compatibility_flags
             writer.Write(constraintBytes); // general_constraint_indicator_flags
             writer.WriteByte((byte)generalProfileIdc); // general_level_idc
@@ -715,7 +715,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             writer.WriteByte(0 | 0xf8); // reserved + bitDepthLumaMinus8
             writer.WriteByte(0 | 0xf8); // reserved + bitDepthChromaMinus8
             writer.WriteUShort(0); // avgFrameRate
-            writer.WriteByte((byte)(0 << 6 | 0 << 3 | 0 << 2 | (NalUnitLengthField - 1))); // constantFrameRate + numTemporalLayers + temporalIdNested + lengthSizeMinusOne
+            writer.WriteByte((byte)((0 << 6) | (0 << 3) | (0 << 2) | (NalUnitLengthField - 1))); // constantFrameRate + numTemporalLayers + temporalIdNested + lengthSizeMinusOne
             writer.WriteByte(0x03); // numOfArrays (vps sps pps)
 
             sps = [.. oriSps];

@@ -67,7 +67,7 @@ namespace Mp4SubtitleParser
             string Add(string xmlTime)
             {
                 DateTime dt = DateTime.ParseExact(xmlTime, "HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
-                TimeSpan ts = TimeSpan.FromMilliseconds(dt.TimeOfDay.TotalMilliseconds + segTimeMs * index);
+                TimeSpan ts = TimeSpan.FromMilliseconds(dt.TimeOfDay.TotalMilliseconds + (segTimeMs * index));
                 return $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
             }
 

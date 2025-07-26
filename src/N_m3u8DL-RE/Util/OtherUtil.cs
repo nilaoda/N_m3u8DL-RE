@@ -138,7 +138,7 @@ namespace N_m3u8DL_RE.Util
             int minutes = match.Groups[2].Success ? int.Parse(match.Groups[2].Value) : 0;
             int seconds = match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0;
 
-            return hours * 3600 + minutes * 60 + seconds;
+            return (hours * 3600) + (minutes * 60) + seconds;
         }
 
         // 若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录

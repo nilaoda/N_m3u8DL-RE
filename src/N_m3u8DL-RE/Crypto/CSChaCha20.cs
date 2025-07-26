@@ -566,7 +566,7 @@ namespace N_m3u8DL_RE.Crypto
         {
             unchecked
             {
-                return v << c | v >> 32 - c;
+                return (v << c) | (v >> (32 - c));
             }
         }
 
@@ -623,9 +623,9 @@ namespace N_m3u8DL_RE.Crypto
             unchecked
             {
                 return p[inputOffset]
-                    | (uint)p[inputOffset + 1] << 8
-                    | (uint)p[inputOffset + 2] << 16
-                    | (uint)p[inputOffset + 3] << 24;
+                    | ((uint)p[inputOffset + 1] << 8)
+                    | ((uint)p[inputOffset + 2] << 16)
+                    | ((uint)p[inputOffset + 3] << 24);
             }
         }
 

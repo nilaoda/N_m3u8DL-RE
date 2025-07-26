@@ -163,8 +163,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
                             {
                                 SubCue? cue = ParseVTTC(
                                     payload,
-                                    0 + (double)startTime / timescale,
-                                    0 + (double)currentTime / timescale);
+                                    0 + ((double)startTime / timescale),
+                                    0 + ((double)currentTime / timescale));
                                 // Check if same subtitle has been splitted
                                 if (cue != null)
                                 {

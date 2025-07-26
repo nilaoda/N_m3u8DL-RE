@@ -51,7 +51,7 @@ namespace N_m3u8DL_RE.Util
                 {
                     // 手动查询结尾标记 0x47 出现两次
                     int skip = 0;
-                    for (int i = 4; i < sourceData.Length - 188 * 2 - 4; i++)
+                    for (int i = 4; i < sourceData.Length - (188 * 2) - 4; i++)
                     {
                         if (sourceData[i] == 0x47 && sourceData[i + 188] == 0x47 && sourceData[i + 188 + 188] == 0x47)
                         {
@@ -77,7 +77,7 @@ namespace N_m3u8DL_RE.Util
             {
                 // 手动查询结尾标记 0x47 出现两次
                 int skip = 0;
-                for (int i = 4; i < sourceData.Length - 188 * 2 - 4; i++)
+                for (int i = 4; i < sourceData.Length - (188 * 2) - 4; i++)
                 {
                     if (sourceData[i] == 0x47 && sourceData[i + 188] == 0x47 && sourceData[i + 188 + 188] == 0x47)
                     {

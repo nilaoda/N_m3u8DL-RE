@@ -86,7 +86,7 @@ namespace N_m3u8DL_RE.Util
             int index = 0; // 序号
 
             // 按照div的容量分割为小数组
-            string[][] li = [.. Enumerable.Range(0, files.Length / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray())];
+            string[][] li = [.. Enumerable.Range(0, (files.Length / div) + 1).Select(x => files.Skip(x * div).Take(div).ToArray())];
             foreach (string[]? items in li)
             {
                 if (items.Length == 0)
