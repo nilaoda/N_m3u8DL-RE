@@ -11,7 +11,7 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
@@ -314,7 +314,7 @@ internal class SimpleDownloadManager
 
         if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
         {
-            outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT ? ".srt" : ".vtt";
+            outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enumerations.SubtitleFormat.SRT ? ".srt" : ".vtt";
         }
         var output = Path.Combine(saveDir, saveName + outputExt);
 
@@ -384,7 +384,7 @@ internal class SimpleDownloadManager
             finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
             var subContentFixed = finalVtt.ToVtt();
             // 转换字幕格式
-            if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
+            if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
             {
                 path = Path.ChangeExtension(path, ".srt");
                 subContentFixed = finalVtt.ToSrt();
@@ -420,7 +420,7 @@ internal class SimpleDownloadManager
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 var subContentFixed = finalVtt.ToVtt();
                 // 转换字幕格式
-                if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
+                if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = finalVtt.ToSrt();
@@ -469,7 +469,7 @@ internal class SimpleDownloadManager
             finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
             var subContentFixed = finalVtt.ToVtt();
             // 转换字幕格式
-            if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
+            if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
             {
                 path = Path.ChangeExtension(path, ".srt");
                 subContentFixed = finalVtt.ToSrt();
@@ -523,7 +523,7 @@ internal class SimpleDownloadManager
             finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
             var subContentFixed = finalVtt.ToVtt();
             // 转换字幕格式
-            if (DownloaderConfig.MyOptions.SubtitleFormat != Enum.SubtitleFormat.VTT)
+            if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
             {
                 path = Path.ChangeExtension(path, ".srt");
                 subContentFixed = finalVtt.ToSrt();

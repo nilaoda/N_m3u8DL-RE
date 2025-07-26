@@ -3,7 +3,7 @@ using System.Text;
 
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 
 using Spectre.Console;
 

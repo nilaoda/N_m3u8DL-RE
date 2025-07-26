@@ -14,7 +14,7 @@ using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
@@ -502,7 +502,7 @@ internal class SimpleLiveRecordManager2
                 else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
                 else if (streamSpec.MediaType == MediaType.SUBTITLES)
                 {
-                    outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enum.SubtitleFormat.SRT ? ".srt" : ".vtt";
+                    outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enumerations.SubtitleFormat.SRT ? ".srt" : ".vtt";
                 }
 
                 var output = Path.Combine(saveDir, saveName + outputExt);

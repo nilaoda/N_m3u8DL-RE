@@ -10,7 +10,7 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.DownloadManager;
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Processor;

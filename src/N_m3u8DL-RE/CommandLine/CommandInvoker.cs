@@ -11,7 +11,7 @@ using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 using N_m3u8DL_RE.Util;
 
 namespace N_m3u8DL_RE.CommandLine;
@@ -39,7 +39,7 @@ internal static partial class CommandInvoker
     private static readonly Option<string> KeyTextFile = new(["--key-text-file"], description: ResString.cmd_keyText);
     private static readonly Option<Dictionary<string, string>> Headers = new(["-H", "--header"], description: ResString.cmd_header, parseArgument: ParseHeaders) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
     private static readonly Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
-    private static readonly Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enum.SubtitleFormat.SRT);
+    private static readonly Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enumerations.SubtitleFormat.SRT);
     private static readonly Option<bool> DisableUpdateCheck = new(["--disable-update-check"], description: ResString.cmd_disableUpdateCheck, getDefaultValue: () => false);
     private static readonly Option<bool> AutoSelect = new(["--auto-select"], description: ResString.cmd_autoSelect, getDefaultValue: () => false);
     private static readonly Option<bool> SubOnly = new(["--sub-only"], description: ResString.cmd_subOnly, getDefaultValue: () => false);

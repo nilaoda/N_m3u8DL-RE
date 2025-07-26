@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Text.RegularExpressions;
 
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 
 namespace N_m3u8DL_RE.Util;
 

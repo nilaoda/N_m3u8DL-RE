@@ -5,7 +5,7 @@ using Mp4SubtitleParser;
 
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
-using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Enumerations;
 
 namespace N_m3u8DL_RE.Util;
 
