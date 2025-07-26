@@ -3,7 +3,7 @@ using Spectre.Console.Rendering;
 
 namespace N_m3u8DL_RE.Column
 {
-    internal class RecordingStatusColumn : ProgressColumn
+    internal sealed class RecordingStatusColumn : ProgressColumn
     {
         protected override bool NoWrap => true;
         public Style MyStyle { get; set; } = new Style(foreground: Color.Default);

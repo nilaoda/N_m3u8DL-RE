@@ -5,7 +5,7 @@ using N_m3u8DL_RE.Parser.Processor;
 
 namespace N_m3u8DL_RE.Processor
 {
-    internal class DemoProcessor : ContentProcessor
+    internal sealed class DemoProcessor : ContentProcessor
     {
 
         public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig)

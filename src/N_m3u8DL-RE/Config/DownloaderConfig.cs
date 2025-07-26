@@ -2,7 +2,7 @@
 
 namespace N_m3u8DL_RE.Config
 {
-    internal class DownloaderConfig
+    internal sealed class DownloaderConfig
     {
         public required MyOption MyOptions { get; set; }
 

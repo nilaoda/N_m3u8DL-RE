@@ -3,7 +3,7 @@
 namespace N_m3u8DL_RE.Parser.Mp4
 {
     // make BinaryWriter in Big Endian
-    internal class BinaryWriter2(Stream stream) : BinaryWriter(stream)
+    internal sealed class BinaryWriter2(Stream stream) : BinaryWriter(stream)
     {
         private static readonly bool IsLittleEndian = BitConverter.IsLittleEndian;
 

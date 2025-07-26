@@ -20,7 +20,7 @@ using Spectre.Console;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
-    internal class SimpleDownloadManager
+    internal sealed class SimpleDownloadManager
     {
         private readonly IDownloader Downloader;
         private readonly DownloaderConfig DownloaderConfig;

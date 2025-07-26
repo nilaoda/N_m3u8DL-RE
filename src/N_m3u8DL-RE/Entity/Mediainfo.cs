@@ -2,7 +2,7 @@
 
 namespace N_m3u8DL_RE.Entity
 {
-    internal class Mediainfo
+    internal sealed class Mediainfo
     {
         public string? Id { get; set; }
         public string? Text { get; set; }

@@ -8,7 +8,7 @@ using N_m3u8DL_RE.Parser.Processor.HLS;
 
 namespace N_m3u8DL_RE.Processor
 {
-    internal class DemoProcessor2 : KeyProcessor
+    internal sealed class DemoProcessor2 : KeyProcessor
     {
         public override bool CanProcess(ExtractorType extractorType, string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
         {

@@ -1,7 +1,7 @@
 ﻿namespace N_m3u8DL_RE.Parser.Mp4
 {
     // make BinaryReader in Big Endian
-    internal class BinaryReader2(Stream stream) : BinaryReader(stream)
+    internal sealed class BinaryReader2(Stream stream) : BinaryReader(stream)
     {
         public bool HasMoreData()
         {

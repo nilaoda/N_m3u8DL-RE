@@ -15,7 +15,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
     // Microsoft Smooth Streaming
     // https://test.playready.microsoft.com/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/manifest
     // file:///C:/Users/nilaoda/Downloads/[MS-SSTR]-180316.pdf
-    internal partial class MSSExtractor : IExtractor
+    internal sealed partial class MSSExtractor : IExtractor
     {
         [GeneratedRegex("00000001\\d7([0-9a-fA-F]{6})")]
         private static partial Regex VCodecsRegex();

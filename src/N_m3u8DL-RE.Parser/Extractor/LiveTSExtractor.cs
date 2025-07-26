@@ -5,7 +5,7 @@ using N_m3u8DL_RE.Parser.Config;
 
 namespace N_m3u8DL_RE.Parser.Extractor
 {
-    internal class LiveTSExtractor(ParserConfig parserConfig) : IExtractor
+    internal sealed class LiveTSExtractor(ParserConfig parserConfig) : IExtractor
     {
         public ExtractorType ExtractorType => ExtractorType.HTTP_LIVE;
 

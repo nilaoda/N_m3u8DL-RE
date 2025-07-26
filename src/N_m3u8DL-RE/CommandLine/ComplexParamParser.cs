@@ -2,7 +2,7 @@
 
 namespace N_m3u8DL_RE.CommandLine
 {
-    internal class ComplexParamParser(string arg)
+    internal sealed class ComplexParamParser(string arg)
     {
         private readonly string _arg = arg;
 

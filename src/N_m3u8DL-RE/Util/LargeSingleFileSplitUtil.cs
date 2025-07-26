@@ -6,7 +6,7 @@ namespace N_m3u8DL_RE.Util
 {
     internal static class LargeSingleFileSplitUtil
     {
-        private class Clip
+        private sealed class Clip
         {
             public required int Index;
             public required long From;

@@ -1,6 +1,6 @@
 ﻿namespace N_m3u8DL_RE.Entity
 {
-    internal class DownloadResult
+    internal sealed class DownloadResult
     {
         public bool Success => (ActualContentLength != null && RespContentLength != null) ? (RespContentLength == ActualContentLength) : (ActualContentLength != null);
         public long? RespContentLength { get; set; }

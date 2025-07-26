@@ -7,7 +7,7 @@ using Spectre.Console.Rendering;
 
 namespace N_m3u8DL_RE.Column
 {
-    internal class RecordingSizeColumn(ConcurrentDictionary<int, double> recodingSizeDic) : ProgressColumn
+    internal sealed class RecordingSizeColumn(ConcurrentDictionary<int, double> recodingSizeDic) : ProgressColumn
     {
         protected override bool NoWrap => true;
         private readonly ConcurrentDictionary<int, double> RecodingSizeDic = new(); // 临时的大小 每秒刷新用

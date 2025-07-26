@@ -1,6 +1,6 @@
 ﻿namespace N_m3u8DL_RE.Entity
 {
-    internal class SpeedContainer
+    internal sealed class SpeedContainer
     {
         public bool SingleSegment { get; set; }
         public long NowSpeed { get; set; }  // 当前每秒速度

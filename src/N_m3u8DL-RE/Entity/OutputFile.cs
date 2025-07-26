@@ -2,7 +2,7 @@
 
 namespace N_m3u8DL_RE.Entity
 {
-    internal class OutputFile
+    internal sealed class OutputFile
     {
         public MediaType? MediaType { get; set; }
         public required int Index { get; set; }

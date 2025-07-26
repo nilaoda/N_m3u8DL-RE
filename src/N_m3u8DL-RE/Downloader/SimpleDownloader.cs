@@ -13,7 +13,7 @@ namespace N_m3u8DL_RE.Downloader
     /// <summary>
     /// 简单下载器
     /// </summary>
-    internal class SimpleDownloader(DownloaderConfig config) : IDownloader
+    internal sealed class SimpleDownloader(DownloaderConfig config) : IDownloader
     {
         private readonly DownloaderConfig DownloaderConfig = config;
 

@@ -12,7 +12,7 @@ using N_m3u8DL_RE.Parser.Util;
 namespace N_m3u8DL_RE.Parser.Extractor
 {
     // https://blog.csdn.net/leek5533/article/details/117750191
-    internal partial class DASHExtractor2 : IExtractor
+    internal sealed partial class DASHExtractor2 : IExtractor
     {
         private static readonly EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
 

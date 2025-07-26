@@ -7,7 +7,7 @@ using Spectre.Console.Rendering;
 
 namespace N_m3u8DL_RE.Column
 {
-    internal class RecordingDurationColumn : ProgressColumn
+    internal sealed class RecordingDurationColumn : ProgressColumn
     {
         protected override bool NoWrap => true;
         private readonly ConcurrentDictionary<int, int> _recodingDurDic;

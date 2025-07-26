@@ -8,7 +8,7 @@ using Spectre.Console.Rendering;
 
 namespace N_m3u8DL_RE.Column
 {
-    internal class DownloadStatusColumn(ConcurrentDictionary<int, SpeedContainer> speedContainerDic) : ProgressColumn
+    internal sealed class DownloadStatusColumn(ConcurrentDictionary<int, SpeedContainer> speedContainerDic) : ProgressColumn
     {
         private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; } = speedContainerDic;
         private readonly ConcurrentDictionary<int, string> DateTimeStringDic = new();

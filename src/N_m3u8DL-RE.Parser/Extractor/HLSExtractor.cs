@@ -9,7 +9,7 @@ using N_m3u8DL_RE.Parser.Util;
 
 namespace N_m3u8DL_RE.Parser.Extractor
 {
-    internal class HLSExtractor : IExtractor
+    internal sealed class HLSExtractor : IExtractor
     {
         public ExtractorType ExtractorType => ExtractorType.HLS;
 

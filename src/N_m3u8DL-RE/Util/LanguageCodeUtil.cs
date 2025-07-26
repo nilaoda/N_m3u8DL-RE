@@ -3,7 +3,7 @@ using N_m3u8DL_RE.Entity;
 
 namespace N_m3u8DL_RE.Util
 {
-    internal class Language(string extendCode, string code, string desc, string descA)
+    internal sealed class Language(string extendCode, string code, string desc, string descA)
     {
         public readonly string Code = code;
         public readonly string ExtendCode = extendCode;

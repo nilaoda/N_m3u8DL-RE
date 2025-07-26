@@ -7,7 +7,7 @@ using N_m3u8DL_RE.Enumerations;
 
 namespace N_m3u8DL_RE.CommandLine
 {
-    internal class MyOption
+    internal sealed class MyOption
     {
         /// <summary>
         /// See: <see cref="CommandInvoker.Input"/>.

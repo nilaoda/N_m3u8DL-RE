@@ -7,7 +7,7 @@
  */
 namespace N_m3u8DL_RE.Parser.Mp4
 {
-    internal class ParsedBox
+    internal sealed class ParsedBox
     {
         public required MP4Parser Parser { get; set; }
         public bool PartialOkay { get; set; }
@@ -18,20 +18,20 @@ namespace N_m3u8DL_RE.Parser.Mp4
         public bool Has64BitSize { get; set; }
     }
 
-    internal class TFHD
+    internal sealed class TFHD
     {
         public uint TrackId { get; set; }
         public uint DefaultSampleDuration { get; set; }
         public uint DefaultSampleSize { get; set; }
     }
 
-    internal class TRUN
+    internal sealed class TRUN
     {
         public uint SampleCount { get; set; }
         public List<Sample> SampleData { get; set; } = [];
     }
 
-    internal class Sample
+    internal sealed class Sample
     {
         public uint SampleDuration { get; set; }
         public uint SampleSize { get; set; }
@@ -44,7 +44,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         FULL_BOX = 1
     };
 
-    internal class MP4Parser
+    internal sealed class MP4Parser
     {
         public bool Done { get; set; }
         public Dictionary<long, int> Headers { get; set; } = [];

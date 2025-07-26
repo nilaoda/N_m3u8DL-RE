@@ -3,7 +3,7 @@ using Spectre.Console.Rendering;
 
 namespace N_m3u8DL_RE.Column
 {
-    internal class MyPercentageColumn : ProgressColumn
+    internal sealed class MyPercentageColumn : ProgressColumn
     {
         /// <summary>
         /// Gets or sets the style for a non-complete task.

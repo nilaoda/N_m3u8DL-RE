@@ -16,7 +16,7 @@ using Spectre.Console;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
-    internal class HTTPLiveRecordManager
+    internal sealed class HTTPLiveRecordManager
     {
         private readonly IDownloader Downloader;
         private readonly DownloaderConfig DownloaderConfig;
