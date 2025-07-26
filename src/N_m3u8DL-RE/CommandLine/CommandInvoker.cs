@@ -312,7 +312,7 @@ namespace N_m3u8DL_RE.CommandLine
             }
             catch (Exception e)
             {
-                result.ErrorMessage = "Invalid log path!";
+                result.ErrorMessage = "Invalid log path!, Reason:" + e.Message;
                 return null;
             }
             string? dir = Path.GetDirectoryName(path);
