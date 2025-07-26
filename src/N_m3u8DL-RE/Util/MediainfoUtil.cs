@@ -30,7 +30,7 @@ namespace N_m3u8DL_RE.Util
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
         {
-            List<Mediainfo> result = new();
+            List<Mediainfo> result = [];
 
             if (string.IsNullOrEmpty(file) || !File.Exists(file))
             {

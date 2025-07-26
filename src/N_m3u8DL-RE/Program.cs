@@ -303,7 +303,7 @@ namespace N_m3u8DL_RE
                 Logger.InfoMarkUp(item.ToString());
             }
 
-            List<StreamSpec> selectedStreams = new();
+            List<StreamSpec> selectedStreams = [];
             if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
             {
                 basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);

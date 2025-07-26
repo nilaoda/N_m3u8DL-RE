@@ -213,21 +213,28 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             byte[] frmaBox = Box("frma", Encoding.ASCII.GetBytes(codec));
 
-            List<byte> sinfPayload = new();
-            sinfPayload.AddRange(frmaBox);
+            List<byte> sinfPayload = [.. frmaBox];
 
-            List<byte> schmPayload = new();
-            schmPayload.AddRange(Encoding.ASCII.GetBytes("cenc")); // scheme_type 'cenc' => common encryption
-            schmPayload.AddRange([0, 1, 0, 0]); // scheme_version Major version 1, Minor version 0
+            List<byte> schmPayload =
+            [
+                .. Encoding.ASCII.GetBytes("cenc"), // scheme_type 'cenc' => common encryption
+0,
+1,
+0,
+0,
+            ];
             byte[] schmBox = FullBox("schm", 0, 0, [.. schmPayload]);
 
             sinfPayload.AddRange(schmBox);
 
-            List<byte> tencPayload = new();
-            tencPayload.AddRange([0, 0]);
-            tencPayload.Add(0x1); // default_IsProtected
-            tencPayload.Add(0x8); // default_Per_Sample_IV_size
-            tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID)); // default_KID
+            List<byte> tencPayload =
+            [
+0,
+0,
+                0x1, // default_IsProtected
+                0x8, // default_Per_Sample_IV_size
+                .. HexUtil.HexToBytes(ProtecitonKID), // default_KID
+            ];
             // tencPayload.Add(0x8);// default_constant_IV_size
             // tencPayload.AddRange(new byte[8]);// default_constant_IV
             byte[] tencBox = FullBox("tenc", 0, 0, [.. tencPayload]);
@@ -362,23 +369,23 @@ namespace N_m3u8DL_RE.Parser.Mp4
             using MemoryStream stream = new();
             using BinaryWriter2 writer = new(stream);
 
-            List<byte> minfPayload = new();
+            List<byte> minfPayload = [];
             if (StreamType == "audio")
             {
-                List<byte> smhd = new()
-                {
+                List<byte> smhd =
+                [
                     0,
                     0, // balance
                     0,
                     0 // reserved
-                };
+                ];
 
                 minfPayload.AddRange(FullBox("smhd", 0, 0, [.. smhd])); // Sound Media Header
             }
             else if (StreamType == "video")
             {
-                List<byte> vmhd = new()
-                {
+                List<byte> vmhd =
+                [
                     0,
                     0, // graphics mode
                     0,
@@ -387,7 +394,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                     0,
                     0,
                     0// opcolor
-                };
+                ];
 
                 minfPayload.AddRange(FullBox("vmhd", 0, 1, [.. vmhd])); // Video Media Header
             }
@@ -400,14 +407,14 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 throw new NotSupportedException();
             }
 
-            List<byte> drefPayload = new()
-            {
+            List<byte> drefPayload =
+            [
                 0,
                 0,
                 0,
-                1 // entry count
-            };
-            drefPayload.AddRange(FullBox("url ", 0, SELF_CONTAINED, [])); // Data Entry URL Box
+                1,
+                .. FullBox("url ", 0, SELF_CONTAINED, []), // entry count
+            ];
 
             byte[] dinfPayload = FullBox("dref", 0, 0, [.. drefPayload]); // Data Reference Box
             minfPayload.AddRange(Box("dinf", [.. dinfPayload])); // Data Information Box
@@ -629,7 +636,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             // Read generalProfileSpace, generalTierFlag, generalProfileIdc,
             // generalProfileCompatibilityFlags, constraintBytes, generalLevelIdc
             // from sps
-            List<byte> encList = new();
+            List<byte> encList = [];
             /**
              * 处理payload, 有00 00 03 0,1,2,3的情况 统一换成00 00 XX 即丢弃03
              * 注意：此处采用的逻辑是直接简单粗暴地判断列表末尾3字节，如果是0x000003就删掉最后的0x03，可能会导致以下情况

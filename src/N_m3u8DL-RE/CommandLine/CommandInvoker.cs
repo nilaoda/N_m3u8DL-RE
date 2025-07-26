@@ -485,7 +485,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static List<OutputFile> ParseImports(ArgumentResult result)
         {
-            List<OutputFile> imports = new();
+            List<OutputFile> imports = [];
 
             foreach (Token item in result.Tokens)
             {

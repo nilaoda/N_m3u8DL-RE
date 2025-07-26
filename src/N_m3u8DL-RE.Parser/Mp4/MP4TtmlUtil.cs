@@ -208,7 +208,7 @@ namespace Mp4SubtitleParser
         {
             // parsing
             XmlDocument xmlDoc = new();
-            List<SubEntity> finalSubs = new();
+            List<SubEntity> finalSubs = [];
             XmlNode? headNode = null;
             XmlNamespaceManager? nsMgr = null;
             Regex regex = LabelFixRegex();
@@ -269,7 +269,7 @@ namespace Mp4SubtitleParser
 
 
                 // PNG Subs
-                Dictionary<string, string> imageDic = new(); // id, Base64
+                Dictionary<string, string> imageDic = []; // id, Base64
                 if (ImageRegex().IsMatch(xmlDoc.InnerXml))
                 {
                     foreach (Match img in ImageRegex().Matches(xmlDoc.InnerXml))
@@ -377,7 +377,7 @@ namespace Mp4SubtitleParser
             }
 
 
-            Dictionary<string, string> dic = new();
+            Dictionary<string, string> dic = [];
             foreach (SubEntity sub in finalSubs)
             {
                 string key = $"{sub.Begin} --> {sub.End}";

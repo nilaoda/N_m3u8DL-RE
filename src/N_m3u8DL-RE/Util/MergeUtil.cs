@@ -78,7 +78,7 @@ namespace N_m3u8DL_RE.Util
 
         public static string[] PartialCombineMultipleFiles(string[] files)
         {
-            List<string> newFiles = new();
+            List<string> newFiles = [];
             int div = files.Length <= 90000 ? 100 : 200;
 
             string outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");

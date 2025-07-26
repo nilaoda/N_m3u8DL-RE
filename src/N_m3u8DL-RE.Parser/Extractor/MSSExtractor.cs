@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
         {
-            List<StreamSpec> streamList = new();
+            List<StreamSpec> streamList = [];
             this.IsmContent = rawText;
             this.PreProcessContent();
 

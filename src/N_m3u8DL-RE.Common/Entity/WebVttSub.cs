@@ -63,7 +63,7 @@ namespace N_m3u8DL_RE.Common.Entity
                 webSub.MpegtsTimestamp = Convert.ToInt64(timestamp);
             }
 
-            List<string> payloads = new();
+            List<string> payloads = [];
             foreach (string line in text.Split('\n'))
             {
                 if (line.Contains(" --> "))
