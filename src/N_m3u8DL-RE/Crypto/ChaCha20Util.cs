@@ -1,6 +1,4 @@
-﻿using CSChaCha20;
-
-namespace N_m3u8DL_RE.Crypto
+﻿namespace N_m3u8DL_RE.Crypto
 {
     internal static class ChaCha20Util
     {

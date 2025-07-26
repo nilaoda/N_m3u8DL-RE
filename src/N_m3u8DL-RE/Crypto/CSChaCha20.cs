@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices; // For MethodImplOptions.AggressiveInlini
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSChaCha20
+namespace N_m3u8DL_RE.Crypto
 {
     /// <summary>
     /// Class that can be used for ChaCha20 encryption / decryption
@@ -72,8 +72,8 @@ namespace CSChaCha20
         /// </param>
         public ChaCha20(byte[] key, byte[] nonce, uint counter)
         {
-            this.KeySetup(key);
-            this.IvSetup(nonce, counter);
+            KeySetup(key);
+            IvSetup(nonce, counter);
         }
 
 #if NET6_0_OR_GREATER
@@ -89,8 +89,8 @@ namespace CSChaCha20
         /// <param name="counter">A 4-byte (32-bit) block counter, treated as a 32-bit little-endian integer</param>
         public ChaCha20(ReadOnlySpan<byte> key, ReadOnlySpan<byte> nonce, uint counter)
         {
-            this.KeySetup(key.ToArray());
-            this.IvSetup(nonce.ToArray(), counter);
+            KeySetup(key.ToArray());
+            IvSetup(nonce.ToArray(), counter);
         }
 
 #endif // NET6_0_OR_GREATER
@@ -102,7 +102,7 @@ namespace CSChaCha20
         {
             get
             {
-                return this.state;
+                return state;
             }
         }
 
@@ -135,7 +135,7 @@ namespace CSChaCha20
             state[6] = Util.U8To32Little(key, 8);
             state[7] = Util.U8To32Little(key, 12);
 
-            byte[] constants = (key.Length == allowedKeyLength) ? sigma : tau;
+            byte[] constants = key.Length == allowedKeyLength ? sigma : tau;
             int keyIndex = key.Length - 16;
 
             state[8] = Util.U8To32Little(key, keyIndex + 0);
@@ -192,7 +192,7 @@ namespace CSChaCha20
         /// <param name="numBytes">Number of bytes to encrypt</param>
         public void EncryptBytes(byte[] output, byte[] input, int numBytes)
         {
-            this.WorkBytes(output, input, numBytes);
+            WorkBytes(output, input, numBytes);
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace CSChaCha20
         /// <param name="howManyBytesToProcessAtTime">How many bytes to read and write at time, default is 1024</param>
         public void EncryptStream(Stream output, Stream input, int howManyBytesToProcessAtTime = 1024)
         {
-            this.WorkStreams(output, input, howManyBytesToProcessAtTime);
+            WorkStreams(output, input, howManyBytesToProcessAtTime);
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace CSChaCha20
         /// <param name="howManyBytesToProcessAtTime">How many bytes to read and write at time, default is 1024</param>
         public async Task EncryptStreamAsync(Stream output, Stream input, int howManyBytesToProcessAtTime = 1024)
         {
-            await this.WorkStreamsAsync(output, input, howManyBytesToProcessAtTime);
+            await WorkStreamsAsync(output, input, howManyBytesToProcessAtTime);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace CSChaCha20
         /// <param name="input">Input byte array</param>
         public void EncryptBytes(byte[] output, byte[] input)
         {
-            this.WorkBytes(output, input, input.Length);
+            WorkBytes(output, input, input.Length);
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace CSChaCha20
         public byte[] EncryptBytes(byte[] input, int numBytes)
         {
             byte[] returnArray = new byte[numBytes];
-            this.WorkBytes(returnArray, input, numBytes);
+            WorkBytes(returnArray, input, numBytes);
             return returnArray;
         }
 
@@ -251,7 +251,7 @@ namespace CSChaCha20
         public byte[] EncryptBytes(byte[] input)
         {
             byte[] returnArray = new byte[input.Length];
-            this.WorkBytes(returnArray, input, input.Length);
+            WorkBytes(returnArray, input, input.Length);
             return returnArray;
         }
 
@@ -263,10 +263,10 @@ namespace CSChaCha20
         /// <returns>Byte array that contains encrypted bytes</returns>
         public byte[] EncryptString(string input)
         {
-            byte[] utf8Bytes = System.Text.Encoding.UTF8.GetBytes(input);
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(input);
             byte[] returnArray = new byte[utf8Bytes.Length];
 
-            this.WorkBytes(returnArray, utf8Bytes, utf8Bytes.Length);
+            WorkBytes(returnArray, utf8Bytes, utf8Bytes.Length);
             return returnArray;
         }
 
@@ -284,7 +284,7 @@ namespace CSChaCha20
         /// <param name="numBytes">Number of bytes to decrypt</param>
         public void DecryptBytes(byte[] output, byte[] input, int numBytes)
         {
-            this.WorkBytes(output, input, numBytes);
+            WorkBytes(output, input, numBytes);
         }
 
         /// <summary>
@@ -295,7 +295,7 @@ namespace CSChaCha20
         /// <param name="howManyBytesToProcessAtTime">How many bytes to read and write at time, default is 1024</param>
         public void DecryptStream(Stream output, Stream input, int howManyBytesToProcessAtTime = 1024)
         {
-            this.WorkStreams(output, input, howManyBytesToProcessAtTime);
+            WorkStreams(output, input, howManyBytesToProcessAtTime);
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace CSChaCha20
         /// <param name="howManyBytesToProcessAtTime">How many bytes to read and write at time, default is 1024</param>
         public async Task DecryptStreamAsync(Stream output, Stream input, int howManyBytesToProcessAtTime = 1024)
         {
-            await this.WorkStreamsAsync(output, input, howManyBytesToProcessAtTime);
+            await WorkStreamsAsync(output, input, howManyBytesToProcessAtTime);
         }
 
         /// <summary>
@@ -358,7 +358,7 @@ namespace CSChaCha20
             byte[] tempArray = new byte[input.Length];
 
             WorkBytes(tempArray, input, input.Length);
-            return System.Text.Encoding.UTF8.GetString(tempArray);
+            return Encoding.UTF8.GetString(tempArray);
         }
 
         #endregion // Decryption methods
@@ -439,7 +439,7 @@ namespace CSChaCha20
             while (numBytes > 0)
             {
                 // Copy state to working buffer
-                Buffer.BlockCopy(this.state, 0, x, 0, stateLength * sizeof(uint));
+                Buffer.BlockCopy(state, 0, x, 0, stateLength * sizeof(uint));
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -456,14 +456,14 @@ namespace CSChaCha20
 
                 for (int i = 0; i < stateLength; i++)
                 {
-                    Util.ToBytes(tmp, Util.Add(x[i], this.state[i]), 4 * i);
+                    Util.ToBytes(tmp, Util.Add(x[i], state[i]), 4 * i);
                 }
 
-                this.state[12] = Util.AddOne(state[12]);
-                if (this.state[12] <= 0)
+                state[12] = Util.AddOne(state[12]);
+                if (state[12] <= 0)
                 {
                     /* Stopping at 2^70 bytes per nonce is the user's responsibility */
-                    this.state[13] = Util.AddOne(state[13]);
+                    state[13] = Util.AddOne(state[13]);
                 }
 
                 // In case these are last bytes
@@ -577,7 +577,7 @@ namespace CSChaCha20
         {
             unchecked
             {
-                return (v << c) | (v >> (32 - c));
+                return v << c | v >> 32 - c;
             }
         }
 
@@ -633,10 +633,10 @@ namespace CSChaCha20
         {
             unchecked
             {
-                return ((uint)p[inputOffset]
-                    | ((uint)p[inputOffset + 1] << 8)
-                    | ((uint)p[inputOffset + 2] << 16)
-                    | ((uint)p[inputOffset + 3] << 24));
+                return p[inputOffset]
+                    | (uint)p[inputOffset + 1] << 8
+                    | (uint)p[inputOffset + 2] << 16
+                    | (uint)p[inputOffset + 3] << 24;
             }
         }
 

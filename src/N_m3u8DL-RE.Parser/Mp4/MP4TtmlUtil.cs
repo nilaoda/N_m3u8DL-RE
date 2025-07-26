@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 
 using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Parser.Mp4;
 
 namespace Mp4SubtitleParser
 {

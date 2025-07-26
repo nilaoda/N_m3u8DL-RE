@@ -5,7 +5,7 @@
  * https://github.com/nilaoda/Mp4SubtitleParser
  * https://github.com/shaka-project/shaka-player
  */
-namespace Mp4SubtitleParser
+namespace N_m3u8DL_RE.Parser.Mp4
 {
     internal class ParsedBox
     {
@@ -88,10 +88,10 @@ namespace Mp4SubtitleParser
         public void Parse(byte[] data, bool partialOkay = false, bool stopOnPartial = false)
         {
             BinaryReader2 reader = new(new MemoryStream(data));
-            this.Done = false;
-            while (reader.HasMoreData() && !this.Done)
+            Done = false;
+            while (reader.HasMoreData() && !Done)
             {
-                this.ParseNext(0, reader, partialOkay, stopOnPartial);
+                ParseNext(0, reader, partialOkay, stopOnPartial);
             }
         }
 
@@ -102,7 +102,7 @@ namespace Mp4SubtitleParser
             // size(4 bytes) + type(4 bytes) = 8 bytes
             if (stopOnPartial && start + 8 > reader.GetLength())
             {
-                this.Done = true;
+                Done = true;
                 return;
             }
 
@@ -121,7 +121,7 @@ namespace Mp4SubtitleParser
                 case 1:
                     if (stopOnPartial && reader.GetPosition() + 8 > reader.GetLength())
                     {
-                        this.Done = true;
+                        Done = true;
                         return;
                     }
                     size = (long)reader.ReadUInt64();
@@ -129,18 +129,18 @@ namespace Mp4SubtitleParser
                     break;
             }
 
-            this.BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition);
+            BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition);
 
             if (boxDefinition != null)
             {
                 uint version = 1000;
                 uint flags = 1000;
 
-                if (this.Headers[type] == (int)BoxType.FULL_BOX)
+                if (Headers[type] == (int)BoxType.FULL_BOX)
                 {
                     if (stopOnPartial && reader.GetPosition() + 4 > reader.GetLength())
                     {
-                        this.Done = true;
+                        Done = true;
                         return;
                     }
                     uint versionAndFlags = reader.ReadUInt32();
@@ -156,12 +156,12 @@ namespace Mp4SubtitleParser
 
                 if (stopOnPartial && end > reader.GetLength())
                 {
-                    this.Done = true;
+                    Done = true;
                     return;
                 }
 
                 int payloadSize = (int)(end - reader.GetPosition());
-                byte[] payload = (payloadSize > 0) ? reader.ReadBytes(payloadSize) : [];
+                byte[] payload = payloadSize > 0 ? reader.ReadBytes(payloadSize) : [];
                 ParsedBox box = new()
                 {
                     Parser = this,
@@ -200,9 +200,9 @@ namespace Mp4SubtitleParser
         {
             return Encoding.UTF8.GetString(new byte[]
             {
-                 (byte)((type >> 24) & 0xff),
-                 (byte)((type >> 16) & 0xff),
-                 (byte)((type >> 8) & 0xff),
+                 (byte)(type >> 24 & 0xff),
+                 (byte)(type >> 16 & 0xff),
+                 (byte)(type >> 8 & 0xff),
                  (byte)(type & 0xff)
             });
         }
@@ -217,7 +217,7 @@ namespace Mp4SubtitleParser
             int code = 0;
             foreach (char chr in name)
             {
-                code = (code << 8) | chr;
+                code = code << 8 | chr;
             }
             return code;
         }
@@ -225,16 +225,16 @@ namespace Mp4SubtitleParser
         public MP4Parser Box(string type, BoxHandler handler)
         {
             int typeCode = TypeFromString(type);
-            this.Headers[typeCode] = (int)BoxType.BASIC_BOX;
-            this.BoxDefinitions[typeCode] = handler;
+            Headers[typeCode] = (int)BoxType.BASIC_BOX;
+            BoxDefinitions[typeCode] = handler;
             return this;
         }
 
         public MP4Parser FullBox(string type, BoxHandler handler)
         {
             int typeCode = TypeFromString(type);
-            this.Headers[typeCode] = (int)BoxType.FULL_BOX;
-            this.BoxDefinitions[typeCode] = handler;
+            Headers[typeCode] = (int)BoxType.FULL_BOX;
+            BoxDefinitions[typeCode] = handler;
             return this;
         }
 

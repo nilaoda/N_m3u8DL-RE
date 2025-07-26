@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Common
 {
@@ -12,7 +12,7 @@ namespace N_m3u8DL_RE.Common
     [JsonSerializable(typeof(MediaType))]
     [JsonSerializable(typeof(EncryptMethod))]
     [JsonSerializable(typeof(ExtractorType))]
-    [JsonSerializable(typeof(Choise))]
+    [JsonSerializable(typeof(Choice))]
     [JsonSerializable(typeof(StreamSpec))]
     [JsonSerializable(typeof(IOrderedEnumerable<StreamSpec>))]
     [JsonSerializable(typeof(IEnumerable<MediaSegment>))]

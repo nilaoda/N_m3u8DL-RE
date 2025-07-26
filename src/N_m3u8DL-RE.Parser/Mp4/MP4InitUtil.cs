@@ -1,6 +1,6 @@
 ﻿using N_m3u8DL_RE.Common.Util;
 
-namespace Mp4SubtitleParser
+namespace N_m3u8DL_RE.Parser.Mp4
 {
     public class ParsedMP4Info
     {

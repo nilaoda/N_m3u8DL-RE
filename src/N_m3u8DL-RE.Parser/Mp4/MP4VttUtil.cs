@@ -2,7 +2,7 @@
 
 using N_m3u8DL_RE.Common.Entity;
 
-namespace Mp4SubtitleParser
+namespace N_m3u8DL_RE.Parser.Mp4
 {
     public static class MP4VttUtil
     {
@@ -190,7 +190,7 @@ namespace Mp4SubtitleParser
                             throw new Exception("The samples do not fit evenly into the sample sizes given in the TRUN box!");
                         }
 
-                    } while (presentation.SampleSize != 0 && (totalSize < presentation.SampleSize));
+                    } while (presentation.SampleSize != 0 && totalSize < presentation.SampleSize);
 
                     if (reader.HasMoreData())
                     {

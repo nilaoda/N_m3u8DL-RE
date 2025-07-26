@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Enum;
+﻿using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Util;
 
 using Spectre.Console;
@@ -11,7 +11,7 @@ namespace N_m3u8DL_RE.Common.Entity
         public string? GroupId { get; set; }
         public string? Language { get; set; }
         public string? Name { get; set; }
-        public Choise? Default { get; set; }
+        public Choice? Default { get; set; }
 
         // 由于用户选择 被跳过的分片总时长
         public double? SkippedDuration { get; set; }
@@ -70,13 +70,13 @@ namespace N_m3u8DL_RE.Common.Entity
 
             string prefixStr;
             string returnStr;
-            if (MediaType == Enum.MediaType.AUDIO)
+            if (MediaType == CommonEnumerations.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
                 string d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
-            else if (MediaType == Enum.MediaType.SUBTITLES)
+            else if (MediaType == CommonEnumerations.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
                 string d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Role}";
@@ -104,13 +104,13 @@ namespace N_m3u8DL_RE.Common.Entity
 
             string prefixStr;
             string returnStr;
-            if (MediaType == Enum.MediaType.AUDIO)
+            if (MediaType == CommonEnumerations.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
                 string d = $"{(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
-            else if (MediaType == Enum.MediaType.SUBTITLES)
+            else if (MediaType == CommonEnumerations.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
                 string d = $"{Language} | {Name} | {Codecs} | {Role}";
@@ -146,13 +146,13 @@ namespace N_m3u8DL_RE.Common.Entity
                 encStr = $"[red]*{string.Join(",", ms).EscapeMarkup()}[/] ";
             }
 
-            if (MediaType == Enum.MediaType.AUDIO)
+            if (MediaType == CommonEnumerations.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
                 string d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
-            else if (MediaType == Enum.MediaType.SUBTITLES)
+            else if (MediaType == CommonEnumerations.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
                 string d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr} | {Role}";

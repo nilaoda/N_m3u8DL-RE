@@ -1,5 +1,5 @@
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Crypto;

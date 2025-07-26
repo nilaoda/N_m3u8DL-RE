@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;

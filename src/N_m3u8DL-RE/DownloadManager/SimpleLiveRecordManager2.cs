@@ -6,8 +6,8 @@ using System.Threading.Tasks.Dataflow;
 using Mp4SubtitleParser;
 
 using N_m3u8DL_RE.Column;
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
@@ -167,7 +167,7 @@ namespace N_m3u8DL_RE.DownloadManager
             task.StartTask();
 
             string name = streamSpec.ToShortString();
-            MediaType type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
+            MediaType type = streamSpec.MediaType ?? MediaType.VIDEO;
             string dirName = $"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
             string tmpDir = Path.Combine(DownloaderConfig.DirPrefix, dirName);
             string saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
@@ -375,7 +375,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 });
 
                 // 自动修复VTT raw字幕
-                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
+                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
                 {
                     // 排序字幕并修正时间戳
                     List<MediaSegment> keys = [.. FileDic.Keys.OrderBy(k => k.Index)];
@@ -403,7 +403,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 // 自动修复VTT mp4字幕
-                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
+                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES
                                                                && streamSpec.Codecs != "stpp" && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s"))
                 {
                     DownloadResult? initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init"));
@@ -426,7 +426,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 // 自动修复TTML raw字幕
-                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
+                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
                 {
                     List<MediaSegment> keys = [.. FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key)];
                     if (firstSub)
@@ -469,7 +469,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 // 自动修复TTML mp4字幕
-                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
+                if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
                     && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
                 {
                     // sawTtml暂时不判断

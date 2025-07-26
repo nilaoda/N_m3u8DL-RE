@@ -1,5 +1,5 @@
-﻿using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Enum;
+﻿using N_m3u8DL_RE.Common.CommonEnumerations;
+using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
@@ -187,7 +187,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     }
 
                     string def = ParserUtil.GetAttribute(line, "DEFAULT");
-                    if (Enum.TryParse<Choise>(type, out Choise defaultChoise))
+                    if (Enum.TryParse<Choice>(type, out Choice defaultChoise))
                     {
                         streamSpec.Default = defaultChoise;
                     }

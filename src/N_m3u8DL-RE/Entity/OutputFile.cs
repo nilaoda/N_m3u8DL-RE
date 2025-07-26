@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Enum;
+﻿using N_m3u8DL_RE.Common.CommonEnumerations;
 
 namespace N_m3u8DL_RE.Entity
 {

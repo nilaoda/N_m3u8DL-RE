@@ -4,8 +4,8 @@ using System.Text;
 using Mp4SubtitleParser;
 
 using N_m3u8DL_RE.Column;
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Config;
@@ -118,7 +118,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
             }
 
-            MediaType type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
+            MediaType type = streamSpec.MediaType ?? MediaType.VIDEO;
             string dirName = $"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
             string tmpDir = Path.Combine(DownloaderConfig.DirPrefix, dirName);
             string saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
@@ -161,7 +161,7 @@ namespace N_m3u8DL_RE.DownloadManager
             Logger.InfoMarkUp(ResString.startDownloading + streamSpec.ToShortString());
 
             // 对于CENC，全部自动开启二进制合并
-            if (!DownloaderConfig.MyOptions.BinaryMerge && totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
+            if (!DownloaderConfig.MyOptions.BinaryMerge && totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == EncryptMethod.CENC)
             {
                 DownloaderConfig.MyOptions.BinaryMerge = true;
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge4}[/]");
@@ -385,7 +385,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 自动修复VTT raw字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
             {
                 Logger.WarnMarkUp(ResString.fixingVTT);
                 // 排序字幕并修正时间戳
@@ -435,7 +435,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 自动修复VTT mp4字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES
                                                            && streamSpec.Codecs != "stpp" && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s"))
             {
                 DownloadResult? initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init"));
@@ -476,7 +476,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 自动修复TTML raw字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
             {
                 Logger.WarnMarkUp(ResString.fixingTTML);
                 bool first = true;
@@ -533,7 +533,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 自动修复TTML mp4字幕
-            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
+            if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
                 && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
             {
                 Logger.WarnMarkUp(ResString.fixingTTMLmp4);
@@ -653,7 +653,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 重新读取init信息
-            if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != Common.Enum.EncryptMethod.NONE)
+            if (mergeSuccess && totalCount >= 1 && string.IsNullOrEmpty(currentKID) && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method != EncryptMethod.NONE)
             {
                 currentKID = MP4DecryptUtil.GetMP4Info(output).KID;
                 // try shaka packager, which can handle WebM

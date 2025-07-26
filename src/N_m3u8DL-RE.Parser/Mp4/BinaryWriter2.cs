@@ -1,9 +1,9 @@
 ﻿using System.Text;
 
-namespace Mp4SubtitleParser
+namespace N_m3u8DL_RE.Parser.Mp4
 {
     // make BinaryWriter in Big Endian
-    internal class BinaryWriter2(System.IO.Stream stream) : BinaryWriter(stream)
+    internal class BinaryWriter2(Stream stream) : BinaryWriter(stream)
     {
         private static readonly bool IsLittleEndian = BitConverter.IsLittleEndian;
 

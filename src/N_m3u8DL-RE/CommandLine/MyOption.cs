@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enumerations;

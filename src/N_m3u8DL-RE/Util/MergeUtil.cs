@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
 
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enumerations;
@@ -257,9 +258,9 @@ namespace N_m3u8DL_RE.Util
                 }
             }
 
-            IEnumerable<OutputFile> videoTracks = files.Where(x => x.MediaType is not Common.Enum.MediaType.AUDIO and not Common.Enum.MediaType.SUBTITLES);
-            IEnumerable<OutputFile> audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-            IEnumerable<OutputFile> subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+            IEnumerable<OutputFile> videoTracks = files.Where(x => x.MediaType is not MediaType.AUDIO and not MediaType.SUBTITLES);
+            IEnumerable<OutputFile> audioTracks = files.Where(x => x.MediaType == MediaType.AUDIO);
+            IEnumerable<OutputFile> subTracks = files.Where(x => x.MediaType == MediaType.AUDIO);
             if (videoTracks.Any())
             {
                 command.Append(" -disposition:v:0 default ");
@@ -308,12 +309,12 @@ namespace N_m3u8DL_RE.Util
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
                 command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
                 // 字幕都不设置默认
-                if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
+                if (files[i].MediaType == MediaType.SUBTITLES)
                 {
                     command.Append($" --default-track 0:no ");
                 }
                 // 音频除了第一个音轨 都不设置默认
-                if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
+                if (files[i].MediaType == MediaType.AUDIO)
                 {
                     if (dFlag)
                     {

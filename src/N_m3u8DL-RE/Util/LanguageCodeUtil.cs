@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Entity;
+﻿using N_m3u8DL_RE.Common.CommonEnumerations;
+using N_m3u8DL_RE.Entity;
 
 namespace N_m3u8DL_RE.Util
 {
@@ -523,7 +524,7 @@ sr;srp
                 outputFile.LangCode = lang.Code;
                 if (string.IsNullOrEmpty(outputFile.Description))
                 {
-                    outputFile.Description = outputFile.MediaType == Common.Enum.MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
+                    outputFile.Description = outputFile.MediaType == MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
                 }
             }
             else
