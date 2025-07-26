@@ -105,19 +105,19 @@ namespace N_m3u8DL_RE.Util
 
             if (filter.For == "best" && inputs.Any())
             {
-                inputs = inputs.Take(1).ToList();
+                inputs = [.. inputs.Take(1)];
             }
             else if (filter.For == "worst" && inputs.Any())
             {
-                inputs = inputs.TakeLast(1).ToList();
+                inputs = [.. inputs.TakeLast(1)];
             }
             else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Any())
             {
-                inputs = inputs.Take(bestNumber).ToList();
+                inputs = [.. inputs.Take(bestNumber)];
             }
             else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Any())
             {
-                inputs = inputs.TakeLast(worstNumber).ToList();
+                inputs = [.. inputs.TakeLast(worstNumber)];
             }
 
             return [.. inputs];
