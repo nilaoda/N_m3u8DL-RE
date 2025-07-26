@@ -195,7 +195,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // 检测时长限制
                 if (RecordingDurDic.All(d => d.Value >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds))
                 {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.LiveLimitReached}[/]");
                     STOP_FLAG = true;
                     CancellationTokenSource.Cancel();
                 }
@@ -242,7 +242,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 TimeSpan? limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
                 {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.LiveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
                 }
                 // 录制直播时，用户选了几个流就并发录几个
                 ParallelOptions options = new()

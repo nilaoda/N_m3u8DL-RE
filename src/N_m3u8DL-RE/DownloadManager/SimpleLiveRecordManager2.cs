@@ -114,13 +114,13 @@ namespace N_m3u8DL_RE.DownloadManager
             if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
             {
                 DownloaderConfig.MyOptions.BinaryMerge = true;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge2}[/]");
             }
 
             if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison))
             {
                 DownloaderConfig.MyOptions.MuxAfterDone = false;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge5}[/]");
             }
 
             if (mediainfos.Where(m => m.Type == "Audio").All(m => m.BaseInfo!.Contains("aac")))
@@ -204,7 +204,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (!DownloaderConfig.MyOptions.BinaryMerge && streamSpec.MediaType != MediaType.SUBTITLES)
                     {
                         DownloaderConfig.MyOptions.BinaryMerge = true;
-                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge}[/]");
+                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge}[/]");
                     }
 
                     string path = Path.Combine(tmpDir, "_init.mp4.tmp");
@@ -237,7 +237,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         // ffmpeg读取信息
                         if (!readInfo)
                         {
-                            Logger.WarnMarkUp(ResString.readingInfo);
+                            Logger.WarnMarkUp(ResString.ReadingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                             lock (lockObj)
@@ -320,7 +320,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         if (!readInfo)
                         {
                             // ffmpeg读取信息
-                            Logger.WarnMarkUp(ResString.readingInfo);
+                            Logger.WarnMarkUp(ResString.ReadingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                             lock (lockObj)
@@ -569,12 +569,12 @@ namespace N_m3u8DL_RE.DownloadManager
                             output = Path.ChangeExtension(output, ".ts");
                             string pipeName = $"RE_pipe_{Guid.NewGuid()}";
                             fileOutputStream = PipeUtil.CreatePipe(pipeName);
-                            Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
+                            Logger.InfoMarkUp($"{ResString.NamedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
                             PipeSteamNamesDic[task.Id] = pipeName;
                             if (PipeSteamNamesDic.Count == SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES))
                             {
                                 string[] names = [.. PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value)];
-                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
+                                Logger.WarnMarkUp($"{ResString.NamedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
                                 Task<bool> t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, names, output);
                             }
 
@@ -737,7 +737,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     // 检测时长限制
                     if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
                     {
-                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.LiveLimitReached}[/]");
                         STOP_FLAG = true;
                         CancellationTokenSource.Cancel();
                     }
@@ -895,13 +895,13 @@ namespace N_m3u8DL_RE.DownloadManager
                 DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
                 if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
                 {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.RealTimeDecMessage}[/]");
                 }
 
                 TimeSpan? limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
                 {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.LiveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
                 }
                 // 录制直播时，用户选了几个流就并发录几个
                 ParallelOptions options = new()

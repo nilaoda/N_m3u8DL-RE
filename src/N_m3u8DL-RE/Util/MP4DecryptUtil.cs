@@ -138,7 +138,7 @@ namespace N_m3u8DL_RE.Util
                 return true;
             }
 
-            Logger.Error(ResString.decryptionFailed);
+            Logger.Error(ResString.DecryptionFailed);
             return false;
         }
 
@@ -175,7 +175,7 @@ namespace N_m3u8DL_RE.Util
                     return null;
                 }
 
-                Logger.InfoMarkUp(ResString.searchKey);
+                Logger.InfoMarkUp(ResString.SearchKey);
                 using FileStream stream = new(file, FileMode.Open, FileAccess.Read, FileShare.Read);
                 using StreamReader reader = new(stream);
                 while (await reader.ReadLineAsync() is { } line)

@@ -23,7 +23,7 @@ namespace N_m3u8DL_RE.Parser
 
         public async Task LoadSourceFromUrlAsync(string url)
         {
-            Logger.Info(ResString.loadingUrl + url);
+            Logger.Info(ResString.LoadingUrl + url);
             if (url.StartsWith("file:"))
             {
                 Uri uri = new(url);
@@ -54,32 +54,32 @@ namespace N_m3u8DL_RE.Parser
             this.rawText = rawText;
             if (rawText.StartsWith(HLSTags.ext_m3u))
             {
-                Logger.InfoMarkUp(ResString.matchHLS);
+                Logger.InfoMarkUp(ResString.MatchHLS);
                 extractor = new HLSExtractor(parserConfig);
                 rawType = "m3u8";
             }
             else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
             {
-                Logger.InfoMarkUp(ResString.matchDASH);
+                Logger.InfoMarkUp(ResString.MatchDASH);
                 // extractor = new DASHExtractor(parserConfig);
                 extractor = new DASHExtractor2(parserConfig);
                 rawType = "mpd";
             }
             else if (rawText.Contains("</SmoothStreamingMedia>") && rawText.Contains("<SmoothStreamingMedia"))
             {
-                Logger.InfoMarkUp(ResString.matchMSS);
+                Logger.InfoMarkUp(ResString.MatchMSS);
                 // extractor = new DASHExtractor(parserConfig);
                 extractor = new MSSExtractor(parserConfig);
                 rawType = "ism";
             }
             else if (rawText == ResString.ReLiveTs)
             {
-                Logger.InfoMarkUp(ResString.matchTS);
+                Logger.InfoMarkUp(ResString.MatchTS);
                 extractor = new LiveTSExtractor(parserConfig);
             }
             else
             {
-                throw new NotSupportedException(ResString.notSupported);
+                throw new NotSupportedException(ResString.NotSupported);
             }
 
             RawFiles[$"raw.{rawType}"] = rawText;
@@ -94,7 +94,7 @@ namespace N_m3u8DL_RE.Parser
             try
             {
                 await semaphore.WaitAsync();
-                Logger.Info(ResString.parsingStream);
+                Logger.Info(ResString.ParsingStream);
                 return await extractor.ExtractStreamsAsync(rawText);
             }
             finally
@@ -112,7 +112,7 @@ namespace N_m3u8DL_RE.Parser
             try
             {
                 await semaphore.WaitAsync();
-                Logger.Info(ResString.parsingStream);
+                Logger.Info(ResString.ParsingStream);
                 await extractor.FetchPlayListAsync(streamSpecs);
             }
             finally

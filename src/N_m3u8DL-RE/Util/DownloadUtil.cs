@@ -38,7 +38,7 @@ namespace N_m3u8DL_RE.Util
 
         public static async Task<DownloadResult> DownloadToFileAsync(string url, string path, SpeedContainer speedContainer, CancellationTokenSource cancellationTokenSource, Dictionary<string, string>? headers = null, long? fromPosition = null, long? toPosition = null)
         {
-            Logger.Debug(ResString.fetch + url);
+            Logger.Debug(ResString.Fetch + url);
             if (url.StartsWith("file:"))
             {
                 string file = new Uri(url).LocalPath;

@@ -98,7 +98,7 @@ async Task DoWorkAsync(MyOption option)
     {
         option.ForceAnsiConsole = true;
         option.NoAnsiColor = true;
-        Logger.Info(ResString.consoleRedirected);
+        Logger.Info(ResString.ConsoleRedirected);
     }
     CustomAnsiConsole.InitConsole(option.ForceAnsiConsole, option.NoAnsiColor);
 
@@ -148,7 +148,7 @@ async Task DoWorkAsync(MyOption option)
 
     if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
     {
-        throw new FileNotFoundException(ResString.ffmpegNotFound);
+        throw new FileNotFoundException(ResString.FfmpegNotFound);
     }
 
     Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
@@ -159,7 +159,7 @@ async Task DoWorkAsync(MyOption option)
         option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
         if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
         {
-            throw new FileNotFoundException(ResString.mkvmergeNotFound);
+            throw new FileNotFoundException(ResString.MkvmergeNotFound);
         }
         Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
     }
@@ -181,7 +181,7 @@ async Task DoWorkAsync(MyOption option)
                     string? file4 = GlobalUtil.FindExecutable("packager-win-x64");
                     if (file == null && file2 == null && file3 == null && file4 == null)
                     {
-                        throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                        throw new FileNotFoundException(ResString.ShakaPackagerNotFound);
                     }
 
                     option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
@@ -190,7 +190,7 @@ async Task DoWorkAsync(MyOption option)
                 }
             case DecryptEngine.MP4DECRYPT:
                 {
-                    string? file = GlobalUtil.FindExecutable("mp4decrypt") ?? throw new FileNotFoundException(ResString.mp4decryptNotFound);
+                    string? file = GlobalUtil.FindExecutable("mp4decrypt") ?? throw new FileNotFoundException(ResString.Mp4decryptNotFound);
                     option.DecryptionBinaryPath = file;
                     Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
                     break;
@@ -240,7 +240,7 @@ async Task DoWorkAsync(MyOption option)
     // 等待任务开始时间
     if (option.TaskStartAt != null && option.TaskStartAt > DateTime.Now)
     {
-        Logger.InfoMarkUp(ResString.taskStartAt + option.TaskStartAt);
+        Logger.InfoMarkUp(ResString.TaskStartAt + option.TaskStartAt);
         while (option.TaskStartAt > DateTime.Now)
         {
             await Task.Delay(1000);
@@ -283,7 +283,7 @@ async Task DoWorkAsync(MyOption option)
     // 写出文件
     await WriteRawFilesAsync(option, extractor, tmpDir);
 
-    Logger.Info(ResString.streamsInfo, lists.Count, basicStreams.Count, audios.Count, subs.Count);
+    Logger.Info(ResString.StreamsInfo, lists.Count, basicStreams.Count, audios.Count, subs.Count);
 
     foreach (StreamSpec? item in lists)
     {
@@ -362,7 +362,7 @@ async Task DoWorkAsync(MyOption option)
 
     if (selectedStreams.Count == 0)
     {
-        throw new Exception(ResString.noStreamsToDownload);
+        throw new Exception(ResString.NoStreamsToDownload);
     }
 
     // HLS: 选中流中若有没加载出playlist的，加载playlist
@@ -376,13 +376,13 @@ async Task DoWorkAsync(MyOption option)
     bool livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
     if (livingFlag)
     {
-        Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
+        Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.LiveFound}[/]");
     }
 
     // 无法识别的加密方式，自动开启二进制合并
     if (selectedStreams.Any(s => s.Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
     {
-        Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge3}[/]");
+        Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge3}[/]");
         option.BinaryMerge = true;
     }
 
@@ -398,7 +398,7 @@ async Task DoWorkAsync(MyOption option)
     // 记录文件
     extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
 
-    Logger.Info(ResString.selectedStream);
+    Logger.Info(ResString.SelectedStream);
     foreach (StreamSpec item in selectedStreams)
     {
         Logger.InfoMarkUp(item.ToString());
@@ -417,13 +417,13 @@ async Task DoWorkAsync(MyOption option)
     Console.ReadKey();
 #endif
 
-    Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
+    Logger.InfoMarkUp(ResString.SaveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 
     // 开始MuxAfterDone后自动使用二进制版
     if (option is { BinaryMerge: false, MuxAfterDone: true })
     {
         option.BinaryMerge = true;
-        Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge6}[/]");
+        Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge6}[/]");
     }
 
     // 下载配置
@@ -474,7 +474,7 @@ async Task WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string
             Directory.CreateDirectory(tmpDir);
         }
 
-        Logger.Warn(ResString.writeJson);
+        Logger.Warn(ResString.WriteJson);
         foreach (KeyValuePair<string, string> item in extractor.RawFiles)
         {
             string file = Path.Combine(tmpDir, item.Key);
@@ -496,8 +496,8 @@ async Task CheckUpdateAsync()
         string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
         if (!latestVer.StartsWith(nowVer) && !latestVer.StartsWith("https"))
         {
-            Console.Title = $"{ResString.newVersionFound} {latestVer}";
-            Logger.InfoMarkUp($"[cyan]{ResString.newVersionFound}[/] [red]{latestVer}[/]");
+            Console.Title = $"{ResString.NewVersionFound} {latestVer}";
+            Logger.InfoMarkUp($"[cyan]{ResString.NewVersionFound}[/] [red]{latestVer}[/]");
         }
     }
     catch (Exception)

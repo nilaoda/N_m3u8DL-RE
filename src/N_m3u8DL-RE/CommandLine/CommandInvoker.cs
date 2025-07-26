@@ -27,91 +27,91 @@ namespace N_m3u8DL_RE.CommandLine
         [GeneratedRegex(@"([\d\\.]+)(M|K)")]
         private static partial Regex SpeedStrRegex();
 
-        private static readonly Argument<string> Input = new(name: "input", description: ResString.cmd_Input);
-        private static readonly Option<string?> TmpDir = new(["--tmp-dir"], description: ResString.cmd_tmpDir);
-        private static readonly Option<string?> SaveDir = new(["--save-dir"], description: ResString.cmd_saveDir);
-        private static readonly Option<string?> SaveName = new(["--save-name"], description: ResString.cmd_saveName, parseArgument: ParseSaveName);
-        private static readonly Option<string?> SavePattern = new(["--save-pattern"], description: ResString.cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
-        private static readonly Option<string?> LogFilePath = new(["--log-file-path"], description: ResString.cmd_logFilePath, parseArgument: ParseFilePath);
-        private static readonly Option<string?> UILanguage = new Option<string?>(["--ui-language"], description: ResString.cmd_uiLanguage).FromAmong("en-US", "zh-CN", "zh-TW");
-        private static readonly Option<string?> UrlProcessorArgs = new(["--urlprocessor-args"], description: ResString.cmd_urlProcessorArgs);
-        private static readonly Option<string[]?> Keys = new(["--key"], description: ResString.cmd_keys) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
-        private static readonly Option<string> KeyTextFile = new(["--key-text-file"], description: ResString.cmd_keyText);
-        private static readonly Option<Dictionary<string, string>> Headers = new(["-H", "--header"], description: ResString.cmd_header, parseArgument: ParseHeaders) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
-        private static readonly Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
-        private static readonly Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.cmd_subFormat, getDefaultValue: () => Enumerations.SubtitleFormat.SRT);
-        private static readonly Option<bool> DisableUpdateCheck = new(["--disable-update-check"], description: ResString.cmd_disableUpdateCheck, getDefaultValue: () => false);
-        private static readonly Option<bool> AutoSelect = new(["--auto-select"], description: ResString.cmd_autoSelect, getDefaultValue: () => false);
-        private static readonly Option<bool> SubOnly = new(["--sub-only"], description: ResString.cmd_subOnly, getDefaultValue: () => false);
-        private static readonly Option<int> ThreadCount = new(["--thread-count"], description: ResString.cmd_threadCount, getDefaultValue: () => Environment.ProcessorCount) { ArgumentHelpName = "number" };
-        private static readonly Option<int> DownloadRetryCount = new(["--download-retry-count"], description: ResString.cmd_downloadRetryCount, getDefaultValue: () => 3) { ArgumentHelpName = "number" };
-        private static readonly Option<double> HttpRequestTimeout = new(["--http-request-timeout"], description: ResString.cmd_httpRequestTimeout, getDefaultValue: () => 100) { ArgumentHelpName = "seconds" };
-        private static readonly Option<bool> SkipMerge = new(["--skip-merge"], description: ResString.cmd_skipMerge, getDefaultValue: () => false);
-        private static readonly Option<bool> SkipDownload = new(["--skip-download"], description: ResString.cmd_skipDownload, getDefaultValue: () => false);
-        private static readonly Option<bool> NoDateInfo = new(["--no-date-info"], description: ResString.cmd_noDateInfo, getDefaultValue: () => false);
-        private static readonly Option<bool> BinaryMerge = new(["--binary-merge"], description: ResString.cmd_binaryMerge, getDefaultValue: () => false);
-        private static readonly Option<bool> UseFFmpegConcatDemuxer = new(["--use-ffmpeg-concat-demuxer"], description: ResString.cmd_useFFmpegConcatDemuxer, getDefaultValue: () => false);
-        private static readonly Option<bool> DelAfterDone = new(["--del-after-done"], description: ResString.cmd_delAfterDone, getDefaultValue: () => true);
-        private static readonly Option<bool> AutoSubtitleFix = new(["--auto-subtitle-fix"], description: ResString.cmd_subtitleFix, getDefaultValue: () => true);
-        private static readonly Option<bool> CheckSegmentsCount = new(["--check-segments-count"], description: ResString.cmd_checkSegmentsCount, getDefaultValue: () => true);
-        private static readonly Option<bool> WriteMetaJson = new(["--write-meta-json"], description: ResString.cmd_writeMetaJson, getDefaultValue: () => true);
-        private static readonly Option<bool> AppendUrlParams = new(["--append-url-params"], description: ResString.cmd_appendUrlParams, getDefaultValue: () => false);
-        private static readonly Option<bool> MP4RealTimeDecryption = new(["--mp4-real-time-decryption"], description: ResString.cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
-        private static readonly Option<bool> UseShakaPackager = new(["--use-shaka-packager"], description: ResString.cmd_useShakaPackager, getDefaultValue: () => false) { IsHidden = true };
-        private static readonly Option<DecryptEngine> DecryptionEngine = new(["--decryption-engine"], description: ResString.cmd_decryptionEngine, getDefaultValue: () => DecryptEngine.MP4DECRYPT);
-        private static readonly Option<bool> ForceAnsiConsole = new(["--force-ansi-console"], description: ResString.cmd_forceAnsiConsole);
-        private static readonly Option<bool> NoAnsiColor = new(["--no-ansi-color"], description: ResString.cmd_noAnsiColor);
-        private static readonly Option<string?> DecryptionBinaryPath = new(["--decryption-binary-path"], description: ResString.cmd_decryptionBinaryPath) { ArgumentHelpName = "PATH" };
-        private static readonly Option<string?> FFmpegBinaryPath = new(["--ffmpeg-binary-path"], description: ResString.cmd_ffmpegBinaryPath) { ArgumentHelpName = "PATH" };
-        private static readonly Option<string?> BaseUrl = new(["--base-url"], description: ResString.cmd_baseUrl);
-        private static readonly Option<bool> ConcurrentDownload = new(["-mt", "--concurrent-download"], description: ResString.cmd_concurrentDownload, getDefaultValue: () => false);
-        private static readonly Option<bool> NoLog = new(["--no-log"], description: ResString.cmd_noLog, getDefaultValue: () => false);
-        private static readonly Option<bool> AllowHlsMultiExtMap = new(["--allow-hls-multi-ext-map"], description: ResString.cmd_allowHlsMultiExtMap, getDefaultValue: () => false);
-        private static readonly Option<string[]?> AdKeywords = new(["--ad-keyword"], description: ResString.cmd_adKeyword) { ArgumentHelpName = "REG" };
-        private static readonly Option<long?> MaxSpeed = new(["-R", "--max-speed"], description: ResString.cmd_maxSpeed, parseArgument: ParseSpeedLimit) { ArgumentHelpName = "SPEED" };
+        private static readonly Argument<string> Input = new(name: "input", description: ResString.Cmd_Input);
+        private static readonly Option<string?> TmpDir = new(["--tmp-dir"], description: ResString.Cmd_tmpDir);
+        private static readonly Option<string?> SaveDir = new(["--save-dir"], description: ResString.Cmd_saveDir);
+        private static readonly Option<string?> SaveName = new(["--save-name"], description: ResString.Cmd_saveName, parseArgument: ParseSaveName);
+        private static readonly Option<string?> SavePattern = new(["--save-pattern"], description: ResString.Cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
+        private static readonly Option<string?> LogFilePath = new(["--log-file-path"], description: ResString.Cmd_logFilePath, parseArgument: ParseFilePath);
+        private static readonly Option<string?> UILanguage = new Option<string?>(["--ui-language"], description: ResString.Cmd_uiLanguage).FromAmong("en-US", "zh-CN", "zh-TW");
+        private static readonly Option<string?> UrlProcessorArgs = new(["--urlprocessor-args"], description: ResString.Cmd_urlProcessorArgs);
+        private static readonly Option<string[]?> Keys = new(["--key"], description: ResString.Cmd_keys) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
+        private static readonly Option<string> KeyTextFile = new(["--key-text-file"], description: ResString.Cmd_keyText);
+        private static readonly Option<Dictionary<string, string>> Headers = new(["-H", "--header"], description: ResString.Cmd_header, parseArgument: ParseHeaders) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false };
+        private static readonly Option<LogLevel> LogLevel = new(name: "--log-level", description: ResString.Cmd_logLevel, getDefaultValue: () => Common.Log.LogLevel.INFO);
+        private static readonly Option<SubtitleFormat> SubtitleFormat = new(name: "--sub-format", description: ResString.Cmd_subFormat, getDefaultValue: () => Enumerations.SubtitleFormat.SRT);
+        private static readonly Option<bool> DisableUpdateCheck = new(["--disable-update-check"], description: ResString.Cmd_disableUpdateCheck, getDefaultValue: () => false);
+        private static readonly Option<bool> AutoSelect = new(["--auto-select"], description: ResString.Cmd_autoSelect, getDefaultValue: () => false);
+        private static readonly Option<bool> SubOnly = new(["--sub-only"], description: ResString.Cmd_subOnly, getDefaultValue: () => false);
+        private static readonly Option<int> ThreadCount = new(["--thread-count"], description: ResString.Cmd_threadCount, getDefaultValue: () => Environment.ProcessorCount) { ArgumentHelpName = "number" };
+        private static readonly Option<int> DownloadRetryCount = new(["--download-retry-count"], description: ResString.Cmd_downloadRetryCount, getDefaultValue: () => 3) { ArgumentHelpName = "number" };
+        private static readonly Option<double> HttpRequestTimeout = new(["--http-request-timeout"], description: ResString.Cmd_httpRequestTimeout, getDefaultValue: () => 100) { ArgumentHelpName = "seconds" };
+        private static readonly Option<bool> SkipMerge = new(["--skip-merge"], description: ResString.Cmd_skipMerge, getDefaultValue: () => false);
+        private static readonly Option<bool> SkipDownload = new(["--skip-download"], description: ResString.Cmd_skipDownload, getDefaultValue: () => false);
+        private static readonly Option<bool> NoDateInfo = new(["--no-date-info"], description: ResString.Cmd_noDateInfo, getDefaultValue: () => false);
+        private static readonly Option<bool> BinaryMerge = new(["--binary-merge"], description: ResString.Cmd_binaryMerge, getDefaultValue: () => false);
+        private static readonly Option<bool> UseFFmpegConcatDemuxer = new(["--use-ffmpeg-concat-demuxer"], description: ResString.Cmd_useFFmpegConcatDemuxer, getDefaultValue: () => false);
+        private static readonly Option<bool> DelAfterDone = new(["--del-after-done"], description: ResString.Cmd_delAfterDone, getDefaultValue: () => true);
+        private static readonly Option<bool> AutoSubtitleFix = new(["--auto-subtitle-fix"], description: ResString.Cmd_subtitleFix, getDefaultValue: () => true);
+        private static readonly Option<bool> CheckSegmentsCount = new(["--check-segments-count"], description: ResString.Cmd_checkSegmentsCount, getDefaultValue: () => true);
+        private static readonly Option<bool> WriteMetaJson = new(["--write-meta-json"], description: ResString.Cmd_writeMetaJson, getDefaultValue: () => true);
+        private static readonly Option<bool> AppendUrlParams = new(["--append-url-params"], description: ResString.Cmd_appendUrlParams, getDefaultValue: () => false);
+        private static readonly Option<bool> MP4RealTimeDecryption = new(["--mp4-real-time-decryption"], description: ResString.Cmd_MP4RealTimeDecryption, getDefaultValue: () => false);
+        private static readonly Option<bool> UseShakaPackager = new(["--use-shaka-packager"], description: ResString.Cmd_useShakaPackager, getDefaultValue: () => false) { IsHidden = true };
+        private static readonly Option<DecryptEngine> DecryptionEngine = new(["--decryption-engine"], description: ResString.Cmd_decryptionEngine, getDefaultValue: () => DecryptEngine.MP4DECRYPT);
+        private static readonly Option<bool> ForceAnsiConsole = new(["--force-ansi-console"], description: ResString.Cmd_forceAnsiConsole);
+        private static readonly Option<bool> NoAnsiColor = new(["--no-ansi-color"], description: ResString.Cmd_noAnsiColor);
+        private static readonly Option<string?> DecryptionBinaryPath = new(["--decryption-binary-path"], description: ResString.Cmd_decryptionBinaryPath) { ArgumentHelpName = "PATH" };
+        private static readonly Option<string?> FFmpegBinaryPath = new(["--ffmpeg-binary-path"], description: ResString.Cmd_ffmpegBinaryPath) { ArgumentHelpName = "PATH" };
+        private static readonly Option<string?> BaseUrl = new(["--base-url"], description: ResString.Cmd_baseUrl);
+        private static readonly Option<bool> ConcurrentDownload = new(["-mt", "--concurrent-download"], description: ResString.Cmd_concurrentDownload, getDefaultValue: () => false);
+        private static readonly Option<bool> NoLog = new(["--no-log"], description: ResString.Cmd_noLog, getDefaultValue: () => false);
+        private static readonly Option<bool> AllowHlsMultiExtMap = new(["--allow-hls-multi-ext-map"], description: ResString.Cmd_allowHlsMultiExtMap, getDefaultValue: () => false);
+        private static readonly Option<string[]?> AdKeywords = new(["--ad-keyword"], description: ResString.Cmd_adKeyword) { ArgumentHelpName = "REG" };
+        private static readonly Option<long?> MaxSpeed = new(["-R", "--max-speed"], description: ResString.Cmd_maxSpeed, parseArgument: ParseSpeedLimit) { ArgumentHelpName = "SPEED" };
 
 
         // 代理选项
-        private static readonly Option<bool> UseSystemProxy = new(["--use-system-proxy"], description: ResString.cmd_useSystemProxy, getDefaultValue: () => true);
-        private static readonly Option<WebProxy?> CustomProxy = new(["--custom-proxy"], description: ResString.cmd_customProxy, parseArgument: ParseProxy) { ArgumentHelpName = "URL" };
+        private static readonly Option<bool> UseSystemProxy = new(["--use-system-proxy"], description: ResString.Cmd_useSystemProxy, getDefaultValue: () => true);
+        private static readonly Option<WebProxy?> CustomProxy = new(["--custom-proxy"], description: ResString.Cmd_customProxy, parseArgument: ParseProxy) { ArgumentHelpName = "URL" };
 
         // 只下载部分分片
-        private static readonly Option<CustomRange?> CustomRange = new(["--custom-range"], description: ResString.cmd_customRange, parseArgument: ParseCustomRange) { ArgumentHelpName = "RANGE" };
+        private static readonly Option<CustomRange?> CustomRange = new(["--custom-range"], description: ResString.Cmd_customRange, parseArgument: ParseCustomRange) { ArgumentHelpName = "RANGE" };
 
 
         // morehelp
-        private static readonly Option<string?> MoreHelp = new(["--morehelp"], description: ResString.cmd_moreHelp) { ArgumentHelpName = "OPTION" };
+        private static readonly Option<string?> MoreHelp = new(["--morehelp"], description: ResString.Cmd_moreHelp) { ArgumentHelpName = "OPTION" };
 
         // 自定义KEY等
-        private static readonly Option<EncryptMethod?> CustomHLSMethod = new(name: "--custom-hls-method", description: ResString.cmd_customHLSMethod) { ArgumentHelpName = "METHOD" };
-        private static readonly Option<byte[]?> CustomHLSKey = new(name: "--custom-hls-key", description: ResString.cmd_customHLSKey, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
-        private static readonly Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv", description: ResString.cmd_customHLSIv, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
+        private static readonly Option<EncryptMethod?> CustomHLSMethod = new(name: "--custom-hls-method", description: ResString.Cmd_customHLSMethod) { ArgumentHelpName = "METHOD" };
+        private static readonly Option<byte[]?> CustomHLSKey = new(name: "--custom-hls-key", description: ResString.Cmd_customHLSKey, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
+        private static readonly Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv", description: ResString.Cmd_customHLSIv, parseArgument: ParseHLSCustomKey) { ArgumentHelpName = "FILE|HEX|BASE64" };
 
         // 任务开始时间
-        private static readonly Option<DateTime?> TaskStartAt = new(["--task-start-at"], description: ResString.cmd_taskStartAt, parseArgument: ParseStartTime) { ArgumentHelpName = "yyyyMMddHHmmss" };
+        private static readonly Option<DateTime?> TaskStartAt = new(["--task-start-at"], description: ResString.Cmd_taskStartAt, parseArgument: ParseStartTime) { ArgumentHelpName = "yyyyMMddHHmmss" };
 
 
         // 直播相关
-        private static readonly Option<bool> LivePerformAsVod = new(["--live-perform-as-vod"], description: ResString.cmd_livePerformAsVod, getDefaultValue: () => false);
-        private static readonly Option<bool> LiveRealTimeMerge = new(["--live-real-time-merge"], description: ResString.cmd_liveRealTimeMerge, getDefaultValue: () => false);
-        private static readonly Option<bool> LiveKeepSegments = new(["--live-keep-segments"], description: ResString.cmd_liveKeepSegments, getDefaultValue: () => true);
-        private static readonly Option<bool> LivePipeMux = new(["--live-pipe-mux"], description: ResString.cmd_livePipeMux, getDefaultValue: () => false);
-        private static readonly Option<TimeSpan?> LiveRecordLimit = new(["--live-record-limit"], description: ResString.cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
-        private static readonly Option<int?> LiveWaitTime = new(["--live-wait-time"], description: ResString.cmd_liveWaitTime) { ArgumentHelpName = "SEC" };
-        private static readonly Option<int> LiveTakeCount = new(["--live-take-count"], description: ResString.cmd_liveTakeCount, getDefaultValue: () => 16) { ArgumentHelpName = "NUM" };
-        private static readonly Option<bool> LiveFixVttByAudio = new(["--live-fix-vtt-by-audio"], description: ResString.cmd_liveFixVttByAudio, getDefaultValue: () => false);
+        private static readonly Option<bool> LivePerformAsVod = new(["--live-perform-as-vod"], description: ResString.Cmd_livePerformAsVod, getDefaultValue: () => false);
+        private static readonly Option<bool> LiveRealTimeMerge = new(["--live-real-time-merge"], description: ResString.Cmd_liveRealTimeMerge, getDefaultValue: () => false);
+        private static readonly Option<bool> LiveKeepSegments = new(["--live-keep-segments"], description: ResString.Cmd_liveKeepSegments, getDefaultValue: () => true);
+        private static readonly Option<bool> LivePipeMux = new(["--live-pipe-mux"], description: ResString.Cmd_livePipeMux, getDefaultValue: () => false);
+        private static readonly Option<TimeSpan?> LiveRecordLimit = new(["--live-record-limit"], description: ResString.Cmd_liveRecordLimit, parseArgument: ParseLiveLimit) { ArgumentHelpName = "HH:mm:ss" };
+        private static readonly Option<int?> LiveWaitTime = new(["--live-wait-time"], description: ResString.Cmd_liveWaitTime) { ArgumentHelpName = "SEC" };
+        private static readonly Option<int> LiveTakeCount = new(["--live-take-count"], description: ResString.Cmd_liveTakeCount, getDefaultValue: () => 16) { ArgumentHelpName = "NUM" };
+        private static readonly Option<bool> LiveFixVttByAudio = new(["--live-fix-vtt-by-audio"], description: ResString.Cmd_liveFixVttByAudio, getDefaultValue: () => false);
 
 
         // 复杂命令行如下
-        private static readonly Option<MuxOptions?> MuxAfterDone = new(["-M", "--mux-after-done"], description: ResString.cmd_muxAfterDone, parseArgument: ParseMuxAfterDone) { ArgumentHelpName = "OPTIONS" };
-        private static readonly Option<List<OutputFile>> MuxImports = new("--mux-import", description: ResString.cmd_muxImport, parseArgument: ParseImports) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, ArgumentHelpName = "OPTIONS" };
-        private static readonly Option<StreamFilter?> VideoFilter = new(["-sv", "--select-video"], description: ResString.cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
-        private static readonly Option<StreamFilter?> AudioFilter = new(["-sa", "--select-audio"], description: ResString.cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
-        private static readonly Option<StreamFilter?> SubtitleFilter = new(["-ss", "--select-subtitle"], description: ResString.cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<MuxOptions?> MuxAfterDone = new(["-M", "--mux-after-done"], description: ResString.Cmd_muxAfterDone, parseArgument: ParseMuxAfterDone) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<List<OutputFile>> MuxImports = new("--mux-import", description: ResString.Cmd_muxImport, parseArgument: ParseImports) { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<StreamFilter?> VideoFilter = new(["-sv", "--select-video"], description: ResString.Cmd_selectVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<StreamFilter?> AudioFilter = new(["-sa", "--select-audio"], description: ResString.Cmd_selectAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<StreamFilter?> SubtitleFilter = new(["-ss", "--select-subtitle"], description: ResString.Cmd_selectSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
-        private static readonly Option<StreamFilter?> DropVideoFilter = new(["-dv", "--drop-video"], description: ResString.cmd_dropVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
-        private static readonly Option<StreamFilter?> DropAudioFilter = new(["-da", "--drop-audio"], description: ResString.cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
-        private static readonly Option<StreamFilter?> DropSubtitleFilter = new(["-ds", "--drop-subtitle"], description: ResString.cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<StreamFilter?> DropVideoFilter = new(["-dv", "--drop-video"], description: ResString.Cmd_dropVideo, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<StreamFilter?> DropAudioFilter = new(["-da", "--drop-audio"], description: ResString.Cmd_dropAudio, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
+        private static readonly Option<StreamFilter?> DropSubtitleFilter = new(["-ds", "--drop-subtitle"], description: ResString.Cmd_dropSubtitle, parseArgument: ParseStreamFilter) { ArgumentHelpName = "OPTIONS" };
 
         /// <summary>
         /// 解析下载速度限制
@@ -685,12 +685,12 @@ namespace N_m3u8DL_RE.CommandLine
                 string option = argList[index + 1];
                 string msg = option switch
                 {
-                    "mux-after-done" => ResString.cmd_muxAfterDone_more,
-                    "mux-import" => ResString.cmd_muxImport_more,
-                    "select-video" => ResString.cmd_selectVideo_more,
-                    "select-audio" => ResString.cmd_selectAudio_more,
-                    "select-subtitle" => ResString.cmd_selectSubtitle_more,
-                    "custom-range" => ResString.cmd_custom_range,
+                    "mux-after-done" => ResString.Cmd_muxAfterDone_more,
+                    "mux-import" => ResString.Cmd_muxImport_more,
+                    "select-video" => ResString.Cmd_selectVideo_more,
+                    "select-audio" => ResString.Cmd_selectAudio_more,
+                    "select-subtitle" => ResString.Cmd_selectSubtitle_more,
+                    "custom-range" => ResString.Cmd_custom_range,
                     _ => $"Option=\"{option}\" not found"
                 };
                 Console.WriteLine($"More Help:\r\n\r\n  --{option}\r\n\r\n" + msg);

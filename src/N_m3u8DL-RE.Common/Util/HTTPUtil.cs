@@ -25,7 +25,7 @@ namespace N_m3u8DL_RE.Common.Util
 
         private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
         {
-            Logger.Debug(ResString.fetch + url);
+            Logger.Debug(ResString.Fetch + url);
             using HttpRequestMessage webRequest = new(HttpMethod.Get, url);
             webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
             webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");

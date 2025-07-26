@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.Util
         {
             if (finalVtt != null && finalVtt.Cues.Any(v => v.Payload.StartsWith("Base64::")))
             {
-                Logger.WarnMarkUp(ResString.processImageSub);
+                Logger.WarnMarkUp(ResString.ProcessImageSub);
                 int i = 0;
                 foreach (SubCue? img in finalVtt.Cues.Where(v => v.Payload.StartsWith("Base64::")))
                 {

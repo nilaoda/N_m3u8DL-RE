@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             M3u8Content = M3u8Content.Trim();
             if (!M3u8Content.StartsWith(HLSTags.ext_m3u))
             {
-                throw new Exception(ResString.badM3u8);
+                throw new Exception(ResString.BadM3u8);
             }
 
             foreach (Processor.ContentProcessor p in ParserConfig.ContentProcessors)
@@ -230,7 +230,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             bool allowHlsMultiExtMap = ParserConfig.CustomParserArgs.TryGetValue("AllowHlsMultiExtMap", out string? allMultiExtMap) && allMultiExtMap == "true";
             if (allowHlsMultiExtMap)
             {
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.allowHlsMultiExtMap}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.AllowHlsMultiExtMap}[/]");
             }
 
             using StringReader sr = new(M3u8Content);
@@ -504,7 +504,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
             }
 
-            throw new Exception(ResString.keyProcessorNotFound);
+            throw new Exception(ResString.KeyProcessorNotFound);
         }
 
         public async Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
@@ -513,7 +513,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             PreProcessContent();
             if (M3u8Content.Contains(HLSTags.ext_x_stream_inf))
             {
-                Logger.Warn(ResString.masterM3u8Found);
+                Logger.Warn(ResString.MasterM3u8Found);
                 List<StreamSpec> lists = await ParseMasterListAsync();
                 lists = [.. lists.DistinctBy(p => p.Url)];
                 return lists;

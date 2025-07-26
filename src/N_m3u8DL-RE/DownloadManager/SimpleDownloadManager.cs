@@ -51,13 +51,13 @@ namespace N_m3u8DL_RE.DownloadManager
             if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
             {
                 DownloaderConfig.MyOptions.BinaryMerge = true;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge2}[/]");
             }
 
             if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison))
             {
                 DownloaderConfig.MyOptions.MuxAfterDone = false;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge5}[/]");
             }
 
             if (mediainfos.Where(m => m.Type == "Audio").All(m => m.BaseInfo!.Contains("aac")))
@@ -98,11 +98,11 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (splitSegments != null)
                 {
                     segments = splitSegments;
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileSplitWarn}[/]");
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.SingleFileSplitWarn}[/]");
                     if (DownloaderConfig.MyOptions.MP4RealTimeDecryption)
                     {
                         DownloaderConfig.MyOptions.MP4RealTimeDecryption = false;
-                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileRealtimeDecryptWarn}[/]");
+                        Logger.WarnMarkUp($"[darkorange3_1]{ResString.SingleFileRealtimeDecryptWarn}[/]");
                     }
                 }
                 else
@@ -151,13 +151,13 @@ namespace N_m3u8DL_RE.DownloadManager
             task.StartTask();
 
             // 开始下载
-            Logger.InfoMarkUp(ResString.startDownloading + streamSpec.ToShortString());
+            Logger.InfoMarkUp(ResString.StartDownloading + streamSpec.ToShortString());
 
             // 对于CENC，全部自动开启二进制合并
             if (!DownloaderConfig.MyOptions.BinaryMerge && totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == EncryptMethod.CENC)
             {
                 DownloaderConfig.MyOptions.BinaryMerge = true;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge4}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge4}[/]");
             }
 
             // 下载init
@@ -167,7 +167,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (!DownloaderConfig.MyOptions.BinaryMerge && streamSpec.MediaType != MediaType.SUBTITLES)
                 {
                     DownloaderConfig.MyOptions.BinaryMerge = true;
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge}[/]");
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.AutoBinaryMerge}[/]");
                 }
 
                 string path = Path.Combine(tmpDir, "_init.mp4.tmp");
@@ -206,7 +206,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     // ffmpeg读取信息
                     if (!readInfo)
                     {
-                        Logger.WarnMarkUp(ResString.readingInfo);
+                        Logger.WarnMarkUp(ResString.ReadingInfo);
                         mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                         mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                         ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
@@ -281,7 +281,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (!readInfo)
                     {
                         // ffmpeg读取信息
-                        Logger.WarnMarkUp(ResString.readingInfo);
+                        Logger.WarnMarkUp(ResString.ReadingInfo);
                         mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                         mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                         ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
@@ -360,7 +360,7 @@ namespace N_m3u8DL_RE.DownloadManager
             // 校验分片数量
             if (DownloaderConfig.MyOptions.CheckSegmentsCount && FileDic.Values.Any(s => s == null))
             {
-                Logger.ErrorMarkUp(ResString.segmentCountCheckNotPass, totalCount, FileDic.Values.Count(s => s != null));
+                Logger.ErrorMarkUp(ResString.SegmentCountCheckNotPass, totalCount, FileDic.Values.Count(s => s != null));
                 return false;
             }
 
@@ -380,7 +380,7 @@ namespace N_m3u8DL_RE.DownloadManager
             // 自动修复VTT raw字幕
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
             {
-                Logger.WarnMarkUp(ResString.fixingVTT);
+                Logger.WarnMarkUp(ResString.FixingVTT);
                 // 排序字幕并修正时间戳
                 bool first = true;
                 WebVttSub finalVtt = new();
@@ -436,7 +436,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 (bool sawVtt, uint timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                 if (sawVtt)
                 {
-                    Logger.WarnMarkUp(ResString.fixingVTTmp4);
+                    Logger.WarnMarkUp(ResString.FixingVTTmp4);
                     string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s"))];
                     WebVttSub finalVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
                     // 写出字幕
@@ -471,7 +471,7 @@ namespace N_m3u8DL_RE.DownloadManager
             // 自动修复TTML raw字幕
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
             {
-                Logger.WarnMarkUp(ResString.fixingTTML);
+                Logger.WarnMarkUp(ResString.FixingTTML);
                 bool first = true;
                 WebVttSub finalVtt = new();
                 IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Key);
@@ -529,7 +529,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("m4s")
                 && streamSpec.Codecs != null && streamSpec.Codecs.Contains("stpp"))
             {
-                Logger.WarnMarkUp(ResString.fixingTTMLmp4);
+                Logger.WarnMarkUp(ResString.FixingTTMLmp4);
                 // sawTtml暂时不判断
                 // var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
                 // var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
@@ -595,7 +595,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // 字幕也使用二进制合并
                 if (DownloaderConfig.MyOptions.BinaryMerge || streamSpec.MediaType == MediaType.SUBTITLES)
                 {
-                    Logger.InfoMarkUp(ResString.binaryMerge);
+                    Logger.InfoMarkUp(ResString.BinaryMerge);
                     string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
                     MergeUtil.CombineMultipleFilesIntoSingleFile(files, output);
                     mergeSuccess = true;
@@ -604,7 +604,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     // ffmpeg合并
                     string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
-                    Logger.InfoMarkUp(ResString.ffmpegMerge);
+                    Logger.InfoMarkUp(ResString.FfmpegMerge);
                     string ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
                     string ffOut = Path.Combine(Path.GetDirectoryName(output)!, Path.GetFileNameWithoutExtension(output) + $".{ext}");
                     // 检测目标文件是否存在
@@ -615,7 +615,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     // 大于1800分片，需要分步骤合并
                     if (files.Length >= 1800)
                     {
-                        Logger.WarnMarkUp(ResString.partMerge);
+                        Logger.WarnMarkUp(ResString.PartMerge);
                         files = MergeUtil.PartialCombineMultipleFiles(files);
                         FileDic.Clear();
                         foreach (string? item in files)
@@ -717,7 +717,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
             {
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.RealTimeDecMessage}[/]");
             }
 
             await progress.StartAsync(async ctx =>

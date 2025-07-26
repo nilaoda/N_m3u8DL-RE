@@ -154,15 +154,15 @@ namespace N_m3u8DL_RE.Util
             List<StreamSpec> subs = [.. streamSpecs.Where(x => x.MediaType == MediaType.SUBTITLES)];
 
             MultiSelectionPrompt<StreamSpec> prompt = new MultiSelectionPrompt<StreamSpec>()
-                    .Title(ResString.promptTitle)
+                    .Title(ResString.PromptTitle)
                     .UseConverter(x =>
                     {
                         return x.Name != null && x.Name.StartsWith("__") ? $"[darkslategray1]{x.Name[2..]}[/]" : x.ToString().EscapeMarkup().RemoveMarkup();
                     })
                     .Required()
                     .PageSize(10)
-                    .MoreChoicesText(ResString.promptChoiceText)
-                    .InstructionsText(ResString.promptInfo)
+                    .MoreChoicesText(ResString.PromptChoiceText)
+                    .InstructionsText(ResString.PromptInfo)
                 ;
 
             // 默认选中第一个
@@ -265,15 +265,15 @@ namespace N_m3u8DL_RE.Util
                 return;
             }
 
-            Logger.InfoMarkUp($"{ResString.customRangeFound}[Cyan underline]{customRange.InputStr}[/]");
-            Logger.WarnMarkUp($"[darkorange3_1]{ResString.customRangeWarn}[/]");
+            Logger.InfoMarkUp($"{ResString.CustomRangeFound}[Cyan underline]{customRange.InputStr}[/]");
+            Logger.WarnMarkUp($"[darkorange3_1]{ResString.CustomRangeWarn}[/]");
 
             bool filterByIndex = customRange is { StartSegIndex: not null, EndSegIndex: not null };
             bool filterByTime = customRange is { StartSec: not null, EndSec: not null };
 
             if (!filterByIndex && !filterByTime)
             {
-                Logger.ErrorMarkUp(ResString.customRangeInvalid);
+                Logger.ErrorMarkUp(ResString.CustomRangeInvalid);
                 return;
             }
 
@@ -317,7 +317,7 @@ namespace N_m3u8DL_RE.Util
             List<Regex> regList = [.. keywords.Select(s => new Regex(s))];
             foreach (Regex? reg in regList)
             {
-                Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
+                Logger.InfoMarkUp($"{ResString.CustomAdKeywordsFound}[Cyan underline]{reg}[/]");
             }
 
             foreach (StreamSpec stream in selectedSteams)
