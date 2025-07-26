@@ -3,4 +3,9 @@
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = true
 
+# Enable IDE code style warnings
+dotnet_analyzer_diagnostic.category-Style.severity = warning
+dotnet_analyzer_diagnostic.category-Simplification.severity = warning
+
+# Disable some warnings
 dotnet_diagnostic.CA1707.severity = none
