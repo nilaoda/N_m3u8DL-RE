@@ -145,7 +145,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         // SDT, BAT, ST
                         else if (pid == 0x0011)
                         {
-                            int tableId = (int)tsPayload.Skip(1).First();
+                            int tableId = tsPayload.Skip(1).First();
                             // Current TS Info
                             if (tableId == 0x42)
                             {
@@ -154,9 +154,9 @@ namespace N_m3u8DL_RE.DownloadManager
                                 IEnumerable<byte> dscripData = sectionData.Skip(8);
                                 int descriptorsLoopLength = (ConvertToUint16(dscripData.Skip(3).Take(2))) & 0xfff;
                                 IEnumerable<byte> descriptorsData = dscripData.Skip(5).Take(descriptorsLoopLength);
-                                int serviceProviderLength = (int)descriptorsData.Skip(3).First();
+                                int serviceProviderLength = descriptorsData.Skip(3).First();
                                 serviceProvider = Encoding.UTF8.GetString([.. descriptorsData.Skip(4).Take(serviceProviderLength)]);
-                                int serviceNameLength = (int)descriptorsData.Skip(4 + serviceProviderLength).First();
+                                int serviceNameLength = descriptorsData.Skip(4 + serviceProviderLength).First();
                                 serviceName = Encoding.UTF8.GetString([.. descriptorsData.Skip(5 + serviceProviderLength).Take(serviceNameLength)]);
                             }
                         }
