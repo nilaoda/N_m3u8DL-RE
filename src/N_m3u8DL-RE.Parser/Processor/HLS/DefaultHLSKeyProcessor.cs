@@ -45,15 +45,15 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 {
                     encryptInfo.Key = parserConfig.CustomeKey;
                 }
-                else if (uri.ToLower().StartsWith("base64:"))
+                else if (uri.StartsWith("base64:", StringComparison.CurrentCultureIgnoreCase))
                 {
                     encryptInfo.Key = Convert.FromBase64String(uri[7..]);
                 }
-                else if (uri.ToLower().StartsWith("data:;base64,"))
+                else if (uri.StartsWith("data:;base64,", StringComparison.CurrentCultureIgnoreCase))
                 {
                     encryptInfo.Key = Convert.FromBase64String(uri[13..]);
                 }
-                else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
+                else if (uri.StartsWith("data:text/plain;base64,", StringComparison.CurrentCultureIgnoreCase))
                 {
                     encryptInfo.Key = Convert.FromBase64String(uri[23..]);
                 }
