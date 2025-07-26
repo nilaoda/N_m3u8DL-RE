@@ -115,7 +115,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     continue;
                 }
 
-                ushort ConvertToUint16(IEnumerable<byte> bytes)
+                static ushort ConvertToUint16(IEnumerable<byte> bytes)
                 {
                     if (BitConverter.IsLittleEndian)
                     {
