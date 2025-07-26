@@ -381,11 +381,11 @@ namespace Mp4SubtitleParser
                 string key = $"{sub.Begin} --> {sub.End}";
                 foreach (XmlElement item in sub.Contents)
                 {
-                    if (dic.ContainsKey(key))
+                    if (dic.TryGetValue(key, out string? value))
                     {
                         dic[key] = item.GetAttribute("tts:fontStyle") is "italic" or "oblique"
-                            ? $"{dic[key]}\r\n<i>{GetTextFromElement(item)}</i>"
-                            : $"{dic[key]}\r\n{GetTextFromElement(item)}";
+                            ? $"{value}\r\n<i>{GetTextFromElement(item)}</i>"
+                            : $"{value}\r\n{GetTextFromElement(item)}";
                     }
                     else
                     {
