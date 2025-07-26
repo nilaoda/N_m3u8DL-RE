@@ -22,12 +22,21 @@ namespace N_m3u8DL_RE.Util
         public static async Task<List<MediaSegment>?> SplitUrlAsync(MediaSegment segment, Dictionary<string, string> headers)
         {
             string url = segment.Url;
-            if (!await CanSplitAsync(url, headers)) return null;
+            if (!await CanSplitAsync(url, headers))
+            {
+                return null;
+            }
 
-            if (segment.StartRange != null) return null;
+            if (segment.StartRange != null)
+            {
+                return null;
+            }
 
             long fileSize = await GetFileSizeAsync(url, headers);
-            if (fileSize == 0) return null;
+            if (fileSize == 0)
+            {
+                return null;
+            }
 
             List<Clip> allClips = GetAllClips(url, fileSize);
             List<MediaSegment> splitSegments = new List<MediaSegment>();

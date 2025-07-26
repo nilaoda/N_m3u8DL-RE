@@ -22,7 +22,10 @@
         {
             byte[] data = base.ReadBytes(4);
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(data);
+            }
+
             return BitConverter.ToInt32(data, 0);
         }
 
@@ -30,7 +33,10 @@
         {
             byte[] data = base.ReadBytes(2);
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(data);
+            }
+
             return BitConverter.ToInt16(data, 0);
         }
 
@@ -38,7 +44,10 @@
         {
             byte[] data = base.ReadBytes(8);
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(data);
+            }
+
             return BitConverter.ToInt64(data, 0);
         }
 
@@ -46,7 +55,10 @@
         {
             byte[] data = base.ReadBytes(4);
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(data);
+            }
+
             return BitConverter.ToUInt32(data, 0);
         }
 
@@ -54,7 +66,10 @@
         {
             byte[] data = base.ReadBytes(8);
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(data);
+            }
+
             return BitConverter.ToUInt64(data, 0);
         }
     }

@@ -11,7 +11,10 @@ namespace N_m3u8DL_RE.Column
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
             if (task.IsFinished)
+            {
                 return new Text($"{task.Value}/{task.MaxValue} Waiting  ", FinishedStyle).LeftJustified();
+            }
+
             return new Text($"{task.Value}/{task.MaxValue} Recording", MyStyle).LeftJustified();
         }
     }

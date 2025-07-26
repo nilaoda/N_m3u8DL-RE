@@ -19,7 +19,10 @@ namespace Mp4SubtitleParser
                 .FullBox("mdhd", box =>
                 {
                     if (box.Version is not (0 or 1))
+                    {
                         throw new Exception("MDHD version can only be 0 or 1");
+                    }
+
                     timescale = MP4Parser.ParseMDHD(box.Reader, box.Version);
                 })
                 .Box("minf", MP4Parser.Children)
@@ -38,7 +41,9 @@ namespace Mp4SubtitleParser
         public static WebVttSub ExtractSub(IEnumerable<string> files, uint timescale)
         {
             if (timescale == 0)
+            {
                 throw new Exception("Missing timescale for VTT content!");
+            }
 
             List<SubCue> cues = [];
 
@@ -63,28 +68,43 @@ namespace Mp4SubtitleParser
                     {
                         sawTFDT = true;
                         if (box.Version is not (0 or 1))
+                        {
                             throw new Exception("TFDT version can only be 0 or 1");
+                        }
+
                         baseTime = MP4Parser.ParseTFDT(box.Reader, box.Version);
                     })
                     .FullBox("tfhd", box =>
                     {
                         if (box.Flags == 1000)
+                        {
                             throw new Exception("A TFHD box should have a valid flags value");
+                        }
+
                         defaultDuration = MP4Parser.ParseTFHD(box.Reader, box.Flags).DefaultSampleDuration;
                     })
                     .FullBox("trun", box =>
                     {
                         sawTRUN = true;
                         if (box.Version == 1000)
+                        {
                             throw new Exception("A TRUN box should have a valid version value");
+                        }
+
                         if (box.Flags == 1000)
+                        {
                             throw new Exception("A TRUN box should have a valid flags value");
+                        }
+
                         presentations = MP4Parser.ParseTRUN(box.Reader, box.Version, box.Flags).SampleData;
                     })
                     .Box("mdat", MP4Parser.AllData(data =>
                     {
                         if (sawMDAT)
+                        {
                             throw new Exception("VTT cues in mp4 with multiple MDAT are not currently supported");
+                        }
+
                         sawMDAT = true;
                         rawPayload = data;
                     }))

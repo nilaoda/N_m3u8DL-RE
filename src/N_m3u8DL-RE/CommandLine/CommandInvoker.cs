@@ -124,11 +124,17 @@ namespace N_m3u8DL_RE.CommandLine
             try
             {
                 Regex reg = SpeedStrRegex();
-                if (!reg.IsMatch(input)) throw new ArgumentException($"Invalid Speed Limit: {input}");
+                if (!reg.IsMatch(input))
+                {
+                    throw new ArgumentException($"Invalid Speed Limit: {input}");
+                }
 
                 double number = double.Parse(reg.Match(input).Groups[1].Value);
                 if (reg.Match(input).Groups[2].Value == "M")
+                {
                     return (long)(number * 1024 * 1024);
+                }
+
                 return (long)(number * 1024);
             }
             catch (Exception)
@@ -151,11 +157,15 @@ namespace N_m3u8DL_RE.CommandLine
             try
             {
                 if (string.IsNullOrEmpty(input))
+                {
                     return null;
+                }
 
                 string[] arr = input.Split('-');
                 if (arr.Length != 2)
+                {
                     throw new ArgumentException("Bad format!");
+                }
 
                 if (input.Contains(':'))
                 {
@@ -200,7 +210,9 @@ namespace N_m3u8DL_RE.CommandLine
             try
             {
                 if (string.IsNullOrEmpty(input))
+                {
                     return null;
+                }
 
                 Uri uri = new Uri(input);
                 WebProxy proxy = new WebProxy(uri, true);
@@ -229,11 +241,20 @@ namespace N_m3u8DL_RE.CommandLine
             try
             {
                 if (string.IsNullOrEmpty(input))
+                {
                     return null;
+                }
+
                 if (File.Exists(input))
+                {
                     return File.ReadAllBytes(input);
+                }
+
                 if (HexUtil.TryParseHexString(input, out byte[]? bytes))
+                {
                     return bytes;
+                }
+
                 return Convert.FromBase64String(input);
             }
             catch (Exception)
@@ -349,67 +370,99 @@ namespace N_m3u8DL_RE.CommandLine
 
             string? id = p.GetValue("id");
             if (!string.IsNullOrEmpty(id))
+            {
                 streamFilter.GroupIdReg = new Regex(id);
+            }
 
             string? lang = p.GetValue("lang");
             if (!string.IsNullOrEmpty(lang))
+            {
                 streamFilter.LanguageReg = new Regex(lang);
+            }
 
             string? name = p.GetValue("name");
             if (!string.IsNullOrEmpty(name))
+            {
                 streamFilter.NameReg = new Regex(name);
+            }
 
             string? codecs = p.GetValue("codecs");
             if (!string.IsNullOrEmpty(codecs))
+            {
                 streamFilter.CodecsReg = new Regex(codecs);
+            }
 
             string? res = p.GetValue("res");
             if (!string.IsNullOrEmpty(res))
+            {
                 streamFilter.ResolutionReg = new Regex(res);
+            }
 
             string? frame = p.GetValue("frame");
             if (!string.IsNullOrEmpty(frame))
+            {
                 streamFilter.FrameRateReg = new Regex(frame);
+            }
 
             string? channel = p.GetValue("channel");
             if (!string.IsNullOrEmpty(channel))
+            {
                 streamFilter.ChannelsReg = new Regex(channel);
+            }
 
             string? range = p.GetValue("range");
             if (!string.IsNullOrEmpty(range))
+            {
                 streamFilter.VideoRangeReg = new Regex(range);
+            }
 
             string? url = p.GetValue("url");
             if (!string.IsNullOrEmpty(url))
+            {
                 streamFilter.UrlReg = new Regex(url);
+            }
 
             string? segsMin = p.GetValue("segsMin");
             if (!string.IsNullOrEmpty(segsMin))
+            {
                 streamFilter.SegmentsMinCount = long.Parse(segsMin);
+            }
 
             string? segsMax = p.GetValue("segsMax");
             if (!string.IsNullOrEmpty(segsMax))
+            {
                 streamFilter.SegmentsMaxCount = long.Parse(segsMax);
+            }
 
             string? plistDurMin = p.GetValue("plistDurMin");
             if (!string.IsNullOrEmpty(plistDurMin))
+            {
                 streamFilter.PlaylistMinDur = OtherUtil.ParseSeconds(plistDurMin);
+            }
 
             string? plistDurMax = p.GetValue("plistDurMax");
             if (!string.IsNullOrEmpty(plistDurMax))
+            {
                 streamFilter.PlaylistMaxDur = OtherUtil.ParseSeconds(plistDurMax);
+            }
 
             string? bwMin = p.GetValue("bwMin");
             if (!string.IsNullOrEmpty(bwMin))
+            {
                 streamFilter.BandwidthMin = int.Parse(bwMin) * 1000;
+            }
 
             string? bwMax = p.GetValue("bwMax");
             if (!string.IsNullOrEmpty(bwMax))
+            {
                 streamFilter.BandwidthMax = int.Parse(bwMax) * 1000;
+            }
 
             string? role = p.GetValue("role");
             if (System.Enum.TryParse(role, true, out RoleType roleType))
+            {
                 streamFilter.Role = roleType;
+            }
 
             return streamFilter;
         }
@@ -586,13 +639,26 @@ namespace N_m3u8DL_RE.CommandLine
                     MaxSpeed = bindingContext.ParseResult.GetValueForOption(MaxSpeed),
                 };
 
-                if (bindingContext.ParseResult.HasOption(CustomHLSMethod)) option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
-                if (bindingContext.ParseResult.HasOption(CustomHLSKey)) option.CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey);
-                if (bindingContext.ParseResult.HasOption(CustomHLSIv)) option.CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv);
+                if (bindingContext.ParseResult.HasOption(CustomHLSMethod))
+                {
+                    option.CustomHLSMethod = bindingContext.ParseResult.GetValueForOption(CustomHLSMethod);
+                }
+
+                if (bindingContext.ParseResult.HasOption(CustomHLSKey))
+                {
+                    option.CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey);
+                }
+
+                if (bindingContext.ParseResult.HasOption(CustomHLSIv))
+                {
+                    option.CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv);
+                }
 
                 Dictionary<string, string>? parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
                 if (parsedHeaders != null)
+                {
                     option.Headers = parsedHeaders;
+                }
 
 
                 // 以用户选择语言为准优先
@@ -605,12 +671,21 @@ namespace N_m3u8DL_RE.CommandLine
 
                 // 混流设置
                 MuxOptions? muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
-                if (muxAfterDoneValue == null) return option;
+                if (muxAfterDoneValue == null)
+                {
+                    return option;
+                }
 
                 option.MuxAfterDone = true;
                 option.MuxOptions = muxAfterDoneValue;
-                if (muxAfterDoneValue.UseMkvmerge) option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;
-                else option.FFmpegBinaryPath ??= muxAfterDoneValue.BinPath;
+                if (muxAfterDoneValue.UseMkvmerge)
+                {
+                    option.MkvmergeBinaryPath = muxAfterDoneValue.BinPath;
+                }
+                else
+                {
+                    option.FFmpegBinaryPath ??= muxAfterDoneValue.BinPath;
+                }
 
                 return option;
             }

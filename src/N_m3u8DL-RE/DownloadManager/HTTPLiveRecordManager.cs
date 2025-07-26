@@ -55,7 +55,10 @@ namespace N_m3u8DL_RE.DownloadManager
             Logger.Debug($"dirName: {dirName}; saveDir: {saveDir}; saveName: {saveName}");
 
             // 创建文件夹
-            if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
+            if (!Directory.Exists(saveDir))
+            {
+                Directory.CreateDirectory(saveDir);
+            }
 
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, new Uri(streamSpec.Url));
             request.Headers.ConnectionClose = false;
@@ -107,12 +110,18 @@ namespace N_m3u8DL_RE.DownloadManager
             while (!STOP_FLAG && !READ_IFO)
             {
                 await Task.Delay(200);
-                if (InfoBuffer.Count < 188 * 5000) continue;
+                if (InfoBuffer.Count < 188 * 5000)
+                {
+                    continue;
+                }
 
                 ushort ConvertToUint16(IEnumerable<byte> bytes)
                 {
                     if (BitConverter.IsLittleEndian)
+                    {
                         bytes = bytes.Reverse();
+                    }
+
                     return BitConverter.ToUInt16(bytes.ToArray());
                 }
 
@@ -152,15 +161,25 @@ namespace N_m3u8DL_RE.DownloadManager
                             }
                         }
                         if (programId != "" && (serviceName != "" || serviceProvider != ""))
+                        {
                             break;
+                        }
                     }
                 }
 
                 if (!string.IsNullOrEmpty(programId))
                 {
                     Logger.InfoMarkUp($"Program Id: [cyan]{programId.EscapeMarkup()}[/]");
-                    if (!string.IsNullOrEmpty(serviceName)) Logger.InfoMarkUp($"Service Name: [cyan]{serviceName.EscapeMarkup()}[/]");
-                    if (!string.IsNullOrEmpty(serviceProvider)) Logger.InfoMarkUp($"Service Provider: [cyan]{serviceProvider.EscapeMarkup()}[/]");
+                    if (!string.IsNullOrEmpty(serviceName))
+                    {
+                        Logger.InfoMarkUp($"Service Name: [cyan]{serviceName.EscapeMarkup()}[/]");
+                    }
+
+                    if (!string.IsNullOrEmpty(serviceProvider))
+                    {
+                        Logger.InfoMarkUp($"Service Provider: [cyan]{serviceProvider.EscapeMarkup()}[/]");
+                    }
+
                     READ_IFO = true;
                 }
             }
@@ -222,7 +241,9 @@ namespace N_m3u8DL_RE.DownloadManager
                 DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
                 TimeSpan? limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
+                {
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
+                }
                 // 录制直播时，用户选了几个流就并发录几个
                 ParallelOptions options = new ParallelOptions()
                 {

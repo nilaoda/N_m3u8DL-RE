@@ -11,9 +11,15 @@ namespace Mp4SubtitleParser
         {
             byte[] arr = BitConverter.GetBytes((uint)n);
             if (IsLittleEndian)
+            {
                 Array.Reverse(arr);
+            }
+
             if (offset != 0)
+            {
                 arr = arr[offset..];
+            }
+
             BaseStream.Write(arr);
         }
 
@@ -26,9 +32,15 @@ namespace Mp4SubtitleParser
         {
             byte[] arr = BitConverter.GetBytes((int)n);
             if (IsLittleEndian)
+            {
                 Array.Reverse(arr);
+            }
+
             if (offset != 0)
+            {
                 arr = arr[offset..];
+            }
+
             BaseStream.Write(arr);
         }
 
@@ -36,9 +48,15 @@ namespace Mp4SubtitleParser
         {
             byte[] arr = BitConverter.GetBytes((ulong)n);
             if (IsLittleEndian)
+            {
                 Array.Reverse(arr);
+            }
+
             if (offset != 0)
+            {
                 arr = arr[offset..];
+            }
+
             BaseStream.Write(arr);
         }
 
@@ -46,7 +64,10 @@ namespace Mp4SubtitleParser
         {
             byte[] arr = BitConverter.GetBytes((ushort)n);
             if (IsLittleEndian)
+            {
                 Array.Reverse(arr);
+            }
+
             while (padding > 0)
             {
                 arr = [.. arr, .. new byte[] { 0x00 }];
@@ -59,7 +80,10 @@ namespace Mp4SubtitleParser
         {
             byte[] arr = BitConverter.GetBytes((short)n);
             if (IsLittleEndian)
+            {
                 Array.Reverse(arr);
+            }
+
             while (padding > 0)
             {
                 arr = [.. arr, .. new byte[] { 0x00 }];

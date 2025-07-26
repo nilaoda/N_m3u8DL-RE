@@ -70,7 +70,11 @@ namespace Mp4SubtitleParser
                 return $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
             }
 
-            if (!xmlSrc.Contains("<tt") || !xmlSrc.Contains("<head>")) return xmlSrc;
+            if (!xmlSrc.Contains("<tt") || !xmlSrc.Contains("<head>"))
+            {
+                return xmlSrc;
+            }
+
             XmlDocument xmlDoc = new XmlDocument();
             XmlNamespaceManager? nsMgr = null;
             xmlDoc.LoadXml(xmlSrc);
@@ -84,7 +88,9 @@ namespace Mp4SubtitleParser
 
             XmlNode? bodyNode = ttNode!.SelectSingleNode("ns:body", nsMgr);
             if (bodyNode == null)
+            {
                 return xmlSrc;
+            }
 
             XmlNode? _div = bodyNode.SelectSingleNode("ns:div", nsMgr);
             // Parse <p> label
@@ -95,8 +101,14 @@ namespace Mp4SubtitleParser
                 // Handle namespace
                 foreach (XmlAttribute attr in _p.Attributes)
                 {
-                    if (attr.LocalName == "begin") _begin = attr.Value;
-                    else if (attr.LocalName == "end") _end = attr.Value;
+                    if (attr.LocalName == "begin")
+                    {
+                        _begin = attr.Value;
+                    }
+                    else if (attr.LocalName == "end")
+                    {
+                        _end = attr.Value;
+                    }
                 }
                 _p.SetAttribute("begin", Add(_begin));
                 _p.SetAttribute("end", Add(_end));
@@ -204,7 +216,10 @@ namespace Mp4SubtitleParser
             foreach (string item in xmls)
             {
                 string xmlContent = item;
-                if (!xmlContent.Contains("<tt")) continue;
+                if (!xmlContent.Contains("<tt"))
+                {
+                    continue;
+                }
 
                 // fix non-standard xml 
                 string xmlContentFix = xmlContent;
@@ -236,15 +251,21 @@ namespace Mp4SubtitleParser
                     nsMgr.AddNamespace("ns", ns);
                 }
                 if (headNode == null)
+                {
                     headNode = ttNode!.SelectSingleNode("ns:head", nsMgr);
+                }
 
                 XmlNode? bodyNode = ttNode!.SelectSingleNode("ns:body", nsMgr);
                 if (bodyNode == null)
+                {
                     continue;
+                }
 
                 XmlNode? _div = bodyNode.SelectSingleNode("ns:div", nsMgr);
                 if (_div == null)
+                {
                     continue;
+                }
 
 
                 // PNG Subs
@@ -278,9 +299,18 @@ namespace Mp4SubtitleParser
                     // Handle namespace
                     foreach (XmlAttribute attr in _p.Attributes)
                     {
-                        if (attr.LocalName == "begin") _begin = attr.Value;
-                        else if (attr.LocalName == "end") _end = attr.Value;
-                        else if (attr.LocalName == "region") _region = attr.Value;
+                        if (attr.LocalName == "begin")
+                        {
+                            _begin = attr.Value;
+                        }
+                        else if (attr.LocalName == "end")
+                        {
+                            _end = attr.Value;
+                        }
+                        else if (attr.LocalName == "region")
+                        {
+                            _region = attr.Value;
+                        }
                     }
                     SubEntity sub = new SubEntity
                     {
@@ -299,7 +329,10 @@ namespace Mp4SubtitleParser
                             {
                                 XmlElement _span = (XmlElement)_node;
                                 if (string.IsNullOrEmpty(_span.InnerText))
+                                {
                                     continue;
+                                }
+
                                 sub.Contents.Add(_span);
                                 sub.ContentStrings.Add(_span.OuterXml);
                             }
@@ -328,12 +361,18 @@ namespace Mp4SubtitleParser
                     int index = finalSubs.FindLastIndex(s => s.End == _begin && s.Region == _region && s.ContentStrings.SequenceEqual(sub.ContentStrings));
                     // Skip empty lines
                     if (sub.ContentStrings.Count <= 0)
+                    {
                         continue;
+                    }
                     // Extend <p> duration
                     if (index != -1)
+                    {
                         finalSubs[index].End = sub.End;
+                    }
                     else if (!finalSubs.Contains(sub))
+                    {
                         finalSubs.Add(sub);
+                    }
                 }
             }
 
@@ -347,16 +386,24 @@ namespace Mp4SubtitleParser
                     if (dic.ContainsKey(key))
                     {
                         if (item.GetAttribute("tts:fontStyle") == "italic" || item.GetAttribute("tts:fontStyle") == "oblique")
+                        {
                             dic[key] = $"{dic[key]}\r\n<i>{GetTextFromElement(item)}</i>";
+                        }
                         else
+                        {
                             dic[key] = $"{dic[key]}\r\n{GetTextFromElement(item)}";
+                        }
                     }
                     else
                     {
                         if (item.GetAttribute("tts:fontStyle") == "italic" || item.GetAttribute("tts:fontStyle") == "oblique")
+                        {
                             dic.Add(key, $"<i>{GetTextFromElement(item)}</i>");
+                        }
                         else
+                        {
                             dic.Add(key, GetTextFromElement(item));
+                        }
                     }
                 }
             }

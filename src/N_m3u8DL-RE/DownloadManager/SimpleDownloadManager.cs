@@ -43,9 +43,13 @@ namespace N_m3u8DL_RE.DownloadManager
             if (_key != null)
             {
                 if (DownloaderConfig.MyOptions.Keys == null)
+                {
                     DownloaderConfig.MyOptions.Keys = [_key];
+                }
                 else
+                {
                     DownloaderConfig.MyOptions.Keys = [.. DownloaderConfig.MyOptions.Keys, _key];
+                }
             }
         }
 
@@ -76,7 +80,9 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 streamSpec.MediaType = MediaType.SUBTITLES;
                 if (streamSpec.Extension is null or "ts")
+                {
                     streamSpec.Extension = "vtt";
+                }
             }
         }
 
@@ -88,7 +94,10 @@ namespace N_m3u8DL_RE.DownloadManager
             ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
 
             IEnumerable<MediaSegment>? segments = streamSpec.Playlist?.MediaParts.SelectMany(m => m.MediaSegments);
-            if (segments == null || !segments.Any()) return false;
+            if (segments == null || !segments.Any())
+            {
+                return false;
+            }
             // 单分段尝试切片并行下载
             if (segments.Count() == 1)
             {
@@ -103,7 +112,10 @@ namespace N_m3u8DL_RE.DownloadManager
                         Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileRealtimeDecryptWarn}[/]");
                     }
                 }
-                else speedContainer.SingleSegment = true;
+                else
+                {
+                    speedContainer.SingleSegment = true;
+                }
             }
 
             MediaType type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
@@ -126,8 +138,15 @@ namespace N_m3u8DL_RE.DownloadManager
             Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}");
 
             // 创建文件夹
-            if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
-            if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
+            if (!Directory.Exists(tmpDir))
+            {
+                Directory.CreateDirectory(tmpDir);
+            }
+
+            if (!Directory.Exists(saveDir))
+            {
+                Directory.CreateDirectory(saveDir);
+            }
 
             int totalCount = segments.Count();
             if (streamSpec.Playlist?.MediaInit != null)
@@ -290,7 +309,9 @@ namespace N_m3u8DL_RE.DownloadManager
                 DownloadResult? result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
                 if (result is { Success: true })
+                {
                     task.Increment(1);
+                }
                 // 实时解密
                 if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID))
                 {
@@ -308,9 +329,18 @@ namespace N_m3u8DL_RE.DownloadManager
 
             // 修改输出后缀
             string outputExt = "." + streamSpec.Extension;
-            if (streamSpec.Extension == null) outputExt = ".ts";
-            else if (streamSpec is { MediaType: MediaType.AUDIO, Extension: "m4s" or "mp4" }) outputExt = ".m4a";
-            else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension is "m4s" or "mp4") outputExt = ".mp4";
+            if (streamSpec.Extension == null)
+            {
+                outputExt = ".ts";
+            }
+            else if (streamSpec is { MediaType: MediaType.AUDIO, Extension: "m4s" or "mp4" })
+            {
+                outputExt = ".m4a";
+            }
+            else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension is "m4s" or "mp4")
+            {
+                outputExt = ".mp4";
+            }
 
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
             {
@@ -372,11 +402,18 @@ namespace N_m3u8DL_RE.DownloadManager
                         vtt.MpegtsTimestamp = 90000 * (long)(skippedDur + keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                     }
                     if (first) { finalVtt = vtt; first = false; }
-                    else finalVtt.AddCuesFromOne(vtt);
+                    else
+                    {
+                        finalVtt.AddCuesFromOne(vtt);
+                    }
                 }
                 // 写出字幕
                 string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
-                foreach (string? item in files) File.Delete(item);
+                foreach (string? item in files)
+                {
+                    File.Delete(item);
+                }
+
                 FileDic.Clear();
                 int index = 0;
                 string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
@@ -412,7 +449,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     // 写出字幕
                     MediaSegment firstKey = FileDic.Keys.First();
                     string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
-                    foreach (string? item in files) File.Delete(item);
+                    foreach (string? item in files)
+                    {
+                        File.Delete(item);
+                    }
+
                     FileDic.Clear();
                     int index = 0;
                     string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
@@ -450,7 +491,10 @@ namespace N_m3u8DL_RE.DownloadManager
                         vtt.MpegtsTimestamp = 90000 * (long)(skippedDur + keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                     }
                     if (first) { finalVtt = vtt; first = false; }
-                    else finalVtt.AddCuesFromOne(vtt);
+                    else
+                    {
+                        finalVtt.AddCuesFromOne(vtt);
+                    }
                 }
                 // 写出字幕
                 MediaSegment firstKey = FileDic.Keys.First();
@@ -461,7 +505,13 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 string keepSegments = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReKeepImageSegments);
                 if (keepSegments != "1")
-                    foreach (string? item in files) File.Delete(item);
+                {
+                    foreach (string? item in files)
+                    {
+                        File.Delete(item);
+                    }
+                }
+
                 FileDic.Clear();
                 int index = 0;
                 string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
@@ -503,7 +553,10 @@ namespace N_m3u8DL_RE.DownloadManager
                         vtt.MpegtsTimestamp = 90000 * (long)(skippedDur + keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                     }
                     if (first) { finalVtt = vtt; first = false; }
-                    else finalVtt.AddCuesFromOne(vtt);
+                    else
+                    {
+                        finalVtt.AddCuesFromOne(vtt);
+                    }
                 }
 
                 // 写出字幕
@@ -515,7 +568,13 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 string keepSegments = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReKeepImageSegments);
                 if (keepSegments != "1")
-                    foreach (string? item in files) File.Delete(item);
+                {
+                    foreach (string? item in files)
+                    {
+                        File.Delete(item);
+                    }
+                }
+
                 FileDic.Clear();
                 int index = 0;
                 string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
@@ -575,7 +634,10 @@ namespace N_m3u8DL_RE.DownloadManager
                         }
                     }
                     mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, useConcatDemuxer: DownloaderConfig.MyOptions.UseFFmpegConcatDemuxer);
-                    if (mergeSuccess) output = ffOut;
+                    if (mergeSuccess)
+                    {
+                        output = ffOut;
+                    }
                 }
             }
 
@@ -661,7 +723,9 @@ namespace N_m3u8DL_RE.DownloadManager
             progress.Columns(progressColumns);
 
             if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
+            {
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
+            }
 
             await progress.StartAsync(async ctx =>
             {
@@ -688,7 +752,10 @@ namespace N_m3u8DL_RE.DownloadManager
                         bool result = await DownloadStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
                         Results[kp.Key] = result;
                         // 失败不再下载后续
-                        if (!result) break;
+                        if (!result)
+                        {
+                            break;
+                        }
                     }
                 }
                 else
@@ -711,7 +778,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 foreach (KeyValuePair<string, string> item in StreamExtractor.RawFiles)
                 {
                     string file = Path.Combine(DownloaderConfig.DirPrefix, item.Key);
-                    if (File.Exists(file)) File.Delete(file);
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                    }
                 }
                 OtherUtil.SafeDeleteDir(DownloaderConfig.DirPrefix);
             }
@@ -737,8 +807,14 @@ namespace N_m3u8DL_RE.DownloadManager
                 string outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 bool result = false;
-                if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath);
-                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
+                if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge)
+                {
+                    result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath);
+                }
+                else
+                {
+                    result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
+                }
                 // 完成后删除各轨道文件
                 if (result)
                 {

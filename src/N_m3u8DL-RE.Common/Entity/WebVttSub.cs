@@ -46,7 +46,9 @@ namespace N_m3u8DL_RE.Common.Entity
         public static WebVttSub Parse(string text, long BaseTimestamp = 0L)
         {
             if (!text.Trim().StartsWith("WEBVTT"))
+            {
                 throw new Exception("Bad vtt!");
+            }
 
             text += Environment.NewLine;
 
@@ -71,12 +73,18 @@ namespace N_m3u8DL_RE.Common.Entity
                     continue;
                 }
 
-                if (!needPayload) continue;
+                if (!needPayload)
+                {
+                    continue;
+                }
 
                 if (string.IsNullOrEmpty(line.Trim()))
                 {
                     string payload = string.Join(Environment.NewLine, payloads);
-                    if (string.IsNullOrEmpty(payload.Trim())) continue; // 没获取到payload 跳过添加
+                    if (string.IsNullOrEmpty(payload.Trim()))
+                    {
+                        continue; // 没获取到payload 跳过添加
+                    }
 
                     List<string> arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
                     TimeSpan startTime = ConvertToTS(arr[0]);
@@ -98,7 +106,10 @@ namespace N_m3u8DL_RE.Common.Entity
                 }
             }
 
-            if (BaseTimestamp == 0) return webSub;
+            if (BaseTimestamp == 0)
+            {
+                return webSub;
+            }
 
             foreach (SubCue item in webSub.Cues)
             {
@@ -138,7 +149,10 @@ namespace N_m3u8DL_RE.Common.Entity
             FixTimestamp(webSub, this.MpegtsTimestamp);
             foreach (SubCue item in webSub.Cues)
             {
-                if (this.Cues.Contains(item)) continue;
+                if (this.Cues.Contains(item))
+                {
+                    continue;
+                }
 
                 // 如果相差只有1ms，且payload相同，则拼接
                 SubCue? last = this.Cues.LastOrDefault();
@@ -230,11 +244,23 @@ namespace N_m3u8DL_RE.Common.Entity
         {
             foreach (SubCue cue in this.Cues)
             {
-                if (cue.StartTime.TotalSeconds - time.TotalSeconds > 0) cue.StartTime -= time;
-                else cue.StartTime = TimeSpan.FromSeconds(0);
+                if (cue.StartTime.TotalSeconds - time.TotalSeconds > 0)
+                {
+                    cue.StartTime -= time;
+                }
+                else
+                {
+                    cue.StartTime = TimeSpan.FromSeconds(0);
+                }
 
-                if (cue.EndTime.TotalSeconds - time.TotalSeconds > 0) cue.EndTime -= time;
-                else cue.EndTime = TimeSpan.FromSeconds(0);
+                if (cue.EndTime.TotalSeconds - time.TotalSeconds > 0)
+                {
+                    cue.EndTime -= time;
+                }
+                else
+                {
+                    cue.EndTime = TimeSpan.FromSeconds(0);
+                }
             }
         }
 

@@ -66,7 +66,10 @@ namespace N_m3u8DL_RE.Util
             }
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
             if (fromPosition != null || toPosition != null)
+            {
                 request.Headers.Range = new(fromPosition, toPosition);
+            }
+
             if (headers != null)
             {
                 foreach (KeyValuePair<string, string> item in headers)
@@ -100,7 +103,10 @@ namespace N_m3u8DL_RE.Util
                 }
                 response.EnsureSuccessStatusCode();
                 long? contentLength = response.Content.Headers.ContentLength;
-                if (speedContainer.SingleSegment) speedContainer.ResponseLength = contentLength;
+                if (speedContainer.SingleSegment)
+                {
+                    speedContainer.ResponseLength = contentLength;
+                }
 
                 using FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 using Stream responseStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token);

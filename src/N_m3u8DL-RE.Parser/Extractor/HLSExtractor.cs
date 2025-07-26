@@ -82,7 +82,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
             while ((line = sr.ReadLine()) != null)
             {
                 if (string.IsNullOrEmpty(line))
+                {
                     continue;
+                }
 
                 if (line.StartsWith(HLSTags.ext_x_stream_inf))
                 {
@@ -95,23 +97,33 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                     string frameRate = ParserUtil.GetAttribute(line, "FRAME-RATE");
                     if (!string.IsNullOrEmpty(frameRate))
+                    {
                         streamSpec.FrameRate = Convert.ToDouble(frameRate);
+                    }
 
                     string audioId = ParserUtil.GetAttribute(line, "AUDIO");
                     if (!string.IsNullOrEmpty(audioId))
+                    {
                         streamSpec.AudioId = audioId;
+                    }
 
                     string videoId = ParserUtil.GetAttribute(line, "VIDEO");
                     if (!string.IsNullOrEmpty(videoId))
+                    {
                         streamSpec.VideoId = videoId;
+                    }
 
                     string subtitleId = ParserUtil.GetAttribute(line, "SUBTITLES");
                     if (!string.IsNullOrEmpty(subtitleId))
+                    {
                         streamSpec.SubtitleId = subtitleId;
+                    }
 
                     string videoRange = ParserUtil.GetAttribute(line, "VIDEO-RANGE");
                     if (!string.IsNullOrEmpty(videoRange))
+                    {
                         streamSpec.VideoRange = videoRange;
+                    }
 
                     // 清除多余的编码信息 dvh1.05.06,ec-3 => dvh1.05.06
                     if (!string.IsNullOrEmpty(streamSpec.Codecs) && !string.IsNullOrEmpty(streamSpec.AudioId))
@@ -164,11 +176,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                     string lang = ParserUtil.GetAttribute(line, "LANGUAGE");
                     if (!string.IsNullOrEmpty(lang))
+                    {
                         streamSpec.Language = lang;
+                    }
 
                     string name = ParserUtil.GetAttribute(line, "NAME");
                     if (!string.IsNullOrEmpty(name))
+                    {
                         streamSpec.Name = name;
+                    }
 
                     string def = ParserUtil.GetAttribute(line, "DEFAULT");
                     if (Enum.TryParse<Choise>(type, out Choise defaultChoise))
@@ -178,11 +194,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                     string channels = ParserUtil.GetAttribute(line, "CHANNELS");
                     if (!string.IsNullOrEmpty(channels))
+                    {
                         streamSpec.Channels = channels;
+                    }
 
                     string characteristics = ParserUtil.GetAttribute(line, "CHARACTERISTICS");
                     if (!string.IsNullOrEmpty(characteristics))
+                    {
                         streamSpec.Characteristics = characteristics.Split(',').Last().Split('.').Last();
+                    }
 
                     streams.Add(streamSpec);
                 }
@@ -227,11 +247,19 @@ namespace N_m3u8DL_RE.Parser.Extractor
             // 当前的加密信息
             EncryptInfo currentEncryptInfo = new();
             if (ParserConfig.CustomMethod != null)
+            {
                 currentEncryptInfo.Method = ParserConfig.CustomMethod.Value;
+            }
+
             if (ParserConfig.CustomeKey is { Length: > 0 })
+            {
                 currentEncryptInfo.Key = ParserConfig.CustomeKey;
+            }
+
             if (ParserConfig.CustomeIV is { Length: > 0 })
+            {
                 currentEncryptInfo.IV = ParserConfig.CustomeIV;
+            }
             // 上次读取到的加密行，#EXT-X-KEY:……
             string lastKeyLine = "";
 
@@ -243,7 +271,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
             while ((line = sr.ReadLine()) != null)
             {
                 if (string.IsNullOrEmpty(line))
+                {
                     continue;
+                }
 
                 // 只下载部分字节
                 if (line.StartsWith(HLSTags.ext_x_byterange))
@@ -262,9 +292,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 else if (line.StartsWith("#UPLYNK-SEGMENT"))
                 {
                     if (line.Contains(",ad"))
+                    {
                         isAd = true;
+                    }
                     else if (line.Contains(",segment"))
+                    {
                         isAd = false;
+                    }
                 }
                 // 国家地理去广告
                 else if (isAd)
@@ -299,7 +333,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         continue;
                     }
                     // 常规情况的#EXT-X-DISCONTINUITY标记，新建part
-                    if (hasAd || segments.Count < 1) continue;
+                    if (hasAd || segments.Count < 1)
+                    {
+                        continue;
+                    }
 
                     mediaParts.Add(new MediaPart
                     {
@@ -370,7 +407,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             playlist.MediaInit.ExpectLength = n;
                             playlist.MediaInit.StartRange = o ?? 0L;
                         }
-                        if (currentEncryptInfo.Method == EncryptMethod.NONE) continue;
+                        if (currentEncryptInfo.Method == EncryptMethod.NONE)
+                        {
+                            continue;
+                        }
                         // 有加密的话写入KEY和IV
                         playlist.MediaInit.EncryptInfo.Method = currentEncryptInfo.Method;
                         playlist.MediaInit.EncryptInfo.Key = currentEncryptInfo.Key;
@@ -395,9 +435,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     }
                 }
                 // 评论行不解析
-                else if (line.StartsWith('#')) continue;
+                else if (line.StartsWith('#'))
+                {
+                    continue;
+                }
                 // 空白行不解析
-                else if (line.StartsWith("\r\n")) continue;
+                else if (line.StartsWith("\r\n"))
+                {
+                    continue;
+                }
                 // 解析分片的地址
                 else if (expectSegment)
                 {
@@ -525,7 +571,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
             foreach (StreamSpec l in lists)
             {
                 List<StreamSpec> match = newStreams.Where(n => n.ToShortString() == l.ToShortString()).ToList();
-                if (match.Count == 0) continue;
+                if (match.Count == 0)
+                {
+                    continue;
+                }
 
                 Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
                 l.Url = match.First().Url;
@@ -551,16 +600,27 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                 Playlist newPlaylist = await ParseListAsync();
                 if (lists[i].Playlist?.MediaInit != null)
+                {
                     lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
+                }
                 else
+                {
                     lists[i].Playlist = newPlaylist;
+                }
 
                 if (lists[i].MediaType == MediaType.SUBTITLES)
                 {
                     bool a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));
                     bool b = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".vtt") || m.Url.Contains(".webvtt")));
-                    if (a) lists[i].Extension = "ttml";
-                    if (b) lists[i].Extension = "vtt";
+                    if (a)
+                    {
+                        lists[i].Extension = "ttml";
+                    }
+
+                    if (b)
+                    {
+                        lists[i].Extension = "vtt";
+                    }
                 }
                 else
                 {

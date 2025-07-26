@@ -18,7 +18,11 @@ namespace N_m3u8DL_RE.Util
         /// <param name="outputFilePath"></param>
         public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath)
         {
-            if (files.Length == 0) return;
+            if (files.Length == 0)
+            {
+                return;
+            }
+
             if (files.Length == 1)
             {
                 FileInfo fi = new FileInfo(files[0]);
@@ -27,14 +31,19 @@ namespace N_m3u8DL_RE.Util
             }
 
             if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
+            {
                 Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
+            }
 
             string[] inputFilePaths = files;
             using FileStream outputStream = File.Create(outputFilePath);
             foreach (string inputFilePath in inputFilePaths)
             {
                 if (inputFilePath == "")
+                {
                     continue;
+                }
+
                 using FileStream inputStream = File.OpenRead(inputFilePath);
                 inputStream.CopyTo(outputStream);
             }
@@ -80,7 +89,10 @@ namespace N_m3u8DL_RE.Util
             foreach (string[]? items in li)
             {
                 if (items.Length == 0)
+                {
                     continue;
+                }
+
                 string output = outputName + index.ToString("0000") + ".ts";
                 CombineMultipleFilesIntoSingleFile(items, output);
                 newFiles.Add(output);
@@ -109,7 +121,10 @@ namespace N_m3u8DL_RE.Util
             string ddpAudio = string.Empty;
             string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
             ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
-            if (!string.IsNullOrEmpty(ddpAudio)) useAACFilter = false;
+            if (!string.IsNullOrEmpty(ddpAudio))
+            {
+                useAACFilter = false;
+            }
 
             if (useConcatDemuxer)
             {
@@ -142,7 +157,10 @@ namespace N_m3u8DL_RE.Util
                         $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} title=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
                     command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
                     if (fastStart)
+                    {
                         command.Append("-movflags +faststart");
+                    }
+
                     command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
                     break;
                 case ("MKV"):
@@ -194,12 +212,21 @@ namespace N_m3u8DL_RE.Util
             bool srt = files.Any(x => x.FilePath.EndsWith(".srt"));
 
             if (muxFormat == MuxFormat.MP4)
+            {
                 command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
+            }
             else if (muxFormat == MuxFormat.TS)
+            {
                 command.Append($" -strict unofficial -c:a copy -c:v copy ");
+            }
             else if (muxFormat == MuxFormat.MKV)
+            {
                 command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
-            else throw new ArgumentException($"unknown format: {muxFormat}");
+            }
+            else
+            {
+                throw new ArgumentException($"unknown format: {muxFormat}");
+            }
 
             // CLEAN
             command.Append(" -map_metadata -1 ");
@@ -221,17 +248,28 @@ namespace N_m3u8DL_RE.Util
                  * 就有可能出现metadata错位的情况，所以加了如下逻辑
                  */
                 if (files[i].Mediainfos.Count > 0)
+                {
                     streamIndex += files[i].Mediainfos.Count;
+                }
                 else
+                {
                     streamIndex++;
+                }
             }
 
             IEnumerable<OutputFile> videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
             IEnumerable<OutputFile> audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
             IEnumerable<OutputFile> subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-            if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
+            if (videoTracks.Any())
+            {
+                command.Append(" -disposition:v:0 default ");
+            }
             // 字幕都不设置默认
-            if (subTracks.Any()) command.Append(" -disposition:s 0 ");
+            if (subTracks.Any())
+            {
+                command.Append(" -disposition:s 0 ");
+            }
+
             if (audioTracks.Any())
             {
                 // 音频除了第一个音轨 都不设置默认
@@ -242,7 +280,11 @@ namespace N_m3u8DL_RE.Util
                 }
             }
 
-            if (dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
+            if (dateinfo)
+            {
+                command.Append($" -metadata date=\"{dateString}\" ");
+            }
+
             command.Append($" -ignore_unknown -copy_unknown ");
             command.Append($" \"{outputPath}{ext}\"");
 
@@ -267,16 +309,24 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
                 // 字幕都不设置默认
                 if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
+                {
                     command.Append($" --default-track 0:no ");
+                }
                 // 音频除了第一个音轨 都不设置默认
                 if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
                 {
                     if (dFlag)
+                    {
                         command.Append($" --default-track 0:no ");
+                    }
+
                     dFlag = true;
                 }
                 if (!string.IsNullOrEmpty(files[i].Description))
+                {
                     command.Append($" --track-name 0:\"{files[i].Description}\" ");
+                }
+
                 command.Append($" \"{files[i].FilePath}\" ");
             }
 

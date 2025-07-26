@@ -17,11 +17,20 @@ namespace N_m3u8DL_RE.Common.Util
             bytes = null;
             input = input.ToUpper();
             if (input.StartsWith("0X"))
+            {
                 input = input[2..];
+            }
+
             if (input.Length % 2 != 0)
+            {
                 return false;
+            }
+
             if (input.Any(c => !"0123456789ABCDEF".Contains(c)))
+            {
                 return false;
+            }
+
             bytes = HexToBytes(input);
             return true;
         }

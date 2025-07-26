@@ -73,7 +73,11 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                     {
                         Logger.WarnMarkUp($"[grey]{_ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
                         Thread.Sleep(1000);
-                        if (retryCount-- > 0) goto getHttpKey;
+                        if (retryCount-- > 0)
+                        {
+                            goto getHttpKey;
+                        }
+
                         throw;
                     }
                 }
@@ -84,7 +88,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 encryptInfo.Method = EncryptMethod.UNKNOWN;
             }
 
-            if (parserConfig.CustomMethod == null) return encryptInfo;
+            if (parserConfig.CustomMethod == null)
+            {
+                return encryptInfo;
+            }
 
             // 处理自定义加密方式
             encryptInfo.Method = parserConfig.CustomMethod.Value;

@@ -14,7 +14,10 @@ namespace N_m3u8DL_RE.Util
         private static readonly string ZeroKid = "00000000000000000000000000000000";
         public static async Task<bool> DecryptAsync(DecryptEngine decryptEngine, string bin, string[]? keys, string source, string dest, string? kid, string init = "", bool isMultiDRM = false)
         {
-            if (keys == null || keys.Length == 0) return false;
+            if (keys == null || keys.Length == 0)
+            {
+                return false;
+            }
 
             List<string> keyPairs = keys.ToList();
             string? keyPair = null;
@@ -31,7 +34,10 @@ namespace N_m3u8DL_RE.Util
             if (!string.IsNullOrEmpty(kid))
             {
                 List<string> test = keyPairs.Where(k => k.StartsWith(kid)).ToList();
-                if (test.Count != 0) keyPair = test.First();
+                if (test.Count != 0)
+                {
+                    keyPair = test.First();
+                }
             }
 
             // Apple
@@ -48,10 +54,16 @@ namespace N_m3u8DL_RE.Util
                 keyPair = keyPairs.First();
             }
 
-            if (keyPair == null) return false;
+            if (keyPair == null)
+            {
+                return false;
+            }
 
             // shakaPackager/ffmpeg 无法单独解密init文件
-            if (source.EndsWith("_init.mp4") && decryptEngine != DecryptEngine.MP4DECRYPT) return false;
+            if (source.EndsWith("_init.mp4") && decryptEngine != DecryptEngine.MP4DECRYPT)
+            {
+                return false;
+            }
 
             string cmd;
 
@@ -111,13 +123,24 @@ namespace N_m3u8DL_RE.Util
             // mp4decrypt 还原文件改名操作
             if (workDir is not null)
             {
-                if (File.Exists(tmpEncFile)) File.Move(tmpEncFile, source);
-                if (File.Exists(tmpDecFile)) File.Move(tmpDecFile, dest);
+                if (File.Exists(tmpEncFile))
+                {
+                    File.Move(tmpEncFile, source);
+                }
+
+                if (File.Exists(tmpDecFile))
+                {
+                    File.Move(tmpDecFile, dest);
+                }
             }
 
             if (isSuccess)
             {
-                if (tmpFile != "" && File.Exists(tmpFile)) File.Delete(tmpFile);
+                if (tmpFile != "" && File.Exists(tmpFile))
+                {
+                    File.Delete(tmpFile);
+                }
+
                 return true;
             }
 
@@ -154,14 +177,19 @@ namespace N_m3u8DL_RE.Util
             try
             {
                 if (string.IsNullOrEmpty(file) || !File.Exists(file) || string.IsNullOrEmpty(kid))
+                {
                     return null;
+                }
 
                 Logger.InfoMarkUp(ResString.searchKey);
                 using FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
                 using StreamReader reader = new StreamReader(stream);
                 while (await reader.ReadLineAsync() is { } line)
                 {
-                    if (!line.Trim().StartsWith(kid)) continue;
+                    if (!line.Trim().StartsWith(kid))
+                    {
+                        continue;
+                    }
 
                     Logger.InfoMarkUp($"[green]OK[/] [grey]{line.Trim()}[/]");
                     return line.Trim();
@@ -177,9 +205,21 @@ namespace N_m3u8DL_RE.Util
         public static ParsedMP4Info GetMP4Info(byte[] data)
         {
             ParsedMP4Info info = MP4InitUtil.ReadInit(data);
-            if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
-            if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
-            if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
+            if (info.Scheme != null)
+            {
+                Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
+            }
+
+            if (info.PSSH != null)
+            {
+                Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
+            }
+
+            if (info.KID != null)
+            {
+                Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
+            }
+
             return info;
         }
 

@@ -32,7 +32,10 @@ namespace N_m3u8DL_RE.Util
         {
             List<Mediainfo> result = new List<Mediainfo>();
 
-            if (string.IsNullOrEmpty(file) || !File.Exists(file)) return result;
+            if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            {
+                return result;
+            }
 
             string cmd = "-hide_banner -i \"" + file + "\"";
             Process p = Process.Start(new ProcessStartInfo()
@@ -68,13 +71,17 @@ namespace N_m3u8DL_RE.Util
                     || info.Type.Contains("dvvideo")
                     || (DoViRegex().IsMatch(output) && info.Type == "Video")
                    )
+                {
                     info.DolbyVison = true;
+                }
 
                 if (StartRegex().IsMatch(output))
                 {
                     string f = StartRegex().Match(output).Groups[1].Value;
                     if (double.TryParse(f, out double d))
+                    {
                         info.StartTime = TimeSpan.FromSeconds(d);
+                    }
                 }
 
                 result.Add(info);

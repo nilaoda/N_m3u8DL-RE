@@ -22,7 +22,11 @@ namespace N_m3u8DL_RE.Util
                 {
                     string name = $"{i++}.png";
                     string dest = "";
-                    for (; File.Exists(dest = Path.Combine(tmpDir, name)); name = $"{i++}.png") ;
+                    for (; File.Exists(dest = Path.Combine(tmpDir, name)); name = $"{i++}.png")
+                    {
+                        ;
+                    }
+
                     string base64 = img.Payload[8..];
                     await File.WriteAllBytesAsync(dest, Convert.FromBase64String(base64));
                     img.Payload = name;

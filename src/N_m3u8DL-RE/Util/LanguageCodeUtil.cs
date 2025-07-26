@@ -501,7 +501,11 @@ sr;srp
         /// <param name="outputFile"></param>
         public static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
         {
-            if (string.IsNullOrEmpty(outputFile.LangCode)) return;
+            if (string.IsNullOrEmpty(outputFile.LangCode))
+            {
+                return;
+            }
+
             string originalLangCode = outputFile.LangCode;
 
             // 先直接查找
@@ -518,7 +522,9 @@ sr;srp
             {
                 outputFile.LangCode = lang.Code;
                 if (string.IsNullOrEmpty(outputFile.Description))
+                {
                     outputFile.Description = outputFile.MediaType == Common.Enum.MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
+                }
             }
             else
             {
@@ -526,7 +532,10 @@ sr;srp
             }
 
             // 无描述，则把LangCode当作描述
-            if (string.IsNullOrEmpty(outputFile.Description)) outputFile.Description = originalLangCode;
+            if (string.IsNullOrEmpty(outputFile.Description))
+            {
+                outputFile.Description = originalLangCode;
+            }
         }
     }
 }

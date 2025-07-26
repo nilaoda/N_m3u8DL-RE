@@ -332,10 +332,22 @@ namespace N_m3u8DL_RE.Parser.Mp4
             using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteUInt(0); // pre defined
-            if (StreamType == "audio") writer.Write("soun");
-            else if (StreamType == "video") writer.Write("vide");
-            else if (StreamType == "text") writer.Write("subt");
-            else throw new NotSupportedException();
+            if (StreamType == "audio")
+            {
+                writer.Write("soun");
+            }
+            else if (StreamType == "video")
+            {
+                writer.Write("vide");
+            }
+            else if (StreamType == "text")
+            {
+                writer.Write("subt");
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
 
             writer.WriteUInt(0); // reserved
             writer.WriteUInt(0);

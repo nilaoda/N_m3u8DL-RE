@@ -18,7 +18,11 @@ namespace N_m3u8DL_RE.Column
 
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            if (task.Value == 0) return new Text("-", MyStyle).RightJustified();
+            if (task.Value == 0)
+            {
+                return new Text("-", MyStyle).RightJustified();
+            }
+
             string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
             SpeedContainer speedContainer = SpeedContainerDic[task.Id];
@@ -33,7 +37,10 @@ namespace N_m3u8DL_RE.Column
             DateTimeStringDic[task.Id] = now;
             SizeDic.TryGetValue(task.Id, out string? sizeStr);
 
-            if (task.IsFinished) sizeStr = GlobalUtil.FormatFileSize(size);
+            if (task.IsFinished)
+            {
+                sizeStr = GlobalUtil.FormatFileSize(size);
+            }
 
             return new Text(sizeStr ?? "-", MyStyle).RightJustified();
         }

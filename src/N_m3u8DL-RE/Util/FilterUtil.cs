@@ -14,60 +14,121 @@ namespace N_m3u8DL_RE.Util
     {
         public static List<StreamSpec> DoFilterKeep(IEnumerable<StreamSpec> lists, StreamFilter? filter)
         {
-            if (filter == null) return [];
+            if (filter == null)
+            {
+                return [];
+            }
 
             IEnumerable<StreamSpec> inputs = lists.Where(_ => true);
             if (filter.GroupIdReg != null)
+            {
                 inputs = inputs.Where(i => i.GroupId != null && filter.GroupIdReg.IsMatch(i.GroupId));
+            }
+
             if (filter.LanguageReg != null)
+            {
                 inputs = inputs.Where(i => i.Language != null && filter.LanguageReg.IsMatch(i.Language));
+            }
+
             if (filter.NameReg != null)
+            {
                 inputs = inputs.Where(i => i.Name != null && filter.NameReg.IsMatch(i.Name));
+            }
+
             if (filter.CodecsReg != null)
+            {
                 inputs = inputs.Where(i => i.Codecs != null && filter.CodecsReg.IsMatch(i.Codecs));
+            }
+
             if (filter.ResolutionReg != null)
+            {
                 inputs = inputs.Where(i => i.Resolution != null && filter.ResolutionReg.IsMatch(i.Resolution));
+            }
+
             if (filter.FrameRateReg != null)
+            {
                 inputs = inputs.Where(i => i.FrameRate != null && filter.FrameRateReg.IsMatch($"{i.FrameRate}"));
+            }
+
             if (filter.ChannelsReg != null)
+            {
                 inputs = inputs.Where(i => i.Channels != null && filter.ChannelsReg.IsMatch(i.Channels));
+            }
+
             if (filter.VideoRangeReg != null)
+            {
                 inputs = inputs.Where(i => i.VideoRange != null && filter.VideoRangeReg.IsMatch(i.VideoRange));
+            }
+
             if (filter.UrlReg != null)
+            {
                 inputs = inputs.Where(i => i.Url != null && filter.UrlReg.IsMatch(i.Url));
+            }
+
             if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0))
+            {
                 inputs = inputs.Where(i => i.SegmentsCount < filter.SegmentsMaxCount);
+            }
+
             if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
+            {
                 inputs = inputs.Where(i => i.SegmentsCount > filter.SegmentsMinCount);
+            }
+
             if (filter.PlaylistMinDur != null)
+            {
                 inputs = inputs.Where(i => i.Playlist?.TotalDuration > filter.PlaylistMinDur);
+            }
+
             if (filter.PlaylistMaxDur != null)
+            {
                 inputs = inputs.Where(i => i.Playlist?.TotalDuration < filter.PlaylistMaxDur);
+            }
+
             if (filter.BandwidthMin != null)
+            {
                 inputs = inputs.Where(i => i.Bandwidth >= filter.BandwidthMin);
+            }
+
             if (filter.BandwidthMax != null)
+            {
                 inputs = inputs.Where(i => i.Bandwidth <= filter.BandwidthMax);
+            }
+
             if (filter.Role.HasValue)
+            {
                 inputs = inputs.Where(i => i.Role == filter.Role);
+            }
 
             string bestNumberStr = filter.For.Replace("best", "");
             string worstNumberStr = filter.For.Replace("worst", "");
 
             if (filter.For == "best" && inputs.Any())
+            {
                 inputs = inputs.Take(1).ToList();
+            }
             else if (filter.For == "worst" && inputs.Any())
+            {
                 inputs = inputs.TakeLast(1).ToList();
+            }
             else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Any())
+            {
                 inputs = inputs.Take(bestNumber).ToList();
+            }
             else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Any())
+            {
                 inputs = inputs.TakeLast(worstNumber).ToList();
+            }
 
             return [.. inputs];
         }
 
         public static List<StreamSpec> DoFilterDrop(IEnumerable<StreamSpec> lists, StreamFilter? filter)
         {
-            if (filter == null) return [.. lists];
+            if (filter == null)
+            {
+                return [.. lists];
+            }
 
             IEnumerable<StreamSpec> inputs = lists.Where(_ => true);
             List<StreamSpec> selected = DoFilterKeep(lists, filter);
@@ -81,7 +142,9 @@ namespace N_m3u8DL_RE.Util
         {
             List<StreamSpec> streamSpecs = lists.ToList();
             if (streamSpecs.Count == 1)
+            {
                 return [.. streamSpecs];
+            }
 
             // 基本流
             List<StreamSpec> basicStreams = streamSpecs.Where(x => x.MediaType == null).ToList();
@@ -95,7 +158,10 @@ namespace N_m3u8DL_RE.Util
                     .UseConverter(x =>
                     {
                         if (x.Name != null && x.Name.StartsWith("__"))
+                        {
                             return $"[darkslategray1]{x.Name[2..]}[/]";
+                        }
+
                         return x.ToString().EscapeMarkup().RemoveMarkup();
                     })
                     .Required()
@@ -177,7 +243,11 @@ namespace N_m3u8DL_RE.Util
             if (selectedSteams.Any(x => x.Playlist!.MediaParts[0].MediaSegments.Count > takeLastCount))
             {
                 int skipCount = selectedSteams.Min(x => x.Playlist!.MediaParts[0].MediaSegments.Count) - takeLastCount + 1;
-                if (skipCount < 0) skipCount = 0;
+                if (skipCount < 0)
+                {
+                    skipCount = 0;
+                }
+
                 foreach (StreamSpec item in selectedSteams)
                 {
                     foreach (MediaPart part in item.Playlist!.MediaParts)
@@ -195,7 +265,10 @@ namespace N_m3u8DL_RE.Util
         /// <param name="customRange"></param>
         public static void ApplyCustomRange(List<StreamSpec> selectedSteams, CustomRange? customRange)
         {
-            if (customRange == null) return;
+            if (customRange == null)
+            {
+                return;
+            }
 
             Logger.InfoMarkUp($"{ResString.customRangeFound}[Cyan underline]{customRange.InputStr}[/]");
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.customRangeWarn}[/]");
@@ -212,18 +285,29 @@ namespace N_m3u8DL_RE.Util
             foreach (StreamSpec stream in selectedSteams)
             {
                 double skippedDur = 0d;
-                if (stream.Playlist == null) continue;
+                if (stream.Playlist == null)
+                {
+                    continue;
+                }
+
                 foreach (MediaPart part in stream.Playlist.MediaParts)
                 {
                     List<MediaSegment> newSegments;
                     if (filterByIndex)
+                    {
                         newSegments = [.. part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex)];
+                    }
                     else
+                    {
                         newSegments = [.. part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
                                                                       && stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) <= customRange.EndSec)];
+                    }
 
                     if (newSegments.Count > 0)
+                    {
                         skippedDur += part.MediaSegments.Where(seg => seg.Index < newSegments.First().Index).Sum(x => x.Duration);
+                    }
+
                     part.MediaSegments = newSegments;
                 }
                 stream.SkippedDuration = skippedDur;
@@ -237,7 +321,11 @@ namespace N_m3u8DL_RE.Util
         /// <param name="keywords"></param>
         public static void CleanAd(List<StreamSpec> selectedSteams, string[]? keywords)
         {
-            if (keywords == null) return;
+            if (keywords == null)
+            {
+                return;
+            }
+
             List<Regex> regList = keywords.Select(s => new Regex(s)).ToList();
             foreach (Regex? reg in regList)
             {
@@ -246,7 +334,10 @@ namespace N_m3u8DL_RE.Util
 
             foreach (StreamSpec stream in selectedSteams)
             {
-                if (stream.Playlist == null) continue;
+                if (stream.Playlist == null)
+                {
+                    continue;
+                }
 
                 int countBefore = stream.SegmentsCount;
 

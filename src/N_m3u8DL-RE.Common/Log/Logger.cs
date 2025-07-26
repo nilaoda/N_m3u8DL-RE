@@ -30,7 +30,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void InitLogFile()
         {
-            if (!IsWriteFile) return;
+            if (!IsWriteFile)
+            {
+                return;
+            }
 
             try
             {
@@ -85,7 +88,10 @@ namespace N_m3u8DL_RE.Common.Log
                     Console.WriteLine(subWrite);
                 }
 
-                if (!IsWriteFile || !File.Exists(LogFilePath)) return;
+                if (!IsWriteFile || !File.Exists(LogFilePath))
+                {
+                    return;
+                }
 
                 string plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
                 try
@@ -121,7 +127,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void Info(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.INFO) return;
+            if (LogLevel < LogLevel.INFO)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : ";
@@ -130,7 +139,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void InfoMarkUp(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.INFO) return;
+            if (LogLevel < LogLevel.INFO)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : " + data;
@@ -139,7 +151,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void Debug(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.DEBUG) return;
+            if (LogLevel < LogLevel.DEBUG)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: ";
@@ -148,7 +163,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void DebugMarkUp(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.DEBUG) return;
+            if (LogLevel < LogLevel.DEBUG)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: " + data;
@@ -157,7 +175,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void Warn(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.WARN) return;
+            if (LogLevel < LogLevel.WARN)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : ";
@@ -166,7 +187,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void WarnMarkUp(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.WARN) return;
+            if (LogLevel < LogLevel.WARN)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : " + data;
@@ -175,7 +199,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void Error(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.ERROR) return;
+            if (LogLevel < LogLevel.ERROR)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline red1]ERROR[/]: ";
@@ -184,7 +211,10 @@ namespace N_m3u8DL_RE.Common.Log
 
         public static void ErrorMarkUp(string data, params object[] ps)
         {
-            if (LogLevel < LogLevel.ERROR) return;
+            if (LogLevel < LogLevel.ERROR)
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string write = GetCurrTime() + " " + "[underline red1]ERROR[/]: " + data;
@@ -209,7 +239,10 @@ namespace N_m3u8DL_RE.Common.Log
         /// <param name="ps"></param>
         public static void Extra(string data, params object[] ps)
         {
-            if (!IsWriteFile || !File.Exists(LogFilePath)) return;
+            if (!IsWriteFile || !File.Exists(LogFilePath))
+            {
+                return;
+            }
 
             data = ReplaceVars(data, ps);
             string plain = GetCurrTime() + " " + "EXTRA: " + data.RemoveMarkup();

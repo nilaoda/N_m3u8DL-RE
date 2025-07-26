@@ -10,7 +10,10 @@ namespace N_m3u8DL_RE.Util
         public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
         {
             Dictionary<string, string> dic = [];
-            if (headers == null) return dic;
+            if (headers == null)
+            {
+                return dic;
+            }
 
             foreach (string header in headers)
             {
@@ -73,16 +76,43 @@ namespace N_m3u8DL_RE.Util
             int secs = -1;
             arr.Reverse().Select(i => Convert.ToInt32(i)).ToList().ForEach(item =>
             {
-                if (secs == -1) secs = item;
-                else if (mins == -1) mins = item;
-                else if (hours == -1) hours = item;
-                else if (days == -1) days = item;
+                if (secs == -1)
+                {
+                    secs = item;
+                }
+                else if (mins == -1)
+                {
+                    mins = item;
+                }
+                else if (hours == -1)
+                {
+                    hours = item;
+                }
+                else if (days == -1)
+                {
+                    days = item;
+                }
             });
 
-            if (days == -1) days = 0;
-            if (hours == -1) hours = 0;
-            if (mins == -1) mins = 0;
-            if (secs == -1) secs = 0;
+            if (days == -1)
+            {
+                days = 0;
+            }
+
+            if (hours == -1)
+            {
+                hours = 0;
+            }
+
+            if (mins == -1)
+            {
+                mins = 0;
+            }
+
+            if (secs == -1)
+            {
+                secs = 0;
+            }
 
             return new TimeSpan(days, hours, mins, secs);
         }
@@ -115,7 +145,9 @@ namespace N_m3u8DL_RE.Util
         public static void SafeDeleteDir(string dirPath)
         {
             if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))
+            {
                 return;
+            }
 
             string parent = Path.GetDirectoryName(dirPath)!;
             if (!Directory.EnumerateFileSystemEntries(dirPath).Any())
@@ -150,7 +182,10 @@ namespace N_m3u8DL_RE.Util
             }
             catch
             {
-                if (File.Exists(deGzipFile)) File.Delete(deGzipFile);
+                if (File.Exists(deGzipFile))
+                {
+                    File.Delete(deGzipFile);
+                }
             }
         }
 

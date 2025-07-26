@@ -35,7 +35,11 @@ namespace N_m3u8DL_RE.Column
                 speedContainer.NowSpeed = speedContainer.Downloaded;
                 // 速度为0，计数增加
                 if (speedContainer.Downloaded <= _stopSpeed) { speedContainer.AddLowSpeedCount(); }
-                else speedContainer.ResetLowSpeedCount();
+                else
+                {
+                    speedContainer.ResetLowSpeedCount();
+                }
+
                 speedContainer.Reset();
             }
             DateTimeStringDic[taskId] = now;

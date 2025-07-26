@@ -40,8 +40,14 @@ namespace N_m3u8DL_RE
 
             string loc = ResString.CurrentLoc;
             string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
-            if (currLoc is "zh-CN" or "zh-SG") loc = "zh-CN";
-            else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
+            if (currLoc is "zh-CN" or "zh-SG")
+            {
+                loc = "zh-CN";
+            }
+            else if (currLoc.StartsWith("zh-"))
+            {
+                loc = "zh-TW";
+            }
 
             // 处理用户-h等请求
             int index = -1;
@@ -74,7 +80,9 @@ namespace N_m3u8DL_RE
             {
                 Console.CursorVisible = true;
                 if (!OperatingSystem.IsWindows())
+                {
                     System.Diagnostics.Process.Start("tput", "cnorm");
+                }
             }
             catch { }
             Environment.Exit(0);
@@ -82,7 +90,10 @@ namespace N_m3u8DL_RE
 
         private static int GetOrder(StreamSpec streamSpec)
         {
-            if (streamSpec.Channels == null) return 0;
+            if (streamSpec.Channels == null)
+            {
+                return 0;
+            }
 
             string str = streamSpec.Channels.Split('/')[0];
             return int.TryParse(str, out int order) ? order : 0;
@@ -101,7 +112,9 @@ namespace N_m3u8DL_RE
 
             // 检测更新
             if (!option.DisableUpdateCheck)
+            {
                 _ = CheckUpdateAsync();
+            }
 
             Logger.IsWriteFile = !option.NoLog;
             Logger.LogFilePath = option.LogFilePath;
@@ -175,7 +188,10 @@ namespace N_m3u8DL_RE
                             string? file3 = GlobalUtil.FindExecutable("packager-osx-x64");
                             string? file4 = GlobalUtil.FindExecutable("packager-win-x64");
                             if (file == null && file2 == null && file3 == null && file4 == null)
+                            {
                                 throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                            }
+
                             option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
                             Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                             break;
@@ -183,7 +199,11 @@ namespace N_m3u8DL_RE
                     case DecryptEngine.MP4DECRYPT:
                         {
                             string? file = GlobalUtil.FindExecutable("mp4decrypt");
-                            if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
+                            if (file == null)
+                            {
+                                throw new FileNotFoundException(ResString.mp4decryptNotFound);
+                            }
+
                             option.DecryptionBinaryPath = file;
                             Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
                             break;
@@ -292,17 +312,43 @@ namespace N_m3u8DL_RE
                 lists = [.. basicStreams, .. audios, .. subs];
             }
 
-            if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
-            if (option.DropAudioFilter != null) Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
-            if (option.DropSubtitleFilter != null) Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
-            if (option.VideoFilter != null) Logger.Extra($"VideoFilter => {option.VideoFilter}");
-            if (option.AudioFilter != null) Logger.Extra($"AudioFilter => {option.AudioFilter}");
-            if (option.SubtitleFilter != null) Logger.Extra($"SubtitleFilter => {option.SubtitleFilter}");
+            if (option.DropVideoFilter != null)
+            {
+                Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
+            }
+
+            if (option.DropAudioFilter != null)
+            {
+                Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
+            }
+
+            if (option.DropSubtitleFilter != null)
+            {
+                Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
+            }
+
+            if (option.VideoFilter != null)
+            {
+                Logger.Extra($"VideoFilter => {option.VideoFilter}");
+            }
+
+            if (option.AudioFilter != null)
+            {
+                Logger.Extra($"AudioFilter => {option.AudioFilter}");
+            }
+
+            if (option.SubtitleFilter != null)
+            {
+                Logger.Extra($"SubtitleFilter => {option.SubtitleFilter}");
+            }
 
             if (option.AutoSelect)
             {
                 if (basicStreams.Count != 0)
+                {
                     selectedStreams.Add(basicStreams.First());
+                }
+
                 IEnumerable<string?> langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
                 foreach (string? lang in langs)
                 {
@@ -328,12 +374,16 @@ namespace N_m3u8DL_RE
             }
 
             if (selectedStreams.Count == 0)
+            {
                 throw new Exception(ResString.noStreamsToDownload);
+            }
 
             // HLS: 选中流中若有没加载出playlist的，加载playlist
             // DASH/MSS: 加载playlist (调用url预处理器)
             if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH || extractor.ExtractorType == ExtractorType.MSS)
+            {
                 await extractor.FetchPlayListAsync(selectedStreams);
+            }
 
             // 直播检测
             bool livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
@@ -351,7 +401,9 @@ namespace N_m3u8DL_RE
 
             // 应用用户自定义的分片范围
             if (!livingFlag)
+            {
                 FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
+            }
 
             // 应用用户自定义的广告分片关键字
             FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
@@ -430,12 +482,19 @@ namespace N_m3u8DL_RE
             // 写出json文件
             if (option.WriteMetaJson)
             {
-                if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
+                if (!Directory.Exists(tmpDir))
+                {
+                    Directory.CreateDirectory(tmpDir);
+                }
+
                 Logger.Warn(ResString.writeJson);
                 foreach (KeyValuePair<string, string> item in extractor.RawFiles)
                 {
                     string file = Path.Combine(tmpDir, item.Key);
-                    if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
+                    if (!File.Exists(file))
+                    {
+                        await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
+                    }
                 }
             }
         }
@@ -473,7 +532,10 @@ namespace N_m3u8DL_RE
             using HttpResponseMessage response = await client.GetAsync(url);
             using HttpContent content = response.Content;
             // ... Read the response to see if we have the redirected url
-            if (response.StatusCode != HttpStatusCode.Found) return redirectedUrl;
+            if (response.StatusCode != HttpStatusCode.Found)
+            {
+                return redirectedUrl;
+            }
 
             System.Net.Http.Headers.HttpResponseHeaders headers = response.Headers;
             if (headers.Location != null)

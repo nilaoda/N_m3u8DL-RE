@@ -63,9 +63,13 @@ namespace N_m3u8DL_RE.DownloadManager
             if (_key != null)
             {
                 if (DownloaderConfig.MyOptions.Keys == null)
+                {
                     DownloaderConfig.MyOptions.Keys = [_key];
+                }
                 else
+                {
                     DownloaderConfig.MyOptions.Keys = [.. DownloaderConfig.MyOptions.Keys, _key];
+                }
             }
         }
 
@@ -140,7 +144,9 @@ namespace N_m3u8DL_RE.DownloadManager
                 streamSpec.MediaType = MediaType.SUBTITLES;
 
                 if (streamSpec.Extension is null or "ts")
+                {
                     streamSpec.Extension = "vtt";
+                }
             }
         }
 
@@ -172,8 +178,15 @@ namespace N_m3u8DL_RE.DownloadManager
             Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}");
 
             // 创建文件夹
-            if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
-            if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
+            if (!Directory.Exists(tmpDir))
+            {
+                Directory.CreateDirectory(tmpDir);
+            }
+
+            if (!Directory.Exists(saveDir))
+            {
+                Directory.CreateDirectory(saveDir);
+            }
 
             while (true && await source.OutputAvailableAsync())
             {
@@ -182,7 +195,11 @@ namespace N_m3u8DL_RE.DownloadManager
                 // TryReceiveAll可以稍微缓解一下
                 source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
                 IEnumerable<MediaSegment> segments = segmentsList!.SelectMany(s => s);
-                if (segments == null || !segments.Any()) continue;
+                if (segments == null || !segments.Any())
+                {
+                    continue;
+                }
+
                 double segmentsDuration = segments.Sum(s => s.Duration);
                 Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
@@ -232,7 +249,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                             lock (lockObj)
                             {
-                                if (audioStart == null) audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
+                                if (audioStart == null)
+                                {
+                                    audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
+                                }
                             }
                             ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                             readInfo = true;
@@ -312,7 +332,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                             lock (lockObj)
                             {
-                                if (audioStart == null) audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
+                                if (audioStart == null)
+                                {
+                                    audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
+                                }
                             }
                             ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                             readInfo = true;
@@ -334,7 +357,9 @@ namespace N_m3u8DL_RE.DownloadManager
                     DownloadResult? result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                     FileDic[seg] = result;
                     if (result is { Success: true })
+                    {
                         task.Increment(1);
+                    }
                     // 实时解密
                     if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID))
                     {
@@ -370,7 +395,10 @@ namespace N_m3u8DL_RE.DownloadManager
                             vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
                         }
                         if (firstSub) { currentVtt = vtt; firstSub = false; }
-                        else currentVtt.AddCuesFromOne(vtt);
+                        else
+                        {
+                            currentVtt.AddCuesFromOne(vtt);
+                        }
                     }
                 }
 
@@ -418,7 +446,10 @@ namespace N_m3u8DL_RE.DownloadManager
                                 vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
                             }
                             if (first) { currentVtt = vtt; first = false; }
-                            else currentVtt.AddCuesFromOne(vtt);
+                            else
+                            {
+                                currentVtt.AddCuesFromOne(vtt);
+                            }
                         }
                         firstSub = false;
                     }
@@ -463,7 +494,10 @@ namespace N_m3u8DL_RE.DownloadManager
                                 vtt.MpegtsTimestamp = 90000 * (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration);
                             }
                             if (first) { currentVtt = vtt; first = false; }
-                            else currentVtt.AddCuesFromOne(vtt);
+                            else
+                            {
+                                currentVtt.AddCuesFromOne(vtt);
+                            }
                         }
                         firstSub = false;
                     }
@@ -497,9 +531,18 @@ namespace N_m3u8DL_RE.DownloadManager
                 {
                     // 合并
                     string outputExt = "." + streamSpec.Extension;
-                    if (streamSpec.Extension == null) outputExt = ".ts";
-                    else if (streamSpec is { MediaType: MediaType.AUDIO, Extension: "m4s" }) outputExt = ".m4a";
-                    else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s") outputExt = ".mp4";
+                    if (streamSpec.Extension == null)
+                    {
+                        outputExt = ".ts";
+                    }
+                    else if (streamSpec is { MediaType: MediaType.AUDIO, Extension: "m4s" })
+                    {
+                        outputExt = ".m4a";
+                    }
+                    else if (streamSpec.MediaType != MediaType.SUBTITLES && streamSpec.Extension == "m4s")
+                    {
+                        outputExt = ".mp4";
+                    }
                     else if (streamSpec.MediaType == MediaType.SUBTITLES)
                     {
                         outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enumerations.SubtitleFormat.SRT ? ".srt" : ".vtt";
@@ -544,7 +587,9 @@ namespace N_m3u8DL_RE.DownloadManager
 
                             // Windows only
                             if (OperatingSystem.IsWindows())
+                            {
                                 await (fileOutputStream as NamedPipeServerStream)!.WaitForConnectionAsync();
+                            }
                         }
                     }
 
@@ -618,10 +663,15 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 if (STOP_FLAG && source.Count == 0)
+                {
                     break;
+                }
             }
 
-            if (fileOutputStream == null) return true;
+            if (fileOutputStream == null)
+            {
+                return true;
+            }
 
             if (!DownloaderConfig.MyOptions.LivePipeMux)
             {
@@ -646,7 +696,10 @@ namespace N_m3u8DL_RE.DownloadManager
         {
             while (!STOP_FLAG)
             {
-                if (WAIT_SEC == 0) continue;
+                if (WAIT_SEC == 0)
+                {
+                    continue;
+                }
 
                 // 1. MPD 所有URL相同 单次请求即可获得所有轨道的信息
                 // 2. M3U8 所有URL不同 才需要多次请求
@@ -657,7 +710,9 @@ namespace N_m3u8DL_RE.DownloadManager
 
                     // 达到上限时 不需要刷新了
                     if (RecordLimitReachedDic[task.Id])
+                    {
                         return;
+                    }
 
                     bool allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
                     if (!SamePathDic.ContainsKey(task.Id))
@@ -700,9 +755,15 @@ namespace N_m3u8DL_RE.DownloadManager
                 try
                 {
                     // Logger.WarnMarkUp($"wait {waitSec}s");
-                    if (!STOP_FLAG) await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
+                    if (!STOP_FLAG)
+                    {
+                        await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
+                    }
                     // 刷新列表
-                    if (!STOP_FLAG) await StreamExtractor.RefreshPlayListAsync([.. dic.Keys]);
+                    if (!STOP_FLAG)
+                    {
+                        await StreamExtractor.RefreshPlayListAsync([.. dic.Keys]);
+                    }
                 }
                 catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
                 {
@@ -723,7 +784,10 @@ namespace N_m3u8DL_RE.DownloadManager
 
         private void FilterMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)
         {
-            if (string.IsNullOrEmpty(LastFileNameDic[task.Id]) && DateTimeDic[task.Id] == 0) return;
+            if (string.IsNullOrEmpty(LastFileNameDic[task.Id]) && DateTimeDic[task.Id] == 0)
+            {
+                return;
+            }
 
             int index = -1;
             long dateTime = DateTimeDic[task.Id];
@@ -774,8 +838,15 @@ namespace N_m3u8DL_RE.DownloadManager
                 WAIT_SEC = (int)(SelectedSteams.Min(s => s.Playlist!.MediaParts[0].MediaSegments.Sum(s => s.Duration)) / 2);
                 WAIT_SEC -= 2; // 再提前两秒吧 留出冗余
                 if (DownloaderConfig.MyOptions.LiveWaitTime != null)
+                {
                     WAIT_SEC = DownloaderConfig.MyOptions.LiveWaitTime.Value;
-                if (WAIT_SEC <= 0) WAIT_SEC = 1;
+                }
+
+                if (WAIT_SEC <= 0)
+                {
+                    WAIT_SEC = 1;
+                }
+
                 Logger.WarnMarkUp($"set refresh interval to {WAIT_SEC} seconds");
             }
             // 如果没有选中音频 取消通过音频修复vtt时间轴
@@ -837,10 +908,15 @@ namespace N_m3u8DL_RE.DownloadManager
                 DownloaderConfig.MyOptions.MP4RealTimeDecryption = true;
                 DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
                 if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
+                {
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
+                }
+
                 TimeSpan? limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
+                {
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
+                }
                 // 录制直播时，用户选了几个流就并发录几个
                 ParallelOptions options = new ParallelOptions()
                 {
@@ -866,7 +942,10 @@ namespace N_m3u8DL_RE.DownloadManager
                 foreach (KeyValuePair<string, string> item in StreamExtractor.RawFiles)
                 {
                     string file = Path.Combine(DownloaderConfig.DirPrefix, item.Key);
-                    if (File.Exists(file)) File.Delete(file);
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                    }
                 }
                 OtherUtil.SafeDeleteDir(DownloaderConfig.DirPrefix);
             }
@@ -892,8 +971,14 @@ namespace N_m3u8DL_RE.DownloadManager
                 string outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
                 bool result = false;
-                if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath);
-                else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
+                if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge)
+                {
+                    result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath);
+                }
+                else
+                {
+                    result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
+                }
                 // 完成后删除各轨道文件
                 if (result)
                 {

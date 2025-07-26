@@ -60,10 +60,14 @@ namespace N_m3u8DL_RE.Util
             foreach (string item in pipeNames)
             {
                 if (OperatingSystem.IsWindows())
+                {
                     command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
+                }
                 else
+                {
                     // command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
                     command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
+                }
             }
 
             for (int i = 0; i < pipeNames.Length; i++)
@@ -79,9 +83,14 @@ namespace N_m3u8DL_RE.Util
             if (!string.IsNullOrEmpty(customDest))
             {
                 if (customDest.Trim().StartsWith('-'))
+                {
                     command.Append(customDest);
+                }
                 else
+                {
                     command.Append($" -f mpegts -shortest \"{customDest}\"");
+                }
+
                 Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
             }
             else

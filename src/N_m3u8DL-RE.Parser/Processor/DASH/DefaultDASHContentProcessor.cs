@@ -11,7 +11,10 @@ namespace N_m3u8DL_RE.Parser.Processor.DASH
     {
         public override bool CanProcess(ExtractorType extractorType, string mpdContent, ParserConfig parserConfig)
         {
-            if (extractorType != ExtractorType.MPEG_DASH) return false;
+            if (extractorType != ExtractorType.MPEG_DASH)
+            {
+                return false;
+            }
 
             return mpdContent.Contains("<mas:") && !mpdContent.Contains("xmlns:mas");
         }

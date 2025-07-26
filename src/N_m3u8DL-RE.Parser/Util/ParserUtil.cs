@@ -20,7 +20,9 @@ namespace N_m3u8DL_RE.Parser.Util
         {
             line = line.Trim();
             if (key == "")
+            {
                 return line[(line.IndexOf(':') + 1)..];
+            }
 
             int index = -1;
             string result = string.Empty;
@@ -79,8 +81,12 @@ namespace N_m3u8DL_RE.Parser.Util
         public static string ReplaceVars(string text, Dictionary<string, object?> keyValuePairs)
         {
             foreach (KeyValuePair<string, object?> item in keyValuePairs)
+            {
                 if (text.Contains(item.Key))
+                {
                     text = text.Replace(item.Key, item.Value!.ToString());
+                }
+            }
 
             // 处理特殊形式数字 如 $Number%05d$
             Regex regex = VarsNumberRegex();
@@ -104,7 +110,9 @@ namespace N_m3u8DL_RE.Parser.Util
         public static string CombineURL(string baseurl, string url)
         {
             if (string.IsNullOrEmpty(baseurl))
+            {
                 return url;
+            }
 
             Uri uri1 = new Uri(baseurl);  // 这里直接传完整的URL即可
             Uri uri2 = new Uri(uri1, url);

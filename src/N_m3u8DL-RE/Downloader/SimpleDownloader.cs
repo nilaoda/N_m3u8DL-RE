@@ -102,7 +102,11 @@ namespace N_m3u8DL_RE.Downloader
                 {
                     while (true)
                     {
-                        if (cts.IsCancellationRequested) break;
+                        if (cts.IsCancellationRequested)
+                        {
+                            break;
+                        }
+
                         if (speedContainer.ShouldStop)
                         {
                             cts.Cancel();

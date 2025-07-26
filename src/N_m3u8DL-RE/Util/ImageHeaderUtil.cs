@@ -7,16 +7,25 @@ namespace N_m3u8DL_RE.Util
             int size = bArr.Length;
             // PNG HEADER检测
             if (size > 3 && 137 == bArr[0] && 80 == bArr[1] && 78 == bArr[2] && 71 == bArr[3])
+            {
                 return true;
+            }
             // GIF HEADER检测
             if (size > 3 && 0x47 == bArr[0] && 0x49 == bArr[1] && 0x46 == bArr[2] && 0x38 == bArr[3])
+            {
                 return true;
+            }
             // BMP HEADER检测
             if (size > 10 && 0x42 == bArr[0] && 0x4D == bArr[1] && 0x00 == bArr[5] && 0x00 == bArr[6] && 0x00 == bArr[7] && 0x00 == bArr[8])
+            {
                 return true;
+            }
             // JPEG HEADER检测
             if (size > 3 && 0xFF == bArr[0] && 0xD8 == bArr[1] && 0xFF == bArr[2])
+            {
                 return true;
+            }
+
             return false;
         }
 
@@ -28,13 +37,21 @@ namespace N_m3u8DL_RE.Util
             if (137 == sourceData[0] && 80 == sourceData[1] && 78 == sourceData[2] && 71 == sourceData[3])
             {
                 if (sourceData.Length > 120 && 137 == sourceData[0] && 80 == sourceData[1] && 78 == sourceData[2] && 71 == sourceData[3] && 96 == sourceData[118] && 130 == sourceData[119])
+                {
                     sourceData = sourceData[120..];
+                }
                 else if (sourceData.Length > 6102 && 137 == sourceData[0] && 80 == sourceData[1] && 78 == sourceData[2] && 71 == sourceData[3] && 96 == sourceData[6100] && 130 == sourceData[6101])
+                {
                     sourceData = sourceData[6102..];
+                }
                 else if (sourceData.Length > 69 && 137 == sourceData[0] && 80 == sourceData[1] && 78 == sourceData[2] && 71 == sourceData[3] && 96 == sourceData[67] && 130 == sourceData[68])
+                {
                     sourceData = sourceData[69..];
+                }
                 else if (sourceData.Length > 771 && 137 == sourceData[0] && 80 == sourceData[1] && 78 == sourceData[2] && 71 == sourceData[3] && 96 == sourceData[769] && 130 == sourceData[770])
+                {
                     sourceData = sourceData[771..];
+                }
                 else
                 {
                     // 手动查询结尾标记 0x47 出现两次

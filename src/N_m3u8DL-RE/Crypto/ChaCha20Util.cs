@@ -7,15 +7,24 @@ namespace N_m3u8DL_RE.Crypto
         public static byte[] DecryptPer1024Bytes(byte[] encryptedBuff, byte[] keyBytes, byte[] nonceBytes)
         {
             if (keyBytes.Length != 32)
+            {
                 throw new Exception("Key must be 32 bytes!");
+            }
+
             if (nonceBytes.Length != 12 && nonceBytes.Length != 8)
+            {
                 throw new Exception("Key must be 12 or 8 bytes!");
+            }
+
             if (nonceBytes.Length == 8)
+            {
                 nonceBytes = [.. (new byte[4] { 0, 0, 0, 0 }), .. nonceBytes];
+            }
 
             MemoryStream decStream = new MemoryStream();
             using BinaryReader reader = new BinaryReader(new MemoryStream(encryptedBuff));
             using (BinaryWriter writer = new BinaryWriter(decStream))
+            {
                 while (true)
                 {
                     byte[] buffer = reader.ReadBytes(1024);
@@ -31,6 +40,7 @@ namespace N_m3u8DL_RE.Crypto
                         break;
                     }
                 }
+            }
 
             return decStream.ToArray();
         }

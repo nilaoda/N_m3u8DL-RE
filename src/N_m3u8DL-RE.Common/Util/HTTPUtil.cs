@@ -101,7 +101,10 @@ namespace N_m3u8DL_RE.Common.Util
         {
             string? mediaType = webResponse?.Content.Headers.ContentType?.MediaType?.ToLower();
             if (webResponse?.Content.Headers.ContentLength != null)
+            {
                 return false;
+            }
+
             return mediaType is "video/ts" or "video/mp2t" or "video/mpeg" or "application/octet-stream";
         }
 

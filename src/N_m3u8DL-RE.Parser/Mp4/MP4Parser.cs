@@ -210,7 +210,10 @@ namespace Mp4SubtitleParser
         private static int TypeFromString(string name)
         {
             if (name.Length != 4)
+            {
                 throw new Exception("Mp4 box names must be 4 characters long");
+            }
+
             int code = 0;
             foreach (char chr in name)
             {

@@ -90,7 +90,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 string? urlPattern = streamIndex.Attribute("Url")?.Value;
                 string? language = streamIndex.Attribute("Language")?.Value;
                 // 去除不规范的语言标签
-                if (language?.Length != 3) language = null;
+                if (language?.Length != 3)
+                {
+                    language = null;
+                }
 
                 // 所有c节点
                 IEnumerable<XElement> cElements = streamIndex.Elements().Where(e => e.Name.LocalName == "c");
@@ -157,7 +160,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         string? _durationStr = c.Attribute("d")?.Value;
                         string? _repeatCountStr = c.Attribute("r")?.Value;
 
-                        if (_startTimeStr != null) currentTime = Convert.ToInt64(_startTimeStr);
+                        if (_startTimeStr != null)
+                        {
+                            currentTime = Convert.ToInt64(_startTimeStr);
+                        }
+
                         long _duration = Convert.ToInt64(_durationStr);
                         long _repeatCount = Convert.ToInt64(_repeatCountStr);
                         if (_repeatCount > 0)
@@ -172,7 +179,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         MediaSegment mediaSegment = new();
                         mediaSegment.Url = mediaUrl;
                         if (oriUrl.Contains(MSSTags.StartTime))
+                        {
                             mediaSegment.NameFromVar = currentTime.ToString();
+                        }
+
                         mediaSegment.Duration = _duration / (double)timescale;
                         mediaSegment.Index = segIndex++;
                         streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
@@ -192,7 +202,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             _mediaSegment.Index = segIndex++;
                             _mediaSegment.Duration = _duration / (double)timescale;
                             if (_oriUrl.Contains(MSSTags.StartTime))
+                            {
                                 _mediaSegment.NameFromVar = currentTime.ToString();
+                            }
+
                             streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
                         }
                         currentTime += _duration;
@@ -265,8 +278,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// <returns></returns>
         private static string? ParseCodecs(string fourCC, string? privateData)
         {
-            if (fourCC == "TTML") return "stpp";
-            if (string.IsNullOrEmpty(privateData)) return null;
+            if (fourCC == "TTML")
+            {
+                return "stpp";
+            }
+
+            if (string.IsNullOrEmpty(privateData))
+            {
+                return null;
+            }
 
             return fourCC switch
             {
@@ -311,7 +331,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
             foreach (StreamSpec streamSpec in streamSpecs)
             {
                 Playlist? playlist = streamSpec.Playlist;
-                if (playlist == null) continue;
+                if (playlist == null)
+                {
+                    continue;
+                }
 
                 if (playlist.MediaInit != null)
                 {
@@ -356,7 +379,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
-            if (streamSpecs.Count == 0) return;
+            if (streamSpecs.Count == 0)
+            {
+                return;
+            }
 
             (string rawText, string url) = ("", ParserConfig.Url);
             try
@@ -379,10 +405,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 // 故增加通过init url来匹配 (如果有的话)
                 IEnumerable<StreamSpec> match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
                 if (!match.Any())
+                {
                     match = newStreams.Where(n => n.Playlist?.MediaInit?.Url == streamSpec.Playlist?.MediaInit?.Url);
+                }
 
                 if (match.Any())
+                {
                     streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; // 不更新init
+                }
             }
             // 这里才调用URL预处理器，节省开销
             await ProcessUrlAsync(streamSpecs);

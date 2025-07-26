@@ -30,14 +30,23 @@ namespace Mp4SubtitleParser
                 .FullBox("pssh", box =>
                 {
                     if (box.Version is not (0 or 1))
+                    {
                         throw new Exception("PSSH version can only be 0 or 1");
+                    }
+
                     byte[] systemId = box.Reader.ReadBytes(16);
-                    if (!SYSTEM_ID_WIDEVINE.SequenceEqual(systemId)) return;
+                    if (!SYSTEM_ID_WIDEVINE.SequenceEqual(systemId))
+                    {
+                        return;
+                    }
 
                     uint dataSize = box.Reader.ReadUInt32();
                     byte[] psshData = box.Reader.ReadBytes((int)dataSize);
                     info.PSSH = Convert.ToBase64String(psshData);
-                    if (info.KID != "00000000000000000000000000000000") return;
+                    if (info.KID != "00000000000000000000000000000000")
+                    {
+                        return;
+                    }
 
                     info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLower();
                     info.isMultiDRM = true;

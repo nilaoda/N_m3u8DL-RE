@@ -12,7 +12,10 @@ namespace N_m3u8DL_RE.Parser.Processor
 
         public override string Process(string oriUrl, ParserConfig paserConfig)
         {
-            if (!oriUrl.StartsWith("http")) return oriUrl;
+            if (!oriUrl.StartsWith("http"))
+            {
+                return oriUrl;
+            }
 
             Uri uriFromConfig = new Uri(paserConfig.Url);
             System.Collections.Specialized.NameValueCollection uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
@@ -22,12 +25,19 @@ namespace N_m3u8DL_RE.Parser.Processor
             foreach (string? item in uriFromConfigQuery.AllKeys)
             {
                 if (newQuery.AllKeys.Contains(item))
+                {
                     newQuery.Set(item, uriFromConfigQuery.Get(item));
+                }
                 else
+                {
                     newQuery.Add(item, uriFromConfigQuery.Get(item));
+                }
             }
 
-            if (string.IsNullOrEmpty(newQuery.ToString())) return oriUrl;
+            if (string.IsNullOrEmpty(newQuery.ToString()))
+            {
+                return oriUrl;
+            }
 
             Logger.Debug("Before: " + oriUrl);
             oriUrl = (oldUri.GetLeftPart(UriPartial.Path) + "?" + newQuery).TrimEnd('?');
