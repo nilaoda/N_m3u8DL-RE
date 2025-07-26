@@ -62,14 +62,7 @@ namespace N_m3u8DL_RE.DownloadManager
             string? _key = await MP4DecryptUtil.SearchKeyFromFileAsync(DownloaderConfig.MyOptions.KeyTextFile, currentKID);
             if (_key != null)
             {
-                if (DownloaderConfig.MyOptions.Keys == null)
-                {
-                    DownloaderConfig.MyOptions.Keys = [_key];
-                }
-                else
-                {
-                    DownloaderConfig.MyOptions.Keys = [.. DownloaderConfig.MyOptions.Keys, _key];
-                }
+                DownloaderConfig.MyOptions.Keys = DownloaderConfig.MyOptions.Keys == null ? [_key] : [.. DownloaderConfig.MyOptions.Keys, _key];
             }
         }
 
@@ -794,14 +787,9 @@ namespace N_m3u8DL_RE.DownloadManager
             string lastName = LastFileNameDic[task.Id];
 
             // 优先使用dateTime判断
-            if (dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null))
-            {
-                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetUnixTimestamp(s.DateTime!.Value) == dateTime);
-            }
-            else
-            {
-                index = streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetSegmentName(s, allHasDatetime, allSamePath) == lastName);
-            }
+            index = dateTime != 0 && streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null)
+                ? streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetUnixTimestamp(s.DateTime!.Value) == dateTime)
+                : streamSpec.Playlist!.MediaParts[0].MediaSegments.FindIndex(s => GetSegmentName(s, allHasDatetime, allSamePath) == lastName);
 
             if (index > -1)
             {
@@ -970,15 +958,9 @@ namespace N_m3u8DL_RE.DownloadManager
                 string outName = $"{dirName}.MUX";
                 string outPath = Path.Combine(saveDir, outName);
                 Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
-                bool result = false;
-                if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge)
-                {
-                    result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath);
-                }
-                else
-                {
-                    result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
-                }
+                bool result = DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge
+                    ? MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, [.. OutputFiles], outPath)
+                    : MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, [.. OutputFiles], outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
                 // 完成后删除各轨道文件
                 if (result)
                 {

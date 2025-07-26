@@ -115,14 +115,7 @@ namespace N_m3u8DL_RE.Common.Util
         {
             string htmlCode;
             HttpResponseMessage webResponse = await DoGetAsync(url, headers);
-            if (CheckMPEG2TS(webResponse))
-            {
-                htmlCode = ResString.ReLiveTs;
-            }
-            else
-            {
-                htmlCode = await webResponse.Content.ReadAsStringAsync();
-            }
+            htmlCode = CheckMPEG2TS(webResponse) ? ResString.ReLiveTs : await webResponse.Content.ReadAsStringAsync();
             Logger.Debug(htmlCode);
             return (htmlCode, webResponse.Headers.Location != null ? webResponse.Headers.Location.AbsoluteUri : url);
         }

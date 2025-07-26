@@ -386,14 +386,9 @@ namespace Mp4SubtitleParser
                 {
                     if (dic.ContainsKey(key))
                     {
-                        if (item.GetAttribute("tts:fontStyle") == "italic" || item.GetAttribute("tts:fontStyle") == "oblique")
-                        {
-                            dic[key] = $"{dic[key]}\r\n<i>{GetTextFromElement(item)}</i>";
-                        }
-                        else
-                        {
-                            dic[key] = $"{dic[key]}\r\n{GetTextFromElement(item)}";
-                        }
+                        dic[key] = item.GetAttribute("tts:fontStyle") == "italic" || item.GetAttribute("tts:fontStyle") == "oblique"
+                            ? $"{dic[key]}\r\n<i>{GetTextFromElement(item)}</i>"
+                            : $"{dic[key]}\r\n{GetTextFromElement(item)}";
                     }
                     else
                     {

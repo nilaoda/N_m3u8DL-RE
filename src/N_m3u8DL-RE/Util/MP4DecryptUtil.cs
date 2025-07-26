@@ -83,14 +83,9 @@ namespace N_m3u8DL_RE.Util
             }
             else if (decryptEngine == DecryptEngine.MP4DECRYPT)
             {
-                if (trackId == null)
-                {
-                    cmd = string.Join(" ", keyPairs.Select(k => $"--key {k}"));
-                }
-                else
-                {
-                    cmd = string.Join(" ", keyPairs.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
-                }
+                cmd = trackId == null
+                    ? string.Join(" ", keyPairs.Select(k => $"--key {k}"))
+                    : string.Join(" ", keyPairs.Select(k => $"--key {trackId}:{k.Split(':')[1]}"));
                 // 解决mp4decrypt中文问题 切换到源文件所在目录并改名再解密
                 workDir = Path.GetDirectoryName(source)!;
                 tmpEncFile = Path.Combine(workDir, $"{Guid.NewGuid()}{Path.GetExtension(source)}");

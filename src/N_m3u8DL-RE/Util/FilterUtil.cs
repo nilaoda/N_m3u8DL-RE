@@ -287,17 +287,10 @@ namespace N_m3u8DL_RE.Util
 
                 foreach (MediaPart part in stream.Playlist.MediaParts)
                 {
-                    List<MediaSegment> newSegments;
-                    if (filterByIndex)
-                    {
-                        newSegments = [.. part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex)];
-                    }
-                    else
-                    {
-                        newSegments = [.. part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
+                    List<MediaSegment> newSegments = filterByIndex
+                        ? [.. part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex)]
+                        : [.. part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
                                                                       && stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) <= customRange.EndSec)];
-                    }
-
                     if (newSegments.Count > 0)
                     {
                         skippedDur += part.MediaSegments.Where(seg => seg.Index < newSegments.First().Index).Sum(x => x.Duration);
