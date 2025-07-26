@@ -21,7 +21,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         [GeneratedRegex(@"(#EXT-X-KEY:[\s\S]*?)(#EXT-X-DISCONTINUITY|#EXT-X-ENDLIST)")]
         private static partial Regex ATVRegex2();
 
-        public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig) => extractorType == ExtractorType.HLS;
+        public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig)
+        {
+            return extractorType == ExtractorType.HLS;
+        }
 
         public override string Process(string m3u8Content, ParserConfig parserConfig)
         {

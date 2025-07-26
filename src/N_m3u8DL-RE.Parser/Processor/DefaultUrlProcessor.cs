@@ -8,7 +8,10 @@ namespace N_m3u8DL_RE.Parser.Processor
 {
     public class DefaultUrlProcessor : UrlProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig paserConfig) => paserConfig.AppendUrlParams;
+        public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig paserConfig)
+        {
+            return paserConfig.AppendUrlParams;
+        }
 
         public override string Process(string oriUrl, ParserConfig paserConfig)
         {

@@ -95,23 +95,26 @@ namespace N_m3u8DL_RE.Parser.Mp4
         }
 
         private static readonly string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = ["", "A", "B", "C"];
-        private int SamplingFrequencyIndex(int samplingRate) => samplingRate switch
+        private int SamplingFrequencyIndex(int samplingRate)
         {
-            96000 => 0x0,
-            88200 => 0x1,
-            64000 => 0x2,
-            48000 => 0x3,
-            44100 => 0x4,
-            32000 => 0x5,
-            24000 => 0x6,
-            22050 => 0x7,
-            16000 => 0x8,
-            12000 => 0x9,
-            11025 => 0xA,
-            8000 => 0xB,
-            7350 => 0xC,
-            _ => 0x0
-        };
+            return samplingRate switch
+            {
+                96000 => 0x0,
+                88200 => 0x1,
+                64000 => 0x2,
+                48000 => 0x3,
+                44100 => 0x4,
+                32000 => 0x5,
+                24000 => 0x6,
+                22050 => 0x7,
+                16000 => 0x8,
+                12000 => 0x9,
+                11025 => 0xA,
+                8000 => 0xB,
+                7350 => 0xC,
+                _ => 0x0
+            };
+        }
 
         private void GenCodecPrivateDataForAAC()
         {
@@ -184,7 +187,10 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
         }
 
-        public static bool CanHandle(string fourCC) => SupportedFourCC.Contains(fourCC);
+        public static bool CanHandle(string fourCC)
+        {
+            return SupportedFourCC.Contains(fourCC);
+        }
 
         private byte[] Box(string boxType, byte[] payload)
         {

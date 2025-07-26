@@ -12,8 +12,10 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
     public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
-
+        public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig)
+        {
+            return extractorType == ExtractorType.HLS;
+        }
 
         public override EncryptInfo Process(string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
         {
