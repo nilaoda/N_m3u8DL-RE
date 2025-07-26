@@ -19,11 +19,9 @@ namespace N_m3u8DL_RE.Common.Util
 
         public static string ConvertToJson(object o)
         {
-            if (o is StreamSpec s)
-            {
-                return JsonSerializer.Serialize(s, Context.StreamSpec);
-            }
-            return o is IOrderedEnumerable<StreamSpec> ss
+            return o is StreamSpec s
+                ? JsonSerializer.Serialize(s, Context.StreamSpec)
+                : o is IOrderedEnumerable<StreamSpec> ss
                 ? JsonSerializer.Serialize(ss, Context.IOrderedEnumerableStreamSpec)
                 : o is List<StreamSpec> sList
                 ? JsonSerializer.Serialize(sList, Context.ListStreamSpec)
