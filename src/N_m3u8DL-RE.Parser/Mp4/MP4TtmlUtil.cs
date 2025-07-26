@@ -6,7 +6,7 @@ using N_m3u8DL_RE.Common.Entity;
 
 namespace Mp4SubtitleParser
 {
-    class SubEntity
+    internal class SubEntity
     {
         public required string Begin { get; set; }
         public required string End { get; set; }

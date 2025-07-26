@@ -22,11 +22,11 @@ namespace N_m3u8DL_RE.DownloadManager
 {
     internal class SimpleDownloadManager
     {
-        IDownloader Downloader;
-        DownloaderConfig DownloaderConfig;
-        StreamExtractor StreamExtractor;
-        List<StreamSpec> SelectedSteams;
-        List<OutputFile> OutputFiles = [];
+        private IDownloader Downloader;
+        private DownloaderConfig DownloaderConfig;
+        private StreamExtractor StreamExtractor;
+        private List<StreamSpec> SelectedSteams;
+        private List<OutputFile> OutputFiles = [];
 
         public SimpleDownloadManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {

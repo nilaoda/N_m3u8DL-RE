@@ -7,7 +7,7 @@
  */
 namespace Mp4SubtitleParser
 {
-    class ParsedBox
+    internal class ParsedBox
     {
         public required MP4Parser Parser { get; set; }
         public bool PartialOkay { get; set; }
@@ -18,33 +18,33 @@ namespace Mp4SubtitleParser
         public bool Has64BitSize { get; set; }
     }
 
-    class TFHD
+    internal class TFHD
     {
         public uint TrackId { get; set; }
         public uint DefaultSampleDuration { get; set; }
         public uint DefaultSampleSize { get; set; }
     }
 
-    class TRUN
+    internal class TRUN
     {
         public uint SampleCount { get; set; }
         public List<Sample> SampleData { get; set; } = [];
     }
 
-    class Sample
+    internal class Sample
     {
         public uint SampleDuration { get; set; }
         public uint SampleSize { get; set; }
         public uint SampleCompositionTimeOffset { get; set; }
     }
 
-    enum BoxType
+    internal enum BoxType
     {
         BASIC_BOX = 0,
         FULL_BOX = 1
     };
 
-    class MP4Parser
+    internal class MP4Parser
     {
         public bool Done { get; set; } = false;
         public Dictionary<long, int> Headers { get; set; } = [];

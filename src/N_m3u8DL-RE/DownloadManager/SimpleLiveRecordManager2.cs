@@ -25,27 +25,27 @@ namespace N_m3u8DL_RE.DownloadManager
 {
     internal class SimpleLiveRecordManager2
     {
-        IDownloader Downloader;
-        DownloaderConfig DownloaderConfig;
-        StreamExtractor StreamExtractor;
-        List<StreamSpec> SelectedSteams;
-        ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
-        List<OutputFile> OutputFiles = [];
-        DateTime? PublishDateTime;
-        bool STOP_FLAG = false;
-        int WAIT_SEC = 0; // 刷新间隔
-        ConcurrentDictionary<int, int> RecordedDurDic = new(); // 已录制时长
-        ConcurrentDictionary<int, int> RefreshedDurDic = new(); // 已刷新出的时长
-        ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
-        ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
-        ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
-        ConcurrentDictionary<int, string> LastFileNameDic = new(); // 上次下载的文件名
-        ConcurrentDictionary<int, long> MaxIndexDic = new(); // 最大Index
-        ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
-        CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
+        private IDownloader Downloader;
+        private DownloaderConfig DownloaderConfig;
+        private StreamExtractor StreamExtractor;
+        private List<StreamSpec> SelectedSteams;
+        private ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
+        private List<OutputFile> OutputFiles = [];
+        private DateTime? PublishDateTime;
+        private bool STOP_FLAG = false;
+        private int WAIT_SEC = 0; // 刷新间隔
+        private ConcurrentDictionary<int, int> RecordedDurDic = new(); // 已录制时长
+        private ConcurrentDictionary<int, int> RefreshedDurDic = new(); // 已刷新出的时长
+        private ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
+        private ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
+        private ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
+        private ConcurrentDictionary<int, string> LastFileNameDic = new(); // 上次下载的文件名
+        private ConcurrentDictionary<int, long> MaxIndexDic = new(); // 最大Index
+        private ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
+        private CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
 
         private readonly Lock lockObj = new();
-        TimeSpan? audioStart = null;
+        private TimeSpan? audioStart = null;
 
         public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {

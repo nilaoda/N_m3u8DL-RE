@@ -1,7 +1,7 @@
 ﻿namespace Mp4SubtitleParser
 {
     // make BinaryReader in Big Endian
-    class BinaryReader2(System.IO.Stream stream) : BinaryReader(stream)
+    internal class BinaryReader2(System.IO.Stream stream) : BinaryReader(stream)
     {
         public bool HasMoreData()
         {

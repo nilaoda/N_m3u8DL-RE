@@ -518,7 +518,7 @@ namespace N_m3u8DL_RE.CommandLine
             };
         }
 
-        class MyOptionBinder : BinderBase<MyOption>
+        private class MyOptionBinder : BinderBase<MyOption>
         {
             protected override MyOption GetBoundValue(BindingContext bindingContext)
             {

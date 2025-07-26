@@ -22,7 +22,7 @@ namespace N_m3u8DL_RE
 {
     internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
             if (OperatingSystem.IsWindows())
@@ -80,7 +80,7 @@ namespace N_m3u8DL_RE
             Environment.Exit(0);
         }
 
-        static int GetOrder(StreamSpec streamSpec)
+        private static int GetOrder(StreamSpec streamSpec)
         {
             if (streamSpec.Channels == null) return 0;
 
@@ -88,7 +88,7 @@ namespace N_m3u8DL_RE
             return int.TryParse(str, out var order) ? order : 0;
         }
 
-        static async Task DoWorkAsync(MyOption option)
+        private static async Task DoWorkAsync(MyOption option)
         {
             HTTPUtil.AppHttpClient.Timeout = TimeSpan.FromSeconds(option.HttpRequestTimeout);
             if (Console.IsOutputRedirected || Console.IsErrorRedirected)
@@ -440,7 +440,7 @@ namespace N_m3u8DL_RE
             }
         }
 
-        static async Task CheckUpdateAsync()
+        private static async Task CheckUpdateAsync()
         {
             try
             {
@@ -461,7 +461,7 @@ namespace N_m3u8DL_RE
         }
 
         // 重定向
-        static async Task<string> Get302Async(string url)
+        private static async Task<string> Get302Async(string url)
         {
             // this allows you to set the settings so that we can get the redirect url
             var handler = new HttpClientHandler
