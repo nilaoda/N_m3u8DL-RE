@@ -33,21 +33,21 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public MSSExtractor(ParserConfig parserConfig)
         {
-            this.ParserConfig = parserConfig;
+            ParserConfig = parserConfig;
             SetInitUrl();
         }
 
         private void SetInitUrl()
         {
-            this.IsmUrl = ParserConfig.Url ?? string.Empty;
-            this.BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : this.IsmUrl;
+            IsmUrl = ParserConfig.Url ?? string.Empty;
+            BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : IsmUrl;
         }
 
         public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
         {
             List<StreamSpec> streamList = [];
-            this.IsmContent = rawText;
-            this.PreProcessContent();
+            IsmContent = rawText;
+            PreProcessContent();
 
             XDocument xmlDocument = XDocument.Parse(IsmContent);
 
@@ -174,7 +174,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         varDic[MSSTags.StartTime] = currentTime;
-                        string oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
+                        string oriUrl = ParserUtil.CombineURL(BaseUrl, urlPattern!);
                         string mediaUrl = ParserUtil.ReplaceVars(oriUrl, varDic);
                         MediaSegment mediaSegment = new();
                         mediaSegment.Url = mediaUrl;
@@ -196,7 +196,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             currentTime += _duration;
                             MediaSegment _mediaSegment = new();
                             varDic[MSSTags.StartTime] = currentTime;
-                            string _oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
+                            string _oriUrl = ParserUtil.CombineURL(BaseUrl, urlPattern!);
                             string _mediaUrl = ParserUtil.ReplaceVars(_oriUrl, varDic);
                             _mediaSegment.Url = _mediaUrl;
                             _mediaSegment.Index = segIndex++;

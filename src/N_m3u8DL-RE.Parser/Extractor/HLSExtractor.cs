@@ -22,14 +22,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public HLSExtractor(ParserConfig parserConfig)
         {
-            this.ParserConfig = parserConfig;
-            this.M3u8Url = parserConfig.Url ?? string.Empty;
-            this.SetBaseUrl();
+            ParserConfig = parserConfig;
+            M3u8Url = parserConfig.Url ?? string.Empty;
+            SetBaseUrl();
         }
 
         private void SetBaseUrl()
         {
-            this.BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : this.M3u8Url;
+            BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : M3u8Url;
         }
 
         /// <summary>
@@ -509,8 +509,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public async Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
         {
-            this.M3u8Content = rawText;
-            this.PreProcessContent();
+            M3u8Content = rawText;
+            PreProcessContent();
             if (M3u8Content.Contains(HLSTags.ext_x_stream_inf))
             {
                 Logger.Warn(ResString.masterM3u8Found);
@@ -537,24 +537,24 @@ namespace N_m3u8DL_RE.Parser.Extractor
             if (url.StartsWith("file:"))
             {
                 Uri uri = new(url);
-                this.M3u8Content = File.ReadAllText(uri.LocalPath);
+                M3u8Content = File.ReadAllText(uri.LocalPath);
             }
             else if (url.StartsWith("http"))
             {
                 try
                 {
-                    (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
+                    (M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
                 }
                 catch (HttpRequestException) when (url != ParserConfig.OriginalUrl)
                 {
                     // 当URL无法访问时，再请求原始URL
-                    (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+                    (M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
                 }
             }
 
-            this.M3u8Url = url;
-            this.SetBaseUrl();
-            this.PreProcessContent();
+            M3u8Url = url;
+            SetBaseUrl();
+            PreProcessContent();
         }
 
         /// <summary>

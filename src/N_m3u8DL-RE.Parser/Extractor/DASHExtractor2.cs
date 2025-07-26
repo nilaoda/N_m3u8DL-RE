@@ -25,15 +25,15 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public DASHExtractor2(ParserConfig parserConfig)
         {
-            this.ParserConfig = parserConfig;
+            ParserConfig = parserConfig;
             SetInitUrl();
         }
 
 
         private void SetInitUrl()
         {
-            this.MpdUrl = ParserConfig.Url ?? string.Empty;
-            this.BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : this.MpdUrl;
+            MpdUrl = ParserConfig.Url ?? string.Empty;
+            BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : MpdUrl;
         }
 
         private string ExtendBaseUrl(XElement element, string oriBaseUrl)
@@ -64,8 +64,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
         {
             List<StreamSpec> streamList = [];
 
-            this.MpdContent = rawText;
-            this.PreProcessContent();
+            MpdContent = rawText;
+            PreProcessContent();
 
 
             XDocument xmlDocument = XDocument.Parse(MpdContent);
@@ -103,7 +103,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     baseUrl = baseUrl.Replace("//https:%2F%2F", "//");
                 }
 
-                this.BaseUrl = ParserUtil.CombineURL(this.MpdUrl, baseUrl);
+                BaseUrl = ParserUtil.CombineURL(MpdUrl, baseUrl);
             }
 
             // 全部Period
@@ -117,7 +117,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 string? periodId = period.Attribute("id")?.Value;
 
                 // 最终分片会使用的baseurl
-                string segBaseUrl = this.BaseUrl;
+                string segBaseUrl = BaseUrl;
 
                 // 处理baseurl嵌套
                 segBaseUrl = ExtendBaseUrl(period, segBaseUrl);

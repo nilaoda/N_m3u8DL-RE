@@ -66,20 +66,20 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         public MSSMoovProcessor(StreamSpec streamSpec)
         {
-            this.StreamSpec = streamSpec;
+            StreamSpec = streamSpec;
             MSSData data = streamSpec.MSSData!;
-            this.NalUnitLengthField = data.NalUnitLengthField;
-            this.CodecPrivateData = data.CodecPrivateData;
-            this.FourCC = data.FourCC;
-            this.Timesacle = data.Timesacle;
-            this.Duration = data.Duration;
-            this.StreamType = data.Type;
-            this.Channels = data.Channels;
-            this.SamplingRate = data.SamplingRate;
-            this.BitsPerSample = data.BitsPerSample;
-            this.IsProtection = data.IsProtection;
-            this.ProtectionData = data.ProtectionData;
-            this.ProtectionSystemId = data.ProtectionSystemID;
+            NalUnitLengthField = data.NalUnitLengthField;
+            CodecPrivateData = data.CodecPrivateData;
+            FourCC = data.FourCC;
+            Timesacle = data.Timesacle;
+            Duration = data.Duration;
+            StreamType = data.Type;
+            Channels = data.Channels;
+            SamplingRate = data.SamplingRate;
+            BitsPerSample = data.BitsPerSample;
+            IsProtection = data.IsProtection;
+            ProtectionData = data.ProtectionData;
+            ProtectionSystemId = data.ProtectionSystemID;
 
             // 需要手动生成CodecPrivateData
             if (string.IsNullOrEmpty(CodecPrivateData))
@@ -137,8 +137,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 arr16[1] = (ushort)((codecPrivateData[2] << 8) + codecPrivateData[3]);
 
                 // convert decimal to hex value
-                this.CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
-                this.CodecPrivateData += HexUtil.BytesToHex(BitConverter.GetBytes(arr16[1])).PadLeft(16, '0');
+                CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
+                CodecPrivateData += HexUtil.BytesToHex(BitConverter.GetBytes(arr16[1])).PadLeft(16, '0');
             }
             else if (FourCC.StartsWith("AAC"))
             {
@@ -153,7 +153,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 arr16[0] = (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]);
 
                 // convert decimal to hex value
-                this.CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
+                CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
             }
         }
 
@@ -166,13 +166,13 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 string text = Encoding.ASCII.GetString(bytes);
                 byte[] kidBytes = Convert.FromBase64String(KIDRegex().Match(text).Groups[1].Value);
                 // save kid for playready
-                this.ProtecitonKID_PR = HexUtil.BytesToHex(kidBytes);
+                ProtecitonKID_PR = HexUtil.BytesToHex(kidBytes);
                 // fix byte order
                 byte[] reverse1 = new[] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
                 byte[] reverse2 = new[] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
                 Array.Copy(reverse1, 0, kidBytes, 0, reverse1.Length);
                 Array.Copy(reverse2, 0, kidBytes, 4, reverse1.Length);
-                this.ProtecitonKID = HexUtil.BytesToHex(kidBytes);
+                ProtecitonKID = HexUtil.BytesToHex(kidBytes);
             }
             // widevine
             else if (ProtectionSystemId.ToUpper() == "EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED")

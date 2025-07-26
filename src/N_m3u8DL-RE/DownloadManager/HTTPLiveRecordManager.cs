@@ -34,7 +34,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
         public HTTPLiveRecordManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {
-            this.DownloaderConfig = downloaderConfig;
+            DownloaderConfig = downloaderConfig;
             Downloader = new SimpleDownloader(DownloaderConfig);
             NowDateTime = DateTime.Now;
             PublishDateTime = selectedSteams.FirstOrDefault()?.PublishTime;

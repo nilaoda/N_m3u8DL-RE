@@ -144,23 +144,23 @@ namespace N_m3u8DL_RE.Common.Entity
         /// <returns></returns>
         public WebVttSub AddCuesFromOne(WebVttSub webSub)
         {
-            FixTimestamp(webSub, this.MpegtsTimestamp);
+            FixTimestamp(webSub, MpegtsTimestamp);
             foreach (SubCue item in webSub.Cues)
             {
-                if (this.Cues.Contains(item))
+                if (Cues.Contains(item))
                 {
                     continue;
                 }
 
                 // 如果相差只有1ms，且payload相同，则拼接
-                SubCue? last = this.Cues.LastOrDefault();
-                if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload)
+                SubCue? last = Cues.LastOrDefault();
+                if (last != null && Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload)
                 {
                     last.EndTime = item.EndTime;
                 }
                 else
                 {
-                    this.Cues.Add(item);
+                    Cues.Add(item);
                 }
             }
             return this;
@@ -174,7 +174,7 @@ namespace N_m3u8DL_RE.Common.Entity
             }
 
             // 确实存在时间轴错误的情况，才修复
-            if ((this.Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < this.Cues.Last().EndTime && sub.Cues.First().EndTime != this.Cues.Last().EndTime) || this.Cues.Count == 0)
+            if ((Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < Cues.Last().EndTime && sub.Cues.First().EndTime != Cues.Last().EndTime) || Cues.Count == 0)
             {
                 // The MPEG2 transport stream clocks (PCR, PTS, DTS) all have units of 1/90000 second
                 long seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
@@ -193,7 +193,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         private IEnumerable<SubCue> GetCues()
         {
-            return this.Cues.Where(c => !string.IsNullOrEmpty(c.Payload));
+            return Cues.Where(c => !string.IsNullOrEmpty(c.Payload));
         }
 
         private static TimeSpan ConvertToTS(string str)
@@ -240,7 +240,7 @@ namespace N_m3u8DL_RE.Common.Entity
         /// <param name="time"></param>
         public void LeftShiftTime(TimeSpan time)
         {
-            foreach (SubCue cue in this.Cues)
+            foreach (SubCue cue in Cues)
             {
                 if (cue.StartTime.TotalSeconds - time.TotalSeconds > 0)
                 {

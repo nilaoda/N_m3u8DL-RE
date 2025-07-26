@@ -27,26 +27,26 @@ namespace N_m3u8DL_RE.Parser
             if (url.StartsWith("file:"))
             {
                 Uri uri = new(url);
-                this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
+                rawText = await File.ReadAllTextAsync(uri.LocalPath);
                 parserConfig.OriginalUrl = parserConfig.Url = url;
             }
             else if (url.StartsWith("http"))
             {
                 parserConfig.OriginalUrl = url;
-                (this.rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
+                (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
                 parserConfig.Url = url;
             }
             else if (File.Exists(url))
             {
                 url = Path.GetFullPath(url);
-                this.rawText = await File.ReadAllTextAsync(url);
+                rawText = await File.ReadAllTextAsync(url);
                 parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
             }
-            this.rawText = rawText.Trim();
-            LoadSourceFromText(this.rawText);
+            rawText = rawText.Trim();
+            LoadSourceFromText(rawText);
         }
 
-        [MemberNotNull(nameof(this.rawText), nameof(this.extractor))]
+        [MemberNotNull(nameof(this.rawText), nameof(extractor))]
         private void LoadSourceFromText(string rawText)
         {
             string rawType = "txt";

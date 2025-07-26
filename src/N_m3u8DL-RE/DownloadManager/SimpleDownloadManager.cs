@@ -30,9 +30,9 @@ namespace N_m3u8DL_RE.DownloadManager
 
         public SimpleDownloadManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {
-            this.DownloaderConfig = downloaderConfig;
-            this.SelectedSteams = selectedSteams;
-            this.StreamExtractor = streamExtractor;
+            DownloaderConfig = downloaderConfig;
+            SelectedSteams = selectedSteams;
+            StreamExtractor = streamExtractor;
             Downloader = new SimpleDownloader(DownloaderConfig);
         }
 
