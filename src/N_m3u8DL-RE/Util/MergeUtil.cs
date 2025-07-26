@@ -257,7 +257,7 @@ namespace N_m3u8DL_RE.Util
                 }
             }
 
-            IEnumerable<OutputFile> videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
+            IEnumerable<OutputFile> videoTracks = files.Where(x => x.MediaType is not Common.Enum.MediaType.AUDIO and not Common.Enum.MediaType.SUBTITLES);
             IEnumerable<OutputFile> audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
             IEnumerable<OutputFile> subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
             if (videoTracks.Any())

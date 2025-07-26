@@ -11,7 +11,7 @@ namespace N_m3u8DL_RE.Crypto
                 throw new Exception("Key must be 32 bytes!");
             }
 
-            if (nonceBytes.Length != 12 && nonceBytes.Length != 8)
+            if (nonceBytes.Length is not 12 and not 8)
             {
                 throw new Exception("Key must be 12 or 8 bytes!");
             }

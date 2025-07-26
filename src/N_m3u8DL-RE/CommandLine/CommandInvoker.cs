@@ -513,7 +513,7 @@ namespace N_m3u8DL_RE.CommandLine
             }
             // 混流器
             string muxer = p.GetValue("muxer") ?? "ffmpeg";
-            if (muxer != "ffmpeg" && muxer != "mkvmerge")
+            if (muxer is not "ffmpeg" and not "mkvmerge")
             {
                 result.ErrorMessage = $"muxer={muxer} not valid";
                 return null;
@@ -527,14 +527,14 @@ namespace N_m3u8DL_RE.CommandLine
             }
             // 是否删除
             string keep = p.GetValue("keep") ?? "false";
-            if (keep != "true" && keep != "false")
+            if (keep is not "true" and not "false")
             {
                 result.ErrorMessage = $"keep={keep} not valid";
                 return null;
             }
             // 是否忽略字幕
             string skipSub = p.GetValue("skip_sub") ?? "false";
-            if (skipSub != "true" && skipSub != "false")
+            if (skipSub is not "true" and not "false")
             {
                 result.ErrorMessage = $"skip_sub={keep} not valid";
                 return null;
