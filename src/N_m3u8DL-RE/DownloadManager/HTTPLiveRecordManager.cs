@@ -92,7 +92,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                     speedContainer.Add(size);
                     RecordingSizeDic[task.Id] += size;
-                    await stream.WriteAsync(buffer, 0, size);
+                    await stream.WriteAsync(buffer.AsMemory(0, size));
                 }
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)

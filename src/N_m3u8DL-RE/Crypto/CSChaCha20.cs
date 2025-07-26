@@ -378,7 +378,7 @@ namespace N_m3u8DL_RE.Crypto
                 WorkBytes(output: writeBytesBuffer, input: readBytesBuffer, numBytes: howManyBytesWereRead);
 
                 // Write
-                await output.WriteAsync(writeBytesBuffer, 0, howManyBytesWereRead);
+                await output.WriteAsync(writeBytesBuffer.AsMemory(0, howManyBytesWereRead));
 
                 // Read more
                 howManyBytesWereRead = await input.ReadAsync(readBytesBuffer, 0, howManyBytesToProcessAtTime);
