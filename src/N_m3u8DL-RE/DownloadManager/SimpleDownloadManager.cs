@@ -337,7 +337,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES)
             {
-                outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enumerations.SubtitleFormat.SRT ? ".srt" : ".vtt";
+                outputExt = DownloaderConfig.MyOptions.SubtitleFormat == SubtitleFormat.SRT ? ".srt" : ".vtt";
             }
             string output = Path.Combine(saveDir, saveName + outputExt);
 
@@ -414,7 +414,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 string subContentFixed = finalVtt.ToVtt();
                 // 转换字幕格式
-                if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
+                if (DownloaderConfig.MyOptions.SubtitleFormat != SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = finalVtt.ToSrt();
@@ -454,7 +454,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                     string subContentFixed = finalVtt.ToVtt();
                     // 转换字幕格式
-                    if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
+                    if (DownloaderConfig.MyOptions.SubtitleFormat != SubtitleFormat.VTT)
                     {
                         path = Path.ChangeExtension(path, ".srt");
                         subContentFixed = finalVtt.ToSrt();
@@ -512,7 +512,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 string subContentFixed = finalVtt.ToVtt();
                 // 转换字幕格式
-                if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
+                if (DownloaderConfig.MyOptions.SubtitleFormat != SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = finalVtt.ToSrt();
@@ -575,7 +575,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 string subContentFixed = finalVtt.ToVtt();
                 // 转换字幕格式
-                if (DownloaderConfig.MyOptions.SubtitleFormat != Enumerations.SubtitleFormat.VTT)
+                if (DownloaderConfig.MyOptions.SubtitleFormat != SubtitleFormat.VTT)
                 {
                     path = Path.ChangeExtension(path, ".srt");
                     subContentFixed = finalVtt.ToSrt();

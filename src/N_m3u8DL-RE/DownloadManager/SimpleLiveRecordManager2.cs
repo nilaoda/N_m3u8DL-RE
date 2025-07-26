@@ -538,7 +538,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                     else if (streamSpec.MediaType == MediaType.SUBTITLES)
                     {
-                        outputExt = DownloaderConfig.MyOptions.SubtitleFormat == Enumerations.SubtitleFormat.SRT ? ".srt" : ".vtt";
+                        outputExt = DownloaderConfig.MyOptions.SubtitleFormat == SubtitleFormat.SRT ? ".srt" : ".vtt";
                     }
 
                     string output = Path.Combine(saveDir, saveName + outputExt);

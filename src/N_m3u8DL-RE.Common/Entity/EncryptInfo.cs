@@ -25,7 +25,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public static EncryptMethod ParseMethod(string? method)
         {
-            return method != null && System.Enum.TryParse(method.Replace("-", "_"), out EncryptMethod m) ? m : EncryptMethod.UNKNOWN;
+            return method != null && Enum.TryParse(method.Replace("-", "_"), out EncryptMethod m) ? m : EncryptMethod.UNKNOWN;
         }
     }
 }

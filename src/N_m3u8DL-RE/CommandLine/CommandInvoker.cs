@@ -443,7 +443,7 @@ namespace N_m3u8DL_RE.CommandLine
             }
 
             string? role = p.GetValue("role");
-            if (System.Enum.TryParse(role, true, out RoleType roleType))
+            if (Enum.TryParse(role, true, out RoleType roleType))
             {
                 streamFilter.Role = roleType;
             }
@@ -505,7 +505,7 @@ namespace N_m3u8DL_RE.CommandLine
             ComplexParamParser p = new(v);
             // 混流格式
             string format = p.GetValue("format") ?? v.Split(':')[0]; // 若未获取到，直接:前的字符串作为format解析
-            bool parseResult = System.Enum.TryParse(format.ToUpperInvariant(), out MuxFormat muxFormat);
+            bool parseResult = Enum.TryParse(format.ToUpperInvariant(), out MuxFormat muxFormat);
             if (!parseResult)
             {
                 result.ErrorMessage = $"format={format} not valid";
