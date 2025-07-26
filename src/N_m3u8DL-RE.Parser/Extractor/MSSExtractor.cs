@@ -278,12 +278,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// <returns></returns>
         private static string? ParseCodecs(string fourCC, string? privateData)
         {
-            if (fourCC == "TTML")
-            {
-                return "stpp";
-            }
-
-            return string.IsNullOrEmpty(privateData)
+            return fourCC == "TTML"
+                ? "stpp"
+                : string.IsNullOrEmpty(privateData)
                 ? null
                 : fourCC switch
             {

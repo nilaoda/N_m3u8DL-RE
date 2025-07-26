@@ -240,12 +240,9 @@ namespace N_m3u8DL_RE.CommandLine
                     return null;
                 }
 
-                if (File.Exists(input))
-                {
-                    return File.ReadAllBytes(input);
-                }
-
-                return HexUtil.TryParseHexString(input, out byte[]? bytes) ? bytes : Convert.FromBase64String(input);
+                return File.Exists(input)
+                    ? File.ReadAllBytes(input)
+                    : HexUtil.TryParseHexString(input, out byte[]? bytes) ? bytes : Convert.FromBase64String(input);
             }
             catch (Exception)
             {
