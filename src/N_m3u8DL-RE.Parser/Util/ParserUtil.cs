@@ -1,5 +1,6 @@
-﻿using N_m3u8DL_RE.Parser.Constants;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Parser.Constants;
 
 namespace N_m3u8DL_RE.Parser.Util;
 

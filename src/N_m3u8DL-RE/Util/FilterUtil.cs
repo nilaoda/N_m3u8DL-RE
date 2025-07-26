@@ -1,10 +1,12 @@
-﻿using N_m3u8DL_RE.Common.Entity;
+﻿using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
+
 using Spectre.Console;
-using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util;
 

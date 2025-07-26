@@ -17,9 +17,9 @@
 
 using System;
 using System.IO;
+using System.Runtime.CompilerServices; // For MethodImplOptions.AggressiveInlining
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices; // For MethodImplOptions.AggressiveInlining
 
 namespace CSChaCha20
 {

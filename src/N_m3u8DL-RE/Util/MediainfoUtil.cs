@@ -1,6 +1,7 @@
-﻿using N_m3u8DL_RE.Entity;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Entity;
 
 namespace N_m3u8DL_RE.Util;
 

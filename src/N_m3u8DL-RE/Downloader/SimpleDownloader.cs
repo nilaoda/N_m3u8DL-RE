@@ -5,6 +5,7 @@ using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Crypto;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
+
 using Spectre.Console;
 
 namespace N_m3u8DL_RE.Downloader;

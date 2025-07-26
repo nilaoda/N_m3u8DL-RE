@@ -1,5 +1,7 @@
 using System.Net;
+
 using N_m3u8DL_RE.Common.Log;
+
 using Spectre.Console;
 
 namespace N_m3u8DL_RE.Common.Util;

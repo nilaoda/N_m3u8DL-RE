@@ -1,0 +1,6 @@
+# .NET formatting rules
+[*.{cs,vb}]
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+dotnet_diagnostic.CA1707.severity = none

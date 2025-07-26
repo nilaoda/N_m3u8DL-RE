@@ -1,7 +1,8 @@
-﻿using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.JsonConverter;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.JsonConverter;
 
 namespace N_m3u8DL_RE.Common.Util;
 

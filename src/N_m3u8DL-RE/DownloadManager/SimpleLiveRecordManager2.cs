@@ -1,4 +1,10 @@
-﻿using Mp4SubtitleParser;
+﻿using System.Collections.Concurrent;
+using System.IO.Pipes;
+using System.Text;
+using System.Threading.Tasks.Dataflow;
+
+using Mp4SubtitleParser;
+
 using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
@@ -8,15 +14,12 @@ using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
+using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
+
 using Spectre.Console;
-using System.Collections.Concurrent;
-using System.IO.Pipes;
-using System.Text;
-using System.Threading.Tasks.Dataflow;
-using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.DownloadManager;
 

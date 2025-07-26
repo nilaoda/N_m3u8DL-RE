@@ -1,10 +1,3 @@
-using N_m3u8DL_RE.Common.Enum;
-using N_m3u8DL_RE.Common.Log;
-using N_m3u8DL_RE.Common.Resource;
-using N_m3u8DL_RE.Common.Util;
-using N_m3u8DL_RE.Entity;
-using N_m3u8DL_RE.Enum;
-using N_m3u8DL_RE.Util;
 using System.CommandLine;
 using System.CommandLine.Binding;
 using System.CommandLine.Builder;
@@ -12,6 +5,14 @@ using System.CommandLine.Parsing;
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Entity;
+using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Util;
 
 namespace N_m3u8DL_RE.CommandLine;
 

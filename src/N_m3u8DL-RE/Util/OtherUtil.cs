@@ -1,6 +1,7 @@
-﻿using N_m3u8DL_RE.Enum;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util;
 

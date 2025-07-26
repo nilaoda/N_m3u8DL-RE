@@ -1,8 +1,10 @@
-﻿using Mp4SubtitleParser;
+﻿using System.Text;
+using System.Text.RegularExpressions;
+
+using Mp4SubtitleParser;
+
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Util;
-using System.Text;
-using System.Text.RegularExpressions;
 
 // https://github.com/canalplus/rx-player/blob/48d1f845064cea5c5a3546d2c53b1855c2be149d/src/parsers/manifest/smooth/get_codecs.ts
 // https://github.dev/Dash-Industry-Forum/dash.js/blob/2aad3e79079b4de0bcd961ce6b4957103d98a621/src/mss/MssFragmentMoovProcessor.js

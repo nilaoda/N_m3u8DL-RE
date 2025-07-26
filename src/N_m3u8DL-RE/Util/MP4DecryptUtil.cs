@@ -1,8 +1,10 @@
-﻿using Mp4SubtitleParser;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
+
+using Mp4SubtitleParser;
+
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util;

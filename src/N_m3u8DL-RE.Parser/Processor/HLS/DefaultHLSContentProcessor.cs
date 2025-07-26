@@ -1,7 +1,8 @@
-﻿using N_m3u8DL_RE.Common.Enum;
+﻿using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
-using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Parser.Processor.HLS;
 

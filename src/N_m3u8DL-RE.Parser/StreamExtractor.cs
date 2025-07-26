@@ -1,12 +1,13 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using N_m3u8DL_RE.Parser.Config;
+
 using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Extractor;
-using N_m3u8DL_RE.Common.Util;
-using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Parser;
 

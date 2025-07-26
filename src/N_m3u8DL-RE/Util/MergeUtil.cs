@@ -1,9 +1,11 @@
-﻿using N_m3u8DL_RE.Common.Log;
-using N_m3u8DL_RE.Entity;
-using Spectre.Console;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
+
+using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
+
+using Spectre.Console;
 
 namespace N_m3u8DL_RE.Util;
 

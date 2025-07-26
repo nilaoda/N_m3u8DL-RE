@@ -1,6 +1,7 @@
-﻿using N_m3u8DL_RE.Common.Enum;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
+
+using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Entity;
 

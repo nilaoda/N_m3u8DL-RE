@@ -1,4 +1,7 @@
-﻿using N_m3u8DL_RE.Column;
+﻿using System.Collections.Concurrent;
+using System.Text;
+
+using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -8,9 +11,8 @@ using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Util;
+
 using Spectre.Console;
-using System.Collections.Concurrent;
-using System.Text;
 
 namespace N_m3u8DL_RE.DownloadManager;
 

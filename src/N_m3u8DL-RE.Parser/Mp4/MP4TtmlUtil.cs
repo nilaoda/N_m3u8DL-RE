@@ -1,7 +1,8 @@
-﻿using N_m3u8DL_RE.Common.Entity;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+
+using N_m3u8DL_RE.Common.Entity;
 
 namespace Mp4SubtitleParser;
 

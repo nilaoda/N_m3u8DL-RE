@@ -1,8 +1,10 @@
-﻿using N_m3u8DL_RE.Entity;
+﻿using System.Collections.Concurrent;
+
+using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Entity;
+
 using Spectre.Console;
 using Spectre.Console.Rendering;
-using System.Collections.Concurrent;
-using N_m3u8DL_RE.Common.Util;
 
 namespace N_m3u8DL_RE.Column;
 

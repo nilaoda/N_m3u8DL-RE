@@ -1,8 +1,9 @@
-﻿using N_m3u8DL_RE.Common.Log;
+﻿using System.Net.Http.Headers;
+
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
-using System.Net.Http.Headers;
 
 namespace N_m3u8DL_RE.Util;
 
