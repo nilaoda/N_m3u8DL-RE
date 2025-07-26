@@ -305,7 +305,7 @@ namespace N_m3u8DL_RE.CommandLine
         private static string? ParseFilePath(ArgumentResult result)
         {
             string input = result.Tokens[0].Value;
-            string path = "";
+            string path;
             try
             {
                 path = Path.GetFullPath(input);
@@ -339,7 +339,7 @@ namespace N_m3u8DL_RE.CommandLine
 
 
             // 目标范围
-            string forStr = "";
+            string forStr;
             if (input == ForStrRegex().Match(input).Value)
             {
                 forStr = input;

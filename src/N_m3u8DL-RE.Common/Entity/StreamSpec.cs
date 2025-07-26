@@ -66,10 +66,10 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string ToShortString()
         {
-            string prefixStr = "";
-            string returnStr = "";
             string encStr = string.Empty;
 
+            string prefixStr;
+            string returnStr;
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
@@ -100,10 +100,10 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string ToShortShortString()
         {
-            string prefixStr = "";
-            string returnStr = "";
             string encStr = string.Empty;
 
+            string prefixStr;
+            string returnStr;
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";

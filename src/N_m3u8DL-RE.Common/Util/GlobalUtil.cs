@@ -48,8 +48,7 @@ namespace N_m3u8DL_RE.Common.Util
         public static string FormatTime(int time)
         {
             TimeSpan ts = new(0, 0, time);
-            string str = "";
-            str = (ts.Hours.ToString("00") == "00" ? "" : ts.Hours.ToString("00") + "h") + ts.Minutes.ToString("00") + "m" + ts.Seconds.ToString("00") + "s";
+            string str = (ts.Hours.ToString("00") == "00" ? "" : ts.Hours.ToString("00") + "h") + ts.Minutes.ToString("00") + "m" + ts.Seconds.ToString("00") + "s";
             return str;
         }
 

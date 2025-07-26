@@ -24,8 +24,9 @@ namespace N_m3u8DL_RE.Parser.Util
                 return line[(line.IndexOf(':') + 1)..];
             }
 
-            int index = -1;
             string result = string.Empty;
+
+            int index;
             if ((index = line.IndexOf(key + "=\"", StringComparison.Ordinal)) > -1)
             {
                 int startIndex = index + (key + "=\"").Length;
