@@ -204,7 +204,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return stream.ToArray();
         }
 
-        private byte[] FullBox(string boxType, byte version, uint flags, byte[] payload)
+        private static byte[] FullBox(string boxType, byte version, uint flags, byte[] payload)
         {
             using MemoryStream stream = new();
             using BinaryWriter2 writer = new(stream);
@@ -254,7 +254,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return sinfBox;
         }
 
-        private byte[] GenFtyp()
+        private static byte[] GenFtyp()
         {
             using MemoryStream stream = new();
             using BinaryWriter2 writer = new(stream);
