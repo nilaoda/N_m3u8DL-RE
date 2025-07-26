@@ -631,7 +631,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetHvcC(byte[] sps, byte[] pps, byte[] vps, string code = "hvc1")
         {
-            List<byte> oriSps = new(sps);
+            List<byte> oriSps = [.. sps];
             // https://www.itu.int/rec/dologin.asp?lang=f&id=T-REC-H.265-201504-S!!PDF-E&type=items
             // Read generalProfileSpace, generalTierFlag, generalProfileIdc,
             // generalProfileCompatibilityFlags, constraintBytes, generalLevelIdc

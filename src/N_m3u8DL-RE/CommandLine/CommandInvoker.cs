@@ -694,7 +694,7 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            List<string> argList = new(args);
+            List<string> argList = [.. args];
             int index = -1;
             if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)
             {

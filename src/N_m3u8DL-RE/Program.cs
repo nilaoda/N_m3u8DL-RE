@@ -44,7 +44,7 @@ else if (currLoc.StartsWith("zh-"))
 
 // 处理用户-h等请求
 int index = -1;
-List<string> list = new(args);
+List<string> list = [.. args];
 if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
 {
     loc = list[index + 1];
