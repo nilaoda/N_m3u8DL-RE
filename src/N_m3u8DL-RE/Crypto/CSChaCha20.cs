@@ -400,22 +400,22 @@ namespace N_m3u8DL_RE.Crypto
 
             if (input == null)
             {
-                throw new ArgumentNullException("input", "Input cannot be null");
+                throw new ArgumentNullException(nameof(input), "Input cannot be null");
             }
 
             if (output == null)
             {
-                throw new ArgumentNullException("output", "Output cannot be null");
+                throw new ArgumentNullException(nameof(output), "Output cannot be null");
             }
 
             if (numBytes < 0 || numBytes > input.Length)
             {
-                throw new ArgumentOutOfRangeException("numBytes", "The number of bytes to read must be between [0..input.Length]");
+                throw new ArgumentOutOfRangeException(nameof(numBytes), "The number of bytes to read must be between [0..input.Length]");
             }
 
             if (output.Length < numBytes)
             {
-                throw new ArgumentOutOfRangeException("output", $"Output byte array should be able to take at least {numBytes}");
+                throw new ArgumentOutOfRangeException(nameof(output), $"Output byte array should be able to take at least {numBytes}");
             }
 
             uint[] x = new uint[stateLength];    // Working buffer
