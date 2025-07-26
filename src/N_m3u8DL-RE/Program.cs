@@ -198,12 +198,7 @@ namespace N_m3u8DL_RE
                         }
                     case DecryptEngine.MP4DECRYPT:
                         {
-                            string? file = GlobalUtil.FindExecutable("mp4decrypt");
-                            if (file == null)
-                            {
-                                throw new FileNotFoundException(ResString.mp4decryptNotFound);
-                            }
-
+                            string? file = GlobalUtil.FindExecutable("mp4decrypt") ?? throw new FileNotFoundException(ResString.mp4decryptNotFound);
                             option.DecryptionBinaryPath = file;
                             Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
                             break;
