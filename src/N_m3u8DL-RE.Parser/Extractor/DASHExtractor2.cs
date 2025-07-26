@@ -299,7 +299,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 }
                             }
                             // 处理分片
-                            List<XElement> segmentURLs = segmentList.Elements().Where(e => e.Name.LocalName == "SegmentURL").ToList();
+                            List<XElement> segmentURLs = [.. segmentList.Elements().Where(e => e.Name.LocalName == "SegmentURL")];
                             string timescaleStr = segmentList.Attribute("timescale")?.Value ?? "1";
                             for (int segmentIndex = 0; segmentIndex < segmentURLs.Count; segmentIndex++)
                             {
@@ -545,8 +545,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
 
             // 为视频设置默认轨道
-            List<StreamSpec> aL = streamList.Where(s => s.MediaType == MediaType.AUDIO).ToList();
-            List<StreamSpec> sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
+            List<StreamSpec> aL = [.. streamList.Where(s => s.MediaType == MediaType.AUDIO)];
+            List<StreamSpec> sL = [.. streamList.Where(s => s.MediaType == MediaType.SUBTITLES)];
             foreach (StreamSpec? item in streamList.Where(item => !string.IsNullOrEmpty(item.Resolution)))
             {
                 if (aL.Count != 0)

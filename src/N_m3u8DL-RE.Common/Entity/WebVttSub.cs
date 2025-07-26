@@ -86,7 +86,7 @@ namespace N_m3u8DL_RE.Common.Entity
                         continue; // 没获取到payload 跳过添加
                     }
 
-                    List<string> arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                    List<string> arr = [.. SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s))];
                     TimeSpan startTime = ConvertToTS(arr[0]);
                     TimeSpan endTime = ConvertToTS(arr[1]);
                     string style = arr.Count > 2 ? string.Join(" ", arr.Skip(2)) : "";
@@ -215,7 +215,7 @@ namespace N_m3u8DL_RE.Common.Entity
                 time += Convert.ToInt32(parts.Last().PadRight(3, '0'));
                 str = parts.First();
             }
-            List<string> t = str.Split(':').Reverse().ToList();
+            List<string> t = [.. str.Split(':').Reverse()];
             for (int i = 0; i < t.Count; i++)
             {
                 time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;

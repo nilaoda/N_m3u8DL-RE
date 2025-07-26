@@ -378,7 +378,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("vtt"))
                 {
                     // 排序字幕并修正时间戳
-                    List<MediaSegment> keys = FileDic.Keys.OrderBy(k => k.Index).ToList();
+                    List<MediaSegment> keys = [.. FileDic.Keys.OrderBy(k => k.Index)];
                     foreach (MediaSegment? seg in keys)
                     {
                         string vttContent = await File.ReadAllTextAsync(FileDic[seg]!.ActualFilePath);
@@ -411,7 +411,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     (bool sawVtt, uint timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                     if (sawVtt)
                     {
-                        string[] mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
+                        string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s"))];
                         if (firstSub)
                         {
                             currentVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
@@ -428,7 +428,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // 自动修复TTML raw字幕
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: Common.Enum.MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
                 {
-                    List<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key).ToList();
+                    List<MediaSegment> keys = [.. FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key)];
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
@@ -580,7 +580,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             PipeSteamNamesDic[task.Id] = pipeName;
                             if (PipeSteamNamesDic.Count == SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES))
                             {
-                                string[] names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
+                                string[] names = [.. PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value)];
                                 Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
                                 Task<bool> t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, names, output);
                             }
@@ -596,7 +596,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (streamSpec.MediaType != MediaType.SUBTITLES)
                     {
                         DownloadResult? initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
-                        string[] files = FileDic.Where(f => f.Key != streamSpec.Playlist!.MediaInit).OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath).ToArray();
+                        string[] files = [.. FileDic.Where(f => f.Key != streamSpec.Playlist!.MediaInit).OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath)];
                         if (initResult != null && mp4InitFile != "")
                         {
                             // shaka/ffmpeg实时解密不需要init文件用于合并，mp4decrpyt需要
@@ -628,7 +628,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     else
                     {
                         DownloadResult? initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
-                        string[] files = FileDic.OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath).ToArray();
+                        string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath)];
                         foreach (string? inputFilePath in files)
                         {
                             if (!DownloaderConfig.MyOptions.LiveKeepSegments && !Path.GetFileName(inputFilePath).StartsWith("_init"))
@@ -806,7 +806,7 @@ namespace N_m3u8DL_RE.DownloadManager
             if (index > -1)
             {
                 // 修正Index
-                List<MediaSegment> list = streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1).ToList();
+                List<MediaSegment> list = [.. streamSpec.Playlist!.MediaParts[0].MediaSegments.Skip(index + 1)];
                 if (list.Count > 0)
                 {
                     long newMin = list.Min(s => s.Index);

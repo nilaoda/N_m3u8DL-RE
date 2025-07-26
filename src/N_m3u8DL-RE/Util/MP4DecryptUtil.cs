@@ -19,7 +19,7 @@ namespace N_m3u8DL_RE.Util
                 return false;
             }
 
-            List<string> keyPairs = keys.ToList();
+            List<string> keyPairs = [.. keys];
             string? keyPair = null;
             string? trackId = null;
             string? tmpEncFile = null;
@@ -33,7 +33,7 @@ namespace N_m3u8DL_RE.Util
 
             if (!string.IsNullOrEmpty(kid))
             {
-                List<string> test = keyPairs.Where(k => k.StartsWith(kid)).ToList();
+                List<string> test = [.. keyPairs.Where(k => k.StartsWith(kid))];
                 if (test.Count != 0)
                 {
                     keyPair = test.First();

@@ -570,7 +570,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             newStreams = [.. newStreams.DistinctBy(p => p.Url)];
             foreach (StreamSpec l in lists)
             {
-                List<StreamSpec> match = newStreams.Where(n => n.ToShortString() == l.ToShortString()).ToList();
+                List<StreamSpec> match = [.. newStreams.Where(n => n.ToShortString() == l.ToShortString())];
                 if (match.Count == 0)
                 {
                     continue;

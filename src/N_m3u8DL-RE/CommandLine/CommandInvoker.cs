@@ -474,7 +474,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static Dictionary<string, string> ParseHeaders(ArgumentResult result)
         {
-            string[] array = result.Tokens.Select(t => t.Value).ToArray();
+            string[] array = [.. result.Tokens.Select(t => t.Value)];
             return OtherUtil.SplitHeaderArrayToDic(array);
         }
 

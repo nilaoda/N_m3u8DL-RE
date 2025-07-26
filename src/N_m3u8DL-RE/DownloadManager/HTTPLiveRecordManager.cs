@@ -125,7 +125,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     return BitConverter.ToUInt16(bytes.ToArray());
                 }
 
-                byte[] data = InfoBuffer.ToArray();
+                byte[] data = [.. InfoBuffer];
                 string programId = "";
                 string serviceProvider = "";
                 string serviceName = "";

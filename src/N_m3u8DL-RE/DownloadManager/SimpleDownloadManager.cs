@@ -408,7 +408,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
                 }
                 // 写出字幕
-                string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
+                string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
                 foreach (string? item in files)
                 {
                     File.Delete(item);
@@ -444,11 +444,11 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (sawVtt)
                 {
                     Logger.WarnMarkUp(ResString.fixingVTTmp4);
-                    string[] mp4s = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s")).ToArray();
+                    string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s"))];
                     WebVttSub finalVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
                     // 写出字幕
                     MediaSegment firstKey = FileDic.Keys.First();
-                    string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
+                    string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
                     foreach (string? item in files)
                     {
                         File.Delete(item);
@@ -498,7 +498,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
                 // 写出字幕
                 MediaSegment firstKey = FileDic.Keys.First();
-                string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
+                string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
 
                 // 处理图形字幕
                 await SubtitleUtil.TryWriteImagePngsAsync(finalVtt, tmpDir);
@@ -561,7 +561,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 // 写出字幕
                 MediaSegment firstKey = FileDic.Keys.First();
-                string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
+                string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
 
                 // 处理图形字幕
                 await SubtitleUtil.TryWriteImagePngsAsync(finalVtt, tmpDir);
@@ -603,14 +603,14 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.BinaryMerge || streamSpec.MediaType == MediaType.SUBTITLES)
                 {
                     Logger.InfoMarkUp(ResString.binaryMerge);
-                    string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
+                    string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
                     MergeUtil.CombineMultipleFilesIntoSingleFile(files, output);
                     mergeSuccess = true;
                 }
                 else
                 {
                     // ffmpeg合并
-                    string[] files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
+                    string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath)];
                     Logger.InfoMarkUp(ResString.ffmpegMerge);
                     string ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
                     string ffOut = Path.Combine(Path.GetDirectoryName(output)!, Path.GetFileNameWithoutExtension(output) + $".{ext}");

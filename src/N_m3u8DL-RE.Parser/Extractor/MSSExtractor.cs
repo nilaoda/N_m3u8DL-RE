@@ -254,8 +254,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
 
             // 为视频设置默认轨道
-            List<StreamSpec> aL = streamList.Where(s => s.MediaType == MediaType.AUDIO).ToList();
-            List<StreamSpec> sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
+            List<StreamSpec> aL = [.. streamList.Where(s => s.MediaType == MediaType.AUDIO)];
+            List<StreamSpec> sL = [.. streamList.Where(s => s.MediaType == MediaType.SUBTITLES)];
             foreach (StreamSpec? item in streamList.Where(item => !string.IsNullOrEmpty(item.Resolution)))
             {
                 if (aL.Count != 0)

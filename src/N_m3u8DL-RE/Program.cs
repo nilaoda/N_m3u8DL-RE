@@ -275,13 +275,13 @@ namespace N_m3u8DL_RE
 
 
             // 全部媒体
-            List<StreamSpec> lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder).ToList();
+            List<StreamSpec> lists = [.. streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder)];
             // 基本流
-            List<StreamSpec> basicStreams = lists.Where(x => x.MediaType is null or MediaType.VIDEO).ToList();
+            List<StreamSpec> basicStreams = [.. lists.Where(x => x.MediaType is null or MediaType.VIDEO)];
             // 可选音频轨道
-            List<StreamSpec> audios = lists.Where(x => x.MediaType == MediaType.AUDIO).ToList();
+            List<StreamSpec> audios = [.. lists.Where(x => x.MediaType == MediaType.AUDIO)];
             // 可选字幕轨道
-            List<StreamSpec> subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
+            List<StreamSpec> subs = [.. lists.Where(x => x.MediaType == MediaType.SUBTITLES)];
 
             // 尝试从URL或文件读取文件名
             if (string.IsNullOrEmpty(option.SaveName))

@@ -846,7 +846,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
             byte[] hdlrPayload = GenHdlr(); // Handler Reference Box
 
-            byte[] mdiaPayload = mdhdPayload.Concat(hdlrPayload).ToArray();
+            byte[] mdiaPayload = [.. mdhdPayload, .. hdlrPayload];
 
             byte[] minfPayload = GenMinf();
 

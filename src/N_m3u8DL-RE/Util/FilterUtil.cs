@@ -140,18 +140,18 @@ namespace N_m3u8DL_RE.Util
 
         public static List<StreamSpec> SelectStreams(IEnumerable<StreamSpec> lists)
         {
-            List<StreamSpec> streamSpecs = lists.ToList();
+            List<StreamSpec> streamSpecs = [.. lists];
             if (streamSpecs.Count == 1)
             {
                 return [.. streamSpecs];
             }
 
             // 基本流
-            List<StreamSpec> basicStreams = streamSpecs.Where(x => x.MediaType == null).ToList();
+            List<StreamSpec> basicStreams = [.. streamSpecs.Where(x => x.MediaType == null)];
             // 可选音频轨道
-            List<StreamSpec> audios = streamSpecs.Where(x => x.MediaType == MediaType.AUDIO).ToList();
+            List<StreamSpec> audios = [.. streamSpecs.Where(x => x.MediaType == MediaType.AUDIO)];
             // 可选字幕轨道
-            List<StreamSpec> subs = streamSpecs.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
+            List<StreamSpec> subs = [.. streamSpecs.Where(x => x.MediaType == MediaType.SUBTITLES)];
 
             MultiSelectionPrompt<StreamSpec> prompt = new MultiSelectionPrompt<StreamSpec>()
                     .Title(ResString.promptTitle)
@@ -326,7 +326,7 @@ namespace N_m3u8DL_RE.Util
                 return;
             }
 
-            List<Regex> regList = keywords.Select(s => new Regex(s)).ToList();
+            List<Regex> regList = [.. keywords.Select(s => new Regex(s))];
             foreach (Regex? reg in regList)
             {
                 Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
