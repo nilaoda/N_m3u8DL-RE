@@ -47,7 +47,7 @@ namespace N_m3u8DL_RE.Common.Entity
         {
             if (!text.Trim().StartsWith("WEBVTT"))
             {
-                throw new Exception("Bad vtt!");
+                throw new FormatException("Bad vtt!");
             }
 
             text += Environment.NewLine;
