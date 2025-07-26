@@ -25,7 +25,7 @@ namespace N_m3u8DL_RE.DownloadManager
 {
     internal sealed class SimpleLiveRecordManager2
     {
-        private readonly IDownloader Downloader;
+        private readonly SimpleDownloader Downloader;
         private readonly DownloaderConfig DownloaderConfig;
         private readonly StreamExtractor StreamExtractor;
         private readonly List<StreamSpec> SelectedSteams;
