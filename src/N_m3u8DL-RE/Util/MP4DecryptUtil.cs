@@ -182,8 +182,8 @@ namespace N_m3u8DL_RE.Util
                 }
 
                 Logger.InfoMarkUp(ResString.searchKey);
-                using FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using StreamReader reader = new StreamReader(stream);
+                using FileStream stream = new(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using StreamReader reader = new(stream);
                 while (await reader.ReadLineAsync() is { } line)
                 {
                     if (!line.Trim().StartsWith(kid))
@@ -241,7 +241,7 @@ namespace N_m3u8DL_RE.Util
             string cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
                       $"--keys key_id={ZeroKid}:key={ZeroKid}";
 
-            using Process p = new Process();
+            using Process p = new();
             p.StartInfo = new ProcessStartInfo()
             {
                 FileName = bin,

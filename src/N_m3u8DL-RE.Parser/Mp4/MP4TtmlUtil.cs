@@ -75,7 +75,7 @@ namespace Mp4SubtitleParser
                 return xmlSrc;
             }
 
-            XmlDocument xmlDoc = new XmlDocument();
+            XmlDocument xmlDoc = new();
             XmlNamespaceManager? nsMgr = null;
             xmlDoc.LoadXml(xmlSrc);
             XmlNode? ttNode = xmlDoc.LastChild;
@@ -121,7 +121,7 @@ namespace Mp4SubtitleParser
 
         private static string GetTextFromElement(XmlElement node)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             foreach (XmlNode item in node.ChildNodes)
             {
                 if (item.NodeType == XmlNodeType.Text)
@@ -207,8 +207,8 @@ namespace Mp4SubtitleParser
         private static WebVttSub ExtractSub(List<string> xmls, long baseTimestamp)
         {
             // parsing
-            XmlDocument xmlDoc = new XmlDocument();
-            List<SubEntity> finalSubs = new List<SubEntity>();
+            XmlDocument xmlDoc = new();
+            List<SubEntity> finalSubs = new();
             XmlNode? headNode = null;
             XmlNamespaceManager? nsMgr = null;
             Regex regex = LabelFixRegex();
@@ -269,7 +269,7 @@ namespace Mp4SubtitleParser
 
 
                 // PNG Subs
-                Dictionary<string, string> imageDic = new Dictionary<string, string>(); // id, Base64
+                Dictionary<string, string> imageDic = new(); // id, Base64
                 if (ImageRegex().IsMatch(xmlDoc.InnerXml))
                 {
                     foreach (Match img in ImageRegex().Matches(xmlDoc.InnerXml))
@@ -312,7 +312,7 @@ namespace Mp4SubtitleParser
                             _region = attr.Value;
                         }
                     }
-                    SubEntity sub = new SubEntity
+                    SubEntity sub = new()
                     {
                         Begin = _begin,
                         End = _end,
@@ -377,7 +377,7 @@ namespace Mp4SubtitleParser
             }
 
 
-            Dictionary<string, string> dic = new Dictionary<string, string>();
+            Dictionary<string, string> dic = new();
             foreach (SubEntity sub in finalSubs)
             {
                 string key = $"{sub.Begin} --> {sub.End}";
@@ -409,7 +409,7 @@ namespace Mp4SubtitleParser
             }
 
 
-            StringBuilder vtt = new StringBuilder();
+            StringBuilder vtt = new();
             vtt.AppendLine("WEBVTT");
             foreach (KeyValuePair<string, string> item in dic)
             {

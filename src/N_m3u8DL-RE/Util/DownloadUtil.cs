@@ -13,8 +13,8 @@ namespace N_m3u8DL_RE.Util
 
         private static async Task<DownloadResult> CopyFileAsync(string sourceFile, string path, SpeedContainer speedContainer, long? fromPosition = null, long? toPosition = null)
         {
-            using FileStream inputStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using FileStream outputStream = new FileStream(path, FileMode.OpenOrCreate);
+            using FileStream inputStream = new(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using FileStream outputStream = new(path, FileMode.OpenOrCreate);
             inputStream.Seek(fromPosition ?? 0L, SeekOrigin.Begin);
             long expect = (toPosition ?? inputStream.Length) - inputStream.Position + 1;
             if (expect == inputStream.Length + 1)
@@ -64,7 +64,7 @@ namespace N_m3u8DL_RE.Util
                     ActualFilePath = path,
                 };
             }
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+            using HttpRequestMessage request = new(HttpMethod.Get, new Uri(url));
             if (fromPosition != null || toPosition != null)
             {
                 request.Headers.Range = new(fromPosition, toPosition);
@@ -90,8 +90,8 @@ namespace N_m3u8DL_RE.Util
                         string redirectedUrl = "";
                         if (!respHeaders.Location.IsAbsoluteUri)
                         {
-                            Uri uri1 = new Uri(url);
-                            Uri uri2 = new Uri(uri1, respHeaders.Location);
+                            Uri uri1 = new(url);
+                            Uri uri2 = new(uri1, respHeaders.Location);
                             redirectedUrl = uri2.ToString();
                         }
                         else
@@ -108,7 +108,7 @@ namespace N_m3u8DL_RE.Util
                     speedContainer.ResponseLength = contentLength;
                 }
 
-                using FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                using FileStream stream = new(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 using Stream responseStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token);
                 byte[] buffer = new byte[16 * 1024];
                 int size = 0;

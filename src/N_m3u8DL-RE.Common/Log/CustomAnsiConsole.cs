@@ -58,7 +58,7 @@ namespace N_m3u8DL_RE.Common.Log
         {
             if (forceAnsi)
             {
-                AnsiConsoleSettings ansiConsoleSettings = new AnsiConsoleSettings();
+                AnsiConsoleSettings ansiConsoleSettings = new();
                 if (noAnsiColor)
                 {
                     ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
@@ -71,7 +71,7 @@ namespace N_m3u8DL_RE.Common.Log
             }
             else
             {
-                AnsiConsoleSettings ansiConsoleSettings = new AnsiConsoleSettings();
+                AnsiConsoleSettings ansiConsoleSettings = new();
                 if (noAnsiColor)
                 {
                     ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());

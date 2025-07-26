@@ -39,7 +39,7 @@ namespace N_m3u8DL_RE.Util
             }
 
             List<Clip> allClips = GetAllClips(url, fileSize);
-            List<MediaSegment> splitSegments = new List<MediaSegment>();
+            List<MediaSegment> splitSegments = new();
             foreach (Clip clip in allClips)
             {
                 splitSegments.Add(new MediaSegment()
@@ -59,7 +59,7 @@ namespace N_m3u8DL_RE.Util
         {
             try
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
+                HttpRequestMessage request = new(HttpMethod.Head, url);
                 HttpResponseMessage response = (await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
                 bool supportsRangeRequests = response.Headers.Contains("Accept-Ranges");
 
@@ -74,7 +74,7 @@ namespace N_m3u8DL_RE.Util
 
         private static async Task<long> GetFileSizeAsync(string url, Dictionary<string, string> headers)
         {
-            using HttpRequestMessage httpRequestMessage = new HttpRequestMessage();
+            using HttpRequestMessage httpRequestMessage = new();
             httpRequestMessage.RequestUri = new(url);
             foreach (KeyValuePair<string, string> header in headers)
             {

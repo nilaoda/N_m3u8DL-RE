@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Parser
             Logger.Info(ResString.loadingUrl + url);
             if (url.StartsWith("file:"))
             {
-                Uri uri = new Uri(url);
+                Uri uri = new(url);
                 this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
                 parserConfig.OriginalUrl = parserConfig.Url = url;
             }

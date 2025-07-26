@@ -25,7 +25,7 @@ namespace N_m3u8DL_RE.Util
 
             if (files.Length == 1)
             {
-                FileInfo fi = new FileInfo(files[0]);
+                FileInfo fi = new(files[0]);
                 fi.CopyTo(outputFilePath, true);
                 return;
             }
@@ -53,7 +53,7 @@ namespace N_m3u8DL_RE.Util
         {
             Logger.DebugMarkUp($"{binary}: {command}");
 
-            using Process p = new Process();
+            using Process p = new();
             p.StartInfo = new ProcessStartInfo()
             {
                 WorkingDirectory = workingDirectory,
@@ -78,7 +78,7 @@ namespace N_m3u8DL_RE.Util
 
         public static string[] PartialCombineMultipleFiles(string[] files)
         {
-            List<string> newFiles = new List<string>();
+            List<string> newFiles = new();
             int div = files.Length <= 90000 ? 100 : 200;
 
             string outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
@@ -117,7 +117,7 @@ namespace N_m3u8DL_RE.Util
 
             string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
 
-            StringBuilder command = new StringBuilder("-loglevel warning -nostdin ");
+            StringBuilder command = new("-loglevel warning -nostdin ");
             string ddpAudio = string.Empty;
             string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
             ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
@@ -195,7 +195,7 @@ namespace N_m3u8DL_RE.Util
         {
             string ext = OtherUtil.GetMuxExtension(muxFormat);
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
+            StringBuilder command = new("-loglevel warning -nostdin -y -dn ");
 
             // INPUT
             foreach (OutputFile item in files)
@@ -295,7 +295,7 @@ namespace N_m3u8DL_RE.Util
 
         public static bool MuxInputsByMkvmerge(string binary, OutputFile[] files, string outputPath)
         {
-            StringBuilder command = new StringBuilder($"-q --output \"{outputPath}.mkv\" ");
+            StringBuilder command = new($"-q --output \"{outputPath}.mkv\" ");
 
             command.Append(" --no-chapters ");
 

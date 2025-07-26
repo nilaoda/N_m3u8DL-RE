@@ -30,7 +30,7 @@ namespace N_m3u8DL_RE.Util
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
         {
-            List<Mediainfo> result = new List<Mediainfo>();
+            List<Mediainfo> result = new();
 
             if (string.IsNullOrEmpty(file) || !File.Exists(file))
             {
@@ -51,7 +51,7 @@ namespace N_m3u8DL_RE.Util
 
             foreach (Match stream in TextRegex().Matches(output))
             {
-                Mediainfo info = new Mediainfo()
+                Mediainfo info = new()
                 {
                     Text = TypeRegex().Match(stream.Value).Groups[2].Value.TrimEnd(),
                     Id = IdRegex().Match(stream.Value).Groups[1].Value,

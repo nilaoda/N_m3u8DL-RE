@@ -28,7 +28,7 @@ namespace N_m3u8DL_RE.Entity
 
         public override string? ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             if (GroupIdReg != null)
             {

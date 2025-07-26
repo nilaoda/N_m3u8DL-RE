@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Common.Util
         private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
         {
             Logger.Debug(ResString.fetch + url);
-            using HttpRequestMessage webRequest = new HttpRequestMessage(HttpMethod.Get, url);
+            using HttpRequestMessage webRequest = new(HttpMethod.Get, url);
             webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
             webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
             webRequest.Headers.Connection.Clear();
@@ -49,8 +49,8 @@ namespace N_m3u8DL_RE.Common.Util
                     string redirectedUrl = "";
                     if (!respHeaders.Location.IsAbsoluteUri)
                     {
-                        Uri uri1 = new Uri(url);
-                        Uri uri2 = new Uri(uri1, respHeaders.Location);
+                        Uri uri1 = new(url);
+                        Uri uri2 = new(uri1, respHeaders.Location);
                         redirectedUrl = uri2.ToString();
                     }
                     else

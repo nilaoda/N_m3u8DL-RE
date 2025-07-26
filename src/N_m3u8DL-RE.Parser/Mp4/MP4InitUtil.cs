@@ -17,7 +17,7 @@ namespace Mp4SubtitleParser
 
         public static ParsedMP4Info ReadInit(byte[] data)
         {
-            ParsedMP4Info info = new ParsedMP4Info();
+            ParsedMP4Info info = new();
 
             // parse init
             new MP4Parser()

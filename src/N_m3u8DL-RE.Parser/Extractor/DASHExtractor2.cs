@@ -62,7 +62,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
         {
-            List<StreamSpec> streamList = new List<StreamSpec>();
+            List<StreamSpec> streamList = new();
 
             this.MpdContent = rawText;
             this.PreProcessContent();
@@ -334,7 +334,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             // 优先使用最近的元素
                             XElement segmentTemplate = (segmentTemplateElements.FirstOrDefault() ?? segmentTemplateElementsOuter.FirstOrDefault())!;
                             XElement segmentTemplateOuter = (segmentTemplateElementsOuter.FirstOrDefault() ?? segmentTemplateElements.FirstOrDefault())!;
-                            Dictionary<string, object?> varDic = new Dictionary<string, object?>
+                            Dictionary<string, object?> varDic = new()
                             {
                                 [DASHTags.TemplateRepresentationID] = streamSpec.GroupId,
                                 [DASHTags.TemplateBandwidth] = bandwidth?.Value

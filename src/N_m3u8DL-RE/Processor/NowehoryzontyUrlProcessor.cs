@@ -28,7 +28,7 @@ namespace N_m3u8DL_RE.Processor
                     Logger.WarnMarkUp($"[white on green]www.nowehoryzonty.pl[/] matched! waiting for calc...");
                     LOG = true;
                 }
-                Context context = new Context();
+                Context context = new();
                 context.Eval(JS);
                 Function = context.GetVariable("md5").As<Function>();
                 string argLine = parserConfig.UrlProcessorArgs![START.Length..];

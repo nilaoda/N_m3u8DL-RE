@@ -290,7 +290,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         // 修复MSS init
                         if (StreamExtractor.ExtractorType == ExtractorType.MSS)
                         {
-                            MSSMoovProcessor processor = new MSSMoovProcessor(streamSpec);
+                            MSSMoovProcessor processor = new(streamSpec);
                             byte[] header = processor.GenHeader(File.ReadAllBytes(result.ActualFilePath));
                             await File.WriteAllBytesAsync(FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath, header);
                             if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
@@ -344,7 +344,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 }
 
                 // 开始下载
-                ParallelOptions options = new ParallelOptions()
+                ParallelOptions options = new()
                 {
                     MaxDegreeOfParallelism = DownloaderConfig.MyOptions.ThreadCount
                 };
@@ -918,7 +918,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
                 }
                 // 录制直播时，用户选了几个流就并发录几个
-                ParallelOptions options = new ParallelOptions()
+                ParallelOptions options = new()
                 {
                     MaxDegreeOfParallelism = SelectedSteams.Count
                 };

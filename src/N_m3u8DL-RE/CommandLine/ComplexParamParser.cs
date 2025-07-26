@@ -22,7 +22,7 @@ namespace N_m3u8DL_RE.CommandLine
                 }
 
                 char[] chars = _arg[(index + key.Length + 1)..].ToCharArray();
-                StringBuilder result = new StringBuilder();
+                StringBuilder result = new();
                 char last = '\0';
                 for (int i = 0; i < chars.Length; i++)
                 {

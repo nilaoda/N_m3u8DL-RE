@@ -51,7 +51,7 @@ namespace N_m3u8DL_RE
 
             // 处理用户-h等请求
             int index = -1;
-            List<string> list = new List<string>(args);
+            List<string> list = new(args);
             if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
             {
                 loc = list[index + 1];
@@ -216,7 +216,7 @@ namespace N_m3u8DL_RE
             }
 
             // 默认的headers
-            Dictionary<string, string> headers = new Dictionary<string, string>()
+            Dictionary<string, string> headers = new()
             {
                 ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
             };
@@ -227,7 +227,7 @@ namespace N_m3u8DL_RE
                 Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
             }
 
-            ParserConfig parserConfig = new ParserConfig()
+            ParserConfig parserConfig = new()
             {
                 AppendUrlParams = option.AppendUrlParams,
                 UrlProcessorArgs = option.UrlProcessorArgs,
@@ -263,7 +263,7 @@ namespace N_m3u8DL_RE
             string url = option.Input;
 
             // 流提取器配置
-            StreamExtractor extractor = new StreamExtractor(parserConfig);
+            StreamExtractor extractor = new(parserConfig);
             // 从链接加载内容
             await RetryUtil.WebRequestRetryAsync(async () =>
             {
@@ -303,7 +303,7 @@ namespace N_m3u8DL_RE
                 Logger.InfoMarkUp(item.ToString());
             }
 
-            List<StreamSpec> selectedStreams = new List<StreamSpec>();
+            List<StreamSpec> selectedStreams = new();
             if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
             {
                 basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
@@ -440,7 +440,7 @@ namespace N_m3u8DL_RE
             }
 
             // 下载配置
-            DownloaderConfig downloadConfig = new DownloaderConfig()
+            DownloaderConfig downloadConfig = new()
             {
                 MyOptions = option,
                 DirPrefix = tmpDir,
@@ -451,18 +451,18 @@ namespace N_m3u8DL_RE
 
             if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
             {
-                HTTPLiveRecordManager sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
+                HTTPLiveRecordManager sldm = new(downloadConfig, selectedStreams, extractor);
                 result = await sldm.StartRecordAsync();
             }
             else if (!livingFlag)
             {
                 // 开始下载
-                SimpleDownloadManager sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
+                SimpleDownloadManager sdm = new(downloadConfig, selectedStreams, extractor);
                 result = await sdm.StartDownloadAsync();
             }
             else
             {
-                SimpleLiveRecordManager2 sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
+                SimpleLiveRecordManager2 sldm = new(downloadConfig, selectedStreams, extractor);
                 result = await sldm.StartRecordAsync();
             }
 
@@ -523,12 +523,12 @@ namespace N_m3u8DL_RE
         private static async Task<string> Get302Async(string url)
         {
             // this allows you to set the settings so that we can get the redirect url
-            HttpClientHandler handler = new HttpClientHandler
+            HttpClientHandler handler = new()
             {
                 AllowAutoRedirect = false
             };
             string redirectedUrl = "";
-            using HttpClient client = new HttpClient(handler);
+            using HttpClient client = new(handler);
             using HttpResponseMessage response = await client.GetAsync(url);
             using HttpContent content = response.Content;
             // ... Read the response to see if we have the redirected url

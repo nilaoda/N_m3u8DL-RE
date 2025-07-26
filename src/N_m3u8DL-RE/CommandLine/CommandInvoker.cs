@@ -214,8 +214,8 @@ namespace N_m3u8DL_RE.CommandLine
                     return null;
                 }
 
-                Uri uri = new Uri(input);
-                WebProxy proxy = new WebProxy(uri, true);
+                Uri uri = new(input);
+                WebProxy proxy = new(uri, true);
                 if (!string.IsNullOrEmpty(uri.UserInfo))
                 {
                     string[] infos = uri.UserInfo.Split(':');
@@ -346,9 +346,9 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static StreamFilter? ParseStreamFilter(ArgumentResult result)
         {
-            StreamFilter streamFilter = new StreamFilter();
+            StreamFilter streamFilter = new();
             string input = result.Tokens[0].Value;
-            ComplexParamParser p = new ComplexParamParser(input);
+            ComplexParamParser p = new(input);
 
 
             // 目标范围
@@ -485,11 +485,11 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static List<OutputFile> ParseImports(ArgumentResult result)
         {
-            List<OutputFile> imports = new List<OutputFile>();
+            List<OutputFile> imports = new();
 
             foreach (Token item in result.Tokens)
             {
-                ComplexParamParser p = new ComplexParamParser(item.Value);
+                ComplexParamParser p = new(item.Value);
                 string path = p.GetValue("path") ?? item.Value; // 若未获取到，直接整个字符串作为path
                 string? lang = p.GetValue("lang");
                 string? name = p.GetValue("name");
@@ -518,7 +518,7 @@ namespace N_m3u8DL_RE.CommandLine
         private static MuxOptions? ParseMuxAfterDone(ArgumentResult result)
         {
             string v = result.Tokens[0].Value;
-            ComplexParamParser p = new ComplexParamParser(v);
+            ComplexParamParser p = new(v);
             // 混流格式
             string format = p.GetValue("format") ?? v.Split(':')[0]; // 若未获取到，直接:前的字符串作为format解析
             bool parseResult = System.Enum.TryParse(format.ToUpperInvariant(), out MuxFormat muxFormat);
@@ -575,7 +575,7 @@ namespace N_m3u8DL_RE.CommandLine
         {
             protected override MyOption GetBoundValue(BindingContext bindingContext)
             {
-                MyOption option = new MyOption
+                MyOption option = new()
                 {
                     Input = bindingContext.ParseResult.GetValueForArgument(Input),
                     ForceAnsiConsole = bindingContext.ParseResult.GetValueForOption(ForceAnsiConsole),
@@ -694,7 +694,7 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            List<string> argList = new List<string>(args);
+            List<string> argList = new(args);
             int index = -1;
             if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)
             {
@@ -713,7 +713,7 @@ namespace N_m3u8DL_RE.CommandLine
                 Environment.Exit(0);
             }
 
-            RootCommand rootCommand = new RootCommand(VERSION_INFO)
+            RootCommand rootCommand = new(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,

@@ -130,7 +130,7 @@ namespace N_m3u8DL_RE.DownloadManager
             string mp4InitFile = "";
             string? currentKID = "";
             bool readInfo = false; // 是否读取过
-            ParsedMP4Info mp4Info = new ParsedMP4Info();
+            ParsedMP4Info mp4Info = new();
 
             // 用户自定义范围导致被跳过的时长 计算字幕偏移使用
             double skippedDur = streamSpec.SkippedDuration ?? 0d;
@@ -245,7 +245,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     // 修复MSS init
                     if (StreamExtractor.ExtractorType == ExtractorType.MSS)
                     {
-                        MSSMoovProcessor processor = new MSSMoovProcessor(streamSpec);
+                        MSSMoovProcessor processor = new(streamSpec);
                         byte[] header = processor.GenHeader(File.ReadAllBytes(result.ActualFilePath));
                         await File.WriteAllBytesAsync(FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath, header);
                         if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
@@ -298,7 +298,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 开始下载
-            ParallelOptions options = new ParallelOptions()
+            ParallelOptions options = new()
             {
                 MaxDegreeOfParallelism = DownloaderConfig.MyOptions.ThreadCount
             };
@@ -390,7 +390,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Logger.WarnMarkUp(ResString.fixingVTT);
                 // 排序字幕并修正时间戳
                 bool first = true;
-                WebVttSub finalVtt = new WebVttSub();
+                WebVttSub finalVtt = new();
                 IOrderedEnumerable<MediaSegment> keys = FileDic.Keys.OrderBy(k => k.Index);
                 foreach (MediaSegment? seg in keys)
                 {
@@ -480,7 +480,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 Logger.WarnMarkUp(ResString.fixingTTML);
                 bool first = true;
-                WebVttSub finalVtt = new WebVttSub();
+                WebVttSub finalVtt = new();
                 IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Key);
                 foreach (MediaSegment? seg in keys)
                 {
@@ -542,7 +542,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                 // var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
                 bool first = true;
-                WebVttSub finalVtt = new WebVttSub();
+                WebVttSub finalVtt = new();
                 IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
                 foreach (MediaSegment? seg in keys)
                 {

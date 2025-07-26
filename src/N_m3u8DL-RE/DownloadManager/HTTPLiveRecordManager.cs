@@ -30,7 +30,7 @@ namespace N_m3u8DL_RE.DownloadManager
         private ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长
         private ConcurrentDictionary<int, double> RecordingSizeDic = new(); // 已录制大小
         private CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
-        private List<byte> InfoBuffer = new List<byte>(188 * 5000); // 5000个分包中解析信息，没有就算了
+        private List<byte> InfoBuffer = new(188 * 5000); // 5000个分包中解析信息，没有就算了
 
         public HTTPLiveRecordManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {
@@ -60,7 +60,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 Directory.CreateDirectory(saveDir);
             }
 
-            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, new Uri(streamSpec.Url));
+            using HttpRequestMessage request = new(HttpMethod.Get, new Uri(streamSpec.Url));
             request.Headers.ConnectionClose = false;
             foreach (KeyValuePair<string, string> item in DownloaderConfig.Headers)
             {
@@ -72,7 +72,7 @@ namespace N_m3u8DL_RE.DownloadManager
             response.EnsureSuccessStatusCode();
 
             string output = Path.Combine(saveDir, saveName + ".ts");
-            using FileStream stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            using FileStream stream = new(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
             using Stream responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
             byte[] buffer = new byte[16 * 1024];
             int size = 0;
@@ -245,7 +245,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
                 }
                 // 录制直播时，用户选了几个流就并发录几个
-                ParallelOptions options = new ParallelOptions()
+                ParallelOptions options = new()
                 {
                     MaxDegreeOfParallelism = SelectedSteams.Count
                 };

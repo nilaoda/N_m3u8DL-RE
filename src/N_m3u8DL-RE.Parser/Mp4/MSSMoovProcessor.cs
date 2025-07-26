@@ -44,8 +44,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             get
             {
-                using MemoryStream stream = new MemoryStream();
-                using BinaryWriter2 writer = new BinaryWriter2(stream);
+                using MemoryStream stream = new();
+                using BinaryWriter2 writer = new(stream);
                 writer.WriteInt(0x10000);
                 writer.WriteInt(0);
                 writer.WriteInt(0);
@@ -187,8 +187,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] Box(string boxType, byte[] payload)
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteUInt(8 + (uint)payload.Length);
             writer.Write(boxType);
@@ -199,8 +199,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] FullBox(string boxType, byte version, uint flags, byte[] payload)
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.Write(version);
             writer.WriteUInt(flags, offset: 1);
@@ -213,17 +213,17 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             byte[] frmaBox = Box("frma", Encoding.ASCII.GetBytes(codec));
 
-            List<byte> sinfPayload = new List<byte>();
+            List<byte> sinfPayload = new();
             sinfPayload.AddRange(frmaBox);
 
-            List<byte> schmPayload = new List<byte>();
+            List<byte> schmPayload = new();
             schmPayload.AddRange(Encoding.ASCII.GetBytes("cenc")); // scheme_type 'cenc' => common encryption
             schmPayload.AddRange([0, 1, 0, 0]); // scheme_version Major version 1, Minor version 0
             byte[] schmBox = FullBox("schm", 0, 0, [.. schmPayload]);
 
             sinfPayload.AddRange(schmBox);
 
-            List<byte> tencPayload = new List<byte>();
+            List<byte> tencPayload = new();
             tencPayload.AddRange([0, 0]);
             tencPayload.Add(0x1); // default_IsProtected
             tencPayload.Add(0x8); // default_Per_Sample_IV_size
@@ -242,8 +242,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenFtyp()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.Write("isml"); // major brand
             writer.WriteUInt(1); // minor version
@@ -257,8 +257,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMvhd()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteULong(CreationTime); // creation_time
             writer.WriteULong(CreationTime); // modification_time
@@ -287,8 +287,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenTkhd()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteULong(CreationTime); // creation_time
             writer.WriteULong(CreationTime); // modification_time
@@ -313,8 +313,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMdhd()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteULong(CreationTime); // creation_time
             writer.WriteULong(CreationTime); // modification_time
@@ -328,8 +328,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenHdlr()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteUInt(0); // pre defined
             if (StreamType == "audio")
@@ -359,13 +359,13 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMinf()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
-            List<byte> minfPayload = new List<byte>();
+            List<byte> minfPayload = new();
             if (StreamType == "audio")
             {
-                List<byte> smhd = new List<byte>
+                List<byte> smhd = new()
                 {
                     0,
                     0, // balance
@@ -377,7 +377,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
             else if (StreamType == "video")
             {
-                List<byte> vmhd = new List<byte>
+                List<byte> vmhd = new()
                 {
                     0,
                     0, // graphics mode
@@ -400,7 +400,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 throw new NotSupportedException();
             }
 
-            List<byte> drefPayload = new List<byte>
+            List<byte> drefPayload = new()
             {
                 0,
                 0,
@@ -417,8 +417,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenEsds(byte[] audioSpecificConfig)
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             // ESDS length = esds box header length (= 12) +
             //               ES_Descriptor header length (= 5) +
@@ -463,8 +463,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetSampleEntryBox()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteByte(0); // reserved
             writer.WriteByte(0);
@@ -606,8 +606,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetAvcC(byte[] sps, byte[] pps)
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteByte(1); // configuration version
             writer.Write(sps[1..4]); // avc profile indication + profile compatibility + avc level indication
@@ -624,12 +624,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetHvcC(byte[] sps, byte[] pps, byte[] vps, string code = "hvc1")
         {
-            List<byte> oriSps = new List<byte>(sps);
+            List<byte> oriSps = new(sps);
             // https://www.itu.int/rec/dologin.asp?lang=f&id=T-REC-H.265-201504-S!!PDF-E&type=items
             // Read generalProfileSpace, generalTierFlag, generalProfileIdc,
             // generalProfileCompatibilityFlags, constraintBytes, generalLevelIdc
             // from sps
-            List<byte> encList = new List<byte>();
+            List<byte> encList = new();
             /**
              * 处理payload, 有00 00 03 0,1,2,3的情况 统一换成00 00 XX 即丢弃03
              * 注意：此处采用的逻辑是直接简单粗暴地判断列表末尾3字节，如果是0x000003就删掉最后的0x03，可能会导致以下情况
@@ -640,7 +640,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
              *   原始：42 01 01 01 60 00 00 03 00 90 00 00 03 00 00 03 00 96 a0 01 e0 20 06 61 65 95 9a 49 30 bf fc 0c 7c 0c 81 a8 08 08 08 20 00 00 03 00 20 00 00 03 03 01
              * 处理后：42 01 01 01 60 00 00 00 90 00 00 00 00 00 96 A0 01 E0 20 06 61 65 95 9A 49 30 BF FC 0C 7C 0C 81 A8 08 08 08 20 00 00 00 20 00 00 01
              */
-            using (BinaryReader _reader = new BinaryReader(new MemoryStream(sps)))
+            using (BinaryReader _reader = new(new MemoryStream(sps)))
             {
                 while (_reader.BaseStream.Position < _reader.BaseStream.Length)
                 {
@@ -653,7 +653,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
             sps = [.. encList];
 
-            using BinaryReader2 reader = new BinaryReader2(new MemoryStream(sps));
+            using BinaryReader2 reader = new(new MemoryStream(sps));
             reader.ReadBytes(2); // Skip 2 bytes unit header
             byte firstByte = reader.ReadByte();
             int maxSubLayersMinus1 = (firstByte & 0xe) >> 1;
@@ -694,8 +694,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
             ///////////////////////
 
 
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             // var reserved1 = 0xF;
 
@@ -732,8 +732,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetStsd()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteUInt(1); // entry count
             byte[] sampleEntryData = GetSampleEntryBox();
@@ -744,8 +744,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetMehd()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteULong(Duration);
 
@@ -753,8 +753,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
         }
         private byte[] GetTrex()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             writer.WriteUInt(TrackId); // track id
             writer.WriteUInt(1); // default sample description index
@@ -767,8 +767,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenPsshBoxForPlayReady()
         {
-            using MemoryStream _stream = new MemoryStream();
-            using BinaryWriter2 _writer = new BinaryWriter2(_stream);
+            using MemoryStream _stream = new();
+            using BinaryWriter2 _writer = new(_stream);
             byte[] sysIdData = HexUtil.HexToBytes(ProtectionSystemId.Replace("-", ""));
             byte[] psshData = HexUtil.HexToBytes(ProtectionData);
 
@@ -781,8 +781,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenPsshBoxForWideVine()
         {
-            using MemoryStream _stream = new MemoryStream();
-            using BinaryWriter2 _writer = new BinaryWriter2(_stream);
+            using MemoryStream _stream = new();
+            using BinaryWriter2 _writer = new(_stream);
             byte[] sysIdData = HexUtil.HexToBytes("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed".Replace("-", ""));
             // var kid = HexUtil.HexToBytes(ProtecitonKID);
 
@@ -796,8 +796,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMoof()
         {
-            using MemoryStream stream = new MemoryStream();
-            using BinaryWriter2 writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new();
+            using BinaryWriter2 writer = new(stream);
 
             // make senc
             writer.WriteUInt(1); // sample_count
@@ -826,7 +826,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         public byte[] GenHeader()
         {
-            using MemoryStream stream = new MemoryStream();
+            using MemoryStream stream = new();
 
             byte[] ftyp = GenFtyp(); // File Type Box
             stream.Write(ftyp);

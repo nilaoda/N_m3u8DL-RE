@@ -19,7 +19,7 @@ namespace N_m3u8DL_RE.Util
             }
 
             string path = Path.Combine(Path.GetTempPath(), pipeName);
-            using Process p = new Process();
+            using Process p = new();
             p.StartInfo = new ProcessStartInfo()
             {
                 FileName = "mkfifo",
@@ -47,7 +47,7 @@ namespace N_m3u8DL_RE.Util
         public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
         {
             string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
+            StringBuilder command = new("-y -fflags +genpts -loglevel quiet ");
 
             string customDest = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeOptions);
             string pipeDir = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeTmpDir, Path.GetTempPath());
@@ -98,7 +98,7 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" -f mpegts -shortest \"{outputPath}\"");
             }
 
-            using Process p = new Process();
+            using Process p = new();
             p.StartInfo = new ProcessStartInfo()
             {
                 WorkingDirectory = Environment.CurrentDirectory,

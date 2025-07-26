@@ -21,9 +21,9 @@ namespace N_m3u8DL_RE.Crypto
                 nonceBytes = [.. (new byte[4] { 0, 0, 0, 0 }), .. nonceBytes];
             }
 
-            MemoryStream decStream = new MemoryStream();
-            using BinaryReader reader = new BinaryReader(new MemoryStream(encryptedBuff));
-            using (BinaryWriter writer = new BinaryWriter(decStream))
+            MemoryStream decStream = new();
+            using BinaryReader reader = new(new MemoryStream(encryptedBuff));
+            using (BinaryWriter writer = new(decStream))
             {
                 while (true)
                 {
@@ -31,7 +31,7 @@ namespace N_m3u8DL_RE.Crypto
                     byte[] dec = new byte[buffer.Length];
                     if (buffer.Length > 0)
                     {
-                        ChaCha20 forDecrypting = new ChaCha20(keyBytes, nonceBytes, 0);
+                        ChaCha20 forDecrypting = new(keyBytes, nonceBytes, 0);
                         forDecrypting.DecryptBytes(dec, buffer);
                         writer.Write(dec, 0, dec.Length);
                     }

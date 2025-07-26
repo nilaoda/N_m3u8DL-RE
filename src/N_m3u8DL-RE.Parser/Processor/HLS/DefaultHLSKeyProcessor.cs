@@ -23,7 +23,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 
             Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
-            EncryptInfo encryptInfo = new EncryptInfo(method);
+            EncryptInfo encryptInfo = new(method);
 
             // IV
             if (!string.IsNullOrEmpty(iv))

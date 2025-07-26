@@ -87,7 +87,7 @@ namespace Mp4SubtitleParser
 
         public void Parse(byte[] data, bool partialOkay = false, bool stopOnPartial = false)
         {
-            BinaryReader2 reader = new BinaryReader2(new MemoryStream(data));
+            BinaryReader2 reader = new(new MemoryStream(data));
             this.Done = false;
             while (reader.HasMoreData() && !this.Done)
             {
@@ -162,7 +162,7 @@ namespace Mp4SubtitleParser
 
                 int payloadSize = (int)(end - reader.GetPosition());
                 byte[] payload = (payloadSize > 0) ? reader.ReadBytes(payloadSize) : [];
-                ParsedBox box = new ParsedBox()
+                ParsedBox box = new()
                 {
                     Parser = this,
                     PartialOkay = partialOkay || false,
@@ -294,7 +294,7 @@ namespace Mp4SubtitleParser
 
         public static TRUN ParseTRUN(BinaryReader2 reader, uint version, uint flags)
         {
-            TRUN trun = new TRUN();
+            TRUN trun = new();
             trun.SampleCount = reader.ReadUInt32();
 
             // Skip "data_offset" if present.
@@ -311,7 +311,7 @@ namespace Mp4SubtitleParser
 
             for (int i = 0; i < trun.SampleCount; i++)
             {
-                Sample sample = new Sample();
+                Sample sample = new();
 
                 // Read "sample duration" if present.
                 if ((flags & 0x000100) != 0)

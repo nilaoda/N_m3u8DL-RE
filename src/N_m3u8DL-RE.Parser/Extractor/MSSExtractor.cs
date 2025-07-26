@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
         {
-            List<StreamSpec> streamList = new List<StreamSpec>();
+            List<StreamSpec> streamList = new();
             this.IsmContent = rawText;
             this.PreProcessContent();
 
@@ -148,7 +148,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                     long currentTime = 0L;
                     int segIndex = 0;
-                    Dictionary<string, object?> varDic = new Dictionary<string, object?>
+                    Dictionary<string, object?> varDic = new()
                     {
                         [MSSTags.Bitrate] = bitrate
                     };
@@ -229,7 +229,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             ProtectionData = protectionData,
                             ProtectionSystemID = protectionSystemId,
                         };
-                        MSSMoovProcessor processor = new MSSMoovProcessor(streamSpec);
+                        MSSMoovProcessor processor = new(streamSpec);
                         byte[] header = processor.GenHeader(); // trackId可能不正确
                         streamSpec.Playlist!.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";
                         // 为音视频写入加密信息

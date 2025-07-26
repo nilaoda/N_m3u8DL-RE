@@ -17,10 +17,10 @@ namespace N_m3u8DL_RE.Parser.Processor
                 return oriUrl;
             }
 
-            Uri uriFromConfig = new Uri(paserConfig.Url);
+            Uri uriFromConfig = new(paserConfig.Url);
             System.Collections.Specialized.NameValueCollection uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
 
-            Uri oldUri = new Uri(oriUrl);
+            Uri oldUri = new(oriUrl);
             System.Collections.Specialized.NameValueCollection newQuery = HttpUtility.ParseQueryString(oldUri.Query);
             foreach (string? item in uriFromConfigQuery.AllKeys)
             {

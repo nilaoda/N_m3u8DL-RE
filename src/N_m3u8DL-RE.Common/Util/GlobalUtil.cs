@@ -15,7 +15,7 @@ namespace N_m3u8DL_RE.Common.Util
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters = { new JsonStringEnumConverter(), new BytesBase64Converter() }
         };
-        private static readonly JsonContext Context = new JsonContext(Options);
+        private static readonly JsonContext Context = new(Options);
 
         public static string ConvertToJson(object o)
         {
@@ -53,7 +53,7 @@ namespace N_m3u8DL_RE.Common.Util
         // 此函数用于格式化输出时长  
         public static string FormatTime(int time)
         {
-            TimeSpan ts = new TimeSpan(0, 0, time);
+            TimeSpan ts = new(0, 0, time);
             string str = "";
             str = (ts.Hours.ToString("00") == "00" ? "" : ts.Hours.ToString("00") + "h") + ts.Minutes.ToString("00") + "m" + ts.Seconds.ToString("00") + "s";
             return str;

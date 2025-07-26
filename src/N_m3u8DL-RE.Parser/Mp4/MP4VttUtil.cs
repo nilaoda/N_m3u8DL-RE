@@ -116,7 +116,7 @@ namespace Mp4SubtitleParser
                 }
 
                 ulong currentTime = baseTime;
-                BinaryReader2 reader = new BinaryReader2(new MemoryStream(rawPayload!));
+                BinaryReader2 reader = new(new MemoryStream(rawPayload!));
 
                 foreach (Sample presentation in presentations)
                 {

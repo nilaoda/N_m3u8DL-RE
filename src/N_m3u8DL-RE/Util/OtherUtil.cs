@@ -55,7 +55,7 @@ namespace N_m3u8DL_RE.Util
             }
             else
             {
-                Uri uri = new Uri(input.Split('?').First());
+                Uri uri = new(input.Split('?').First());
                 string name = Path.GetFileNameWithoutExtension(uri.LocalPath);
                 saveName = GetValidFileName(name) + "_" + saveName;
             }
@@ -173,7 +173,7 @@ namespace N_m3u8DL_RE.Util
                 await using (FileStream fileToDecompressAsStream = File.OpenRead(filePath))
                 {
                     await using FileStream decompressedStream = File.Create(deGzipFile);
-                    await using GZipStream decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
+                    await using GZipStream decompressionStream = new(fileToDecompressAsStream, CompressionMode.Decompress);
                     await decompressionStream.CopyToAsync(decompressedStream);
                 }
                 ;

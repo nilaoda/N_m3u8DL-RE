@@ -52,7 +52,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
             text += Environment.NewLine;
 
-            WebVttSub webSub = new WebVttSub();
+            WebVttSub webSub = new();
             bool needPayload = false;
             string timeLine = "";
             Regex regex1 = TSMapRegex();
@@ -63,7 +63,7 @@ namespace N_m3u8DL_RE.Common.Entity
                 webSub.MpegtsTimestamp = Convert.ToInt64(timestamp);
             }
 
-            List<string> payloads = new List<string>();
+            List<string> payloads = new();
             foreach (string line in text.Split('\n'))
             {
                 if (line.Contains(" --> "))
@@ -225,7 +225,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             foreach (SubCue c in GetCues())  // 输出时去除空串
             {
                 sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);
@@ -271,7 +271,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string ToSrt()
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             int index = 1;
             foreach (SubCue c in GetCues())
             {

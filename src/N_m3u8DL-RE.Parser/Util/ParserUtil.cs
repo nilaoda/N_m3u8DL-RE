@@ -114,8 +114,8 @@ namespace N_m3u8DL_RE.Parser.Util
                 return url;
             }
 
-            Uri uri1 = new Uri(baseurl);  // 这里直接传完整的URL即可
-            Uri uri2 = new Uri(uri1, url);
+            Uri uri1 = new(baseurl);  // 这里直接传完整的URL即可
+            Uri uri2 = new(uri1, url);
             url = uri2.ToString();
 
             return url;

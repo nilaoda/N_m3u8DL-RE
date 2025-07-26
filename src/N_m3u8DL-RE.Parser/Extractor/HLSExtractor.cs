@@ -74,7 +74,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
             List<StreamSpec> streams = [];
 
-            using StringReader sr = new StringReader(M3u8Content);
+            using StringReader sr = new(M3u8Content);
             string? line;
             bool expectPlaylist = false;
             StreamSpec streamSpec = new();
@@ -233,7 +233,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.allowHlsMultiExtMap}[/]");
             }
 
-            using StringReader sr = new StringReader(M3u8Content);
+            using StringReader sr = new(M3u8Content);
             string? line;
             bool expectSegment = false;
             bool isEndlist = false;
@@ -536,7 +536,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             // Logger.Info(ResString.loadingUrl + url);
             if (url.StartsWith("file:"))
             {
-                Uri uri = new Uri(url);
+                Uri uri = new(url);
                 this.M3u8Content = File.ReadAllText(uri.LocalPath);
             }
             else if (url.StartsWith("http"))
