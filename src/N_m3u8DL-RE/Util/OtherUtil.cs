@@ -14,7 +14,7 @@ namespace N_m3u8DL_RE.Util
 
             foreach (string header in headers)
             {
-                var index = header.IndexOf(':');
+                int index = header.IndexOf(':');
                 if (index != -1)
                 {
                     dic[header[..index].Trim().ToLower()] = header[(index + 1)..].Trim();
@@ -28,7 +28,7 @@ namespace N_m3u8DL_RE.Util
             .Split(',').Select(s => (char)int.Parse(s))];
         public static string GetValidFileName(string input, string re = "_", bool filterSlash = false)
         {
-            var title = InvalidChars.Aggregate(input, (current, invalidChar) => current.Replace(invalidChar.ToString(), re));
+            string title = InvalidChars.Aggregate(input, (current, invalidChar) => current.Replace(invalidChar.ToString(), re));
             if (filterSlash)
             {
                 title = title.Replace("/", re);
@@ -45,15 +45,15 @@ namespace N_m3u8DL_RE.Util
         /// <returns></returns>
         public static string GetFileNameFromInput(string input, bool addSuffix = true)
         {
-            var saveName = addSuffix ? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") : string.Empty;
+            string saveName = addSuffix ? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") : string.Empty;
             if (File.Exists(input))
             {
                 saveName = Path.GetFileNameWithoutExtension(input) + "_" + saveName;
             }
             else
             {
-                var uri = new Uri(input.Split('?').First());
-                var name = Path.GetFileNameWithoutExtension(uri.LocalPath);
+                Uri uri = new Uri(input.Split('?').First());
+                string name = Path.GetFileNameWithoutExtension(uri.LocalPath);
                 saveName = GetValidFileName(name) + "_" + saveName;
             }
             return saveName;
@@ -66,11 +66,11 @@ namespace N_m3u8DL_RE.Util
         /// <returns></returns>
         public static TimeSpan ParseDur(string timeStr)
         {
-            var arr = timeStr.Replace("：", ":").Split(':');
-            var days = -1;
-            var hours = -1;
-            var mins = -1;
-            var secs = -1;
+            string[] arr = timeStr.Replace("：", ":").Split(':');
+            int days = -1;
+            int hours = -1;
+            int mins = -1;
+            int secs = -1;
             arr.Reverse().Select(i => Convert.ToInt32(i)).ToList().ForEach(item =>
             {
                 if (secs == -1) secs = item;
@@ -95,9 +95,9 @@ namespace N_m3u8DL_RE.Util
         /// <exception cref="ArgumentException"></exception>
         public static double ParseSeconds(string timeStr)
         {
-            var pattern = TimeStrRegex();
+            Regex pattern = TimeStrRegex();
 
-            var match = pattern.Match(timeStr);
+            Match match = pattern.Match(timeStr);
 
             if (!match.Success)
             {
@@ -117,7 +117,7 @@ namespace N_m3u8DL_RE.Util
             if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))
                 return;
 
-            var parent = Path.GetDirectoryName(dirPath)!;
+            string parent = Path.GetDirectoryName(dirPath)!;
             if (!Directory.EnumerateFileSystemEntries(dirPath).Any())
             {
                 Directory.Delete(dirPath);
@@ -135,13 +135,13 @@ namespace N_m3u8DL_RE.Util
         /// <param name="filePath"></param>
         public static async Task DeGzipFileAsync(string filePath)
         {
-            var deGzipFile = Path.ChangeExtension(filePath, ".dezip_tmp");
+            string deGzipFile = Path.ChangeExtension(filePath, ".dezip_tmp");
             try
             {
-                await using (var fileToDecompressAsStream = File.OpenRead(filePath))
+                await using (FileStream fileToDecompressAsStream = File.OpenRead(filePath))
                 {
-                    await using var decompressedStream = File.Create(deGzipFile);
-                    await using var decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
+                    await using FileStream decompressedStream = File.Create(deGzipFile);
+                    await using GZipStream decompressionStream = new GZipStream(fileToDecompressAsStream, CompressionMode.Decompress);
                     await decompressionStream.CopyToAsync(decompressedStream);
                 }
                 ;

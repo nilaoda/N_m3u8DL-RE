@@ -34,18 +34,18 @@ namespace N_m3u8DL_RE.Common.Log
 
             try
             {
-                var logDir = Path.GetDirectoryName(LogFilePath) ?? (Path.GetDirectoryName(Environment.ProcessPath) + "/Logs");
+                string logDir = Path.GetDirectoryName(LogFilePath) ?? (Path.GetDirectoryName(Environment.ProcessPath) + "/Logs");
                 if (!Directory.Exists(logDir))
                 {
                     Directory.CreateDirectory(logDir);
                 }
 
-                var now = DateTime.Now;
+                DateTime now = DateTime.Now;
                 if (string.IsNullOrEmpty(LogFilePath))
                 {
                     LogFilePath = Path.Combine(logDir, now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".log");
                     int index = 1;
-                    var fileName = Path.GetFileNameWithoutExtension(LogFilePath);
+                    string fileName = Path.GetFileNameWithoutExtension(LogFilePath);
                     // 若文件存在则加序号
                     while (File.Exists(LogFilePath))
                     {
@@ -87,7 +87,7 @@ namespace N_m3u8DL_RE.Common.Log
 
                 if (!IsWriteFile || !File.Exists(LogFilePath)) return;
 
-                var plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
+                string plain = write.RemoveMarkup() + subWrite.RemoveMarkup();
                 try
                 {
                     // 进入写入
@@ -124,7 +124,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.INFO) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : ";
+            string write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : ";
             HandleLog(write, data);
         }
 
@@ -133,7 +133,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.INFO) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : " + data;
+            string write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : " + data;
             HandleLog(write);
         }
 
@@ -142,7 +142,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.DEBUG) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: ";
+            string write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: ";
             HandleLog(write, data);
         }
 
@@ -151,7 +151,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.DEBUG) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: " + data;
+            string write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: " + data;
             HandleLog(write);
         }
 
@@ -160,7 +160,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.WARN) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : ";
+            string write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : ";
             HandleLog(write, data);
         }
 
@@ -169,7 +169,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.WARN) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : " + data;
+            string write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : " + data;
             HandleLog(write);
         }
 
@@ -178,7 +178,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.ERROR) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: ";
+            string write = GetCurrTime() + " " + "[underline red1]ERROR[/]: ";
             HandleLog(write, data);
         }
 
@@ -187,7 +187,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (LogLevel < LogLevel.ERROR) return;
 
             data = ReplaceVars(data, ps);
-            var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: " + data;
+            string write = GetCurrTime() + " " + "[underline red1]ERROR[/]: " + data;
             HandleLog(write);
         }
 
@@ -212,7 +212,7 @@ namespace N_m3u8DL_RE.Common.Log
             if (!IsWriteFile || !File.Exists(LogFilePath)) return;
 
             data = ReplaceVars(data, ps);
-            var plain = GetCurrTime() + " " + "EXTRA: " + data.RemoveMarkup();
+            string plain = GetCurrTime() + " " + "EXTRA: " + data.RemoveMarkup();
             try
             {
                 // 进入写入

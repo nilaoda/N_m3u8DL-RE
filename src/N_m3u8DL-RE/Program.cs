@@ -27,7 +27,7 @@ namespace N_m3u8DL_RE
             // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
             if (OperatingSystem.IsWindows())
             {
-                var osVersion = Environment.OSVersion.Version;
+                Version osVersion = Environment.OSVersion.Version;
                 if (osVersion.Major < 6 || osVersion is { Major: 6, Minor: 0 })
                 {
                     Environment.SetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
@@ -44,8 +44,8 @@ namespace N_m3u8DL_RE
             else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
 
             // 处理用户-h等请求
-            var index = -1;
-            var list = new List<string>(args);
+            int index = -1;
+            List<string> list = new List<string>(args);
             if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
             {
                 loc = list[index + 1];
@@ -84,8 +84,8 @@ namespace N_m3u8DL_RE
         {
             if (streamSpec.Channels == null) return 0;
 
-            var str = streamSpec.Channels.Split('/')[0];
-            return int.TryParse(str, out var order) ? order : 0;
+            string str = streamSpec.Channels.Split('/')[0];
+            return int.TryParse(str, out int order) ? order : 0;
         }
 
         private static async Task DoWorkAsync(MyOption option)
@@ -170,10 +170,10 @@ namespace N_m3u8DL_RE
                 {
                     case DecryptEngine.SHAKA_PACKAGER:
                         {
-                            var file = GlobalUtil.FindExecutable("shaka-packager");
-                            var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
-                            var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
-                            var file4 = GlobalUtil.FindExecutable("packager-win-x64");
+                            string? file = GlobalUtil.FindExecutable("shaka-packager");
+                            string? file2 = GlobalUtil.FindExecutable("packager-linux-x64");
+                            string? file3 = GlobalUtil.FindExecutable("packager-osx-x64");
+                            string? file4 = GlobalUtil.FindExecutable("packager-win-x64");
                             if (file == null && file2 == null && file3 == null && file4 == null)
                                 throw new FileNotFoundException(ResString.shakaPackagerNotFound);
                             option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
@@ -182,7 +182,7 @@ namespace N_m3u8DL_RE
                         }
                     case DecryptEngine.MP4DECRYPT:
                         {
-                            var file = GlobalUtil.FindExecutable("mp4decrypt");
+                            string? file = GlobalUtil.FindExecutable("mp4decrypt");
                             if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
                             option.DecryptionBinaryPath = file;
                             Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
@@ -196,18 +196,18 @@ namespace N_m3u8DL_RE
             }
 
             // 默认的headers
-            var headers = new Dictionary<string, string>()
+            Dictionary<string, string> headers = new Dictionary<string, string>()
             {
                 ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
             };
             // 添加或替换用户输入的headers
-            foreach (var item in option.Headers)
+            foreach (KeyValuePair<string, string> item in option.Headers)
             {
                 headers[item.Key] = item.Value;
                 Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
             }
 
-            var parserConfig = new ParserConfig()
+            ParserConfig parserConfig = new ParserConfig()
             {
                 AppendUrlParams = option.AppendUrlParams,
                 UrlProcessorArgs = option.UrlProcessorArgs,
@@ -240,10 +240,10 @@ namespace N_m3u8DL_RE
                 }
             }
 
-            var url = option.Input;
+            string url = option.Input;
 
             // 流提取器配置
-            var extractor = new StreamExtractor(parserConfig);
+            StreamExtractor extractor = new StreamExtractor(parserConfig);
             // 从链接加载内容
             await RetryUtil.WebRequestRetryAsync(async () =>
             {
@@ -251,17 +251,17 @@ namespace N_m3u8DL_RE
                 return true;
             });
             // 解析流信息
-            var streams = await extractor.ExtractStreamsAsync();
+            List<StreamSpec> streams = await extractor.ExtractStreamsAsync();
 
 
             // 全部媒体
-            var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder).ToList();
+            List<StreamSpec> lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder).ToList();
             // 基本流
-            var basicStreams = lists.Where(x => x.MediaType is null or MediaType.VIDEO).ToList();
+            List<StreamSpec> basicStreams = lists.Where(x => x.MediaType is null or MediaType.VIDEO).ToList();
             // 可选音频轨道
-            var audios = lists.Where(x => x.MediaType == MediaType.AUDIO).ToList();
+            List<StreamSpec> audios = lists.Where(x => x.MediaType == MediaType.AUDIO).ToList();
             // 可选字幕轨道
-            var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
+            List<StreamSpec> subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
 
             // 尝试从URL或文件读取文件名
             if (string.IsNullOrEmpty(option.SaveName))
@@ -270,7 +270,7 @@ namespace N_m3u8DL_RE
             }
 
             // 生成文件夹
-            var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+            string tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
             // 记录文件
             extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
             // 写出文件
@@ -278,12 +278,12 @@ namespace N_m3u8DL_RE
 
             Logger.Info(ResString.streamsInfo, lists.Count, basicStreams.Count, audios.Count, subs.Count);
 
-            foreach (var item in lists)
+            foreach (StreamSpec? item in lists)
             {
                 Logger.InfoMarkUp(item.ToString());
             }
 
-            var selectedStreams = new List<StreamSpec>();
+            List<StreamSpec> selectedStreams = new List<StreamSpec>();
             if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
             {
                 basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
@@ -303,8 +303,8 @@ namespace N_m3u8DL_RE
             {
                 if (basicStreams.Count != 0)
                     selectedStreams.Add(basicStreams.First());
-                var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
-                foreach (var lang in langs)
+                IEnumerable<string?> langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
+                foreach (string? lang in langs)
                 {
                     selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
                 }
@@ -336,7 +336,7 @@ namespace N_m3u8DL_RE
                 await extractor.FetchPlayListAsync(selectedStreams);
 
             // 直播检测
-            var livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
+            bool livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
             if (livingFlag)
             {
                 Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
@@ -360,7 +360,7 @@ namespace N_m3u8DL_RE
             extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
 
             Logger.Info(ResString.selectedStream);
-            foreach (var item in selectedStreams)
+            foreach (StreamSpec item in selectedStreams)
             {
                 Logger.InfoMarkUp(item.ToString());
             }
@@ -388,29 +388,29 @@ namespace N_m3u8DL_RE
             }
 
             // 下载配置
-            var downloadConfig = new DownloaderConfig()
+            DownloaderConfig downloadConfig = new DownloaderConfig()
             {
                 MyOptions = option,
                 DirPrefix = tmpDir,
                 Headers = parserConfig.Headers, // 使用命令行解析得到的Headers
             };
 
-            var result = false;
+            bool result = false;
 
             if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
             {
-                var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
+                HTTPLiveRecordManager sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
                 result = await sldm.StartRecordAsync();
             }
             else if (!livingFlag)
             {
                 // 开始下载
-                var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
+                SimpleDownloadManager sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
                 result = await sdm.StartDownloadAsync();
             }
             else
             {
-                var sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
+                SimpleLiveRecordManager2 sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
                 result = await sldm.StartRecordAsync();
             }
 
@@ -432,9 +432,9 @@ namespace N_m3u8DL_RE
             {
                 if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
                 Logger.Warn(ResString.writeJson);
-                foreach (var item in extractor.RawFiles)
+                foreach (KeyValuePair<string, string> item in extractor.RawFiles)
                 {
-                    var file = Path.Combine(tmpDir, item.Key);
+                    string file = Path.Combine(tmpDir, item.Key);
                     if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
                 }
             }
@@ -444,7 +444,7 @@ namespace N_m3u8DL_RE
         {
             try
             {
-                var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
+                Version ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
                 string nowVer = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
                 string redirctUrl = await Get302Async("https://github.com/nilaoda/N_m3u8DL-RE/releases/latest");
                 string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
@@ -464,18 +464,18 @@ namespace N_m3u8DL_RE
         private static async Task<string> Get302Async(string url)
         {
             // this allows you to set the settings so that we can get the redirect url
-            var handler = new HttpClientHandler
+            HttpClientHandler handler = new HttpClientHandler
             {
                 AllowAutoRedirect = false
             };
-            var redirectedUrl = "";
-            using var client = new HttpClient(handler);
-            using var response = await client.GetAsync(url);
-            using var content = response.Content;
+            string redirectedUrl = "";
+            using HttpClient client = new HttpClient(handler);
+            using HttpResponseMessage response = await client.GetAsync(url);
+            using HttpContent content = response.Content;
             // ... Read the response to see if we have the redirected url
             if (response.StatusCode != HttpStatusCode.Found) return redirectedUrl;
 
-            var headers = response.Headers;
+            System.Net.Http.Headers.HttpResponseHeaders headers = response.Headers;
             if (headers.Location != null)
             {
                 redirectedUrl = headers.Location.AbsoluteUri;

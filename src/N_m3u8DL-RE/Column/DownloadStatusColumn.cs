@@ -19,19 +19,19 @@ namespace N_m3u8DL_RE.Column
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
             if (task.Value == 0) return new Text("-", MyStyle).RightJustified();
-            var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-            var speedContainer = SpeedContainerDic[task.Id];
-            var size = speedContainer.RDownloaded;
+            SpeedContainer speedContainer = SpeedContainerDic[task.Id];
+            long size = speedContainer.RDownloaded;
 
             // 一秒汇报一次即可
-            if (DateTimeStringDic.TryGetValue(task.Id, out var oldTime) && oldTime != now)
+            if (DateTimeStringDic.TryGetValue(task.Id, out string? oldTime) && oldTime != now)
             {
-                var totalSize = speedContainer.SingleSegment ? (speedContainer.ResponseLength ?? 0) : (long)(size / (task.Value / task.MaxValue));
+                long totalSize = speedContainer.SingleSegment ? (speedContainer.ResponseLength ?? 0) : (long)(size / (task.Value / task.MaxValue));
                 SizeDic[task.Id] = $"{GlobalUtil.FormatFileSize(size)}/{GlobalUtil.FormatFileSize(totalSize)}";
             }
             DateTimeStringDic[task.Id] = now;
-            SizeDic.TryGetValue(task.Id, out var sizeStr);
+            SizeDic.TryGetValue(task.Id, out string? sizeStr);
 
             if (task.IsFinished) sizeStr = GlobalUtil.FormatFileSize(size);
 

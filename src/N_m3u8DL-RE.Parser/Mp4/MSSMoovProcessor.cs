@@ -44,8 +44,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             get
             {
-                using var stream = new MemoryStream();
-                using var writer = new BinaryWriter2(stream);
+                using MemoryStream stream = new MemoryStream();
+                using BinaryWriter2 writer = new BinaryWriter2(stream);
                 writer.WriteInt(0x10000);
                 writer.WriteInt(0);
                 writer.WriteInt(0);
@@ -69,7 +69,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         public MSSMoovProcessor(StreamSpec streamSpec)
         {
             this.StreamSpec = streamSpec;
-            var data = streamSpec.MSSData!;
+            MSSData data = streamSpec.MSSData!;
             this.NalUnitLengthField = data.NalUnitLengthField;
             this.CodecPrivateData = data.CodecPrivateData;
             this.FourCC = data.FourCC;
@@ -117,16 +117,16 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private void GenCodecPrivateDataForAAC()
         {
-            var objectType = 0x02; // AAC Main Low Complexity => object Type = 2
-            var indexFreq = SamplingFrequencyIndex(SamplingRate);
+            int objectType = 0x02; // AAC Main Low Complexity => object Type = 2
+            int indexFreq = SamplingFrequencyIndex(SamplingRate);
 
             if (FourCC == "AACH")
             {
                 // 4 bytes :     XXXXX         XXXX          XXXX             XXXX                  XXXXX      XXX   XXXXXXX
                 //           ' ObjectType' 'Freq Index' 'Channels value'   'Extens Sampl Freq'  'ObjectType'  'GAS' 'alignment = 0'
                 objectType = 0x05; // High Efficiency AAC Profile = object Type = 5 SBR
-                var codecPrivateData = new byte[4];
-                var extensionSamplingFrequencyIndex = SamplingFrequencyIndex(SamplingRate * 2); // in HE AAC Extension Sampling frequence
+                byte[] codecPrivateData = new byte[4];
+                int extensionSamplingFrequencyIndex = SamplingFrequencyIndex(SamplingRate * 2); // in HE AAC Extension Sampling frequence
                 // equals to SamplingRate*2
                 // Freq Index is present for 3 bits in the first byte, last bit is in the second
                 codecPrivateData[0] = (byte)((objectType << 3) | (indexFreq >> 1));
@@ -134,7 +134,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 codecPrivateData[2] = (byte)((extensionSamplingFrequencyIndex << 7) | (0x02 << 2)); // origin object type equals to 2 => AAC Main Low Complexity
                 codecPrivateData[3] = 0x0; // alignment bits
 
-                var arr16 = new ushort[2];
+                ushort[] arr16 = new ushort[2];
                 arr16[0] = (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]);
                 arr16[1] = (ushort)((codecPrivateData[2] << 8) + codecPrivateData[3]);
 
@@ -146,12 +146,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
             {
                 // 2 bytes :     XXXXX         XXXX          XXXX              XXX
                 //           ' ObjectType' 'Freq Index' 'Channels value'   'GAS = 000'
-                var codecPrivateData = new byte[2];
+                byte[] codecPrivateData = new byte[2];
                 // Freq Index is present for 3 bits in the first byte, last bit is in the second
                 codecPrivateData[0] = (byte)((objectType << 3) | (indexFreq >> 1));
                 codecPrivateData[1] = (byte)((indexFreq << 7) | Channels << 3);
                 // put the 2 bytes in an 16 bits array
-                var arr16 = new ushort[1];
+                ushort[] arr16 = new ushort[1];
                 arr16[0] = (ushort)((codecPrivateData[0] << 8) + codecPrivateData[1]);
 
                 // convert decimal to hex value
@@ -164,14 +164,14 @@ namespace N_m3u8DL_RE.Parser.Mp4
             // playready
             if (ProtectionSystemId.ToUpper() == "9A04F079-9840-4286-AB92-E65BE0885F95")
             {
-                var bytes = HexUtil.HexToBytes(ProtectionData.Replace("00", ""));
-                var text = Encoding.ASCII.GetString(bytes);
-                var kidBytes = Convert.FromBase64String(KIDRegex().Match(text).Groups[1].Value);
+                byte[] bytes = HexUtil.HexToBytes(ProtectionData.Replace("00", ""));
+                string text = Encoding.ASCII.GetString(bytes);
+                byte[] kidBytes = Convert.FromBase64String(KIDRegex().Match(text).Groups[1].Value);
                 // save kid for playready
                 this.ProtecitonKID_PR = HexUtil.BytesToHex(kidBytes);
                 // fix byte order
-                var reverse1 = new[] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
-                var reverse2 = new[] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
+                byte[] reverse1 = new[] { kidBytes[3], kidBytes[2], kidBytes[1], kidBytes[0] };
+                byte[] reverse2 = new[] { kidBytes[5], kidBytes[4], kidBytes[7], kidBytes[6] };
                 Array.Copy(reverse1, 0, kidBytes, 0, reverse1.Length);
                 Array.Copy(reverse2, 0, kidBytes, 4, reverse1.Length);
                 this.ProtecitonKID = HexUtil.BytesToHex(kidBytes);
@@ -187,8 +187,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] Box(string boxType, byte[] payload)
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteUInt(8 + (uint)payload.Length);
             writer.Write(boxType);
@@ -199,8 +199,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] FullBox(string boxType, byte version, uint flags, byte[] payload)
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.Write(version);
             writer.WriteUInt(flags, offset: 1);
@@ -211,39 +211,39 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenSinf(string codec)
         {
-            var frmaBox = Box("frma", Encoding.ASCII.GetBytes(codec));
+            byte[] frmaBox = Box("frma", Encoding.ASCII.GetBytes(codec));
 
-            var sinfPayload = new List<byte>();
+            List<byte> sinfPayload = new List<byte>();
             sinfPayload.AddRange(frmaBox);
 
-            var schmPayload = new List<byte>();
+            List<byte> schmPayload = new List<byte>();
             schmPayload.AddRange(Encoding.ASCII.GetBytes("cenc")); // scheme_type 'cenc' => common encryption
             schmPayload.AddRange([0, 1, 0, 0]); // scheme_version Major version 1, Minor version 0
-            var schmBox = FullBox("schm", 0, 0, [.. schmPayload]);
+            byte[] schmBox = FullBox("schm", 0, 0, [.. schmPayload]);
 
             sinfPayload.AddRange(schmBox);
 
-            var tencPayload = new List<byte>();
+            List<byte> tencPayload = new List<byte>();
             tencPayload.AddRange([0, 0]);
             tencPayload.Add(0x1); // default_IsProtected
             tencPayload.Add(0x8); // default_Per_Sample_IV_size
             tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID)); // default_KID
             // tencPayload.Add(0x8);// default_constant_IV_size
             // tencPayload.AddRange(new byte[8]);// default_constant_IV
-            var tencBox = FullBox("tenc", 0, 0, [.. tencPayload]);
+            byte[] tencBox = FullBox("tenc", 0, 0, [.. tencPayload]);
 
-            var schiBox = Box("schi", tencBox);
+            byte[] schiBox = Box("schi", tencBox);
             sinfPayload.AddRange(schiBox);
 
-            var sinfBox = Box("sinf", [.. sinfPayload]);
+            byte[] sinfBox = Box("sinf", [.. sinfPayload]);
 
             return sinfBox;
         }
 
         private byte[] GenFtyp()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.Write("isml"); // major brand
             writer.WriteUInt(1); // minor version
@@ -257,8 +257,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMvhd()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteULong(CreationTime); // creation_time
             writer.WriteULong(CreationTime); // modification_time
@@ -287,8 +287,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenTkhd()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteULong(CreationTime); // creation_time
             writer.WriteULong(CreationTime); // modification_time
@@ -313,8 +313,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMdhd()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteULong(CreationTime); // creation_time
             writer.WriteULong(CreationTime); // modification_time
@@ -328,8 +328,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenHdlr()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteUInt(0); // pre defined
             if (StreamType == "audio") writer.Write("soun");
@@ -347,13 +347,13 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenMinf()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
-            var minfPayload = new List<byte>();
+            List<byte> minfPayload = new List<byte>();
             if (StreamType == "audio")
             {
-                var smhd = new List<byte>
+                List<byte> smhd = new List<byte>
                 {
                     0,
                     0, // balance
@@ -365,7 +365,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
             else if (StreamType == "video")
             {
-                var vmhd = new List<byte>
+                List<byte> vmhd = new List<byte>
                 {
                     0,
                     0, // graphics mode
@@ -388,7 +388,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 throw new NotSupportedException();
             }
 
-            var drefPayload = new List<byte>
+            List<byte> drefPayload = new List<byte>
             {
                 0,
                 0,
@@ -397,7 +397,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             };
             drefPayload.AddRange(FullBox("url ", 0, SELF_CONTAINED, [])); // Data Entry URL Box
 
-            var dinfPayload = FullBox("dref", 0, 0, [.. drefPayload]); // Data Reference Box
+            byte[] dinfPayload = FullBox("dref", 0, 0, [.. drefPayload]); // Data Reference Box
             minfPayload.AddRange(Box("dinf", [.. dinfPayload])); // Data Information Box
 
             return [.. minfPayload];
@@ -405,8 +405,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenEsds(byte[] audioSpecificConfig)
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             // ESDS length = esds box header length (= 12) +
             //               ES_Descriptor header length (= 5) +
@@ -431,7 +431,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             writer.WriteByte(0xFF);
             writer.WriteByte(0xFF);
 
-            var bandwidth = StreamSpec.Bandwidth!;
+            int? bandwidth = StreamSpec.Bandwidth!;
             writer.WriteByte((byte)((bandwidth & 0xFF000000) >> 24)); // maxBitrate
             writer.WriteByte((byte)((bandwidth & 0x00FF0000) >> 16));
             writer.WriteByte((byte)((bandwidth & 0x0000FF00) >> 8));
@@ -451,8 +451,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetSampleEntryBox()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteByte(0); // reserved
             writer.WriteByte(0);
@@ -472,15 +472,15 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 writer.WriteUShort(0); // reserved3
                 writer.WriteUShort(SamplingRate, padding: 2); // sampling_rate
 
-                var audioSpecificConfig = HexUtil.HexToBytes(CodecPrivateData);
-                var esdsBox = GenEsds(audioSpecificConfig);
+                byte[] audioSpecificConfig = HexUtil.HexToBytes(CodecPrivateData);
+                byte[] esdsBox = GenEsds(audioSpecificConfig);
                 writer.Write(esdsBox);
 
                 if (FourCC.StartsWith("AAC"))
                 {
                     if (IsProtection)
                     {
-                        var sinfBox = GenSinf("mp4a");
+                        byte[] sinfBox = GenSinf("mp4a");
                         writer.Write(sinfBox);
                         return Box("enca", stream.ToArray()); // Encrypted Audio
                     }
@@ -490,7 +490,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 {
                     if (IsProtection)
                     {
-                        var sinfBox = GenSinf("ec-3");
+                        byte[] sinfBox = GenSinf("ec-3");
                         writer.Write(sinfBox);
                         return Box("enca", stream.ToArray()); // Encrypted Audio
                     }
@@ -517,19 +517,19 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 writer.WriteUShort(0x18); // depth
                 writer.WriteUShort(65535); // pre defined
 
-                var codecPrivateData = HexUtil.HexToBytes(CodecPrivateData);
+                byte[] codecPrivateData = HexUtil.HexToBytes(CodecPrivateData);
 
                 if (FourCC is "H264" or "AVC1" or "DAVC")
                 {
-                    var arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
-                    var sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 7));
-                    var pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 8));
+                    string[] arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
+                    byte[] sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 7));
+                    byte[] pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] & 0x1F) == 8));
                     // make avcC
-                    var avcC = GetAvcC(sps, pps);
+                    byte[] avcC = GetAvcC(sps, pps);
                     writer.Write(avcC);
                     if (IsProtection)
                     {
-                        var sinfBox = GenSinf("avc1");
+                        byte[] sinfBox = GenSinf("avc1");
                         writer.Write(sinfBox);
                         return Box("encv", stream.ToArray()); // Encrypted Video
                     }
@@ -537,16 +537,16 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 }
                 if (FourCC is "HVC1" or "HEV1")
                 {
-                    var arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
-                    var vps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20));
-                    var sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21));
-                    var pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22));
+                    string[] arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
+                    byte[] vps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20));
+                    byte[] sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21));
+                    byte[] pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22));
                     // make hvcC
-                    var hvcC = GetHvcC(sps, pps, vps);
+                    byte[] hvcC = GetHvcC(sps, pps, vps);
                     writer.Write(hvcC);
                     if (IsProtection)
                     {
-                        var sinfBox = GenSinf("hvc1");
+                        byte[] sinfBox = GenSinf("hvc1");
                         writer.Write(sinfBox);
                         return Box("encv", stream.ToArray()); // Encrypted Video
                     }
@@ -555,16 +555,16 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 // 杜比视界也按照hevc处理
                 if (FourCC is "DVHE" or "DVH1")
                 {
-                    var arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
-                    var vps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20));
-                    var sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21));
-                    var pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22));
+                    string[] arr = CodecPrivateData.Split([StartCode], StringSplitOptions.RemoveEmptyEntries);
+                    byte[] vps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x20));
+                    byte[] sps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x21));
+                    byte[] pps = HexUtil.HexToBytes(arr.First(x => (HexUtil.HexToBytes(x[0..2])[0] >> 1) == 0x22));
                     // make hvcC
-                    var hvcC = GetHvcC(sps, pps, vps, "dvh1");
+                    byte[] hvcC = GetHvcC(sps, pps, vps, "dvh1");
                     writer.Write(hvcC);
                     if (IsProtection)
                     {
-                        var sinfBox = GenSinf("dvh1");
+                        byte[] sinfBox = GenSinf("dvh1");
                         writer.Write(sinfBox);
                         return Box("encv", stream.ToArray()); // Encrypted Video
                     }
@@ -594,8 +594,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetAvcC(byte[] sps, byte[] pps)
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteByte(1); // configuration version
             writer.Write(sps[1..4]); // avc profile indication + profile compatibility + avc level indication
@@ -612,12 +612,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetHvcC(byte[] sps, byte[] pps, byte[] vps, string code = "hvc1")
         {
-            var oriSps = new List<byte>(sps);
+            List<byte> oriSps = new List<byte>(sps);
             // https://www.itu.int/rec/dologin.asp?lang=f&id=T-REC-H.265-201504-S!!PDF-E&type=items
             // Read generalProfileSpace, generalTierFlag, generalProfileIdc,
             // generalProfileCompatibilityFlags, constraintBytes, generalLevelIdc
             // from sps
-            var encList = new List<byte>();
+            List<byte> encList = new List<byte>();
             /**
              * 处理payload, 有00 00 03 0,1,2,3的情况 统一换成00 00 XX 即丢弃03
              * 注意：此处采用的逻辑是直接简单粗暴地判断列表末尾3字节，如果是0x000003就删掉最后的0x03，可能会导致以下情况
@@ -628,7 +628,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
              *   原始：42 01 01 01 60 00 00 03 00 90 00 00 03 00 00 03 00 96 a0 01 e0 20 06 61 65 95 9a 49 30 bf fc 0c 7c 0c 81 a8 08 08 08 20 00 00 03 00 20 00 00 03 03 01
              * 处理后：42 01 01 01 60 00 00 00 90 00 00 00 00 00 96 A0 01 E0 20 06 61 65 95 9A 49 30 BF FC 0C 7C 0C 81 A8 08 08 08 20 00 00 00 20 00 00 01
              */
-            using (var _reader = new BinaryReader(new MemoryStream(sps)))
+            using (BinaryReader _reader = new BinaryReader(new MemoryStream(sps)))
             {
                 while (_reader.BaseStream.Position < _reader.BaseStream.Length)
                 {
@@ -641,17 +641,17 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
             sps = [.. encList];
 
-            using var reader = new BinaryReader2(new MemoryStream(sps));
+            using BinaryReader2 reader = new BinaryReader2(new MemoryStream(sps));
             reader.ReadBytes(2); // Skip 2 bytes unit header
-            var firstByte = reader.ReadByte();
-            var maxSubLayersMinus1 = (firstByte & 0xe) >> 1;
-            var nextByte = reader.ReadByte();
-            var generalProfileSpace = (nextByte & 0xc0) >> 6;
-            var generalTierFlag = (nextByte & 0x20) >> 5;
-            var generalProfileIdc = nextByte & 0x1f;
-            var generalProfileCompatibilityFlags = reader.ReadUInt32();
-            var constraintBytes = reader.ReadBytes(6);
-            var generalLevelIdc = reader.ReadByte();
+            byte firstByte = reader.ReadByte();
+            int maxSubLayersMinus1 = (firstByte & 0xe) >> 1;
+            byte nextByte = reader.ReadByte();
+            int generalProfileSpace = (nextByte & 0xc0) >> 6;
+            int generalTierFlag = (nextByte & 0x20) >> 5;
+            int generalProfileIdc = nextByte & 0x1f;
+            uint generalProfileCompatibilityFlags = reader.ReadUInt32();
+            byte[] constraintBytes = reader.ReadBytes(6);
+            byte generalLevelIdc = reader.ReadByte();
 
             /*var skipBit = 0;
             for (int i = 0; i < maxSubLayersMinus1; i++)
@@ -671,7 +671,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }*/
 
             // 生成编码信息
-            var codecs = code +
+            string codecs = code +
                          $".{HEVC_GENERAL_PROFILE_SPACE_STRINGS[generalProfileSpace]}{generalProfileIdc}" +
                          $".{Convert.ToString(generalProfileCompatibilityFlags, 16)}" +
                          $".{(generalTierFlag == 1 ? 'H' : 'L')}{generalLevelIdc}" +
@@ -682,8 +682,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
             ///////////////////////
 
 
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             // var reserved1 = 0xF;
 
@@ -720,11 +720,11 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetStsd()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteUInt(1); // entry count
-            var sampleEntryData = GetSampleEntryBox();
+            byte[] sampleEntryData = GetSampleEntryBox();
             writer.Write(sampleEntryData);
 
             return stream.ToArray();
@@ -732,8 +732,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GetMehd()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteULong(Duration);
 
@@ -741,8 +741,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
         }
         private byte[] GetTrex()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             writer.WriteUInt(TrackId); // track id
             writer.WriteUInt(1); // default sample description index
@@ -755,45 +755,45 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         private byte[] GenPsshBoxForPlayReady()
         {
-            using var _stream = new MemoryStream();
-            using var _writer = new BinaryWriter2(_stream);
-            var sysIdData = HexUtil.HexToBytes(ProtectionSystemId.Replace("-", ""));
-            var psshData = HexUtil.HexToBytes(ProtectionData);
+            using MemoryStream _stream = new MemoryStream();
+            using BinaryWriter2 _writer = new BinaryWriter2(_stream);
+            byte[] sysIdData = HexUtil.HexToBytes(ProtectionSystemId.Replace("-", ""));
+            byte[] psshData = HexUtil.HexToBytes(ProtectionData);
 
             _writer.Write(sysIdData);  // SystemID 16 bytes
             _writer.WriteUInt(psshData.Length); // Size of Data 4 bytes
             _writer.Write(psshData); // Data
-            var psshBox = FullBox("pssh", 0, 0, _stream.ToArray());
+            byte[] psshBox = FullBox("pssh", 0, 0, _stream.ToArray());
             return psshBox;
         }
 
         private byte[] GenPsshBoxForWideVine()
         {
-            using var _stream = new MemoryStream();
-            using var _writer = new BinaryWriter2(_stream);
-            var sysIdData = HexUtil.HexToBytes("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed".Replace("-", ""));
+            using MemoryStream _stream = new MemoryStream();
+            using BinaryWriter2 _writer = new BinaryWriter2(_stream);
+            byte[] sysIdData = HexUtil.HexToBytes("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed".Replace("-", ""));
             // var kid = HexUtil.HexToBytes(ProtecitonKID);
 
             _writer.Write(sysIdData);  // SystemID 16 bytes
-            var psshData = HexUtil.HexToBytes($"08011210{ProtecitonKID}1A046E647265220400000000");
+            byte[] psshData = HexUtil.HexToBytes($"08011210{ProtecitonKID}1A046E647265220400000000");
             _writer.WriteUInt(psshData.Length); // Size of Data 4 bytes
             _writer.Write(psshData); // Data
-            var psshBox = FullBox("pssh", 0, 0, _stream.ToArray());
+            byte[] psshBox = FullBox("pssh", 0, 0, _stream.ToArray());
             return psshBox;
         }
 
         private byte[] GenMoof()
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter2(stream);
+            using MemoryStream stream = new MemoryStream();
+            using BinaryWriter2 writer = new BinaryWriter2(stream);
 
             // make senc
             writer.WriteUInt(1); // sample_count
             writer.Write(new byte[8]); // 8 bytes IV
 
-            var sencBox = FullBox("senc", 1, 0, stream.ToArray());
+            byte[] sencBox = FullBox("senc", 1, 0, stream.ToArray());
 
-            var moofBox = Box("moof", sencBox); // Movie Extends Box
+            byte[] moofBox = Box("moof", sencBox); // Movie Extends Box
 
             return moofBox;
         }
@@ -814,69 +814,69 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         public byte[] GenHeader()
         {
-            using var stream = new MemoryStream();
+            using MemoryStream stream = new MemoryStream();
 
-            var ftyp = GenFtyp(); // File Type Box
+            byte[] ftyp = GenFtyp(); // File Type Box
             stream.Write(ftyp);
 
-            var moovPayload = GenMvhd(); // Movie Header Box
+            byte[] moovPayload = GenMvhd(); // Movie Header Box
 
-            var trakPayload = GenTkhd(); // Track Header Box
+            byte[] trakPayload = GenTkhd(); // Track Header Box
 
-            var mdhdPayload = GenMdhd(); // Media Header Box
+            byte[] mdhdPayload = GenMdhd(); // Media Header Box
 
-            var hdlrPayload = GenHdlr(); // Handler Reference Box
+            byte[] hdlrPayload = GenHdlr(); // Handler Reference Box
 
-            var mdiaPayload = mdhdPayload.Concat(hdlrPayload).ToArray();
+            byte[] mdiaPayload = mdhdPayload.Concat(hdlrPayload).ToArray();
 
-            var minfPayload = GenMinf();
+            byte[] minfPayload = GenMinf();
 
 
-            var sttsPayload = new byte[] { 0, 0, 0, 0 }; // entry count
-            var stblPayload = FullBox("stts", 0, 0, sttsPayload); // Decoding Time to Sample Box
+            byte[] sttsPayload = new byte[] { 0, 0, 0, 0 }; // entry count
+            byte[] stblPayload = FullBox("stts", 0, 0, sttsPayload); // Decoding Time to Sample Box
 
-            var stscPayload = new byte[] { 0, 0, 0, 0 }; // entry count
-            var stscBox = FullBox("stsc", 0, 0, stscPayload); // Sample To Chunk Box
+            byte[] stscPayload = new byte[] { 0, 0, 0, 0 }; // entry count
+            byte[] stscBox = FullBox("stsc", 0, 0, stscPayload); // Sample To Chunk Box
 
-            var stcoPayload = new byte[] { 0, 0, 0, 0 }; // entry count
-            var stcoBox = FullBox("stco", 0, 0, stcoPayload); // Chunk Offset Box
+            byte[] stcoPayload = new byte[] { 0, 0, 0, 0 }; // entry count
+            byte[] stcoBox = FullBox("stco", 0, 0, stcoPayload); // Chunk Offset Box
 
-            var stszPayload = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }; // sample size, sample count
-            var stszBox = FullBox("stsz", 0, 0, stszPayload); // Sample Size Box
+            byte[] stszPayload = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }; // sample size, sample count
+            byte[] stszBox = FullBox("stsz", 0, 0, stszPayload); // Sample Size Box
 
-            var stsdPayload = GetStsd();
-            var stsdBox = FullBox("stsd", 0, 0, stsdPayload); // Sample Description Box
+            byte[] stsdPayload = GetStsd();
+            byte[] stsdBox = FullBox("stsd", 0, 0, stsdPayload); // Sample Description Box
 
             stblPayload = [.. stblPayload, .. stscBox, .. stcoBox, .. stszBox, .. stsdBox];
 
 
-            var stblBox = Box("stbl", stblPayload); // Sample Table Box
+            byte[] stblBox = Box("stbl", stblPayload); // Sample Table Box
             minfPayload = [.. minfPayload, .. stblBox];
 
-            var minfBox = Box("minf", minfPayload); // Media Information Box
+            byte[] minfBox = Box("minf", minfPayload); // Media Information Box
             mdiaPayload = [.. mdiaPayload, .. minfBox];
 
-            var mdiaBox = Box("mdia", mdiaPayload); // Media Box
+            byte[] mdiaBox = Box("mdia", mdiaPayload); // Media Box
             trakPayload = [.. trakPayload, .. mdiaBox];
 
-            var trakBox = Box("trak", trakPayload); // Track Box
+            byte[] trakBox = Box("trak", trakPayload); // Track Box
             moovPayload = [.. moovPayload, .. trakBox];
 
-            var mvexPayload = GetMehd();
-            var trexBox = GetTrex();
+            byte[] mvexPayload = GetMehd();
+            byte[] trexBox = GetTrex();
             mvexPayload = [.. mvexPayload, .. trexBox];
 
-            var mvexBox = Box("mvex", mvexPayload); // Movie Extends Box
+            byte[] mvexBox = Box("mvex", mvexPayload); // Movie Extends Box
             moovPayload = [.. moovPayload, .. mvexBox];
 
             if (IsProtection)
             {
-                var psshBox1 = GenPsshBoxForPlayReady();
-                var psshBox2 = GenPsshBoxForWideVine();
+                byte[] psshBox1 = GenPsshBoxForPlayReady();
+                byte[] psshBox2 = GenPsshBoxForWideVine();
                 moovPayload = [.. moovPayload, .. psshBox1, .. psshBox2];
             }
 
-            var moovBox = Box("moov", moovPayload); // Movie Box
+            byte[] moovBox = Box("moov", moovPayload); // Movie Box
 
             stream.Write(moovBox);
 

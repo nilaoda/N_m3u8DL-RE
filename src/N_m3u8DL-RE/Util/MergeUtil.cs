@@ -29,13 +29,13 @@ namespace N_m3u8DL_RE.Util
             if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
 
-            var inputFilePaths = files;
-            using var outputStream = File.Create(outputFilePath);
-            foreach (var inputFilePath in inputFilePaths)
+            string[] inputFilePaths = files;
+            using FileStream outputStream = File.Create(outputFilePath);
+            foreach (string inputFilePath in inputFilePaths)
             {
                 if (inputFilePath == "")
                     continue;
-                using var inputStream = File.OpenRead(inputFilePath);
+                using FileStream inputStream = File.OpenRead(inputFilePath);
                 inputStream.CopyTo(outputStream);
             }
         }
@@ -44,7 +44,7 @@ namespace N_m3u8DL_RE.Util
         {
             Logger.DebugMarkUp($"{binary}: {command}");
 
-            using var p = new Process();
+            using Process p = new Process();
             p.StartInfo = new ProcessStartInfo()
             {
                 WorkingDirectory = workingDirectory,
@@ -69,23 +69,23 @@ namespace N_m3u8DL_RE.Util
 
         public static string[] PartialCombineMultipleFiles(string[] files)
         {
-            var newFiles = new List<string>();
-            var div = files.Length <= 90000 ? 100 : 200;
+            List<string> newFiles = new List<string>();
+            int div = files.Length <= 90000 ? 100 : 200;
 
-            var outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
-            var index = 0; // 序号
+            string outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
+            int index = 0; // 序号
 
             // 按照div的容量分割为小数组
-            var li = Enumerable.Range(0, files.Length / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
-            foreach (var items in li)
+            string[][] li = Enumerable.Range(0, files.Length / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
+            foreach (string[]? items in li)
             {
                 if (items.Length == 0)
                     continue;
-                var output = outputName + index.ToString("0000") + ".ts";
+                string output = outputName + index.ToString("0000") + ".ts";
                 CombineMultipleFilesIntoSingleFile(items, output);
                 newFiles.Add(output);
                 // 合并后删除这些文件
-                foreach (var item in items)
+                foreach (string? item in items)
                 {
                     File.Delete(item);
                 }
@@ -114,8 +114,8 @@ namespace N_m3u8DL_RE.Util
             if (useConcatDemuxer)
             {
                 // 使用 concat demuxer合并
-                var text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
-                var tempFile = Path.GetTempFileName();
+                string text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
+                string tempFile = Path.GetTempFileName();
                 File.WriteAllText(tempFile, text);
                 command.Append($" -f concat -safe 0 -i \"{tempFile}");
             }
@@ -168,19 +168,19 @@ namespace N_m3u8DL_RE.Util
                     break;
             }
 
-            var code = InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
+            int code = InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
 
             return code == 0;
         }
 
         public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, MuxFormat muxFormat, bool dateinfo)
         {
-            var ext = OtherUtil.GetMuxExtension(muxFormat);
+            string ext = OtherUtil.GetMuxExtension(muxFormat);
             string dateString = DateTime.Now.ToString("o");
             StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
 
             // INPUT
-            foreach (var item in files)
+            foreach (OutputFile item in files)
             {
                 command.Append($" -i \"{item.FilePath}\" ");
             }
@@ -191,7 +191,7 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" -map {i} ");
             }
 
-            var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
+            bool srt = files.Any(x => x.FilePath.EndsWith(".srt"));
 
             if (muxFormat == MuxFormat.MP4)
                 command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
@@ -205,7 +205,7 @@ namespace N_m3u8DL_RE.Util
             command.Append(" -map_metadata -1 ");
 
             // LANG and NAME
-            var streamIndex = 0;
+            int streamIndex = 0;
             for (int i = 0; i < files.Length; i++)
             {
                 // 转换语言代码
@@ -226,9 +226,9 @@ namespace N_m3u8DL_RE.Util
                     streamIndex++;
             }
 
-            var videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
-            var audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-            var subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+            IEnumerable<OutputFile> videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
+            IEnumerable<OutputFile> audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+            IEnumerable<OutputFile> subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
             if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
             // 字幕都不设置默认
             if (subTracks.Any()) command.Append(" -disposition:s 0 ");
@@ -246,7 +246,7 @@ namespace N_m3u8DL_RE.Util
             command.Append($" -ignore_unknown -copy_unknown ");
             command.Append($" \"{outputPath}{ext}\"");
 
-            var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+            int code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
             return code == 0;
         }
@@ -257,7 +257,7 @@ namespace N_m3u8DL_RE.Util
 
             command.Append(" --no-chapters ");
 
-            var dFlag = false;
+            bool dFlag = false;
 
             // LANG and NAME
             for (int i = 0; i < files.Length; i++)
@@ -280,7 +280,7 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" \"{files[i].FilePath}\" ");
             }
 
-            var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+            int code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
             return code == 0;
         }

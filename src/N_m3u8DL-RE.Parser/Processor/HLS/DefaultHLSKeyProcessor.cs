@@ -17,13 +17,13 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
 
         public override EncryptInfo Process(string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
         {
-            var iv = ParserUtil.GetAttribute(keyLine, "IV");
-            var method = ParserUtil.GetAttribute(keyLine, "METHOD");
-            var uri = ParserUtil.GetAttribute(keyLine, "URI");
+            string iv = ParserUtil.GetAttribute(keyLine, "IV");
+            string method = ParserUtil.GetAttribute(keyLine, "METHOD");
+            string uri = ParserUtil.GetAttribute(keyLine, "URI");
 
             Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
-            var encryptInfo = new EncryptInfo(method);
+            EncryptInfo encryptInfo = new EncryptInfo(method);
 
             // IV
             if (!string.IsNullOrEmpty(iv))
@@ -61,12 +61,12 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 }
                 else if (!string.IsNullOrEmpty(uri))
                 {
-                    var retryCount = parserConfig.KeyRetryCount;
-                    var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
+                    int retryCount = parserConfig.KeyRetryCount;
+                    string segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
                 getHttpKey:
                     try
                     {
-                        var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
+                        byte[] bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
                         encryptInfo.Key = bytes;
                     }
                     catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
@@ -98,7 +98,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         /// </summary>
         private string PreProcessUrl(string url, ParserConfig parserConfig)
         {
-            foreach (var p in parserConfig.UrlProcessors)
+            foreach (UrlProcessor p in parserConfig.UrlProcessors)
             {
                 if (p.CanProcess(ExtractorType.HLS, url, parserConfig))
                 {

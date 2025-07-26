@@ -47,32 +47,32 @@ namespace N_m3u8DL_RE.DownloadManager
             task.MaxValue = 1;
             task.StartTask();
 
-            var name = streamSpec.ToShortString();
-            var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
-            var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-            var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
+            string name = streamSpec.ToShortString();
+            string dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
+            string saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
+            string saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
 
             Logger.Debug($"dirName: {dirName}; saveDir: {saveDir}; saveName: {saveName}");
 
             // 创建文件夹
             if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(streamSpec.Url));
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, new Uri(streamSpec.Url));
             request.Headers.ConnectionClose = false;
-            foreach (var item in DownloaderConfig.Headers)
+            foreach (KeyValuePair<string, string> item in DownloaderConfig.Headers)
             {
                 request.Headers.TryAddWithoutValidation(item.Key, item.Value);
             }
             Logger.Debug(request.Headers.ToString());
 
-            using var response = await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
+            using HttpResponseMessage response = await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
             response.EnsureSuccessStatusCode();
 
-            var output = Path.Combine(saveDir, saveName + ".ts");
-            using var stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-            using var responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
-            var buffer = new byte[16 * 1024];
-            var size = 0;
+            string output = Path.Combine(saveDir, saveName + ".ts");
+            using FileStream stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            using Stream responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
+            byte[] buffer = new byte[16 * 1024];
+            int size = 0;
 
             // 计时器
             _ = TimeCounterAsync();
@@ -116,18 +116,18 @@ namespace N_m3u8DL_RE.DownloadManager
                     return BitConverter.ToUInt16(bytes.ToArray());
                 }
 
-                var data = InfoBuffer.ToArray();
-                var programId = "";
-                var serviceProvider = "";
-                var serviceName = "";
+                byte[] data = InfoBuffer.ToArray();
+                string programId = "";
+                string serviceProvider = "";
+                string serviceName = "";
                 for (int i = 0; i < data.Length; i++)
                 {
                     if (data[i] == 0x47 && (i + 188) < data.Length && data[i + 188] == 0x47)
                     {
-                        var tsData = data.Skip(i).Take(188);
-                        var tsHeaderInt = BitConverter.ToUInt32(BitConverter.IsLittleEndian ? [.. tsData.Take(4).Reverse()] : [.. tsData.Take(4)], 0);
-                        var pid = (tsHeaderInt & 0x1fff00) >> 8;
-                        var tsPayload = tsData.Skip(4);
+                        IEnumerable<byte> tsData = data.Skip(i).Take(188);
+                        uint tsHeaderInt = BitConverter.ToUInt32(BitConverter.IsLittleEndian ? [.. tsData.Take(4).Reverse()] : [.. tsData.Take(4)], 0);
+                        uint pid = (tsHeaderInt & 0x1fff00) >> 8;
+                        IEnumerable<byte> tsPayload = tsData.Skip(4);
                         // PAT
                         if (pid == 0x0000)
                         {
@@ -136,18 +136,18 @@ namespace N_m3u8DL_RE.DownloadManager
                         // SDT, BAT, ST
                         else if (pid == 0x0011)
                         {
-                            var tableId = (int)tsPayload.Skip(1).First();
+                            int tableId = (int)tsPayload.Skip(1).First();
                             // Current TS Info
                             if (tableId == 0x42)
                             {
-                                var sectionLength = ConvertToUint16(tsPayload.Skip(2).Take(2)) & 0xfff;
-                                var sectionData = tsPayload.Skip(4).Take(sectionLength);
-                                var dscripData = sectionData.Skip(8);
-                                var descriptorsLoopLength = (ConvertToUint16(dscripData.Skip(3).Take(2))) & 0xfff;
-                                var descriptorsData = dscripData.Skip(5).Take(descriptorsLoopLength);
-                                var serviceProviderLength = (int)descriptorsData.Skip(3).First();
+                                int sectionLength = ConvertToUint16(tsPayload.Skip(2).Take(2)) & 0xfff;
+                                IEnumerable<byte> sectionData = tsPayload.Skip(4).Take(sectionLength);
+                                IEnumerable<byte> dscripData = sectionData.Skip(8);
+                                int descriptorsLoopLength = (ConvertToUint16(dscripData.Skip(3).Take(2))) & 0xfff;
+                                IEnumerable<byte> descriptorsData = dscripData.Skip(5).Take(descriptorsLoopLength);
+                                int serviceProviderLength = (int)descriptorsData.Skip(3).First();
                                 serviceProvider = Encoding.UTF8.GetString([.. descriptorsData.Skip(4).Take(serviceProviderLength)]);
-                                var serviceNameLength = (int)descriptorsData.Skip(4 + serviceProviderLength).First();
+                                int serviceNameLength = (int)descriptorsData.Skip(4 + serviceProviderLength).First();
                                 serviceName = Encoding.UTF8.GetString([.. descriptorsData.Skip(5 + serviceProviderLength).Take(serviceNameLength)]);
                             }
                         }
@@ -188,11 +188,11 @@ namespace N_m3u8DL_RE.DownloadManager
             ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); // 速度计算
             ConcurrentDictionary<StreamSpec, bool?> Results = new();
 
-            var progress = CustomAnsiConsole.Console.Progress().AutoClear(true);
+            Progress progress = CustomAnsiConsole.Console.Progress().AutoClear(true);
             progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
 
             // 进度条的列定义
-            var progressColumns = new ProgressColumn[]
+            ProgressColumn[] progressColumns = new ProgressColumn[]
             {
                 new TaskDescriptionColumn() { Alignment = Justify.Left },
                 new RecordingDurationColumn(RecordingDurDic), // 时长显示
@@ -210,9 +210,9 @@ namespace N_m3u8DL_RE.DownloadManager
             await progress.StartAsync(async ctx =>
             {
                 // 创建任务
-                var dic = SelectedSteams.Select(item =>
+                Dictionary<StreamSpec, ProgressTask> dic = SelectedSteams.Select(item =>
                 {
-                    var task = ctx.AddTask(item.ToShortString(), autoStart: false, maxValue: 0);
+                    ProgressTask task = ctx.AddTask(item.ToShortString(), autoStart: false, maxValue: 0);
                     SpeedContainerDic[task.Id] = new SpeedContainer(); // 速度计算
                     RecordingDurDic[task.Id] = 0;
                     RecordingSizeDic[task.Id] = 0;
@@ -220,24 +220,24 @@ namespace N_m3u8DL_RE.DownloadManager
                 }).ToDictionary(item => item.item, item => item.task);
 
                 DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
-                var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
+                TimeSpan? limit = DownloaderConfig.MyOptions.LiveRecordLimit;
                 if (limit != TimeSpan.MaxValue)
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
                 // 录制直播时，用户选了几个流就并发录几个
-                var options = new ParallelOptions()
+                ParallelOptions options = new ParallelOptions()
                 {
                     MaxDegreeOfParallelism = SelectedSteams.Count
                 };
                 // 并发下载
                 await Parallel.ForEachAsync(dic, options, async (kp, _) =>
                 {
-                    var task = kp.Value;
-                    var consumerTask = RecordStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
+                    ProgressTask task = kp.Value;
+                    Task<bool> consumerTask = RecordStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
                     Results[kp.Key] = await consumerTask;
                 });
             });
 
-            var success = Results.Values.All(v => v == true);
+            bool success = Results.Values.All(v => v == true);
 
             return success;
         }

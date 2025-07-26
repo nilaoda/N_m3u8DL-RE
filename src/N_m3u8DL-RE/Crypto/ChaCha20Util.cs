@@ -13,12 +13,12 @@ namespace N_m3u8DL_RE.Crypto
             if (nonceBytes.Length == 8)
                 nonceBytes = [.. (new byte[4] { 0, 0, 0, 0 }), .. nonceBytes];
 
-            var decStream = new MemoryStream();
+            MemoryStream decStream = new MemoryStream();
             using BinaryReader reader = new BinaryReader(new MemoryStream(encryptedBuff));
             using (BinaryWriter writer = new BinaryWriter(decStream))
                 while (true)
                 {
-                    var buffer = reader.ReadBytes(1024);
+                    byte[] buffer = reader.ReadBytes(1024);
                     byte[] dec = new byte[buffer.Length];
                     if (buffer.Length > 0)
                     {

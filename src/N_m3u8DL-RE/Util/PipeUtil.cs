@@ -18,8 +18,8 @@ namespace N_m3u8DL_RE.Util
                 return new NamedPipeServerStream(pipeName, PipeDirection.InOut);
             }
 
-            var path = Path.Combine(Path.GetTempPath(), pipeName);
-            using var p = new Process();
+            string path = Path.Combine(Path.GetTempPath(), pipeName);
+            using Process p = new Process();
             p.StartInfo = new ProcessStartInfo()
             {
                 FileName = "mkfifo",
@@ -46,18 +46,18 @@ namespace N_m3u8DL_RE.Util
 
         public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
         {
-            var dateString = DateTime.Now.ToString("o");
-            var command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
+            string dateString = DateTime.Now.ToString("o");
+            StringBuilder command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
 
-            var customDest = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeOptions);
-            var pipeDir = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeTmpDir, Path.GetTempPath());
+            string customDest = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeOptions);
+            string pipeDir = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeTmpDir, Path.GetTempPath());
 
             if (!string.IsNullOrEmpty(customDest))
             {
                 command.Append(" -re ");
             }
 
-            foreach (var item in pipeNames)
+            foreach (string item in pipeNames)
             {
                 if (OperatingSystem.IsWindows())
                     command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
@@ -66,7 +66,7 @@ namespace N_m3u8DL_RE.Util
                     command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
             }
 
-            for (var i = 0; i < pipeNames.Length; i++)
+            for (int i = 0; i < pipeNames.Length; i++)
             {
                 command.Append($" -map {i} ");
             }
@@ -89,7 +89,7 @@ namespace N_m3u8DL_RE.Util
                 command.Append($" -f mpegts -shortest \"{outputPath}\"");
             }
 
-            using var p = new Process();
+            using Process p = new Process();
             p.StartInfo = new ProcessStartInfo()
             {
                 WorkingDirectory = Environment.CurrentDirectory,

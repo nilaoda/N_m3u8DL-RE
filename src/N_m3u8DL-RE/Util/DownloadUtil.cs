@@ -13,10 +13,10 @@ namespace N_m3u8DL_RE.Util
 
         private static async Task<DownloadResult> CopyFileAsync(string sourceFile, string path, SpeedContainer speedContainer, long? fromPosition = null, long? toPosition = null)
         {
-            using var inputStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var outputStream = new FileStream(path, FileMode.OpenOrCreate);
+            using FileStream inputStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using FileStream outputStream = new FileStream(path, FileMode.OpenOrCreate);
             inputStream.Seek(fromPosition ?? 0L, SeekOrigin.Begin);
-            var expect = (toPosition ?? inputStream.Length) - inputStream.Position + 1;
+            long expect = (toPosition ?? inputStream.Length) - inputStream.Position + 1;
             if (expect == inputStream.Length + 1)
             {
                 await inputStream.CopyToAsync(outputStream);
@@ -24,7 +24,7 @@ namespace N_m3u8DL_RE.Util
             }
             else
             {
-                var buffer = new byte[expect];
+                byte[] buffer = new byte[expect];
                 _ = await inputStream.ReadAsync(buffer);
                 await outputStream.WriteAsync(buffer);
                 speedContainer.Add(buffer.Length);
@@ -41,12 +41,12 @@ namespace N_m3u8DL_RE.Util
             Logger.Debug(ResString.fetch + url);
             if (url.StartsWith("file:"))
             {
-                var file = new Uri(url).LocalPath;
+                string file = new Uri(url).LocalPath;
                 return await CopyFileAsync(file, path, speedContainer, fromPosition, toPosition);
             }
             if (url.StartsWith("base64://"))
             {
-                var bytes = Convert.FromBase64String(url[9..]);
+                byte[] bytes = Convert.FromBase64String(url[9..]);
                 await File.WriteAllBytesAsync(path, bytes);
                 return new DownloadResult()
                 {
@@ -56,7 +56,7 @@ namespace N_m3u8DL_RE.Util
             }
             if (url.StartsWith("hex://"))
             {
-                var bytes = HexUtil.HexToBytes(url[6..]);
+                byte[] bytes = HexUtil.HexToBytes(url[6..]);
                 await File.WriteAllBytesAsync(path, bytes);
                 return new DownloadResult()
                 {
@@ -64,12 +64,12 @@ namespace N_m3u8DL_RE.Util
                     ActualFilePath = path,
                 };
             }
-            using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+            using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
             if (fromPosition != null || toPosition != null)
                 request.Headers.Range = new(fromPosition, toPosition);
             if (headers != null)
             {
-                foreach (var item in headers)
+                foreach (KeyValuePair<string, string> item in headers)
                 {
                     request.Headers.TryAddWithoutValidation(item.Key, item.Value);
                 }
@@ -77,14 +77,14 @@ namespace N_m3u8DL_RE.Util
             Logger.Debug(request.Headers.ToString());
             try
             {
-                using var response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
+                using HttpResponseMessage response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
                 if (((int)response.StatusCode).ToString().StartsWith("30"))
                 {
                     HttpResponseHeaders respHeaders = response.Headers;
                     Logger.Debug(respHeaders.ToString());
                     if (respHeaders.Location != null)
                     {
-                        var redirectedUrl = "";
+                        string redirectedUrl = "";
                         if (!respHeaders.Location.IsAbsoluteUri)
                         {
                             Uri uri1 = new Uri(url);
@@ -99,13 +99,13 @@ namespace N_m3u8DL_RE.Util
                     }
                 }
                 response.EnsureSuccessStatusCode();
-                var contentLength = response.Content.Headers.ContentLength;
+                long? contentLength = response.Content.Headers.ContentLength;
                 if (speedContainer.SingleSegment) speedContainer.ResponseLength = contentLength;
 
-                using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                using var responseStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token);
-                var buffer = new byte[16 * 1024];
-                var size = 0;
+                using FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                using Stream responseStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token);
+                byte[] buffer = new byte[16 * 1024];
+                int size = 0;
 
                 size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token);
                 speedContainer.Add(size);

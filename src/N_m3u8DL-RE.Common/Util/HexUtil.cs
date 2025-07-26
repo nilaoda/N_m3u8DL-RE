@@ -28,7 +28,7 @@ namespace N_m3u8DL_RE.Common.Util
 
         public static byte[] HexToBytes(string hex)
         {
-            var hexSpan = hex.AsSpan().Trim();
+            ReadOnlySpan<char> hexSpan = hex.AsSpan().Trim();
             if (hexSpan.StartsWith("0x") || hexSpan.StartsWith("0X"))
             {
                 hexSpan = hexSpan[2..];

@@ -120,13 +120,13 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static long? ParseSpeedLimit(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value.ToUpper();
+            string input = result.Tokens[0].Value.ToUpper();
             try
             {
-                var reg = SpeedStrRegex();
+                Regex reg = SpeedStrRegex();
                 if (!reg.IsMatch(input)) throw new ArgumentException($"Invalid Speed Limit: {input}");
 
-                var number = double.Parse(reg.Match(input).Groups[1].Value);
+                double number = double.Parse(reg.Match(input).Groups[1].Value);
                 if (reg.Match(input).Groups[2].Value == "M")
                     return (long)(number * 1024 * 1024);
                 return (long)(number * 1024);
@@ -146,14 +146,14 @@ namespace N_m3u8DL_RE.CommandLine
         /// <exception cref="ArgumentException"></exception>
         private static CustomRange? ParseCustomRange(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
+            string input = result.Tokens[0].Value;
             // 支持的种类 0-100; 01:00:00-02:30:00; -300; 300-; 05:00-; -03:00;
             try
             {
                 if (string.IsNullOrEmpty(input))
                     return null;
 
-                var arr = input.Split('-');
+                string[] arr = input.Split('-');
                 if (arr.Length != 2)
                     throw new ArgumentException("Bad format!");
 
@@ -169,8 +169,8 @@ namespace N_m3u8DL_RE.CommandLine
 
                 if (RangeRegex().IsMatch(input))
                 {
-                    var left = RangeRegex().Match(input).Groups[1].Value;
-                    var right = RangeRegex().Match(input).Groups[2].Value;
+                    string left = RangeRegex().Match(input).Groups[1].Value;
+                    string right = RangeRegex().Match(input).Groups[2].Value;
                     return new CustomRange()
                     {
                         InputStr = input,
@@ -196,17 +196,17 @@ namespace N_m3u8DL_RE.CommandLine
         /// <exception cref="ArgumentException"></exception>
         private static WebProxy? ParseProxy(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
+            string input = result.Tokens[0].Value;
             try
             {
                 if (string.IsNullOrEmpty(input))
                     return null;
 
-                var uri = new Uri(input);
-                var proxy = new WebProxy(uri, true);
+                Uri uri = new Uri(input);
+                WebProxy proxy = new WebProxy(uri, true);
                 if (!string.IsNullOrEmpty(uri.UserInfo))
                 {
-                    var infos = uri.UserInfo.Split(':');
+                    string[] infos = uri.UserInfo.Split(':');
                     proxy.Credentials = new NetworkCredential(infos.First(), infos.Last());
                 }
                 return proxy;
@@ -225,7 +225,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static byte[]? ParseHLSCustomKey(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
+            string input = result.Tokens[0].Value;
             try
             {
                 if (string.IsNullOrEmpty(input))
@@ -250,7 +250,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static TimeSpan? ParseLiveLimit(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
+            string input = result.Tokens[0].Value;
             try
             {
                 return OtherUtil.ParseDur(input);
@@ -269,7 +269,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static DateTime? ParseStartTime(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
+            string input = result.Tokens[0].Value;
             try
             {
                 CultureInfo provider = CultureInfo.InvariantCulture;
@@ -284,8 +284,8 @@ namespace N_m3u8DL_RE.CommandLine
 
         private static string? ParseSaveName(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
-            var newName = OtherUtil.GetValidFileName(input);
+            string input = result.Tokens[0].Value;
+            string newName = OtherUtil.GetValidFileName(input);
             if (string.IsNullOrEmpty(newName))
             {
                 result.ErrorMessage = "Invalid save name!";
@@ -296,8 +296,8 @@ namespace N_m3u8DL_RE.CommandLine
 
         private static string? ParseFilePath(ArgumentResult result)
         {
-            var input = result.Tokens[0].Value;
-            var path = "";
+            string input = result.Tokens[0].Value;
+            string path = "";
             try
             {
                 path = Path.GetFullPath(input);
@@ -307,9 +307,9 @@ namespace N_m3u8DL_RE.CommandLine
                 result.ErrorMessage = "Invalid log path!";
                 return null;
             }
-            var dir = Path.GetDirectoryName(path);
-            var filename = Path.GetFileName(path);
-            var newName = OtherUtil.GetValidFileName(filename);
+            string? dir = Path.GetDirectoryName(path);
+            string filename = Path.GetFileName(path);
+            string newName = OtherUtil.GetValidFileName(filename);
             if (string.IsNullOrEmpty(newName))
             {
                 result.ErrorMessage = "Invalid log file name!";
@@ -325,13 +325,13 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static StreamFilter? ParseStreamFilter(ArgumentResult result)
         {
-            var streamFilter = new StreamFilter();
-            var input = result.Tokens[0].Value;
-            var p = new ComplexParamParser(input);
+            StreamFilter streamFilter = new StreamFilter();
+            string input = result.Tokens[0].Value;
+            ComplexParamParser p = new ComplexParamParser(input);
 
 
             // 目标范围
-            var forStr = "";
+            string forStr = "";
             if (input == ForStrRegex().Match(input).Value)
             {
                 forStr = input;
@@ -347,67 +347,67 @@ namespace N_m3u8DL_RE.CommandLine
             }
             streamFilter.For = forStr;
 
-            var id = p.GetValue("id");
+            string? id = p.GetValue("id");
             if (!string.IsNullOrEmpty(id))
                 streamFilter.GroupIdReg = new Regex(id);
 
-            var lang = p.GetValue("lang");
+            string? lang = p.GetValue("lang");
             if (!string.IsNullOrEmpty(lang))
                 streamFilter.LanguageReg = new Regex(lang);
 
-            var name = p.GetValue("name");
+            string? name = p.GetValue("name");
             if (!string.IsNullOrEmpty(name))
                 streamFilter.NameReg = new Regex(name);
 
-            var codecs = p.GetValue("codecs");
+            string? codecs = p.GetValue("codecs");
             if (!string.IsNullOrEmpty(codecs))
                 streamFilter.CodecsReg = new Regex(codecs);
 
-            var res = p.GetValue("res");
+            string? res = p.GetValue("res");
             if (!string.IsNullOrEmpty(res))
                 streamFilter.ResolutionReg = new Regex(res);
 
-            var frame = p.GetValue("frame");
+            string? frame = p.GetValue("frame");
             if (!string.IsNullOrEmpty(frame))
                 streamFilter.FrameRateReg = new Regex(frame);
 
-            var channel = p.GetValue("channel");
+            string? channel = p.GetValue("channel");
             if (!string.IsNullOrEmpty(channel))
                 streamFilter.ChannelsReg = new Regex(channel);
 
-            var range = p.GetValue("range");
+            string? range = p.GetValue("range");
             if (!string.IsNullOrEmpty(range))
                 streamFilter.VideoRangeReg = new Regex(range);
 
-            var url = p.GetValue("url");
+            string? url = p.GetValue("url");
             if (!string.IsNullOrEmpty(url))
                 streamFilter.UrlReg = new Regex(url);
 
-            var segsMin = p.GetValue("segsMin");
+            string? segsMin = p.GetValue("segsMin");
             if (!string.IsNullOrEmpty(segsMin))
                 streamFilter.SegmentsMinCount = long.Parse(segsMin);
 
-            var segsMax = p.GetValue("segsMax");
+            string? segsMax = p.GetValue("segsMax");
             if (!string.IsNullOrEmpty(segsMax))
                 streamFilter.SegmentsMaxCount = long.Parse(segsMax);
 
-            var plistDurMin = p.GetValue("plistDurMin");
+            string? plistDurMin = p.GetValue("plistDurMin");
             if (!string.IsNullOrEmpty(plistDurMin))
                 streamFilter.PlaylistMinDur = OtherUtil.ParseSeconds(plistDurMin);
 
-            var plistDurMax = p.GetValue("plistDurMax");
+            string? plistDurMax = p.GetValue("plistDurMax");
             if (!string.IsNullOrEmpty(plistDurMax))
                 streamFilter.PlaylistMaxDur = OtherUtil.ParseSeconds(plistDurMax);
 
-            var bwMin = p.GetValue("bwMin");
+            string? bwMin = p.GetValue("bwMin");
             if (!string.IsNullOrEmpty(bwMin))
                 streamFilter.BandwidthMin = int.Parse(bwMin) * 1000;
 
-            var bwMax = p.GetValue("bwMax");
+            string? bwMax = p.GetValue("bwMax");
             if (!string.IsNullOrEmpty(bwMax))
                 streamFilter.BandwidthMax = int.Parse(bwMax) * 1000;
 
-            var role = p.GetValue("role");
+            string? role = p.GetValue("role");
             if (System.Enum.TryParse(role, true, out RoleType roleType))
                 streamFilter.Role = roleType;
 
@@ -421,7 +421,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static Dictionary<string, string> ParseHeaders(ArgumentResult result)
         {
-            var array = result.Tokens.Select(t => t.Value).ToArray();
+            string[] array = result.Tokens.Select(t => t.Value).ToArray();
             return OtherUtil.SplitHeaderArrayToDic(array);
         }
 
@@ -432,14 +432,14 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static List<OutputFile> ParseImports(ArgumentResult result)
         {
-            var imports = new List<OutputFile>();
+            List<OutputFile> imports = new List<OutputFile>();
 
-            foreach (var item in result.Tokens)
+            foreach (Token item in result.Tokens)
             {
-                var p = new ComplexParamParser(item.Value);
-                var path = p.GetValue("path") ?? item.Value; // 若未获取到，直接整个字符串作为path
-                var lang = p.GetValue("lang");
-                var name = p.GetValue("name");
+                ComplexParamParser p = new ComplexParamParser(item.Value);
+                string path = p.GetValue("path") ?? item.Value; // 若未获取到，直接整个字符串作为path
+                string? lang = p.GetValue("lang");
+                string? name = p.GetValue("name");
                 if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 {
                     result.ErrorMessage = "path empty or file not exists!";
@@ -464,39 +464,39 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static MuxOptions? ParseMuxAfterDone(ArgumentResult result)
         {
-            var v = result.Tokens[0].Value;
-            var p = new ComplexParamParser(v);
+            string v = result.Tokens[0].Value;
+            ComplexParamParser p = new ComplexParamParser(v);
             // 混流格式
-            var format = p.GetValue("format") ?? v.Split(':')[0]; // 若未获取到，直接:前的字符串作为format解析
-            var parseResult = System.Enum.TryParse(format.ToUpperInvariant(), out MuxFormat muxFormat);
+            string format = p.GetValue("format") ?? v.Split(':')[0]; // 若未获取到，直接:前的字符串作为format解析
+            bool parseResult = System.Enum.TryParse(format.ToUpperInvariant(), out MuxFormat muxFormat);
             if (!parseResult)
             {
                 result.ErrorMessage = $"format={format} not valid";
                 return null;
             }
             // 混流器
-            var muxer = p.GetValue("muxer") ?? "ffmpeg";
+            string muxer = p.GetValue("muxer") ?? "ffmpeg";
             if (muxer != "ffmpeg" && muxer != "mkvmerge")
             {
                 result.ErrorMessage = $"muxer={muxer} not valid";
                 return null;
             }
             // 混流器路径
-            var bin_path = p.GetValue("bin_path") ?? "auto";
+            string bin_path = p.GetValue("bin_path") ?? "auto";
             if (string.IsNullOrEmpty(bin_path))
             {
                 result.ErrorMessage = $"bin_path={bin_path} not valid";
                 return null;
             }
             // 是否删除
-            var keep = p.GetValue("keep") ?? "false";
+            string keep = p.GetValue("keep") ?? "false";
             if (keep != "true" && keep != "false")
             {
                 result.ErrorMessage = $"keep={keep} not valid";
                 return null;
             }
             // 是否忽略字幕
-            var skipSub = p.GetValue("skip_sub") ?? "false";
+            string skipSub = p.GetValue("skip_sub") ?? "false";
             if (skipSub != "true" && skipSub != "false")
             {
                 result.ErrorMessage = $"skip_sub={keep} not valid";
@@ -522,7 +522,7 @@ namespace N_m3u8DL_RE.CommandLine
         {
             protected override MyOption GetBoundValue(BindingContext bindingContext)
             {
-                var option = new MyOption
+                MyOption option = new MyOption
                 {
                     Input = bindingContext.ParseResult.GetValueForArgument(Input),
                     ForceAnsiConsole = bindingContext.ParseResult.GetValueForOption(ForceAnsiConsole),
@@ -590,7 +590,7 @@ namespace N_m3u8DL_RE.CommandLine
                 if (bindingContext.ParseResult.HasOption(CustomHLSKey)) option.CustomHLSKey = bindingContext.ParseResult.GetValueForOption(CustomHLSKey);
                 if (bindingContext.ParseResult.HasOption(CustomHLSIv)) option.CustomHLSIv = bindingContext.ParseResult.GetValueForOption(CustomHLSIv);
 
-                var parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
+                Dictionary<string, string>? parsedHeaders = bindingContext.ParseResult.GetValueForOption(Headers);
                 if (parsedHeaders != null)
                     option.Headers = parsedHeaders;
 
@@ -604,7 +604,7 @@ namespace N_m3u8DL_RE.CommandLine
                 }
 
                 // 混流设置
-                var muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
+                MuxOptions? muxAfterDoneValue = bindingContext.ParseResult.GetValueForOption(MuxAfterDone);
                 if (muxAfterDoneValue == null) return option;
 
                 option.MuxAfterDone = true;
@@ -619,12 +619,12 @@ namespace N_m3u8DL_RE.CommandLine
 
         public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
         {
-            var argList = new List<string>(args);
-            var index = -1;
+            List<string> argList = new List<string>(args);
+            int index = -1;
             if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)
             {
-                var option = argList[index + 1];
-                var msg = option switch
+                string option = argList[index + 1];
+                string msg = option switch
                 {
                     "mux-after-done" => ResString.cmd_muxAfterDone_more,
                     "mux-import" => ResString.cmd_muxImport_more,
@@ -638,7 +638,7 @@ namespace N_m3u8DL_RE.CommandLine
                 Environment.Exit(0);
             }
 
-            var rootCommand = new RootCommand(VERSION_INFO)
+            RootCommand rootCommand = new RootCommand(VERSION_INFO)
             {
                 Input, TmpDir, SaveDir, SaveName, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
                 BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
@@ -654,7 +654,7 @@ namespace N_m3u8DL_RE.CommandLine
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async myOption => await action(myOption), new MyOptionBinder());
 
-            var parser = new CommandLineBuilder(rootCommand)
+            System.CommandLine.Parsing.Parser parser = new CommandLineBuilder(rootCommand)
                 .UseDefaults()
                 .EnablePosixBundling(false)
                 .UseExceptionHandler((ex, context) =>

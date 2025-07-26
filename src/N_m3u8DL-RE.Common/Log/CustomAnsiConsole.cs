@@ -29,7 +29,7 @@ namespace N_m3u8DL_RE.Common.Log
         private void RemoveAnsiEscapeSequences(string? input)
         {
             // Use regular expression to remove ANSI escape sequences
-            var output = MyRegex().Replace(input ?? "", "");
+            string output = MyRegex().Replace(input ?? "", "");
             output = MyRegex1().Replace(output, "");
             output = MyRegex2().Replace(output, "");
             if (string.IsNullOrWhiteSpace(output))
@@ -58,7 +58,7 @@ namespace N_m3u8DL_RE.Common.Log
         {
             if (forceAnsi)
             {
-                var ansiConsoleSettings = new AnsiConsoleSettings();
+                AnsiConsoleSettings ansiConsoleSettings = new AnsiConsoleSettings();
                 if (noAnsiColor)
                 {
                     ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
@@ -71,7 +71,7 @@ namespace N_m3u8DL_RE.Common.Log
             }
             else
             {
-                var ansiConsoleSettings = new AnsiConsoleSettings();
+                AnsiConsoleSettings ansiConsoleSettings = new AnsiConsoleSettings();
                 if (noAnsiColor)
                 {
                     ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());

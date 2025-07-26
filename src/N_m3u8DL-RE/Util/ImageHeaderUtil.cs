@@ -4,7 +4,7 @@ namespace N_m3u8DL_RE.Util
     {
         public static bool IsImageHeader(byte[] bArr)
         {
-            var size = bArr.Length;
+            int size = bArr.Length;
             // PNG HEADER检测
             if (size > 3 && 137 == bArr[0] && 80 == bArr[1] && 78 == bArr[2] && 71 == bArr[3])
                 return true;
@@ -22,7 +22,7 @@ namespace N_m3u8DL_RE.Util
 
         public static async Task ProcessAsync(string sourcePath)
         {
-            var sourceData = await File.ReadAllBytesAsync(sourcePath);
+            byte[] sourceData = await File.ReadAllBytesAsync(sourcePath);
 
             // PNG HEADER
             if (137 == sourceData[0] && 80 == sourceData[1] && 78 == sourceData[2] && 71 == sourceData[3])

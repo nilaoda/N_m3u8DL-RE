@@ -57,14 +57,14 @@ namespace Mp4SubtitleParser
         {
             return box =>
             {
-                var all = box.Reader.GetLength() - box.Reader.GetPosition();
+                long all = box.Reader.GetLength() - box.Reader.GetPosition();
                 handler(box.Reader.ReadBytes((int)all));
             };
         }
 
         public static void Children(ParsedBox box)
         {
-            var headerSize = HeaderSize(box);
+            int headerSize = HeaderSize(box);
             while (box.Reader.HasMoreData() && !box.Parser.Done)
             {
                 box.Parser.ParseNext(box.Start + headerSize, box.Reader, box.PartialOkay);
@@ -73,8 +73,8 @@ namespace Mp4SubtitleParser
 
         public static void SampleDescription(ParsedBox box)
         {
-            var headerSize = HeaderSize(box);
-            var count = box.Reader.ReadUInt32();
+            int headerSize = HeaderSize(box);
+            uint count = box.Reader.ReadUInt32();
             for (int i = 0; i < count; i++)
             {
                 box.Parser.ParseNext(box.Start + headerSize, box.Reader, box.PartialOkay);
@@ -87,7 +87,7 @@ namespace Mp4SubtitleParser
 
         public void Parse(byte[] data, bool partialOkay = false, bool stopOnPartial = false)
         {
-            var reader = new BinaryReader2(new MemoryStream(data));
+            BinaryReader2 reader = new BinaryReader2(new MemoryStream(data));
             this.Done = false;
             while (reader.HasMoreData() && !this.Done)
             {
@@ -97,7 +97,7 @@ namespace Mp4SubtitleParser
 
         private void ParseNext(long absStart, BinaryReader2 reader, bool partialOkay, bool stopOnPartial = false)
         {
-            var start = reader.GetPosition();
+            long start = reader.GetPosition();
 
             // size(4 bytes) + type(4 bytes) = 8 bytes
             if (stopOnPartial && start + 8 > reader.GetLength())
@@ -108,8 +108,8 @@ namespace Mp4SubtitleParser
 
             long size = reader.ReadUInt32();
             long type = reader.ReadUInt32();
-            var name = TypeToString(type);
-            var has64BitSize = false;
+            string name = TypeToString(type);
+            bool has64BitSize = false;
 
             // Console.WriteLine($"Parsing MP4 box: {name}");
 
@@ -143,11 +143,11 @@ namespace Mp4SubtitleParser
                         this.Done = true;
                         return;
                     }
-                    var versionAndFlags = reader.ReadUInt32();
+                    uint versionAndFlags = reader.ReadUInt32();
                     version = versionAndFlags >> 24;
                     flags = versionAndFlags & 0xFFFFFF;
                 }
-                var end = start + size;
+                long end = start + size;
                 if (partialOkay && end > reader.GetLength())
                 {
                     // For partial reads, truncate the payload if we must.
@@ -161,8 +161,8 @@ namespace Mp4SubtitleParser
                 }
 
                 int payloadSize = (int)(end - reader.GetPosition());
-                var payload = (payloadSize > 0) ? reader.ReadBytes(payloadSize) : [];
-                var box = new ParsedBox()
+                byte[] payload = (payloadSize > 0) ? reader.ReadBytes(payloadSize) : [];
+                ParsedBox box = new ParsedBox()
                 {
                     Parser = this,
                     PartialOkay = partialOkay || false,
@@ -181,7 +181,7 @@ namespace Mp4SubtitleParser
                 // If the box is longer than the remaining parts of the file, e.g. the
                 // mp4 is improperly formatted, or this was a partial range request that
                 // ended in the middle of a box, just skip to the end.
-                var skipLength = Math.Min(
+                long skipLength = Math.Min(
                   start + size - reader.GetPosition(),
                   reader.GetLength() - reader.GetPosition());
                 reader.ReadBytes((int)skipLength);
@@ -211,8 +211,8 @@ namespace Mp4SubtitleParser
         {
             if (name.Length != 4)
                 throw new Exception("Mp4 box names must be 4 characters long");
-            var code = 0;
-            foreach (var chr in name)
+            int code = 0;
+            foreach (char chr in name)
             {
                 code = (code << 8) | chr;
             }
@@ -221,7 +221,7 @@ namespace Mp4SubtitleParser
 
         public MP4Parser Box(string type, BoxHandler handler)
         {
-            var typeCode = TypeFromString(type);
+            int typeCode = TypeFromString(type);
             this.Headers[typeCode] = (int)BoxType.BASIC_BOX;
             this.BoxDefinitions[typeCode] = handler;
             return this;
@@ -229,7 +229,7 @@ namespace Mp4SubtitleParser
 
         public MP4Parser FullBox(string type, BoxHandler handler)
         {
-            var typeCode = TypeFromString(type);
+            int typeCode = TypeFromString(type);
             this.Headers[typeCode] = (int)BoxType.FULL_BOX;
             this.BoxDefinitions[typeCode] = handler;
             return this;
@@ -258,7 +258,7 @@ namespace Mp4SubtitleParser
 
         public static TFHD ParseTFHD(BinaryReader2 reader, uint flags)
         {
-            var trackId = reader.ReadUInt32();
+            uint trackId = reader.ReadUInt32();
             uint defaultSampleDuration = 0;
             uint defaultSampleSize = 0;
 
@@ -291,7 +291,7 @@ namespace Mp4SubtitleParser
 
         public static TRUN ParseTRUN(BinaryReader2 reader, uint version, uint flags)
         {
-            var trun = new TRUN();
+            TRUN trun = new TRUN();
             trun.SampleCount = reader.ReadUInt32();
 
             // Skip "data_offset" if present.
@@ -308,7 +308,7 @@ namespace Mp4SubtitleParser
 
             for (int i = 0; i < trun.SampleCount; i++)
             {
-                var sample = new Sample();
+                Sample sample = new Sample();
 
                 // Read "sample duration" if present.
                 if ((flags & 0x000100) != 0)

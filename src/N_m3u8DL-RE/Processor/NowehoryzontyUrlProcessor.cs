@@ -28,10 +28,10 @@ namespace N_m3u8DL_RE.Processor
                     Logger.WarnMarkUp($"[white on green]www.nowehoryzonty.pl[/] matched! waiting for calc...");
                     LOG = true;
                 }
-                var context = new Context();
+                Context context = new Context();
                 context.Eval(JS);
                 Function = context.GetVariable("md5").As<Function>();
-                var argLine = parserConfig.UrlProcessorArgs![START.Length..];
+                string argLine = parserConfig.UrlProcessorArgs![START.Length..];
                 TimeDifferenceStr = ParserUtil.GetAttribute(argLine, "timeDifference");
                 SecureToken = ParserUtil.GetAttribute(argLine, "filminfo.secureToken");
                 if (TimeDifferenceStr != null && SecureToken != null)
@@ -45,8 +45,8 @@ namespace N_m3u8DL_RE.Processor
 
         public override string Process(string oriUrl, ParserConfig parserConfig)
         {
-            var a = new Uri(oriUrl).AbsolutePath;
-            var n = oriUrl + "?secure=" + Calc(a);
+            string a = new Uri(oriUrl).AbsolutePath;
+            string n = oriUrl + "?secure=" + Calc(a);
             return n;
         }
 

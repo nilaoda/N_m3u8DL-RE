@@ -22,18 +22,18 @@ namespace N_m3u8DL_RE.Parser.Util
             if (key == "")
                 return line[(line.IndexOf(':') + 1)..];
 
-            var index = -1;
-            var result = string.Empty;
+            int index = -1;
+            string result = string.Empty;
             if ((index = line.IndexOf(key + "=\"", StringComparison.Ordinal)) > -1)
             {
-                var startIndex = index + (key + "=\"").Length;
-                var endIndex = startIndex + line[startIndex..].IndexOf('\"');
+                int startIndex = index + (key + "=\"").Length;
+                int endIndex = startIndex + line[startIndex..].IndexOf('\"');
                 result = line[startIndex..endIndex];
             }
             else if ((index = line.IndexOf(key + "=", StringComparison.Ordinal)) > -1)
             {
-                var startIndex = index + (key + "=").Length;
-                var endIndex = startIndex + line[startIndex..].IndexOf(',');
+                int startIndex = index + (key + "=").Length;
+                int endIndex = startIndex + line[startIndex..].IndexOf(',');
                 result = endIndex >= startIndex ? line[startIndex..endIndex] : line[startIndex..];
             }
 
@@ -48,7 +48,7 @@ namespace N_m3u8DL_RE.Parser.Util
         /// <returns>n(length) o(start)</returns>
         public static (long, long?) GetRange(string input)
         {
-            var t = input.Split('@');
+            string[] t = input.Split('@');
             return t.Length switch
             {
                 <= 0 => (0, null),
@@ -65,8 +65,8 @@ namespace N_m3u8DL_RE.Parser.Util
         /// <returns>StartRange, ExpectLength</returns>
         public static (long, long) ParseRange(string range)
         {
-            var start = Convert.ToInt64(range.Split('-')[0]);
-            var end = Convert.ToInt64(range.Split('-')[1]);
+            long start = Convert.ToInt64(range.Split('-')[0]);
+            long end = Convert.ToInt64(range.Split('-')[1]);
             return (start, end - start + 1);
         }
 
@@ -78,13 +78,13 @@ namespace N_m3u8DL_RE.Parser.Util
         /// <returns></returns>
         public static string ReplaceVars(string text, Dictionary<string, object?> keyValuePairs)
         {
-            foreach (var item in keyValuePairs)
+            foreach (KeyValuePair<string, object?> item in keyValuePairs)
                 if (text.Contains(item.Key))
                     text = text.Replace(item.Key, item.Value!.ToString());
 
             // 处理特殊形式数字 如 $Number%05d$
-            var regex = VarsNumberRegex();
-            if (regex.IsMatch(text) && keyValuePairs.TryGetValue(DASHTags.TemplateNumber, out var keyValuePair))
+            Regex regex = VarsNumberRegex();
+            if (regex.IsMatch(text) && keyValuePairs.TryGetValue(DASHTags.TemplateNumber, out object? keyValuePair))
             {
                 foreach (Match m in regex.Matches(text))
                 {
@@ -106,8 +106,8 @@ namespace N_m3u8DL_RE.Parser.Util
             if (string.IsNullOrEmpty(baseurl))
                 return url;
 
-            var uri1 = new Uri(baseurl);  // 这里直接传完整的URL即可
-            var uri2 = new Uri(uri1, url);
+            Uri uri1 = new Uri(baseurl);  // 这里直接传完整的URL即可
+            Uri uri2 = new Uri(uri1, url);
             url = uri2.ToString();
 
             return url;

@@ -30,12 +30,12 @@ namespace N_m3u8DL_RE.Util
 
         public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
         {
-            var result = new List<Mediainfo>();
+            List<Mediainfo> result = new List<Mediainfo>();
 
             if (string.IsNullOrEmpty(file) || !File.Exists(file)) return result;
 
             string cmd = "-hide_banner -i \"" + file + "\"";
-            var p = Process.Start(new ProcessStartInfo()
+            Process p = Process.Start(new ProcessStartInfo()
             {
                 FileName = binary,
                 Arguments = cmd,
@@ -43,12 +43,12 @@ namespace N_m3u8DL_RE.Util
                 RedirectStandardError = true,
                 UseShellExecute = false
             })!;
-            var output = await p.StandardError.ReadToEndAsync();
+            string output = await p.StandardError.ReadToEndAsync();
             await p.WaitForExitAsync();
 
             foreach (Match stream in TextRegex().Matches(output))
             {
-                var info = new Mediainfo()
+                Mediainfo info = new Mediainfo()
                 {
                     Text = TypeRegex().Match(stream.Value).Groups[2].Value.TrimEnd(),
                     Id = IdRegex().Match(stream.Value).Groups[1].Value,
@@ -72,8 +72,8 @@ namespace N_m3u8DL_RE.Util
 
                 if (StartRegex().IsMatch(output))
                 {
-                    var f = StartRegex().Match(output).Groups[1].Value;
-                    if (double.TryParse(f, out var d))
+                    string f = StartRegex().Match(output).Groups[1].Value;
+                    if (double.TryParse(f, out double d))
                         info.StartTime = TimeSpan.FromSeconds(d);
                 }
 

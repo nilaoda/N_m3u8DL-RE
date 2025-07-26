@@ -21,7 +21,7 @@ namespace N_m3u8DL_RE.Util
         /// <returns></returns>
         public static async Task<List<MediaSegment>?> SplitUrlAsync(MediaSegment segment, Dictionary<string, string> headers)
         {
-            var url = segment.Url;
+            string url = segment.Url;
             if (!await CanSplitAsync(url, headers)) return null;
 
             if (segment.StartRange != null) return null;
@@ -30,7 +30,7 @@ namespace N_m3u8DL_RE.Util
             if (fileSize == 0) return null;
 
             List<Clip> allClips = GetAllClips(url, fileSize);
-            var splitSegments = new List<MediaSegment>();
+            List<MediaSegment> splitSegments = new List<MediaSegment>();
             foreach (Clip clip in allClips)
             {
                 splitSegments.Add(new MediaSegment()
@@ -50,8 +50,8 @@ namespace N_m3u8DL_RE.Util
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Head, url);
-                var response = (await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, url);
+                HttpResponseMessage response = (await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
                 bool supportsRangeRequests = response.Headers.Contains("Accept-Ranges");
 
                 return supportsRangeRequests;
@@ -65,13 +65,13 @@ namespace N_m3u8DL_RE.Util
 
         private static async Task<long> GetFileSizeAsync(string url, Dictionary<string, string> headers)
         {
-            using var httpRequestMessage = new HttpRequestMessage();
+            using HttpRequestMessage httpRequestMessage = new HttpRequestMessage();
             httpRequestMessage.RequestUri = new(url);
-            foreach (var header in headers)
+            foreach (KeyValuePair<string, string> header in headers)
             {
                 httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
-            var response = (await HTTPUtil.AppHttpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
+            HttpResponseMessage response = (await HTTPUtil.AppHttpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
             long totalSizeBytes = response.Content.Headers.ContentLength ?? 0;
 
             return totalSizeBytes;

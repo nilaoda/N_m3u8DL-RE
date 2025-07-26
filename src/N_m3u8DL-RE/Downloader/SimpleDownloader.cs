@@ -19,33 +19,33 @@ namespace N_m3u8DL_RE.Downloader
 
         public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null)
         {
-            var url = segment.Url;
-            var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
+            string url = segment.Url;
+            (string des, DownloadResult dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
             if (dResult is { Success: true } && dResult.ActualFilePath != des)
             {
                 switch (segment.EncryptInfo.Method)
                 {
                     case EncryptMethod.AES_128:
                         {
-                            var key = segment.EncryptInfo.Key;
-                            var iv = segment.EncryptInfo.IV;
+                            byte[]? key = segment.EncryptInfo.Key;
+                            byte[]? iv = segment.EncryptInfo.IV;
                             AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
                             break;
                         }
                     case EncryptMethod.AES_128_ECB:
                         {
-                            var key = segment.EncryptInfo.Key;
-                            var iv = segment.EncryptInfo.IV;
+                            byte[]? key = segment.EncryptInfo.Key;
+                            byte[]? iv = segment.EncryptInfo.IV;
                             AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
                             break;
                         }
                     case EncryptMethod.CHACHA20:
                         {
-                            var key = segment.EncryptInfo.Key;
-                            var nonce = segment.EncryptInfo.IV;
+                            byte[]? key = segment.EncryptInfo.Key;
+                            byte[]? nonce = segment.EncryptInfo.IV;
 
-                            var fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
-                            var decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
+                            byte[] fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
+                            byte[] decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
                             await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
                             break;
                         }
@@ -79,7 +79,7 @@ namespace N_m3u8DL_RE.Downloader
             try
             {
                 cancellationTokenSource = new();
-                var des = Path.ChangeExtension(path, null);
+                string des = Path.ChangeExtension(path, null);
 
                 // 已下载跳过
                 if (File.Exists(des))
@@ -89,7 +89,7 @@ namespace N_m3u8DL_RE.Downloader
                 }
 
                 // 已解密跳过
-                var dec = Path.Combine(Path.GetDirectoryName(des)!, Path.GetFileNameWithoutExtension(des) + "_dec" + Path.GetExtension(des));
+                string dec = Path.Combine(Path.GetDirectoryName(des)!, Path.GetFileNameWithoutExtension(des) + "_dec" + Path.GetExtension(des));
                 if (File.Exists(dec))
                 {
                     speedContainer.Add(new FileInfo(dec).Length);
@@ -97,8 +97,8 @@ namespace N_m3u8DL_RE.Downloader
                 }
 
                 // 另起线程进行监控
-                var cts = cancellationTokenSource;
-                using var watcher = Task.Factory.StartNew(async () =>
+                CancellationTokenSource cts = cancellationTokenSource;
+                using Task<Task> watcher = Task.Factory.StartNew(async () =>
                 {
                     while (true)
                     {
@@ -114,7 +114,7 @@ namespace N_m3u8DL_RE.Downloader
                 });
 
                 // 调用下载
-                var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
+                DownloadResult result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
                 return (des, result);
 
                 throw new Exception("please retry");

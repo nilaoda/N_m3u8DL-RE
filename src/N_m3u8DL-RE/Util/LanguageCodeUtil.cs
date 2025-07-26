@@ -376,7 +376,7 @@ MA;msa;Melayu;Melayu
 "
             .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x =>
             {
-                var arr = x.Trim().Split(';', StringSplitOptions.TrimEntries);
+                string[] arr = x.Trim().Split(';', StringSplitOptions.TrimEntries);
                 return new Language(arr[0], arr[1], arr[2], arr[3]);
             })];
 
@@ -502,15 +502,15 @@ sr;srp
         public static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
         {
             if (string.IsNullOrEmpty(outputFile.LangCode)) return;
-            var originalLangCode = outputFile.LangCode;
+            string originalLangCode = outputFile.LangCode;
 
             // 先直接查找
-            var lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
+            Language? lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
             // 处理特殊的扩展语言标记
             if (lang == null)
             {
                 // 2位转3位
-                var l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
+                string l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
                 lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(l, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(l, StringComparison.OrdinalIgnoreCase));
             }
 

@@ -17,15 +17,15 @@ namespace N_m3u8DL_RE.Column
 
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            var taskId = task.Id;
+            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            int taskId = task.Id;
             // 一秒汇报一次即可
-            if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now)
+            if (DateTimeStringDic.TryGetValue(taskId, out string? oldTime) && oldTime != now)
             {
                 RecodingSizeDic[task.Id] = _recodingSizeDic[task.Id];
             }
             DateTimeStringDic[taskId] = now;
-            var flag = RecodingSizeDic.TryGetValue(taskId, out var size);
+            bool flag = RecodingSizeDic.TryGetValue(taskId, out double size);
             return new Text(GlobalUtil.FormatFileSize(flag ? size : 0), MyStyle).LeftJustified();
         }
     }

@@ -50,19 +50,19 @@ namespace N_m3u8DL_RE.Common.Entity
 
             text += Environment.NewLine;
 
-            var webSub = new WebVttSub();
-            var needPayload = false;
-            var timeLine = "";
-            var regex1 = TSMapRegex();
+            WebVttSub webSub = new WebVttSub();
+            bool needPayload = false;
+            string timeLine = "";
+            Regex regex1 = TSMapRegex();
 
             if (regex1.IsMatch(text))
             {
-                var timestamp = TSValueRegex().Match(regex1.Match(text).Value).Groups[1].Value;
+                string timestamp = TSValueRegex().Match(regex1.Match(text).Value).Groups[1].Value;
                 webSub.MpegtsTimestamp = Convert.ToInt64(timestamp);
             }
 
-            var payloads = new List<string>();
-            foreach (var line in text.Split('\n'))
+            List<string> payloads = new List<string>();
+            foreach (string line in text.Split('\n'))
             {
                 if (line.Contains(" --> "))
                 {
@@ -75,13 +75,13 @@ namespace N_m3u8DL_RE.Common.Entity
 
                 if (string.IsNullOrEmpty(line.Trim()))
                 {
-                    var payload = string.Join(Environment.NewLine, payloads);
+                    string payload = string.Join(Environment.NewLine, payloads);
                     if (string.IsNullOrEmpty(payload.Trim())) continue; // 没获取到payload 跳过添加
 
-                    var arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                    var startTime = ConvertToTS(arr[0]);
-                    var endTime = ConvertToTS(arr[1]);
-                    var style = arr.Count > 2 ? string.Join(" ", arr.Skip(2)) : "";
+                    List<string> arr = SplitRegex().Split(timeLine.Replace("-->", "")).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                    TimeSpan startTime = ConvertToTS(arr[0]);
+                    TimeSpan endTime = ConvertToTS(arr[1]);
+                    string style = arr.Count > 2 ? string.Join(" ", arr.Skip(2)) : "";
                     webSub.Cues.Add(new SubCue()
                     {
                         StartTime = startTime,
@@ -100,7 +100,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
             if (BaseTimestamp == 0) return webSub;
 
-            foreach (var item in webSub.Cues)
+            foreach (SubCue item in webSub.Cues)
             {
                 if (item.StartTime.TotalMilliseconds - BaseTimestamp >= 0)
                 {
@@ -136,12 +136,12 @@ namespace N_m3u8DL_RE.Common.Entity
         public WebVttSub AddCuesFromOne(WebVttSub webSub)
         {
             FixTimestamp(webSub, this.MpegtsTimestamp);
-            foreach (var item in webSub.Cues)
+            foreach (SubCue item in webSub.Cues)
             {
                 if (this.Cues.Contains(item)) continue;
 
                 // 如果相差只有1ms，且payload相同，则拼接
-                var last = this.Cues.LastOrDefault();
+                SubCue? last = this.Cues.LastOrDefault();
                 if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload)
                 {
                     last.EndTime = item.EndTime;
@@ -165,12 +165,12 @@ namespace N_m3u8DL_RE.Common.Entity
             if ((this.Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < this.Cues.Last().EndTime && sub.Cues.First().EndTime != this.Cues.Last().EndTime) || this.Cues.Count == 0)
             {
                 // The MPEG2 transport stream clocks (PCR, PTS, DTS) all have units of 1/90000 second
-                var seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
-                var offset = TimeSpan.FromSeconds(seconds);
+                long seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
+                TimeSpan offset = TimeSpan.FromSeconds(seconds);
                 // 当前预添加的字幕的起始时间小于实际上已经走过的时间(如offset已经是100秒，而字幕起始却是2秒)，才修复
                 if (sub.Cues.Count > 0 && sub.Cues.First().StartTime < offset)
                 {
-                    foreach (var subCue in sub.Cues)
+                    foreach (SubCue subCue in sub.Cues)
                     {
                         subCue.StartTime += offset;
                         subCue.EndTime += offset;
@@ -201,7 +201,7 @@ namespace N_m3u8DL_RE.Common.Entity
                 time += Convert.ToInt32(parts.Last().PadRight(3, '0'));
                 str = parts.First();
             }
-            var t = str.Split(':').Reverse().ToList();
+            List<string> t = str.Split(':').Reverse().ToList();
             for (int i = 0; i < t.Count; i++)
             {
                 time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;
@@ -211,8 +211,8 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            foreach (var c in GetCues())  // 输出时去除空串
+            StringBuilder sb = new StringBuilder();
+            foreach (SubCue c in GetCues())  // 输出时去除空串
             {
                 sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);
                 sb.AppendLine(c.Payload);
@@ -228,7 +228,7 @@ namespace N_m3u8DL_RE.Common.Entity
         /// <param name="time"></param>
         public void LeftShiftTime(TimeSpan time)
         {
-            foreach (var cue in this.Cues)
+            foreach (SubCue cue in this.Cues)
             {
                 if (cue.StartTime.TotalSeconds - time.TotalSeconds > 0) cue.StartTime -= time;
                 else cue.StartTime = TimeSpan.FromSeconds(0);
@@ -247,7 +247,7 @@ namespace N_m3u8DL_RE.Common.Entity
         {
             StringBuilder sb = new StringBuilder();
             int index = 1;
-            foreach (var c in GetCues())
+            foreach (SubCue c in GetCues())
             {
                 sb.AppendLine($"{index++}");
                 sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff"));
@@ -256,7 +256,7 @@ namespace N_m3u8DL_RE.Common.Entity
             }
             sb.AppendLine();
 
-            var srt = sb.ToString();
+            string srt = sb.ToString();
 
             if (string.IsNullOrEmpty(srt.Trim()))
             {

@@ -31,7 +31,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
                 m3u8Content = m3u8Content.Replace("\r", Environment.NewLine);
             }
 
-            var m3u8Url = parserConfig.Url;
+            string m3u8Url = parserConfig.Url;
             // YSP回放
             if (m3u8Url.Contains("tlivecloud-playback-cdn.ysp.cctv.cn") && m3u8Url.Contains("endtime="))
             {
@@ -47,7 +47,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             // 针对YK #EXT-X-VERSION:7杜比视界片源修正
             if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Content.Contains("ott.cibntv.net") && m3u8Content.Contains("ccode="))
             {
-                var ykmap = YkDVRegex();
+                Regex ykmap = YkDVRegex();
                 foreach (Match m in ykmap.Matches(m3u8Content))
                 {
                     m3u8Content = m3u8Content.Replace(m.Value, $"#EXTINF:0.000000,\n#EXT-X-BYTERANGE:{m.Groups[2].Value}\n{m.Groups[1].Value}");
@@ -86,7 +86,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
             }
 
             // 修复#EXT-X-KEY与#EXTINF出现次序异常问题
-            var regex = OrderFixRegex();
+            Regex regex = OrderFixRegex();
             if (regex.IsMatch(m3u8Content))
             {
                 m3u8Content = regex.Replace(m3u8Content, "$3$2$1");

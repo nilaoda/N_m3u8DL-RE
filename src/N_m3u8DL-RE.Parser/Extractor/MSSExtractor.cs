@@ -45,29 +45,29 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
         {
-            var streamList = new List<StreamSpec>();
+            List<StreamSpec> streamList = new List<StreamSpec>();
             this.IsmContent = rawText;
             this.PreProcessContent();
 
-            var xmlDocument = XDocument.Parse(IsmContent);
+            XDocument xmlDocument = XDocument.Parse(IsmContent);
 
             // 选中第一个SmoothStreamingMedia节点
-            var ssmElement = xmlDocument.Elements().First(e => e.Name.LocalName == "SmoothStreamingMedia");
-            var timeScaleStr = ssmElement.Attribute("TimeScale")?.Value ?? "10000000";
-            var durationStr = ssmElement.Attribute("Duration")?.Value;
-            var timescale = Convert.ToInt32(timeScaleStr);
-            var isLiveStr = ssmElement.Attribute("IsLive")?.Value;
+            XElement ssmElement = xmlDocument.Elements().First(e => e.Name.LocalName == "SmoothStreamingMedia");
+            string timeScaleStr = ssmElement.Attribute("TimeScale")?.Value ?? "10000000";
+            string? durationStr = ssmElement.Attribute("Duration")?.Value;
+            int timescale = Convert.ToInt32(timeScaleStr);
+            string? isLiveStr = ssmElement.Attribute("IsLive")?.Value;
             bool isLive = Convert.ToBoolean(isLiveStr ?? "FALSE");
 
-            var isProtection = false;
-            var protectionSystemId = "";
-            var protectionData = "";
+            bool isProtection = false;
+            string protectionSystemId = "";
+            string protectionData = "";
 
             // 加密检测
-            var protectElement = ssmElement.Elements().FirstOrDefault(e => e.Name.LocalName == "Protection");
+            XElement? protectElement = ssmElement.Elements().FirstOrDefault(e => e.Name.LocalName == "Protection");
             if (protectElement != null)
             {
-                var protectionHeader = protectElement.Element("ProtectionHeader");
+                XElement? protectionHeader = protectElement.Element("ProtectionHeader");
                 if (protectionHeader != null)
                 {
                     isProtection = true;
@@ -77,42 +77,42 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
 
             // 所有StreamIndex节点
-            var streamIndexElements = ssmElement.Elements().Where(e => e.Name.LocalName == "StreamIndex");
+            IEnumerable<XElement> streamIndexElements = ssmElement.Elements().Where(e => e.Name.LocalName == "StreamIndex");
 
-            foreach (var streamIndex in streamIndexElements)
+            foreach (XElement? streamIndex in streamIndexElements)
             {
-                var type = streamIndex.Attribute("Type")?.Value; // "video" / "audio" / "text"
-                var name = streamIndex.Attribute("Name")?.Value;
-                var subType = streamIndex.Attribute("Subtype")?.Value; // text track
+                string? type = streamIndex.Attribute("Type")?.Value; // "video" / "audio" / "text"
+                string? name = streamIndex.Attribute("Name")?.Value;
+                string? subType = streamIndex.Attribute("Subtype")?.Value; // text track
                 // 如果有则不从QualityLevel读取
                 // Bitrate = "{bitrate}" / "{Bitrate}"
                 // StartTimeSubstitution = "{start time}" / "{start_time}"
-                var urlPattern = streamIndex.Attribute("Url")?.Value;
-                var language = streamIndex.Attribute("Language")?.Value;
+                string? urlPattern = streamIndex.Attribute("Url")?.Value;
+                string? language = streamIndex.Attribute("Language")?.Value;
                 // 去除不规范的语言标签
                 if (language?.Length != 3) language = null;
 
                 // 所有c节点
-                var cElements = streamIndex.Elements().Where(e => e.Name.LocalName == "c");
+                IEnumerable<XElement> cElements = streamIndex.Elements().Where(e => e.Name.LocalName == "c");
 
                 // 所有QualityLevel节点
-                var qualityLevelElements = streamIndex.Elements().Where(e => e.Name.LocalName == "QualityLevel");
+                IEnumerable<XElement> qualityLevelElements = streamIndex.Elements().Where(e => e.Name.LocalName == "QualityLevel");
 
-                foreach (var qualityLevel in qualityLevelElements)
+                foreach (XElement? qualityLevel in qualityLevelElements)
                 {
                     urlPattern = (qualityLevel.Attribute("Url")?.Value ?? urlPattern)!
                         .Replace(MSSTags.Bitrate_BK, MSSTags.Bitrate).Replace(MSSTags.StartTime_BK, MSSTags.StartTime);
-                    var fourCC = qualityLevel.Attribute("FourCC")!.Value.ToUpper();
-                    var samplingRateStr = qualityLevel.Attribute("SamplingRate")?.Value;
-                    var bitsPerSampleStr = qualityLevel.Attribute("BitsPerSample")?.Value;
-                    var nalUnitLengthFieldStr = qualityLevel.Attribute("NALUnitLengthField")?.Value;
-                    var indexStr = qualityLevel.Attribute("Index")?.Value;
-                    var codecPrivateData = qualityLevel.Attribute("CodecPrivateData")?.Value ?? "";
-                    var audioTag = qualityLevel.Attribute("AudioTag")?.Value;
-                    var bitrate = Convert.ToInt32(qualityLevel.Attribute("Bitrate")?.Value ?? "0");
-                    var width = Convert.ToInt32(qualityLevel.Attribute("MaxWidth")?.Value ?? "0");
-                    var height = Convert.ToInt32(qualityLevel.Attribute("MaxHeight")?.Value ?? "0");
-                    var channels = qualityLevel.Attribute("Channels")?.Value;
+                    string fourCC = qualityLevel.Attribute("FourCC")!.Value.ToUpper();
+                    string? samplingRateStr = qualityLevel.Attribute("SamplingRate")?.Value;
+                    string? bitsPerSampleStr = qualityLevel.Attribute("BitsPerSample")?.Value;
+                    string? nalUnitLengthFieldStr = qualityLevel.Attribute("NALUnitLengthField")?.Value;
+                    string? indexStr = qualityLevel.Attribute("Index")?.Value;
+                    string codecPrivateData = qualityLevel.Attribute("CodecPrivateData")?.Value ?? "";
+                    string? audioTag = qualityLevel.Attribute("AudioTag")?.Value;
+                    int bitrate = Convert.ToInt32(qualityLevel.Attribute("Bitrate")?.Value ?? "0");
+                    int width = Convert.ToInt32(qualityLevel.Attribute("MaxWidth")?.Value ?? "0");
+                    int height = Convert.ToInt32(qualityLevel.Attribute("MaxHeight")?.Value ?? "0");
+                    string? channels = qualityLevel.Attribute("Channels")?.Value;
 
                     StreamSpec streamSpec = new();
                     streamSpec.PublishTime = DateTime.Now; // 发布时间默认现在
@@ -143,23 +143,23 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         streamSpec.Playlist.MediaInit.Url = $"hex://{codecPrivateData}";
                     }
 
-                    var currentTime = 0L;
-                    var segIndex = 0;
-                    var varDic = new Dictionary<string, object?>
+                    long currentTime = 0L;
+                    int segIndex = 0;
+                    Dictionary<string, object?> varDic = new Dictionary<string, object?>
                     {
                         [MSSTags.Bitrate] = bitrate
                     };
 
-                    foreach (var c in cElements)
+                    foreach (XElement? c in cElements)
                     {
                         // 每个C元素包含三个属性:@t(start time)\@r(repeat count)\@d(duration)
-                        var _startTimeStr = c.Attribute("t")?.Value;
-                        var _durationStr = c.Attribute("d")?.Value;
-                        var _repeatCountStr = c.Attribute("r")?.Value;
+                        string? _startTimeStr = c.Attribute("t")?.Value;
+                        string? _durationStr = c.Attribute("d")?.Value;
+                        string? _repeatCountStr = c.Attribute("r")?.Value;
 
                         if (_startTimeStr != null) currentTime = Convert.ToInt64(_startTimeStr);
-                        var _duration = Convert.ToInt64(_durationStr);
-                        var _repeatCount = Convert.ToInt64(_repeatCountStr);
+                        long _duration = Convert.ToInt64(_durationStr);
+                        long _repeatCount = Convert.ToInt64(_repeatCountStr);
                         if (_repeatCount > 0)
                         {
                             // This value is one-based. (A value of 2 means two fragments in the contiguous series).
@@ -167,8 +167,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         }
 
                         varDic[MSSTags.StartTime] = currentTime;
-                        var oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
-                        var mediaUrl = ParserUtil.ReplaceVars(oriUrl, varDic);
+                        string oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
+                        string mediaUrl = ParserUtil.ReplaceVars(oriUrl, varDic);
                         MediaSegment mediaSegment = new();
                         mediaSegment.Url = mediaUrl;
                         if (oriUrl.Contains(MSSTags.StartTime))
@@ -186,8 +186,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             currentTime += _duration;
                             MediaSegment _mediaSegment = new();
                             varDic[MSSTags.StartTime] = currentTime;
-                            var _oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
-                            var _mediaUrl = ParserUtil.ReplaceVars(_oriUrl, varDic);
+                            string _oriUrl = ParserUtil.CombineURL(this.BaseUrl, urlPattern!);
+                            string _mediaUrl = ParserUtil.ReplaceVars(_oriUrl, varDic);
                             _mediaSegment.Url = _mediaUrl;
                             _mediaSegment.Index = segIndex++;
                             _mediaSegment.Duration = _duration / (double)timescale;
@@ -216,8 +216,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             ProtectionData = protectionData,
                             ProtectionSystemID = protectionSystemId,
                         };
-                        var processor = new MSSMoovProcessor(streamSpec);
-                        var header = processor.GenHeader(); // trackId可能不正确
+                        MSSMoovProcessor processor = new MSSMoovProcessor(streamSpec);
+                        byte[] header = processor.GenHeader(); // trackId可能不正确
                         streamSpec.Playlist!.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";
                         // 为音视频写入加密信息
                         if (isProtection && type != "text")
@@ -226,7 +226,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 streamSpec.Playlist.MediaInit.EncryptInfo.Method = DEFAULT_METHOD;
                             }
-                            foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
+                            foreach (MediaSegment item in streamSpec.Playlist.MediaParts[0].MediaSegments)
                             {
                                 item.EncryptInfo.Method = DEFAULT_METHOD;
                             }
@@ -241,9 +241,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
             }
 
             // 为视频设置默认轨道
-            var aL = streamList.Where(s => s.MediaType == MediaType.AUDIO).ToList();
-            var sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
-            foreach (var item in streamList.Where(item => !string.IsNullOrEmpty(item.Resolution)))
+            List<StreamSpec> aL = streamList.Where(s => s.MediaType == MediaType.AUDIO).ToList();
+            List<StreamSpec> sL = streamList.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
+            foreach (StreamSpec? item in streamList.Where(item => !string.IsNullOrEmpty(item.Resolution)))
             {
                 if (aL.Count != 0)
                 {
@@ -281,13 +281,13 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private static string ParseAVCCodecs(string privateData)
         {
-            var result = VCodecsRegex().Match(privateData).Groups[1].Value;
+            string result = VCodecsRegex().Match(privateData).Groups[1].Value;
             return string.IsNullOrEmpty(result) ? "avc1.4D401E" : $"avc1.{result}";
         }
 
         private static string ParseAACCodecs(string fourCC, string privateData)
         {
-            var mpProfile = 2;
+            int mpProfile = 2;
             if (fourCC == "AACH")
             {
                 mpProfile = 5; // High Efficiency AAC Profile
@@ -308,19 +308,19 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private Task ProcessUrlAsync(List<StreamSpec> streamSpecs)
         {
-            foreach (var streamSpec in streamSpecs)
+            foreach (StreamSpec streamSpec in streamSpecs)
             {
-                var playlist = streamSpec.Playlist;
+                Playlist? playlist = streamSpec.Playlist;
                 if (playlist == null) continue;
 
                 if (playlist.MediaInit != null)
                 {
                     playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
                 }
-                for (var ii = 0; ii < playlist!.MediaParts.Count; ii++)
+                for (int ii = 0; ii < playlist!.MediaParts.Count; ii++)
                 {
-                    var part = playlist.MediaParts[ii];
-                    foreach (var segment in part.MediaSegments)
+                    MediaPart part = playlist.MediaParts[ii];
+                    foreach (MediaSegment segment in part.MediaSegments)
                     {
                         segment.Url = PreProcessUrl(segment.Url);
                     }
@@ -332,7 +332,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public string PreProcessUrl(string url)
         {
-            foreach (var p in ParserConfig.UrlProcessors)
+            foreach (Processor.UrlProcessor p in ParserConfig.UrlProcessors)
             {
                 if (p.CanProcess(ExtractorType, url, ParserConfig))
                 {
@@ -345,7 +345,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         public void PreProcessContent()
         {
-            foreach (var p in ParserConfig.ContentProcessors)
+            foreach (Processor.ContentProcessor p in ParserConfig.ContentProcessors)
             {
                 if (p.CanProcess(ExtractorType, IsmContent, ParserConfig))
                 {
@@ -358,7 +358,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         {
             if (streamSpecs.Count == 0) return;
 
-            var (rawText, url) = ("", ParserConfig.Url);
+            (string rawText, string url) = ("", ParserConfig.Url);
             try
             {
                 (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.Url, ParserConfig.Headers);
@@ -372,12 +372,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
             ParserConfig.Url = url;
             SetInitUrl();
 
-            var newStreams = await ExtractStreamsAsync(rawText);
-            foreach (var streamSpec in streamSpecs)
+            List<StreamSpec> newStreams = await ExtractStreamsAsync(rawText);
+            foreach (StreamSpec streamSpec in streamSpecs)
             {
                 // 有的网站每次请求MPD返回的码率不一致，导致ToShortString()无法匹配 无法更新playlist
                 // 故增加通过init url来匹配 (如果有的话)
-                var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
+                IEnumerable<StreamSpec> match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
                 if (!match.Any())
                     match = newStreams.Where(n => n.Playlist?.MediaInit?.Url == streamSpec.Playlist?.MediaInit?.Url);
 

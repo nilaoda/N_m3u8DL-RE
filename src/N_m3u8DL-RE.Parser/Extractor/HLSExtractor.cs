@@ -43,7 +43,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 throw new Exception(ResString.badM3u8);
             }
 
-            foreach (var p in ParserConfig.ContentProcessors)
+            foreach (Processor.ContentProcessor p in ParserConfig.ContentProcessors)
             {
                 if (p.CanProcess(ExtractorType, M3u8Content, ParserConfig))
                 {
@@ -57,7 +57,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         public string PreProcessUrl(string url)
         {
-            foreach (var p in ParserConfig.UrlProcessors)
+            foreach (Processor.UrlProcessor p in ParserConfig.UrlProcessors)
             {
                 if (p.CanProcess(ExtractorType, url, ParserConfig))
                 {
@@ -88,28 +88,28 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 {
                     streamSpec = new();
                     streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
-                    var bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH")) ? ParserUtil.GetAttribute(line, "BANDWIDTH") : ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH");
+                    string bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH")) ? ParserUtil.GetAttribute(line, "BANDWIDTH") : ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH");
                     streamSpec.Bandwidth = Convert.ToInt32(bandwidth);
                     streamSpec.Codecs = ParserUtil.GetAttribute(line, "CODECS");
                     streamSpec.Resolution = ParserUtil.GetAttribute(line, "RESOLUTION");
 
-                    var frameRate = ParserUtil.GetAttribute(line, "FRAME-RATE");
+                    string frameRate = ParserUtil.GetAttribute(line, "FRAME-RATE");
                     if (!string.IsNullOrEmpty(frameRate))
                         streamSpec.FrameRate = Convert.ToDouble(frameRate);
 
-                    var audioId = ParserUtil.GetAttribute(line, "AUDIO");
+                    string audioId = ParserUtil.GetAttribute(line, "AUDIO");
                     if (!string.IsNullOrEmpty(audioId))
                         streamSpec.AudioId = audioId;
 
-                    var videoId = ParserUtil.GetAttribute(line, "VIDEO");
+                    string videoId = ParserUtil.GetAttribute(line, "VIDEO");
                     if (!string.IsNullOrEmpty(videoId))
                         streamSpec.VideoId = videoId;
 
-                    var subtitleId = ParserUtil.GetAttribute(line, "SUBTITLES");
+                    string subtitleId = ParserUtil.GetAttribute(line, "SUBTITLES");
                     if (!string.IsNullOrEmpty(subtitleId))
                         streamSpec.SubtitleId = subtitleId;
 
-                    var videoRange = ParserUtil.GetAttribute(line, "VIDEO-RANGE");
+                    string videoRange = ParserUtil.GetAttribute(line, "VIDEO-RANGE");
                     if (!string.IsNullOrEmpty(videoRange))
                         streamSpec.VideoRange = videoRange;
 
@@ -124,8 +124,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 else if (line.StartsWith(HLSTags.ext_x_media))
                 {
                     streamSpec = new();
-                    var type = ParserUtil.GetAttribute(line, "TYPE").Replace("-", "_");
-                    if (Enum.TryParse<MediaType>(type, out var mediaType))
+                    string type = ParserUtil.GetAttribute(line, "TYPE").Replace("-", "_");
+                    if (Enum.TryParse<MediaType>(type, out MediaType mediaType))
                     {
                         streamSpec.MediaType = mediaType;
                     }
@@ -136,7 +136,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         continue;
                     }
 
-                    var url = ParserUtil.GetAttribute(line, "URI");
+                    string url = ParserUtil.GetAttribute(line, "URI");
 
                     /**
                      *    The URI attribute of the EXT-X-MEDIA tag is REQUIRED if the media
@@ -159,28 +159,28 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     url = ParserUtil.CombineURL(BaseUrl, url);
                     streamSpec.Url = PreProcessUrl(url);
 
-                    var groupId = ParserUtil.GetAttribute(line, "GROUP-ID");
+                    string groupId = ParserUtil.GetAttribute(line, "GROUP-ID");
                     streamSpec.GroupId = groupId;
 
-                    var lang = ParserUtil.GetAttribute(line, "LANGUAGE");
+                    string lang = ParserUtil.GetAttribute(line, "LANGUAGE");
                     if (!string.IsNullOrEmpty(lang))
                         streamSpec.Language = lang;
 
-                    var name = ParserUtil.GetAttribute(line, "NAME");
+                    string name = ParserUtil.GetAttribute(line, "NAME");
                     if (!string.IsNullOrEmpty(name))
                         streamSpec.Name = name;
 
-                    var def = ParserUtil.GetAttribute(line, "DEFAULT");
-                    if (Enum.TryParse<Choise>(type, out var defaultChoise))
+                    string def = ParserUtil.GetAttribute(line, "DEFAULT");
+                    if (Enum.TryParse<Choise>(type, out Choise defaultChoise))
                     {
                         streamSpec.Default = defaultChoise;
                     }
 
-                    var channels = ParserUtil.GetAttribute(line, "CHANNELS");
+                    string channels = ParserUtil.GetAttribute(line, "CHANNELS");
                     if (!string.IsNullOrEmpty(channels))
                         streamSpec.Channels = channels;
 
-                    var characteristics = ParserUtil.GetAttribute(line, "CHARACTERISTICS");
+                    string characteristics = ParserUtil.GetAttribute(line, "CHARACTERISTICS");
                     if (!string.IsNullOrEmpty(characteristics))
                         streamSpec.Characteristics = characteristics.Split(',').Last().Split('.').Last();
 
@@ -192,7 +192,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
                 else if (expectPlaylist)
                 {
-                    var url = ParserUtil.CombineURL(BaseUrl, line);
+                    string url = ParserUtil.CombineURL(BaseUrl, line);
                     streamSpec.Url = PreProcessUrl(url);
                     expectPlaylist = false;
                     streams.Add(streamSpec);
@@ -207,7 +207,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             // 标记是否已清除广告分片
             bool hasAd = false;
             ;
-            bool allowHlsMultiExtMap = ParserConfig.CustomParserArgs.TryGetValue("AllowHlsMultiExtMap", out var allMultiExtMap) && allMultiExtMap == "true";
+            bool allowHlsMultiExtMap = ParserConfig.CustomParserArgs.TryGetValue("AllowHlsMultiExtMap", out string? allMultiExtMap) && allMultiExtMap == "true";
             if (allowHlsMultiExtMap)
             {
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.allowHlsMultiExtMap}[/]");
@@ -248,8 +248,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 // 只下载部分字节
                 if (line.StartsWith(HLSTags.ext_x_byterange))
                 {
-                    var p = ParserUtil.GetAttribute(line);
-                    var (n, o) = ParserUtil.GetRange(p);
+                    string p = ParserUtil.GetAttribute(line);
+                    (long n, long? o) = ParserUtil.GetRange(p);
                     segment.ExpectLength = n;
                     segment.StartRange = o ?? segments.Last().StartRange + segments.Last().ExpectLength;
                     expectSegment = true;
@@ -310,14 +310,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 // 解析KEY
                 else if (line.StartsWith(HLSTags.ext_x_key))
                 {
-                    var uri = ParserUtil.GetAttribute(line, "URI");
-                    var uri_last = ParserUtil.GetAttribute(lastKeyLine, "URI");
+                    string uri = ParserUtil.GetAttribute(line, "URI");
+                    string uri_last = ParserUtil.GetAttribute(lastKeyLine, "URI");
 
                     // 如果KEY URL相同，不进行重复解析
                     if (uri != uri_last)
                     {
                         // 调用处理器进行解析
-                        var parsedInfo = ParseKey(line);
+                        EncryptInfo parsedInfo = ParseKey(line);
                         currentEncryptInfo.Method = parsedInfo.Method;
                         currentEncryptInfo.Key = parsedInfo.Key;
                         currentEncryptInfo.IV = parsedInfo.IV;
@@ -365,8 +365,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         };
                         if (line.Contains("BYTERANGE"))
                         {
-                            var p = ParserUtil.GetAttribute(line, "BYTERANGE");
-                            var (n, o) = ParserUtil.GetRange(p);
+                            string p = ParserUtil.GetAttribute(line, "BYTERANGE");
+                            (long n, long? o) = ParserUtil.GetRange(p);
                             playlist.MediaInit.ExpectLength = n;
                             playlist.MediaInit.StartRange = o ?? 0L;
                         }
@@ -401,7 +401,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 // 解析分片的地址
                 else if (expectSegment)
                 {
-                    var segUrl = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, line));
+                    string segUrl = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, line));
                     segment.Url = segUrl;
                     segments.Add(segment);
                     segment = new();
@@ -449,7 +449,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
         private EncryptInfo ParseKey(string keyLine)
         {
-            foreach (var p in ParserConfig.KeyProcessors)
+            foreach (Processor.KeyProcessor p in ParserConfig.KeyProcessors)
             {
                 if (p.CanProcess(ExtractorType, keyLine, M3u8Url, M3u8Content, ParserConfig))
                 {
@@ -468,12 +468,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
             if (M3u8Content.Contains(HLSTags.ext_x_stream_inf))
             {
                 Logger.Warn(ResString.masterM3u8Found);
-                var lists = await ParseMasterListAsync();
+                List<StreamSpec> lists = await ParseMasterListAsync();
                 lists = [.. lists.DistinctBy(p => p.Url)];
                 return lists;
             }
 
-            var playlist = await ParseListAsync();
+            Playlist playlist = await ParseListAsync();
             return
             [
                 new()
@@ -490,7 +490,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             // Logger.Info(ResString.loadingUrl + url);
             if (url.StartsWith("file:"))
             {
-                var uri = new Uri(url);
+                Uri uri = new Uri(url);
                 this.M3u8Content = File.ReadAllText(uri.LocalPath);
             }
             else if (url.StartsWith("http"))
@@ -520,11 +520,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
         {
             // 重新加载master m3u8, 刷新选中流的URL
             await LoadM3u8FromUrlAsync(ParserConfig.Url);
-            var newStreams = await ParseMasterListAsync();
+            List<StreamSpec> newStreams = await ParseMasterListAsync();
             newStreams = [.. newStreams.DistinctBy(p => p.Url)];
-            foreach (var l in lists)
+            foreach (StreamSpec l in lists)
             {
-                var match = newStreams.Where(n => n.ToShortString() == l.ToShortString()).ToList();
+                List<StreamSpec> match = newStreams.Where(n => n.ToShortString() == l.ToShortString()).ToList();
                 if (match.Count == 0) continue;
 
                 Logger.DebugMarkUp($"{l.Url} => {match.First().Url}");
@@ -549,7 +549,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     await LoadM3u8FromUrlAsync(lists[i].Url!);
                 }
 
-                var newPlaylist = await ParseListAsync();
+                Playlist newPlaylist = await ParseListAsync();
                 if (lists[i].Playlist?.MediaInit != null)
                     lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
                 else
@@ -557,8 +557,8 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                 if (lists[i].MediaType == MediaType.SUBTITLES)
                 {
-                    var a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));
-                    var b = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".vtt") || m.Url.Contains(".webvtt")));
+                    bool a = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".ttml")));
+                    bool b = lists[i].Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.Url.Contains(".vtt") || m.Url.Contains(".webvtt")));
                     if (a) lists[i].Extension = "ttml";
                     if (b) lists[i].Extension = "vtt";
                 }

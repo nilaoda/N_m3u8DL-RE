@@ -141,7 +141,7 @@
 
         private static string GetText(string key)
         {
-            if (!StaticText.LANG_DIC.TryGetValue(key, out var textObj))
+            if (!StaticText.LANG_DIC.TryGetValue(key, out TextContainer? textObj))
                 return "<...LANG TEXT MISSING...>";
 
             if (CurrentLoc is "zh-CN" or "zh-SG" or "zh-Hans")

@@ -42,9 +42,9 @@ namespace Mp4SubtitleParser
 
             List<SubCue> cues = [];
 
-            foreach (var item in files)
+            foreach (string item in files)
             {
-                var dataSeg = File.ReadAllBytes(item);
+                byte[] dataSeg = File.ReadAllBytes(item);
 
                 bool sawTFDT = false;
                 bool sawTRUN = false;
@@ -95,26 +95,26 @@ namespace Mp4SubtitleParser
                     throw new Exception("A required box is missing");
                 }
 
-                var currentTime = baseTime;
-                var reader = new BinaryReader2(new MemoryStream(rawPayload!));
+                ulong currentTime = baseTime;
+                BinaryReader2 reader = new BinaryReader2(new MemoryStream(rawPayload!));
 
-                foreach (var presentation in presentations)
+                foreach (Sample presentation in presentations)
                 {
-                    var duration = presentation.SampleDuration == 0 ? defaultDuration : presentation.SampleDuration;
-                    var startTime = presentation.SampleCompositionTimeOffset != 0 ?
+                    ulong duration = presentation.SampleDuration == 0 ? defaultDuration : presentation.SampleDuration;
+                    ulong startTime = presentation.SampleCompositionTimeOffset != 0 ?
                         baseTime + presentation.SampleCompositionTimeOffset :
                         currentTime;
                     currentTime = startTime + duration;
-                    var totalSize = 0;
+                    int totalSize = 0;
                     do
                     {
                         // Read the payload size.
-                        var payloadSize = (int)reader.ReadUInt32();
+                        int payloadSize = (int)reader.ReadUInt32();
                         totalSize += payloadSize;
 
                         // Skip the type.
-                        var payloadType = reader.ReadUInt32();
-                        var payloadName = MP4Parser.TypeToString(payloadType);
+                        uint payloadType = reader.ReadUInt32();
+                        string payloadName = MP4Parser.TypeToString(payloadType);
 
                         // Read the data payload.
                         byte[]? payload = null;
@@ -141,14 +141,14 @@ namespace Mp4SubtitleParser
                         {
                             if (payload != null)
                             {
-                                var cue = ParseVTTC(
+                                SubCue? cue = ParseVTTC(
                                     payload,
                                     0 + (double)startTime / timescale,
                                     0 + (double)currentTime / timescale);
                                 // Check if same subtitle has been splitted
                                 if (cue != null)
                                 {
-                                    var index = cues.FindLastIndex(s => s.EndTime == cue.StartTime && s.Settings == cue.Settings && s.Payload == cue.Payload);
+                                    int index = cues.FindLastIndex(s => s.EndTime == cue.StartTime && s.Settings == cue.Settings && s.Payload == cue.Payload);
                                     if (index != -1)
                                     {
                                         cues[index].EndTime = cue.EndTime;

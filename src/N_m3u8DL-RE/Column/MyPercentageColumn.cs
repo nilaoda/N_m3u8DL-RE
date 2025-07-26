@@ -18,8 +18,8 @@ namespace N_m3u8DL_RE.Column
         /// <inheritdoc/>
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            var percentage = task.Percentage;
-            var style = percentage == 100 ? CompletedStyle : Style ?? Style.Plain;
+            double percentage = task.Percentage;
+            Style style = percentage == 100 ? CompletedStyle : Style ?? Style.Plain;
             return new Text($"{task.Value}/{task.MaxValue} {percentage:F2}%", style).RightJustified();
         }
     }

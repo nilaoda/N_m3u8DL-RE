@@ -17,13 +17,13 @@ namespace N_m3u8DL_RE.Util
             if (finalVtt != null && finalVtt.Cues.Any(v => v.Payload.StartsWith("Base64::")))
             {
                 Logger.WarnMarkUp(ResString.processImageSub);
-                var i = 0;
-                foreach (var img in finalVtt.Cues.Where(v => v.Payload.StartsWith("Base64::")))
+                int i = 0;
+                foreach (SubCue? img in finalVtt.Cues.Where(v => v.Payload.StartsWith("Base64::")))
                 {
-                    var name = $"{i++}.png";
-                    var dest = "";
+                    string name = $"{i++}.png";
+                    string dest = "";
                     for (; File.Exists(dest = Path.Combine(tmpDir, name)); name = $"{i++}.png") ;
-                    var base64 = img.Payload[8..];
+                    string base64 = img.Payload[8..];
                     await File.WriteAllBytesAsync(dest, Convert.FromBase64String(base64));
                     img.Payload = name;
                 }

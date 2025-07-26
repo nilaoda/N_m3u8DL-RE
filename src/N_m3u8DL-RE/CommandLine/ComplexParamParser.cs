@@ -12,11 +12,11 @@ namespace N_m3u8DL_RE.CommandLine
 
             try
             {
-                var index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
+                int index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
                 if (index == -1) return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
 
-                var chars = _arg[(index + key.Length + 1)..].ToCharArray();
-                var result = new StringBuilder();
+                char[] chars = _arg[(index + key.Length + 1)..].ToCharArray();
+                StringBuilder result = new StringBuilder();
                 char last = '\0';
                 for (int i = 0; i < chars.Length; i++)
                 {
@@ -37,7 +37,7 @@ namespace N_m3u8DL_RE.CommandLine
                     }
                 }
 
-                var resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
+                string resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
 
                 // 不应该有引号出现
                 if (resultStr.Contains('\"') || resultStr.Contains('\'')) throw new Exception();

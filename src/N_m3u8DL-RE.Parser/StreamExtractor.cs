@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Parser
             Logger.Info(ResString.loadingUrl + url);
             if (url.StartsWith("file:"))
             {
-                var uri = new Uri(url);
+                Uri uri = new Uri(url);
                 this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
                 parserConfig.OriginalUrl = parserConfig.Url = url;
             }
@@ -49,7 +49,7 @@ namespace N_m3u8DL_RE.Parser
         [MemberNotNull(nameof(this.rawText), nameof(this.extractor))]
         private void LoadSourceFromText(string rawText)
         {
-            var rawType = "txt";
+            string rawType = "txt";
             rawText = rawText.Trim();
             this.rawText = rawText;
             if (rawText.StartsWith(HLSTags.ext_m3u))

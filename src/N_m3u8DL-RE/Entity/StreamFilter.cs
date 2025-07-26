@@ -28,7 +28,7 @@ namespace N_m3u8DL_RE.Entity
 
         public override string? ToString()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             if (GroupIdReg != null) sb.Append($"GroupIdReg: {GroupIdReg} ");
             if (LanguageReg != null) sb.Append($"LanguageReg: {LanguageReg} ");

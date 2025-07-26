@@ -14,8 +14,8 @@ namespace N_m3u8DL_RE.Crypto
         /// <param name="padding"></param>
         public static void AES128Decrypt(string filePath, byte[] keyByte, byte[] ivByte, CipherMode mode = CipherMode.CBC, PaddingMode padding = PaddingMode.PKCS7)
         {
-            var fileBytes = File.ReadAllBytes(filePath);
-            var decrypted = AES128Decrypt(fileBytes, keyByte, ivByte, mode, padding);
+            byte[] fileBytes = File.ReadAllBytes(filePath);
+            byte[] decrypted = AES128Decrypt(fileBytes, keyByte, ivByte, mode, padding);
             File.WriteAllBytes(filePath, decrypted);
         }
 

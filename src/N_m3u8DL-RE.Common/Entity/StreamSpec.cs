@@ -66,26 +66,26 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string ToShortString()
         {
-            var prefixStr = "";
-            var returnStr = "";
-            var encStr = string.Empty;
+            string prefixStr = "";
+            string returnStr = "";
+            string encStr = string.Empty;
 
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
+                string d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Role}";
+                string d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {Role}";
+                string d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
 
@@ -100,26 +100,26 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public string ToShortShortString()
         {
-            var prefixStr = "";
-            var returnStr = "";
-            var encStr = string.Empty;
+            string prefixStr = "";
+            string returnStr = "";
+            string encStr = string.Empty;
 
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
+                string d = $"{(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{Language} | {Name} | {Codecs} | {Role}";
+                string d = $"{Language} | {Name} | {Codecs} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange} | {Role}";
+                string d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
 
@@ -134,34 +134,34 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public override string ToString()
         {
-            var prefixStr = "";
-            var returnStr = "";
-            var encStr = string.Empty;
-            var segmentsCountStr = SegmentsCount == 0 ? "" : (SegmentsCount > 1 ? $"{SegmentsCount} Segments" : $"{SegmentsCount} Segment");
+            string prefixStr = "";
+            string returnStr = "";
+            string encStr = string.Empty;
+            string segmentsCountStr = SegmentsCount == 0 ? "" : (SegmentsCount > 1 ? $"{SegmentsCount} Segments" : $"{SegmentsCount} Segment");
 
             // 增加加密标志
             if (Playlist != null && Playlist.MediaParts.Any(m => m.MediaSegments.Any(s => s.EncryptInfo.Method != EncryptMethod.NONE)))
             {
-                var ms = Playlist.MediaParts.SelectMany(m => m.MediaSegments.Select(s => s.EncryptInfo.Method)).Where(e => e != EncryptMethod.NONE).Distinct();
+                IEnumerable<EncryptMethod> ms = Playlist.MediaParts.SelectMany(m => m.MediaSegments.Select(s => s.EncryptInfo.Method)).Where(e => e != EncryptMethod.NONE).Distinct();
                 encStr = $"[red]*{string.Join(",", ms).EscapeMarkup()}[/] ";
             }
 
             if (MediaType == Enum.MediaType.AUDIO)
             {
                 prefixStr = $"[deepskyblue3]Aud[/] {encStr}";
-                var d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr} | {Role}";
+                string d = $"{GroupId} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {Name} | {Codecs} | {Language} | {(Channels != null ? Channels + "CH" : "")} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else if (MediaType == Enum.MediaType.SUBTITLES)
             {
                 prefixStr = $"[deepskyblue3_1]Sub[/] {encStr}";
-                var d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr} | {Role}";
+                string d = $"{GroupId} | {Language} | {Name} | {Codecs} | {Characteristics} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
             else
             {
                 prefixStr = $"[aqua]Vid[/] {encStr}";
-                var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {Role}";
+                string d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {Role}";
                 returnStr = d.EscapeMarkup();
             }
 
@@ -174,7 +174,7 @@ namespace N_m3u8DL_RE.Common.Entity
             // 计算时长
             if (Playlist != null)
             {
-                var total = Playlist.TotalDuration;
+                double total = Playlist.TotalDuration;
                 returnStr += " | ~" + GlobalUtil.FormatTime((int)total);
             }
 

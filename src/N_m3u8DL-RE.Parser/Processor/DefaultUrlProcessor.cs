@@ -14,12 +14,12 @@ namespace N_m3u8DL_RE.Parser.Processor
         {
             if (!oriUrl.StartsWith("http")) return oriUrl;
 
-            var uriFromConfig = new Uri(paserConfig.Url);
-            var uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
+            Uri uriFromConfig = new Uri(paserConfig.Url);
+            System.Collections.Specialized.NameValueCollection uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
 
-            var oldUri = new Uri(oriUrl);
-            var newQuery = HttpUtility.ParseQueryString(oldUri.Query);
-            foreach (var item in uriFromConfigQuery.AllKeys)
+            Uri oldUri = new Uri(oriUrl);
+            System.Collections.Specialized.NameValueCollection newQuery = HttpUtility.ParseQueryString(oldUri.Query);
+            foreach (string? item in uriFromConfigQuery.AllKeys)
             {
                 if (newQuery.AllKeys.Contains(item))
                     newQuery.Set(item, uriFromConfigQuery.Get(item));

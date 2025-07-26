@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.Util
         {
             if (keys == null || keys.Length == 0) return false;
 
-            var keyPairs = keys.ToList();
+            List<string> keyPairs = keys.ToList();
             string? keyPair = null;
             string? trackId = null;
             string? tmpEncFile = null;
@@ -30,7 +30,7 @@ namespace N_m3u8DL_RE.Util
 
             if (!string.IsNullOrEmpty(kid))
             {
-                var test = keyPairs.Where(k => k.StartsWith(kid)).ToList();
+                List<string> test = keyPairs.Where(k => k.StartsWith(kid)).ToList();
                 if (test.Count != 0) keyPair = test.First();
             }
 
@@ -55,10 +55,10 @@ namespace N_m3u8DL_RE.Util
 
             string cmd;
 
-            var tmpFile = "";
+            string tmpFile = "";
             if (decryptEngine == DecryptEngine.SHAKA_PACKAGER)
             {
-                var enc = source;
+                string enc = source;
                 // shakaPackager 手动构造文件
                 if (init != "")
                 {
@@ -87,14 +87,14 @@ namespace N_m3u8DL_RE.Util
                 File.Move(source, tmpEncFile);
                 if (init != "")
                 {
-                    var infoFile = Path.GetDirectoryName(init) == workDir ? Path.GetFileName(init) : init;
+                    string infoFile = Path.GetDirectoryName(init) == workDir ? Path.GetFileName(init) : init;
                     cmd += $" --fragments-info \"{infoFile}\" ";
                 }
                 cmd += $" \"{Path.GetFileName(tmpEncFile)}\" \"{Path.GetFileName(tmpDecFile)}\"";
             }
             else
             {
-                var enc = source;
+                string enc = source;
                 // ffmpeg实时解密 手动构造文件
                 if (init != "")
                 {
@@ -106,7 +106,7 @@ namespace N_m3u8DL_RE.Util
                 cmd = $"-loglevel error -nostdin -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy \"{dest}\"";
             }
 
-            var isSuccess = await RunCommandAsync(bin, cmd, workDir);
+            bool isSuccess = await RunCommandAsync(bin, cmd, workDir);
 
             // mp4decrypt 还原文件改名操作
             if (workDir is not null)
@@ -129,7 +129,7 @@ namespace N_m3u8DL_RE.Util
         {
             Logger.DebugMarkUp($"FileName: {name}");
             Logger.DebugMarkUp($"Arguments: {arg}");
-            var process = Process.Start(new ProcessStartInfo()
+            Process? process = Process.Start(new ProcessStartInfo()
             {
                 FileName = name,
                 Arguments = arg,
@@ -157,8 +157,8 @@ namespace N_m3u8DL_RE.Util
                     return null;
 
                 Logger.InfoMarkUp(ResString.searchKey);
-                using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = new StreamReader(stream);
+                using FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using StreamReader reader = new StreamReader(stream);
                 while (await reader.ReadLineAsync() is { } line)
                 {
                     if (!line.Trim().StartsWith(kid)) continue;
@@ -176,7 +176,7 @@ namespace N_m3u8DL_RE.Util
 
         public static ParsedMP4Info GetMP4Info(byte[] data)
         {
-            var info = MP4InitUtil.ReadInit(data);
+            ParsedMP4Info info = MP4InitUtil.ReadInit(data);
             if (info.Scheme != null) Logger.WarnMarkUp($"[grey]Type: {info.Scheme}[/]");
             if (info.PSSH != null) Logger.WarnMarkUp($"[grey]PSSH(WV): {info.PSSH}[/]");
             if (info.KID != null) Logger.WarnMarkUp($"[grey]KID: {info.KID}[/]");
@@ -185,8 +185,8 @@ namespace N_m3u8DL_RE.Util
 
         public static ParsedMP4Info GetMP4Info(string output)
         {
-            using var fs = File.OpenRead(output);
-            var header = new byte[1 * 1024 * 1024]; // 1MB
+            using FileStream fs = File.OpenRead(output);
+            byte[] header = new byte[1 * 1024 * 1024]; // 1MB
             _ = fs.Read(header);
             return GetMP4Info(header);
         }
@@ -198,10 +198,10 @@ namespace N_m3u8DL_RE.Util
             // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
             //       - stop process
             //       - remove {output}.tmp.webm
-            var cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
+            string cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
                       $"--keys key_id={ZeroKid}:key={ZeroKid}";
 
-            using var p = new Process();
+            using Process p = new Process();
             p.StartInfo = new ProcessStartInfo()
             {
                 FileName = bin,
@@ -211,7 +211,7 @@ namespace N_m3u8DL_RE.Util
                 UseShellExecute = false
             };
             p.Start();
-            var errorOutput = p.StandardError.ReadToEnd();
+            string errorOutput = p.StandardError.ReadToEnd();
             p.WaitForExit();
             return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;
         }
