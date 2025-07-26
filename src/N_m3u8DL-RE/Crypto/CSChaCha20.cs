@@ -46,11 +46,6 @@ namespace N_m3u8DL_RE.Crypto
         private const int stateLength = 16;
 
         /// <summary>
-        /// The ChaCha20 state (aka "context")
-        /// </summary>
-        private readonly uint[] state = new uint[stateLength];
-
-        /// <summary>
         /// Determines if the objects in this class have been disposed of. Set to true by the Dispose() method.
         /// </summary>
         private bool isDisposed = false;
@@ -98,13 +93,7 @@ namespace N_m3u8DL_RE.Crypto
         /// <summary>
         /// The ChaCha20 state (aka "context"). Read-Only.
         /// </summary>
-        public uint[] State
-        {
-            get
-            {
-                return state;
-            }
-        }
+        public uint[] State { get; } = new uint[stateLength];
 
 
         // These are the same constants defined in the reference implementation.
@@ -130,23 +119,23 @@ namespace N_m3u8DL_RE.Crypto
                 throw new ArgumentException($"Key length must be {allowedKeyLength}. Actual: {key.Length}");
             }
 
-            state[4] = Util.U8To32Little(key, 0);
-            state[5] = Util.U8To32Little(key, 4);
-            state[6] = Util.U8To32Little(key, 8);
-            state[7] = Util.U8To32Little(key, 12);
+            State[4] = Util.U8To32Little(key, 0);
+            State[5] = Util.U8To32Little(key, 4);
+            State[6] = Util.U8To32Little(key, 8);
+            State[7] = Util.U8To32Little(key, 12);
 
             byte[] constants = key.Length == allowedKeyLength ? sigma : tau;
             int keyIndex = key.Length - 16;
 
-            state[8] = Util.U8To32Little(key, keyIndex + 0);
-            state[9] = Util.U8To32Little(key, keyIndex + 4);
-            state[10] = Util.U8To32Little(key, keyIndex + 8);
-            state[11] = Util.U8To32Little(key, keyIndex + 12);
+            State[8] = Util.U8To32Little(key, keyIndex + 0);
+            State[9] = Util.U8To32Little(key, keyIndex + 4);
+            State[10] = Util.U8To32Little(key, keyIndex + 8);
+            State[11] = Util.U8To32Little(key, keyIndex + 12);
 
-            state[0] = Util.U8To32Little(constants, 0);
-            state[1] = Util.U8To32Little(constants, 4);
-            state[2] = Util.U8To32Little(constants, 8);
-            state[3] = Util.U8To32Little(constants, 12);
+            State[0] = Util.U8To32Little(constants, 0);
+            State[1] = Util.U8To32Little(constants, 4);
+            State[2] = Util.U8To32Little(constants, 8);
+            State[3] = Util.U8To32Little(constants, 12);
         }
 
         /// <summary>
@@ -174,10 +163,10 @@ namespace N_m3u8DL_RE.Crypto
                 throw new ArgumentException($"Nonce length must be {allowedNonceLength}. Actual: {nonce.Length}");
             }
 
-            state[12] = counter;
-            state[13] = Util.U8To32Little(nonce, 0);
-            state[14] = Util.U8To32Little(nonce, 4);
-            state[15] = Util.U8To32Little(nonce, 8);
+            State[12] = counter;
+            State[13] = Util.U8To32Little(nonce, 0);
+            State[14] = Util.U8To32Little(nonce, 4);
+            State[15] = Util.U8To32Little(nonce, 8);
         }
 
 
@@ -439,7 +428,7 @@ namespace N_m3u8DL_RE.Crypto
             while (numBytes > 0)
             {
                 // Copy state to working buffer
-                Buffer.BlockCopy(state, 0, x, 0, stateLength * sizeof(uint));
+                Buffer.BlockCopy(State, 0, x, 0, stateLength * sizeof(uint));
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -456,14 +445,14 @@ namespace N_m3u8DL_RE.Crypto
 
                 for (int i = 0; i < stateLength; i++)
                 {
-                    Util.ToBytes(tmp, Util.Add(x[i], state[i]), 4 * i);
+                    Util.ToBytes(tmp, Util.Add(x[i], State[i]), 4 * i);
                 }
 
-                state[12] = Util.AddOne(state[12]);
-                if (state[12] <= 0)
+                State[12] = Util.AddOne(State[12]);
+                if (State[12] <= 0)
                 {
                     /* Stopping at 2^70 bytes per nonce is the user's responsibility */
-                    state[13] = Util.AddOne(state[13]);
+                    State[13] = Util.AddOne(State[13]);
                 }
 
                 // In case these are last bytes
@@ -552,7 +541,7 @@ namespace N_m3u8DL_RE.Crypto
                 }
 
                 /* Cleanup any unmanaged objects here */
-                Array.Clear(state, 0, stateLength);
+                Array.Clear(State, 0, stateLength);
             }
 
             isDisposed = true;
