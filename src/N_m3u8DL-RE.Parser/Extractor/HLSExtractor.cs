@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         private string M3u8Url = string.Empty;
         private string BaseUrl = string.Empty;
         private string M3u8Content = string.Empty;
-        private bool MasterM3u8Flag = false;
+        private bool MasterM3u8Flag;
 
         public ParserConfig ParserConfig { get; set; }
 

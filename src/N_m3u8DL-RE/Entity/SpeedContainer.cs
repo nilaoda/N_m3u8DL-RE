@@ -2,19 +2,19 @@
 {
     internal class SpeedContainer
     {
-        public bool SingleSegment { get; set; } = false;
-        public long NowSpeed { get; set; } = 0L; // 当前每秒速度
+        public bool SingleSegment { get; set; }
+        public long NowSpeed { get; set; }  // 当前每秒速度
         public long SpeedLimit { get; set; } = long.MaxValue; // 限速设置
         public long? ResponseLength { get; set; }
         public long RDownloaded => _Rdownloaded;
-        private int _zeroSpeedCount = 0;
+        private int _zeroSpeedCount;
         public int LowSpeedCount => _zeroSpeedCount;
         public bool ShouldStop => LowSpeedCount >= 20;
 
         ///////////////////////////////////////////////////
 
-        private long _downloaded = 0;
-        private long _Rdownloaded = 0;
+        private long _downloaded;
+        private long _Rdownloaded;
         public long Downloaded => _downloaded;
 
         public int AddLowSpeedCount()

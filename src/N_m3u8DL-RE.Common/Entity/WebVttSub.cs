@@ -15,7 +15,7 @@ namespace N_m3u8DL_RE.Common.Entity
         private static partial Regex VttClassRegex();
 
         public List<SubCue> Cues { get; set; } = [];
-        public long MpegtsTimestamp { get; set; } = 0L;
+        public long MpegtsTimestamp { get; set; }
 
         /// <summary>
         /// 从字节数组解析WEBVTT

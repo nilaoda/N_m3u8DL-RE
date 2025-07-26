@@ -14,11 +14,11 @@ namespace N_m3u8DL_RE.Processor
     internal class NowehoryzontyUrlProcessor : UrlProcessor
     {
         private static readonly string START = "nowehoryzonty:";
-        private static string? TimeDifferenceStr = null;
-        private static int? TimeDifference = null;
-        private static string? SecureToken = null;
-        private static bool LOG = false;
-        private static Function? Function = null;
+        private static string? TimeDifferenceStr;
+        private static int? TimeDifference;
+        private static string? SecureToken;
+        private static bool LOG;
+        private static Function? Function;
         public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig parserConfig)
         {
             if (extractorType == ExtractorType.MPEG_DASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START))

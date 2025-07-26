@@ -32,8 +32,8 @@ namespace N_m3u8DL_RE.DownloadManager
         private readonly ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
         private List<OutputFile> OutputFiles = [];
         private readonly DateTime? PublishDateTime;
-        private bool STOP_FLAG = false;
-        private int WAIT_SEC = 0; // 刷新间隔
+        private bool STOP_FLAG;
+        private int WAIT_SEC; // 刷新间隔
         private readonly ConcurrentDictionary<int, int> RecordedDurDic = new(); // 已录制时长
         private readonly ConcurrentDictionary<int, int> RefreshedDurDic = new(); // 已刷新出的时长
         private readonly ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.DownloadManager
         private readonly CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
 
         private readonly Lock lockObj = new();
-        private TimeSpan? audioStart = null;
+        private TimeSpan? audioStart;
 
         public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {

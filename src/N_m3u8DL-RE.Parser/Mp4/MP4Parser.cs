@@ -46,7 +46,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
     internal class MP4Parser
     {
-        public bool Done { get; set; } = false;
+        public bool Done { get; set; }
         public Dictionary<long, int> Headers { get; set; } = [];
         public Dictionary<long, BoxHandler> BoxDefinitions { get; set; } = [];
 

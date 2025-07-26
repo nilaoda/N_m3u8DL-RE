@@ -5,7 +5,7 @@
         // 对应Url信息
         public string Url { get; set; } = string.Empty;
         // 是否直播
-        public bool IsLive { get; set; } = false;
+        public bool IsLive { get; set; }
         // 直播刷新间隔毫秒（默认15秒）
         public double RefreshIntervalMs { get; set; } = 15000;
         // 所有分片时长总和

@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.Crypto
         /// <summary>
         /// Determines if the objects in this class have been disposed of. Set to true by the Dispose() method.
         /// </summary>
-        private bool isDisposed = false;
+        private bool isDisposed;
 
         /// <summary>
         /// Set up a new ChaCha20 state. The lengths of the given parameters are checked before encryption happens.

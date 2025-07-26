@@ -12,7 +12,7 @@
         public int NalUnitLengthField { get; set; }
         public long Duration { get; set; }
 
-        public bool IsProtection { get; set; } = false;
+        public bool IsProtection { get; set; }
         public string ProtectionSystemID { get; set; } = "";
         public string ProtectionData { get; set; } = "";
     }

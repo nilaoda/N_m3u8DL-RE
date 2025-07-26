@@ -25,8 +25,8 @@ namespace N_m3u8DL_RE.DownloadManager
         private readonly List<OutputFile> OutputFiles = [];
         private readonly DateTime NowDateTime;
         private readonly DateTime? PublishDateTime;
-        private bool STOP_FLAG = false;
-        private bool READ_IFO = false;
+        private bool STOP_FLAG;
+        private bool READ_IFO;
         private readonly ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长
         private readonly ConcurrentDictionary<int, double> RecordingSizeDic = new(); // 已录制大小
         private readonly CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
