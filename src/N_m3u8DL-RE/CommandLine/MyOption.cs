@@ -138,9 +138,9 @@ internal class MyOption
     /// </summary>
     public bool MP4RealTimeDecryption { get; set; }
     /// <summary>
+    /// Deprecated: Use <see cref="CommandInvoker.DecryptionEngine"/> instead.
     /// See: <see cref="CommandInvoker.UseShakaPackager"/>.
     /// </summary>
-    [Obsolete("Use DecryptionEngine instead")]
     public bool UseShakaPackager { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.DecryptionEngine"/>.

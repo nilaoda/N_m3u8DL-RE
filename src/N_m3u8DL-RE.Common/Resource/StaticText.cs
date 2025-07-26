@@ -468,9 +468,9 @@ internal static class StaticText
         ),
         ["cmd_useShakaPackager"] = new TextContainer
         (
-            zhCN: "解密时使用shaka-packager替代mp4decrypt",
-            zhTW: "解密時使用shaka-packager替代mp4decrypt",
-            enUS: "Use shaka-packager instead of mp4decrypt to decrypt"
+            zhCN: "此选项已弃用, 请使用 \"--decryption-engine\" 代替. 解密时使用shaka-packager替代mp4decrypt",
+            zhTW: "此選項已棄用, 請使用 \"--decryption-engine\" 代替. 解密時使用shaka-packager替代mp4decrypt",
+            enUS: "This option is deprecated, use \"--decryption-engine\" instead.\r\nUse shaka-packager instead of mp4decrypt to decrypt"
         ),
         ["cmd_decryptionEngine"] = new TextContainer
         (
