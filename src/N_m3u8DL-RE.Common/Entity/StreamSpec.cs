@@ -56,13 +56,7 @@ namespace N_m3u8DL_RE.Common.Entity
 
         public Playlist? Playlist { get; set; }
 
-        public int SegmentsCount
-        {
-            get
-            {
-                return Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) : 0;
-            }
-        }
+        public int SegmentsCount => Playlist != null ? Playlist.MediaParts.Sum(x => x.MediaSegments.Count) : 0;
 
         public string ToShortString()
         {
