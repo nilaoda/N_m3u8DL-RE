@@ -11,7 +11,7 @@ namespace N_m3u8DL_RE.Common.Util
         public static async Task<T?> WebRequestRetryAsync<T>(Func<Task<T>> funcAsync, int maxRetries = 10, int retryDelayMilliseconds = 1500, int retryDelayIncrementMilliseconds = 0)
         {
             int retryCount = 0;
-            T? result = default(T);
+            T? result = default;
             Exception currentException = new();
 
             while (retryCount < maxRetries)
