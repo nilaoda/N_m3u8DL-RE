@@ -20,7 +20,7 @@
 
         public override int ReadInt32()
         {
-            byte[] data = base.ReadBytes(4);
+            byte[] data = ReadBytes(4);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(data);
@@ -31,7 +31,7 @@
 
         public override short ReadInt16()
         {
-            byte[] data = base.ReadBytes(2);
+            byte[] data = ReadBytes(2);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(data);
@@ -42,7 +42,7 @@
 
         public override long ReadInt64()
         {
-            byte[] data = base.ReadBytes(8);
+            byte[] data = ReadBytes(8);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(data);
@@ -53,7 +53,7 @@
 
         public override uint ReadUInt32()
         {
-            byte[] data = base.ReadBytes(4);
+            byte[] data = ReadBytes(4);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(data);
@@ -64,7 +64,7 @@
 
         public override ulong ReadUInt64()
         {
-            byte[] data = base.ReadBytes(8);
+            byte[] data = ReadBytes(8);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(data);
