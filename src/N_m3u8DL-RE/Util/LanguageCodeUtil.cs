@@ -380,7 +380,7 @@ MA;msa;Melayu;Melayu
                 return new Language(arr[0], arr[1], arr[2], arr[3]);
             })];
 
-        private static Dictionary<string, string> CODE_MAP = @"
+        private static readonly Dictionary<string, string> CODE_MAP = @"
 iv;IVL
 ar;ara
 bg;bul

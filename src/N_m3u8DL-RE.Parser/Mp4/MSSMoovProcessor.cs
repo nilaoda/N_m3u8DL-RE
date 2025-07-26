@@ -18,26 +18,26 @@ namespace N_m3u8DL_RE.Parser.Mp4
         [GeneratedRegex(@"\<KID\>(.*?)\<")]
         private static partial Regex KIDRegex();
 
-        private static string StartCode = "00000001";
-        private StreamSpec StreamSpec;
+        private static readonly string StartCode = "00000001";
+        private readonly StreamSpec StreamSpec;
         private int TrackId = 2;
-        private string FourCC;
+        private readonly string FourCC;
         private string CodecPrivateData;
-        private int Timesacle;
-        private long Duration;
+        private readonly int Timesacle;
+        private readonly long Duration;
         private string Language => StreamSpec.Language ?? "und";
         private int Width => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').First());
         private int Height => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').Last());
-        private string StreamType;
-        private int Channels;
-        private int BitsPerSample;
-        private int SamplingRate;
-        private int NalUnitLengthField;
-        private long CreationTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        private readonly string StreamType;
+        private readonly int Channels;
+        private readonly int BitsPerSample;
+        private readonly int SamplingRate;
+        private readonly int NalUnitLengthField;
+        private readonly long CreationTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        private bool IsProtection;
-        private string ProtectionSystemId;
-        private string ProtectionData;
+        private readonly bool IsProtection;
+        private readonly string ProtectionSystemId;
+        private readonly string ProtectionData;
         private string? ProtecitonKID;
         private string? ProtecitonKID_PR;
         private byte[] UnityMatrix
@@ -58,12 +58,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 return stream.ToArray();
             }
         }
-        private static byte TRACK_ENABLED = 0x1;
-        private static byte TRACK_IN_MOVIE = 0x2;
-        private static byte TRACK_IN_PREVIEW = 0x4;
-        private static byte SELF_CONTAINED = 0x1;
+        private static readonly byte TRACK_ENABLED = 0x1;
+        private static readonly byte TRACK_IN_MOVIE = 0x2;
+        private static readonly byte TRACK_IN_PREVIEW = 0x4;
+        private static readonly byte SELF_CONTAINED = 0x1;
 
-        private static List<string> SupportedFourCC =
+        private static readonly List<string> SupportedFourCC =
             ["HVC1", "HEV1", "AACL", "AACH", "EC-3", "H264", "AVC1", "DAVC", "AVC1", "TTML", "DVHE", "DVH1"];
 
         public MSSMoovProcessor(StreamSpec streamSpec)
@@ -96,7 +96,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
         }
 
-        private static string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = ["", "A", "B", "C"];
+        private static readonly string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = ["", "A", "B", "C"];
         private int SamplingFrequencyIndex(int samplingRate) => samplingRate switch
         {
             96000 => 0x0,

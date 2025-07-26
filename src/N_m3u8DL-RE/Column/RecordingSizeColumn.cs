@@ -10,9 +10,9 @@ namespace N_m3u8DL_RE.Column
     internal class RecordingSizeColumn(ConcurrentDictionary<int, double> recodingSizeDic) : ProgressColumn
     {
         protected override bool NoWrap => true;
-        private ConcurrentDictionary<int, double> RecodingSizeDic = new(); // 临时的大小 每秒刷新用
-        private ConcurrentDictionary<int, double> _recodingSizeDic = recodingSizeDic;
-        private ConcurrentDictionary<int, string> DateTimeStringDic = new();
+        private readonly ConcurrentDictionary<int, double> RecodingSizeDic = new(); // 临时的大小 每秒刷新用
+        private readonly ConcurrentDictionary<int, double> _recodingSizeDic = recodingSizeDic;
+        private readonly ConcurrentDictionary<int, string> DateTimeStringDic = new();
         public Style MyStyle { get; set; } = new Style(foreground: Color.DarkCyan);
 
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)

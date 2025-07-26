@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Common.Log
         public static string? LogFilePath { get; set; }
 
         // 读写锁
-        private static ReaderWriterLockSlim LogWriteLock = new();
+        private static readonly ReaderWriterLockSlim LogWriteLock = new();
 
         public static void InitLogFile()
         {

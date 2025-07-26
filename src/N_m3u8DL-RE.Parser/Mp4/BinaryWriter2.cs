@@ -5,7 +5,7 @@ namespace Mp4SubtitleParser
     // make BinaryWriter in Big Endian
     internal class BinaryWriter2(System.IO.Stream stream) : BinaryWriter(stream)
     {
-        private static bool IsLittleEndian = BitConverter.IsLittleEndian;
+        private static readonly bool IsLittleEndian = BitConverter.IsLittleEndian;
 
         public void WriteUInt(decimal n, int offset = 0)
         {

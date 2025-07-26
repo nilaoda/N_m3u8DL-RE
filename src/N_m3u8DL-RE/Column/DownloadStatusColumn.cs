@@ -11,8 +11,8 @@ namespace N_m3u8DL_RE.Column
     internal class DownloadStatusColumn(ConcurrentDictionary<int, SpeedContainer> speedContainerDic) : ProgressColumn
     {
         private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; } = speedContainerDic;
-        private ConcurrentDictionary<int, string> DateTimeStringDic = new();
-        private ConcurrentDictionary<int, string> SizeDic = new();
+        private readonly ConcurrentDictionary<int, string> DateTimeStringDic = new();
+        private readonly ConcurrentDictionary<int, string> SizeDic = new();
         public Style MyStyle { get; set; } = new Style(foreground: Color.DarkCyan);
         public Style FinishedStyle { get; set; } = new Style(foreground: Color.Green);
 

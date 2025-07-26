@@ -14,7 +14,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
     // https://blog.csdn.net/leek5533/article/details/117750191
     internal partial class DASHExtractor2 : IExtractor
     {
-        private static EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
+        private static readonly EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
 
         public ExtractorType ExtractorType => ExtractorType.MPEG_DASH;
 

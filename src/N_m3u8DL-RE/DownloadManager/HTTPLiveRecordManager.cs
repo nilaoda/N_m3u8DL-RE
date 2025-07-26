@@ -18,19 +18,19 @@ namespace N_m3u8DL_RE.DownloadManager
 {
     internal class HTTPLiveRecordManager
     {
-        private IDownloader Downloader;
-        private DownloaderConfig DownloaderConfig;
-        private StreamExtractor StreamExtractor;
-        private List<StreamSpec> SelectedSteams;
-        private List<OutputFile> OutputFiles = [];
-        private DateTime NowDateTime;
-        private DateTime? PublishDateTime;
+        private readonly IDownloader Downloader;
+        private readonly DownloaderConfig DownloaderConfig;
+        private readonly StreamExtractor StreamExtractor;
+        private readonly List<StreamSpec> SelectedSteams;
+        private readonly List<OutputFile> OutputFiles = [];
+        private readonly DateTime NowDateTime;
+        private readonly DateTime? PublishDateTime;
         private bool STOP_FLAG = false;
         private bool READ_IFO = false;
-        private ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长
-        private ConcurrentDictionary<int, double> RecordingSizeDic = new(); // 已录制大小
-        private CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
-        private List<byte> InfoBuffer = new(188 * 5000); // 5000个分包中解析信息，没有就算了
+        private readonly ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长
+        private readonly ConcurrentDictionary<int, double> RecordingSizeDic = new(); // 已录制大小
+        private readonly CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
+        private readonly List<byte> InfoBuffer = new(188 * 5000); // 5000个分包中解析信息，没有就算了
 
         public HTTPLiveRecordManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
         {
