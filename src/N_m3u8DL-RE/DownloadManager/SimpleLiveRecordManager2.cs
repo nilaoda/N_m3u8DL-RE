@@ -647,10 +647,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     }
 
                     // 刷新buffer
-                    if (fileOutputStream != null)
-                    {
-                        fileOutputStream.Flush();
-                    }
+                    fileOutputStream?.Flush();
                 }
 
                 if (STOP_FLAG && source.Count == 0)

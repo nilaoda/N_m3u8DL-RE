@@ -251,10 +251,7 @@ namespace Mp4SubtitleParser
                     nsMgr = new XmlNamespaceManager(xmlDoc.NameTable);
                     nsMgr.AddNamespace("ns", ns);
                 }
-                if (headNode == null)
-                {
-                    headNode = ttNode!.SelectSingleNode("ns:head", nsMgr);
-                }
+                headNode ??= ttNode!.SelectSingleNode("ns:head", nsMgr);
 
                 XmlNode? bodyNode = ttNode!.SelectSingleNode("ns:body", nsMgr);
                 if (bodyNode == null)
@@ -386,13 +383,13 @@ namespace Mp4SubtitleParser
                 {
                     if (dic.ContainsKey(key))
                     {
-                        dic[key] = item.GetAttribute("tts:fontStyle") == "italic" || item.GetAttribute("tts:fontStyle") == "oblique"
+                        dic[key] = item.GetAttribute("tts:fontStyle") is "italic" or "oblique"
                             ? $"{dic[key]}\r\n<i>{GetTextFromElement(item)}</i>"
                             : $"{dic[key]}\r\n{GetTextFromElement(item)}";
                     }
                     else
                     {
-                        if (item.GetAttribute("tts:fontStyle") == "italic" || item.GetAttribute("tts:fontStyle") == "oblique")
+                        if (item.GetAttribute("tts:fontStyle") is "italic" or "oblique")
                         {
                             dic.Add(key, $"<i>{GetTextFromElement(item)}</i>");
                         }

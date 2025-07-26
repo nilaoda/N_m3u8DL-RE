@@ -296,8 +296,10 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
         public static TRUN ParseTRUN(BinaryReader2 reader, uint version, uint flags)
         {
-            TRUN trun = new();
-            trun.SampleCount = reader.ReadUInt32();
+            TRUN trun = new()
+            {
+                SampleCount = reader.ReadUInt32()
+            };
 
             // Skip "data_offset" if present.
             if ((flags & 0x000001) != 0)

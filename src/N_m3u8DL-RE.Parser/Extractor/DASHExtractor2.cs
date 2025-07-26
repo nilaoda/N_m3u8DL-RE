@@ -142,15 +142,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         // 处理baseurl嵌套
                         segBaseUrl = ExtendBaseUrl(representation, segBaseUrl);
 
-                        if (mimeType == null)
-                        {
-                            mimeType = representation.Attribute("contentType")?.Value ?? representation.Attribute("mimeType")?.Value ?? "";
-                        }
+                        mimeType ??= representation.Attribute("contentType")?.Value ?? representation.Attribute("mimeType")?.Value ?? "";
                         XAttribute? bandwidth = representation.Attribute("bandwidth");
-                        StreamSpec streamSpec = new();
-                        streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
-                        streamSpec.PeriodId = periodId;
-                        streamSpec.Playlist = new Playlist();
+                        StreamSpec streamSpec = new()
+                        {
+                            OriginalUrl = ParserConfig.OriginalUrl,
+                            PeriodId = periodId,
+                            Playlist = new Playlist()
+                        };
                         streamSpec.Playlist.MediaParts.Add(new MediaPart());
                         streamSpec.GroupId = representation.Attribute("id")?.Value;
                         streamSpec.Bandwidth = Convert.ToInt32(bandwidth?.Value ?? "0");
@@ -264,9 +263,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 {
                                     string initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                     string? initRange = initialization.Attribute("range")?.Value;
-                                    streamSpec.Playlist.MediaInit = new MediaSegment();
-                                    streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                                    streamSpec.Playlist.MediaInit.Url = initUrl;
+                                    streamSpec.Playlist.MediaInit = new MediaSegment
+                                    {
+                                        Index = -1, // 便于排序
+                                        Url = initUrl
+                                    };
                                     if (initRange != null)
                                     {
                                         (long start, long expect) = ParserUtil.ParseRange(initRange);
@@ -288,9 +289,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 string initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                 string? initRange = initialization.Attribute("range")?.Value;
-                                streamSpec.Playlist.MediaInit = new MediaSegment();
-                                streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                                streamSpec.Playlist.MediaInit.Url = initUrl;
+                                streamSpec.Playlist.MediaInit = new MediaSegment
+                                {
+                                    Index = -1, // 便于排序
+                                    Url = initUrl
+                                };
                                 if (initRange != null)
                                 {
                                     (long start, long expect) = ParserUtil.ParseRange(initRange);
@@ -308,10 +311,12 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                 string? mediaRange = segmentURL.Attribute("mediaRange")?.Value;
                                 int timesacle = Convert.ToInt32(timescaleStr);
                                 long duration = Convert.ToInt64(durationStr);
-                                MediaSegment mediaSegment = new();
-                                mediaSegment.Duration = duration / (double)timesacle;
-                                mediaSegment.Url = mediaUrl;
-                                mediaSegment.Index = segmentIndex;
+                                MediaSegment mediaSegment = new()
+                                {
+                                    Duration = duration / (double)timesacle,
+                                    Url = mediaUrl,
+                                    Index = segmentIndex
+                                };
                                 if (mediaRange != null)
                                 {
                                     (long start, long expect) = ParserUtil.ParseRange(mediaRange);
@@ -351,9 +356,11 @@ namespace N_m3u8DL_RE.Parser.Extractor
                             {
                                 string _init = ParserUtil.ReplaceVars(initialization, varDic);
                                 string initUrl = ParserUtil.CombineURL(segBaseUrl, _init);
-                                streamSpec.Playlist.MediaInit = new MediaSegment();
-                                streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                                streamSpec.Playlist.MediaInit.Url = initUrl;
+                                streamSpec.Playlist.MediaInit = new MediaSegment
+                                {
+                                    Index = -1, // 便于排序
+                                    Url = initUrl
+                                };
                             }
                             // 处理分片
                             string? mediaTemplate = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
@@ -385,8 +392,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     bool hasTime = mediaTemplate!.Contains(DASHTags.TemplateTime);
                                     string media = ParserUtil.ReplaceVars(mediaTemplate!, varDic);
                                     string mediaUrl = ParserUtil.CombineURL(segBaseUrl, media!);
-                                    MediaSegment mediaSegment = new();
-                                    mediaSegment.Url = mediaUrl;
+                                    MediaSegment mediaSegment = new()
+                                    {
+                                        Url = mediaUrl
+                                    };
                                     if (hasTime)
                                     {
                                         mediaSegment.NameFromVar = currentTime.ToString();
@@ -449,8 +458,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                                     bool hasNumber = mediaTemplate!.Contains(DASHTags.TemplateNumber);
                                     string media = ParserUtil.ReplaceVars(mediaTemplate!, varDic);
                                     string mediaUrl = ParserUtil.CombineURL(segBaseUrl, media!);
-                                    MediaSegment mediaSegment = new();
-                                    mediaSegment.Url = mediaUrl;
+                                    MediaSegment mediaSegment = new()
+                                    {
+                                        Url = mediaUrl
+                                    };
                                     if (hasNumber)
                                     {
                                         mediaSegment.NameFromVar = index.ToString();

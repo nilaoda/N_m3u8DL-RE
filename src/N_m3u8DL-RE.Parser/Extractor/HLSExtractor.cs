@@ -88,8 +88,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
 
                 if (line.StartsWith(HLSTags.ext_x_stream_inf))
                 {
-                    streamSpec = new();
-                    streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
+                    streamSpec = new()
+                    {
+                        OriginalUrl = ParserConfig.OriginalUrl
+                    };
                     string bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH")) ? ParserUtil.GetAttribute(line, "BANDWIDTH") : ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH");
                     streamSpec.Bandwidth = Convert.ToInt32(bandwidth);
                     streamSpec.Codecs = ParserUtil.GetAttribute(line, "CODECS");
@@ -137,7 +139,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 {
                     streamSpec = new();
                     string type = ParserUtil.GetAttribute(line, "TYPE").Replace("-", "_");
-                    if (Enum.TryParse<MediaType>(type, out MediaType mediaType))
+                    if (Enum.TryParse(type, out MediaType mediaType))
                     {
                         streamSpec.MediaType = mediaType;
                     }
@@ -187,7 +189,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     }
 
                     string def = ParserUtil.GetAttribute(line, "DEFAULT");
-                    if (Enum.TryParse<Choice>(type, out Choice defaultChoise))
+                    if (Enum.TryParse(type, out Choice defaultChoise))
                     {
                         streamSpec.Default = defaultChoise;
                     }

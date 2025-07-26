@@ -117,13 +117,17 @@ namespace N_m3u8DL_RE.Parser.Extractor
                     int height = Convert.ToInt32(qualityLevel.Attribute("MaxHeight")?.Value ?? "0");
                     string? channels = qualityLevel.Attribute("Channels")?.Value;
 
-                    StreamSpec streamSpec = new();
-                    streamSpec.PublishTime = DateTime.Now; // 发布时间默认现在
-                    streamSpec.Extension = "m4s";
-                    streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
-                    streamSpec.PeriodId = indexStr;
-                    streamSpec.Playlist = new Playlist();
-                    streamSpec.Playlist.IsLive = isLive;
+                    StreamSpec streamSpec = new()
+                    {
+                        PublishTime = DateTime.Now, // 发布时间默认现在
+                        Extension = "m4s",
+                        OriginalUrl = ParserConfig.OriginalUrl,
+                        PeriodId = indexStr,
+                        Playlist = new Playlist
+                        {
+                            IsLive = isLive
+                        }
+                    };
                     streamSpec.Playlist.MediaParts.Add(new MediaPart());
                     streamSpec.GroupId = name ?? indexStr;
                     streamSpec.Bandwidth = bitrate;
@@ -176,8 +180,10 @@ namespace N_m3u8DL_RE.Parser.Extractor
                         varDic[MSSTags.StartTime] = currentTime;
                         string oriUrl = ParserUtil.CombineURL(BaseUrl, urlPattern!);
                         string mediaUrl = ParserUtil.ReplaceVars(oriUrl, varDic);
-                        MediaSegment mediaSegment = new();
-                        mediaSegment.Url = mediaUrl;
+                        MediaSegment mediaSegment = new()
+                        {
+                            Url = mediaUrl
+                        };
                         if (oriUrl.Contains(MSSTags.StartTime))
                         {
                             mediaSegment.NameFromVar = currentTime.ToString();
@@ -283,14 +289,14 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 : string.IsNullOrEmpty(privateData)
                 ? null
                 : fourCC switch
-            {
-                // AVC视频
-                "H264" or "X264" or "DAVC" or "AVC1" => ParseAVCCodecs(privateData),
-                // AAC音频
-                "AAC" or "AACL" or "AACH" or "AACP" => ParseAACCodecs(fourCC, privateData),
-                // 默认返回fourCC本身
-                _ => fourCC.ToLower()
-            };
+                {
+                    // AVC视频
+                    "H264" or "X264" or "DAVC" or "AVC1" => ParseAVCCodecs(privateData),
+                    // AAC音频
+                    "AAC" or "AACL" or "AACH" or "AACP" => ParseAACCodecs(fourCC, privateData),
+                    // 默认返回fourCC本身
+                    _ => fourCC.ToLower()
+                };
         }
 
         private static string ParseAVCCodecs(string privateData)

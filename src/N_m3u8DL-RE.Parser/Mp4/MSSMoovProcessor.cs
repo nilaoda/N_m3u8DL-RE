@@ -808,22 +808,6 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return psshBox;
         }
 
-        private byte[] GenMoof()
-        {
-            using MemoryStream stream = new();
-            using BinaryWriter2 writer = new(stream);
-
-            // make senc
-            writer.WriteUInt(1); // sample_count
-            writer.Write(new byte[8]); // 8 bytes IV
-
-            byte[] sencBox = FullBox("senc", 1, 0, stream.ToArray());
-
-            byte[] moofBox = Box("moof", sencBox); // Movie Extends Box
-
-            return moofBox;
-        }
-
         public byte[] GenHeader(byte[] firstSegment)
         {
             new MP4Parser()
