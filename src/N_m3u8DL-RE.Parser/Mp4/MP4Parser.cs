@@ -127,6 +127,8 @@ namespace N_m3u8DL_RE.Parser.Mp4
                     size = (long)reader.ReadUInt64();
                     has64BitSize = true;
                     break;
+                default:
+                    break;
             }
 
             BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition);

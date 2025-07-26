@@ -185,6 +185,8 @@ namespace N_m3u8DL_RE.Util
                 case "AC3":
                     command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
                     break;
+                default:
+                    break;
             }
 
             int code = InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);

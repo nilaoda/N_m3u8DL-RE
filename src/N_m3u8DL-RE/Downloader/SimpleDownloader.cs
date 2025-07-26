@@ -52,6 +52,16 @@ namespace N_m3u8DL_RE.Downloader
                     case EncryptMethod.SAMPLE_AES_CTR:
                         // throw new NotSupportedException("SAMPLE-AES-CTR");
                         break;
+                    case EncryptMethod.NONE:
+                        break;
+                    case EncryptMethod.SAMPLE_AES:
+                        break;
+                    case EncryptMethod.CENC:
+                        break;
+                    case EncryptMethod.UNKNOWN:
+                        break;
+                    default:
+                        break;
                 }
 
                 // Image头处理
