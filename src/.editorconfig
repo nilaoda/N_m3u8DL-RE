@@ -6,6 +6,9 @@ dotnet_separate_import_directive_groups = true
 # Enable IDE code style warnings
 dotnet_analyzer_diagnostic.category-Style.severity = warning
 dotnet_analyzer_diagnostic.category-Simplification.severity = warning
+dotnet_analyzer_diagnostic.category-Reliability.severity = warning
+dotnet_analyzer_diagnostic.category-Performance.severity = warning
+dotnet_analyzer_diagnostic.category-Usage.severity = warning
 
 # Disable some warnings
 dotnet_diagnostic.CA1707.severity = none
