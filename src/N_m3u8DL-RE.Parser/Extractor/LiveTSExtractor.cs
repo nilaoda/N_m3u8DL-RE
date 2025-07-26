@@ -5,16 +5,11 @@ using N_m3u8DL_RE.Parser.Config;
 
 namespace N_m3u8DL_RE.Parser.Extractor;
 
-internal class LiveTSExtractor : IExtractor
+internal class LiveTSExtractor(ParserConfig parserConfig) : IExtractor
 {
     public ExtractorType ExtractorType => ExtractorType.HTTP_LIVE;
 
-    public ParserConfig ParserConfig { get; set; }
-
-    public LiveTSExtractor(ParserConfig parserConfig)
-    {
-        this.ParserConfig = parserConfig;
-    }
+    public ParserConfig ParserConfig { get; set; } = parserConfig;
 
     public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
     {

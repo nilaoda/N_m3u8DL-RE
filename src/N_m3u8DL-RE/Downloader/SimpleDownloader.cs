@@ -13,14 +13,9 @@ namespace N_m3u8DL_RE.Downloader;
 /// <summary>
 /// 简单下载器
 /// </summary>
-internal class SimpleDownloader : IDownloader
+internal class SimpleDownloader(DownloaderConfig config) : IDownloader
 {
-    DownloaderConfig DownloaderConfig;
-
-    public SimpleDownloader(DownloaderConfig config)
-    {
-        DownloaderConfig = config;
-    }
+    DownloaderConfig DownloaderConfig = config;
 
     public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null)
     {

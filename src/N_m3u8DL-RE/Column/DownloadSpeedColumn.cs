@@ -8,17 +8,12 @@ using Spectre.Console.Rendering;
 
 namespace N_m3u8DL_RE.Column;
 
-internal sealed class DownloadSpeedColumn : ProgressColumn
+internal sealed class DownloadSpeedColumn(ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic) : ProgressColumn
 {
     private long _stopSpeed = 0;
     private ConcurrentDictionary<int, string> DateTimeStringDic = new();
     protected override bool NoWrap => true;
-    private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; }
-
-    public DownloadSpeedColumn(ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic)
-    {
-        this.SpeedContainerDic = SpeedContainerDic;
-    }
+    private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; } = SpeedContainerDic;
 
     public Style MyStyle { get; set; } = new Style(foreground: Color.Green);
 

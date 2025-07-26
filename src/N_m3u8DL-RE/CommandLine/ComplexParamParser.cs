@@ -2,13 +2,9 @@
 
 namespace N_m3u8DL_RE.CommandLine;
 
-internal class ComplexParamParser
+internal class ComplexParamParser(string arg)
 {
-    private readonly string _arg;
-    public ComplexParamParser(string arg)
-    {
-        _arg = arg;
-    }
+    private readonly string _arg = arg;
 
     public string? GetValue(string key)
     {

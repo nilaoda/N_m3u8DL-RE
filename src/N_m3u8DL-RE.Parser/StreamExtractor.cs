@@ -11,20 +11,15 @@ using N_m3u8DL_RE.Parser.Extractor;
 
 namespace N_m3u8DL_RE.Parser;
 
-public class StreamExtractor
+public class StreamExtractor(ParserConfig parserConfig)
 {
     public ExtractorType ExtractorType => extractor.ExtractorType;
     private IExtractor extractor;
-    private ParserConfig parserConfig = new();
+    private ParserConfig parserConfig = parserConfig;
     private string rawText;
     private static SemaphoreSlim semaphore = new(1, 1);
 
     public Dictionary<string, string> RawFiles { get; set; } = []; // 存储（文件名,文件内容）
-
-    public StreamExtractor(ParserConfig parserConfig)
-    {
-        this.parserConfig = parserConfig;
-    }
 
     public async Task LoadSourceFromUrlAsync(string url)
     {
