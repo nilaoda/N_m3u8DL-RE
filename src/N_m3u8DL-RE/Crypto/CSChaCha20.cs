@@ -367,7 +367,7 @@ namespace N_m3u8DL_RE.Crypto
         {
             byte[] readBytesBuffer = new byte[howManyBytesToProcessAtTime];
             byte[] writeBytesBuffer = new byte[howManyBytesToProcessAtTime];
-            int howManyBytesWereRead = await input.ReadAsync(readBytesBuffer, 0, howManyBytesToProcessAtTime);
+            int howManyBytesWereRead = await input.ReadAsync(readBytesBuffer.AsMemory(0, howManyBytesToProcessAtTime));
 
             while (howManyBytesWereRead > 0)
             {
@@ -378,7 +378,7 @@ namespace N_m3u8DL_RE.Crypto
                 await output.WriteAsync(writeBytesBuffer.AsMemory(0, howManyBytesWereRead));
 
                 // Read more
-                howManyBytesWereRead = await input.ReadAsync(readBytesBuffer, 0, howManyBytesToProcessAtTime);
+                howManyBytesWereRead = await input.ReadAsync(readBytesBuffer.AsMemory(0, howManyBytesToProcessAtTime));
             }
         }
 
