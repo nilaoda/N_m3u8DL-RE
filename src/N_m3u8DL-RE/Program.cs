@@ -122,7 +122,7 @@ namespace N_m3u8DL_RE
             Logger.LogLevel = option.LogLevel;
             Logger.Info(CommandInvoker.VERSION_INFO);
 
-            if (option.UseSystemProxy == false)
+            if (!option.UseSystemProxy)
             {
                 HTTPUtil.HttpClientHandler.UseProxy = false;
             }

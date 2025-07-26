@@ -379,7 +379,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 校验完整性
-            if (DownloaderConfig.CheckContentLength && FileDic.Values.Any(a => a!.Success == false))
+            if (DownloaderConfig.CheckContentLength && FileDic.Values.Any(a => !a!.Success))
             {
                 return false;
             }
