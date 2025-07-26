@@ -10,12 +10,9 @@ namespace N_m3u8DL_RE.Column
         public Style FinishedStyle { get; set; } = new Style(foreground: Color.Yellow);
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            if (task.IsFinished)
-            {
-                return new Text($"{task.Value}/{task.MaxValue} Waiting  ", FinishedStyle).LeftJustified();
-            }
-
-            return new Text($"{task.Value}/{task.MaxValue} Recording", MyStyle).LeftJustified();
+            return task.IsFinished
+                ? new Text($"{task.Value}/{task.MaxValue} Waiting  ", FinishedStyle).LeftJustified()
+                : new Text($"{task.Value}/{task.MaxValue} Recording", MyStyle).LeftJustified();
         }
     }
 }

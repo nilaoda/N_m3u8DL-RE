@@ -569,12 +569,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// <returns></returns>
         private string? FilterLanguage(string? v)
         {
-            if (v == null)
-            {
-                return null;
-            }
-
-            return LangCodeRegex().IsMatch(v) ? v : "und";
+            return v == null ? null : LangCodeRegex().IsMatch(v) ? v : "und";
         }
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)

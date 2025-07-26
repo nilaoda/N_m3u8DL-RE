@@ -21,12 +21,7 @@ namespace N_m3u8DL_RE.Util
                 return true;
             }
             // JPEG HEADER检测
-            if (size > 3 && 0xFF == bArr[0] && 0xD8 == bArr[1] && 0xFF == bArr[2])
-            {
-                return true;
-            }
-
-            return false;
+            return size > 3 && 0xFF == bArr[0] && 0xD8 == bArr[1] && 0xFF == bArr[2];
         }
 
         public static async Task ProcessAsync(string sourcePath)

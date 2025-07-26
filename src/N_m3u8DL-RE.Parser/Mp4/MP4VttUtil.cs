@@ -199,11 +199,7 @@ namespace Mp4SubtitleParser
                 }
             }
 
-            if (cues.Count > 0)
-            {
-                return new WebVttSub() { Cues = cues };
-            }
-            return new WebVttSub();
+            return cues.Count > 0 ? new WebVttSub() { Cues = cues } : new WebVttSub();
         }
 
         private static SubCue? ParseVTTC(byte[] data, double startTime, double endTime)
@@ -226,11 +222,9 @@ namespace Mp4SubtitleParser
                 }))
                 .Parse(data);
 
-            if (!string.IsNullOrEmpty(payload))
-            {
-                return new SubCue() { StartTime = TimeSpan.FromSeconds(startTime), EndTime = TimeSpan.FromSeconds(endTime), Payload = payload, Settings = settings };
-            }
-            return null;
+            return !string.IsNullOrEmpty(payload)
+                ? new SubCue() { StartTime = TimeSpan.FromSeconds(startTime), EndTime = TimeSpan.FromSeconds(endTime), Payload = payload, Settings = settings }
+                : null;
         }
     }
 }

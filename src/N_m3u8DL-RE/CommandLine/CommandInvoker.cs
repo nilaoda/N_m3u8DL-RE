@@ -130,12 +130,7 @@ namespace N_m3u8DL_RE.CommandLine
                 }
 
                 double number = double.Parse(reg.Match(input).Groups[1].Value);
-                if (reg.Match(input).Groups[2].Value == "M")
-                {
-                    return (long)(number * 1024 * 1024);
-                }
-
-                return (long)(number * 1024);
+                return reg.Match(input).Groups[2].Value == "M" ? (long)(number * 1024 * 1024) : (long)(number * 1024);
             }
             catch (Exception)
             {
@@ -250,12 +245,7 @@ namespace N_m3u8DL_RE.CommandLine
                     return File.ReadAllBytes(input);
                 }
 
-                if (HexUtil.TryParseHexString(input, out byte[]? bytes))
-                {
-                    return bytes;
-                }
-
-                return Convert.FromBase64String(input);
+                return HexUtil.TryParseHexString(input, out byte[]? bytes) ? bytes : Convert.FromBase64String(input);
             }
             catch (Exception)
             {

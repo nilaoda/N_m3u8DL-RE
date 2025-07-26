@@ -30,12 +30,9 @@ namespace N_m3u8DL_RE.Common.Util
                 }
             }
 
-            if (retryCount == maxRetries)
-            {
-                throw new Exception($"Failed to execute action after {maxRetries} retries.", currentException);
-            }
-
-            return result;
+            return retryCount == maxRetries
+                ? throw new Exception($"Failed to execute action after {maxRetries} retries.", currentException)
+                : result;
         }
     }
 }

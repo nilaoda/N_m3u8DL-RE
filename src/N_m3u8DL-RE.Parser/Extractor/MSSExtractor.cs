@@ -283,12 +283,9 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 return "stpp";
             }
 
-            if (string.IsNullOrEmpty(privateData))
-            {
-                return null;
-            }
-
-            return fourCC switch
+            return string.IsNullOrEmpty(privateData)
+                ? null
+                : fourCC switch
             {
                 // AVC视频
                 "H264" or "X264" or "DAVC" or "AVC1" => ParseAVCCodecs(privateData),

@@ -49,12 +49,7 @@ namespace N_m3u8DL_RE.CommandLine
                 string resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
 
                 // 不应该有引号出现
-                if (resultStr.Contains('\"') || resultStr.Contains('\''))
-                {
-                    throw new Exception();
-                }
-
-                return resultStr;
+                return resultStr.Contains('\"') || resultStr.Contains('\'') ? throw new Exception() : resultStr;
             }
             catch (Exception)
             {

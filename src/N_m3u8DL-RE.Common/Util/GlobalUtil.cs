@@ -31,11 +31,7 @@ namespace N_m3u8DL_RE.Common.Util
             {
                 return JsonSerializer.Serialize(sList, Context.ListStreamSpec);
             }
-            if (o is IEnumerable<MediaSegment> mList)
-            {
-                return JsonSerializer.Serialize(mList, Context.IEnumerableMediaSegment);
-            }
-            return "{NOT SUPPORTED}";
+            return o is IEnumerable<MediaSegment> mList ? JsonSerializer.Serialize(mList, Context.IEnumerableMediaSegment) : "{NOT SUPPORTED}";
         }
 
         public static string FormatFileSize(double fileSize)
