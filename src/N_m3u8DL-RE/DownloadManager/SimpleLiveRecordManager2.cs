@@ -600,10 +600,8 @@ namespace N_m3u8DL_RE.DownloadManager
                         }
                         foreach (string? inputFilePath in files)
                         {
-                            using (FileStream inputStream = File.OpenRead(inputFilePath))
-                            {
-                                inputStream.CopyTo(fileOutputStream);
-                            }
+                            using FileStream inputStream = File.OpenRead(inputFilePath);
+                            inputStream.CopyTo(fileOutputStream);
                         }
                         if (!DownloaderConfig.MyOptions.LiveKeepSegments)
                         {

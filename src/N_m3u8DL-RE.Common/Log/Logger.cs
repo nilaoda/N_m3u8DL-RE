@@ -98,10 +98,8 @@ namespace N_m3u8DL_RE.Common.Log
                 {
                     // 进入写入
                     LogWriteLock.EnterWriteLock();
-                    using (StreamWriter sw = File.AppendText(LogFilePath))
-                    {
-                        sw.WriteLine(plain);
-                    }
+                    using StreamWriter sw = File.AppendText(LogFilePath);
+                    sw.WriteLine(plain);
                 }
                 finally
                 {
@@ -250,10 +248,8 @@ namespace N_m3u8DL_RE.Common.Log
             {
                 // 进入写入
                 LogWriteLock.EnterWriteLock();
-                using (StreamWriter sw = File.AppendText(LogFilePath))
-                {
-                    sw.WriteLine(plain, Encoding.UTF8);
-                }
+                using StreamWriter sw = File.AppendText(LogFilePath);
+                sw.WriteLine(plain, Encoding.UTF8);
             }
             finally
             {
