@@ -82,7 +82,7 @@ namespace N_m3u8DL_RE.Downloader
             return dResult;
         }
 
-        private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
+        private static async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
         {
             CancellationTokenSource? cancellationTokenSource = null;
         retry:

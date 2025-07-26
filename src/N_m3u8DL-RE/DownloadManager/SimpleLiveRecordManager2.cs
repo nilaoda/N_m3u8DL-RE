@@ -71,7 +71,7 @@ namespace N_m3u8DL_RE.DownloadManager
         /// </summary>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        private long GetUnixTimestamp(DateTime dateTime)
+        private static long GetUnixTimestamp(DateTime dateTime)
         {
             return new DateTimeOffset(dateTime.ToUniversalTime()).ToUnixTimeSeconds();
         }

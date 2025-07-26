@@ -38,7 +38,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         private readonly string ProtectionData;
         private string? ProtecitonKID;
         private string? ProtecitonKID_PR;
-        private byte[] UnityMatrix
+        private static byte[] UnityMatrix
         {
             get
             {
@@ -95,7 +95,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         }
 
         private static readonly string[] HEVC_GENERAL_PROFILE_SPACE_STRINGS = ["", "A", "B", "C"];
-        private int SamplingFrequencyIndex(int samplingRate)
+        private static int SamplingFrequencyIndex(int samplingRate)
         {
             return samplingRate switch
             {
@@ -192,7 +192,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             return SupportedFourCC.Contains(fourCC);
         }
 
-        private byte[] Box(string boxType, byte[] payload)
+        private static byte[] Box(string boxType, byte[] payload)
         {
             using MemoryStream stream = new();
             using BinaryWriter2 writer = new(stream);

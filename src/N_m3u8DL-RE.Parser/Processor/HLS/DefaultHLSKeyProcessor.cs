@@ -105,7 +105,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS
         /// <summary>
         /// 预处理URL
         /// </summary>
-        private string PreProcessUrl(string url, ParserConfig parserConfig)
+        private static string PreProcessUrl(string url, ParserConfig parserConfig)
         {
             foreach (UrlProcessor p in parserConfig.UrlProcessors)
             {

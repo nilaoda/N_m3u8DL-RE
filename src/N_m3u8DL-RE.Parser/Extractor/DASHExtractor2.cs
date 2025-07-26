@@ -36,7 +36,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             BaseUrl = !string.IsNullOrEmpty(ParserConfig.BaseUrl) ? ParserConfig.BaseUrl : MpdUrl;
         }
 
-        private string ExtendBaseUrl(XElement element, string oriBaseUrl)
+        private static string ExtendBaseUrl(XElement element, string oriBaseUrl)
         {
             XElement? target = element.Elements().FirstOrDefault(e => e.Name.LocalName == "BaseURL");
             if (target != null)
@@ -47,7 +47,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             return oriBaseUrl;
         }
 
-        private double? GetFrameRate(XElement element)
+        private static double? GetFrameRate(XElement element)
         {
             string? frameRate = element.Attribute("frameRate")?.Value;
             if (frameRate == null || !frameRate.Contains('/'))
@@ -567,7 +567,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
         /// </summary>
         /// <param name="v"></param>
         /// <returns></returns>
-        private string? FilterLanguage(string? v)
+        private static string? FilterLanguage(string? v)
         {
             return v == null ? null : LangCodeRegex().IsMatch(v) ? v : "und";
         }

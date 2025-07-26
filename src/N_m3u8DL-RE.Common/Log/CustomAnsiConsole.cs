@@ -26,7 +26,7 @@ namespace N_m3u8DL_RE.Common.Log
             RemoveAnsiEscapeSequences(value);
         }
 
-        private void RemoveAnsiEscapeSequences(string? input)
+        private static void RemoveAnsiEscapeSequences(string? input)
         {
             // Use regular expression to remove ANSI escape sequences
             string output = MyRegex().Replace(input ?? "", "");
