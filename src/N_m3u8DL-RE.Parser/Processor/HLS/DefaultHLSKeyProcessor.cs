@@ -8,104 +8,105 @@ using N_m3u8DL_RE.Parser.Util;
 
 using Spectre.Console;
 
-namespace N_m3u8DL_RE.Parser.Processor.HLS;
-
-public class DefaultHLSKeyProcessor : KeyProcessor
+namespace N_m3u8DL_RE.Parser.Processor.HLS
 {
-    public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
-
-
-    public override EncryptInfo Process(string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
+    public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        var iv = ParserUtil.GetAttribute(keyLine, "IV");
-        var method = ParserUtil.GetAttribute(keyLine, "METHOD");
-        var uri = ParserUtil.GetAttribute(keyLine, "URI");
+        public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
-        Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
-        var encryptInfo = new EncryptInfo(method);
-
-        // IV
-        if (!string.IsNullOrEmpty(iv))
+        public override EncryptInfo Process(string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
         {
-            encryptInfo.IV = HexUtil.HexToBytes(iv);
-        }
-        // 自定义IV
-        if (parserConfig.CustomeIV is { Length: > 0 })
-        {
-            encryptInfo.IV = parserConfig.CustomeIV;
-        }
+            var iv = ParserUtil.GetAttribute(keyLine, "IV");
+            var method = ParserUtil.GetAttribute(keyLine, "METHOD");
+            var uri = ParserUtil.GetAttribute(keyLine, "URI");
 
-        // KEY
-        try
-        {
-            if (parserConfig.CustomeKey is { Length: > 0 })
+            Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
+
+            var encryptInfo = new EncryptInfo(method);
+
+            // IV
+            if (!string.IsNullOrEmpty(iv))
             {
-                encryptInfo.Key = parserConfig.CustomeKey;
+                encryptInfo.IV = HexUtil.HexToBytes(iv);
             }
-            else if (uri.ToLower().StartsWith("base64:"))
+            // 自定义IV
+            if (parserConfig.CustomeIV is { Length: > 0 })
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                encryptInfo.IV = parserConfig.CustomeIV;
             }
-            else if (uri.ToLower().StartsWith("data:;base64,"))
+
+            // KEY
+            try
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[13..]);
-            }
-            else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
-            {
-                encryptInfo.Key = Convert.FromBase64String(uri[23..]);
-            }
-            else if (File.Exists(uri))
-            {
-                encryptInfo.Key = File.ReadAllBytes(uri);
-            }
-            else if (!string.IsNullOrEmpty(uri))
-            {
-                var retryCount = parserConfig.KeyRetryCount;
-                var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
-            getHttpKey:
-                try
+                if (parserConfig.CustomeKey is { Length: > 0 })
                 {
-                    var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
-                    encryptInfo.Key = bytes;
+                    encryptInfo.Key = parserConfig.CustomeKey;
                 }
-                catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
+                else if (uri.ToLower().StartsWith("base64:"))
                 {
-                    Logger.WarnMarkUp($"[grey]{_ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
-                    Thread.Sleep(1000);
-                    if (retryCount-- > 0) goto getHttpKey;
-                    throw;
+                    encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                }
+                else if (uri.ToLower().StartsWith("data:;base64,"))
+                {
+                    encryptInfo.Key = Convert.FromBase64String(uri[13..]);
+                }
+                else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
+                {
+                    encryptInfo.Key = Convert.FromBase64String(uri[23..]);
+                }
+                else if (File.Exists(uri))
+                {
+                    encryptInfo.Key = File.ReadAllBytes(uri);
+                }
+                else if (!string.IsNullOrEmpty(uri))
+                {
+                    var retryCount = parserConfig.KeyRetryCount;
+                    var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
+                getHttpKey:
+                    try
+                    {
+                        var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
+                        encryptInfo.Key = bytes;
+                    }
+                    catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
+                    {
+                        Logger.WarnMarkUp($"[grey]{_ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
+                        Thread.Sleep(1000);
+                        if (retryCount-- > 0) goto getHttpKey;
+                        throw;
+                    }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ResString.cmd_loadKeyFailed + ": " + ex.Message);
-            encryptInfo.Method = EncryptMethod.UNKNOWN;
-        }
-
-        if (parserConfig.CustomMethod == null) return encryptInfo;
-
-        // 处理自定义加密方式
-        encryptInfo.Method = parserConfig.CustomMethod.Value;
-        Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
-
-        return encryptInfo;
-    }
-
-    /// <summary>
-    /// 预处理URL
-    /// </summary>
-    private string PreProcessUrl(string url, ParserConfig parserConfig)
-    {
-        foreach (var p in parserConfig.UrlProcessors)
-        {
-            if (p.CanProcess(ExtractorType.HLS, url, parserConfig))
+            catch (Exception ex)
             {
-                url = p.Process(url, parserConfig);
+                Logger.Error(ResString.cmd_loadKeyFailed + ": " + ex.Message);
+                encryptInfo.Method = EncryptMethod.UNKNOWN;
             }
+
+            if (parserConfig.CustomMethod == null) return encryptInfo;
+
+            // 处理自定义加密方式
+            encryptInfo.Method = parserConfig.CustomMethod.Value;
+            Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
+
+            return encryptInfo;
         }
 
-        return url;
+        /// <summary>
+        /// 预处理URL
+        /// </summary>
+        private string PreProcessUrl(string url, ParserConfig parserConfig)
+        {
+            foreach (var p in parserConfig.UrlProcessors)
+            {
+                if (p.CanProcess(ExtractorType.HLS, url, parserConfig))
+                {
+                    url = p.Process(url, parserConfig);
+                }
+            }
+
+            return url;
+        }
     }
 }

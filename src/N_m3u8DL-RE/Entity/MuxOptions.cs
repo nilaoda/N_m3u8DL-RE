@@ -1,12 +1,13 @@
 ﻿using N_m3u8DL_RE.Enumerations;
 
-namespace N_m3u8DL_RE.Entity;
-
-internal class MuxOptions
+namespace N_m3u8DL_RE.Entity
 {
-    public bool UseMkvmerge { get; set; } = false;
-    public MuxFormat MuxFormat { get; set; } = MuxFormat.MP4;
-    public bool KeepFiles { get; set; } = false;
-    public bool SkipSubtitle { get; set; } = false;
-    public string? BinPath { get; set; }
+    internal class MuxOptions
+    {
+        public bool UseMkvmerge { get; set; } = false;
+        public MuxFormat MuxFormat { get; set; } = MuxFormat.MP4;
+        public bool KeepFiles { get; set; } = false;
+        public bool SkipSubtitle { get; set; } = false;
+        public string? BinPath { get; set; }
+    }
 }

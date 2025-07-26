@@ -1,7 +1,8 @@
-﻿namespace N_m3u8DL_RE.Enumerations;
-
-internal enum SubtitleFormat
+﻿namespace N_m3u8DL_RE.Enumerations
 {
-    VTT,
-    SRT
+    internal enum SubtitleFormat
+    {
+        VTT,
+        SRT
+    }
 }

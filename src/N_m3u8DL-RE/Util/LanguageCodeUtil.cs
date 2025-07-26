@@ -1,19 +1,19 @@
 ﻿using N_m3u8DL_RE.Entity;
 
-namespace N_m3u8DL_RE.Util;
-
-internal class Language(string extendCode, string code, string desc, string descA)
+namespace N_m3u8DL_RE.Util
 {
-    public readonly string Code = code;
-    public readonly string ExtendCode = extendCode;
-    public readonly string Description = desc;
-    public readonly string DescriptionAudio = descA;
-}
+    internal class Language(string extendCode, string code, string desc, string descA)
+    {
+        public readonly string Code = code;
+        public readonly string ExtendCode = extendCode;
+        public readonly string Description = desc;
+        public readonly string DescriptionAudio = descA;
+    }
 
-internal static class LanguageCodeUtil
-{
+    internal static class LanguageCodeUtil
+    {
 
-    private static readonly List<Language> ALL_LANGS = [.. @"
+        private static readonly List<Language> ALL_LANGS = [.. @"
 default;und;default;default
 af;afr;Afrikaans;Afrikaans
 af-ZA;afr;Afrikaans (South Africa);Afrikaans (South Africa)
@@ -374,13 +374,13 @@ CC;chi;中文（繁體）;中文
 CZ;chi;中文（简体）;中文
 MA;msa;Melayu;Melayu
 "
-        .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x =>
-        {
-            var arr = x.Trim().Split(';', StringSplitOptions.TrimEntries);
-            return new Language(arr[0], arr[1], arr[2], arr[3]);
-        })];
+            .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x =>
+            {
+                var arr = x.Trim().Split(';', StringSplitOptions.TrimEntries);
+                return new Language(arr[0], arr[1], arr[2], arr[3]);
+            })];
 
-    private static Dictionary<string, string> CODE_MAP = @"
+        private static Dictionary<string, string> CODE_MAP = @"
 iv;IVL
 ar;ara
 bg;bul
@@ -486,46 +486,47 @@ nn;nno
 bs;bos
 sr;srp
 "
-        .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToDictionary(x => x.Split(';').First().Trim(), x => x.Split(';').Last().Trim());
+            .Trim().Replace("\r", "").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToDictionary(x => x.Split(';').First().Trim(), x => x.Split(';').Last().Trim());
 
 
-    private static string ConvertTwoToThree(string input)
-    {
-        return CODE_MAP.GetValueOrDefault(input, input);
-    }
-
-    /// <summary>
-    /// 转换 ISO 639-1 => ISO 639-2
-    /// 且当Description为空时将DisplayName写入
-    /// </summary>
-    /// <param name="outputFile"></param>
-    public static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
-    {
-        if (string.IsNullOrEmpty(outputFile.LangCode)) return;
-        var originalLangCode = outputFile.LangCode;
-
-        // 先直接查找
-        var lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
-        // 处理特殊的扩展语言标记
-        if (lang == null)
+        private static string ConvertTwoToThree(string input)
         {
-            // 2位转3位
-            var l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
-            lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(l, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(l, StringComparison.OrdinalIgnoreCase));
+            return CODE_MAP.GetValueOrDefault(input, input);
         }
 
-        if (lang != null)
+        /// <summary>
+        /// 转换 ISO 639-1 => ISO 639-2
+        /// 且当Description为空时将DisplayName写入
+        /// </summary>
+        /// <param name="outputFile"></param>
+        public static void ConvertLangCodeAndDisplayName(OutputFile outputFile)
         {
-            outputFile.LangCode = lang.Code;
-            if (string.IsNullOrEmpty(outputFile.Description))
-                outputFile.Description = outputFile.MediaType == Common.Enum.MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
-        }
-        else
-        {
-            outputFile.LangCode = "und"; // 无法识别直接置为und
-        }
+            if (string.IsNullOrEmpty(outputFile.LangCode)) return;
+            var originalLangCode = outputFile.LangCode;
 
-        // 无描述，则把LangCode当作描述
-        if (string.IsNullOrEmpty(outputFile.Description)) outputFile.Description = originalLangCode;
+            // 先直接查找
+            var lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(outputFile.LangCode, StringComparison.OrdinalIgnoreCase));
+            // 处理特殊的扩展语言标记
+            if (lang == null)
+            {
+                // 2位转3位
+                var l = ConvertTwoToThree(outputFile.LangCode.Split('-').First());
+                lang = ALL_LANGS.FirstOrDefault(a => a.ExtendCode.Equals(l, StringComparison.OrdinalIgnoreCase) || a.Code.Equals(l, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (lang != null)
+            {
+                outputFile.LangCode = lang.Code;
+                if (string.IsNullOrEmpty(outputFile.Description))
+                    outputFile.Description = outputFile.MediaType == Common.Enum.MediaType.SUBTITLES ? lang.Description : lang.DescriptionAudio;
+            }
+            else
+            {
+                outputFile.LangCode = "und"; // 无法识别直接置为und
+            }
+
+            // 无描述，则把LangCode当作描述
+            if (string.IsNullOrEmpty(outputFile.Description)) outputFile.Description = originalLangCode;
+        }
     }
 }

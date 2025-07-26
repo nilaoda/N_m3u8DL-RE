@@ -1,8 +1,9 @@
-namespace N_m3u8DL_RE.Enumerations;
-
-internal enum DecryptEngine
+namespace N_m3u8DL_RE.Enumerations
 {
-    MP4DECRYPT,
-    SHAKA_PACKAGER,
-    FFMPEG,
+    internal enum DecryptEngine
+    {
+        MP4DECRYPT,
+        SHAKA_PACKAGER,
+        FFMPEG,
+    }
 }

@@ -1,52 +1,53 @@
 ﻿using System.Text;
 
-namespace N_m3u8DL_RE.CommandLine;
-
-internal class ComplexParamParser(string arg)
+namespace N_m3u8DL_RE.CommandLine
 {
-    private readonly string _arg = arg;
-
-    public string? GetValue(string key)
+    internal class ComplexParamParser(string arg)
     {
-        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(_arg)) return null;
+        private readonly string _arg = arg;
 
-        try
+        public string? GetValue(string key)
         {
-            var index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
-            if (index == -1) return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(_arg)) return null;
 
-            var chars = _arg[(index + key.Length + 1)..].ToCharArray();
-            var result = new StringBuilder();
-            char last = '\0';
-            for (int i = 0; i < chars.Length; i++)
+            try
             {
-                if (chars[i] == ':')
+                var index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
+                if (index == -1) return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
+
+                var chars = _arg[(index + key.Length + 1)..].ToCharArray();
+                var result = new StringBuilder();
+                char last = '\0';
+                for (int i = 0; i < chars.Length; i++)
                 {
-                    if (last == '\\')
+                    if (chars[i] == ':')
                     {
-                        result.Replace("\\", "");
+                        if (last == '\\')
+                        {
+                            result.Replace("\\", "");
+                            last = chars[i];
+                            result.Append(chars[i]);
+                        }
+                        else break;
+                    }
+                    else
+                    {
                         last = chars[i];
                         result.Append(chars[i]);
                     }
-                    else break;
                 }
-                else
-                {
-                    last = chars[i];
-                    result.Append(chars[i]);
-                }
+
+                var resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
+
+                // 不应该有引号出现
+                if (resultStr.Contains('\"') || resultStr.Contains('\'')) throw new Exception();
+
+                return resultStr;
             }
-
-            var resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
-
-            // 不应该有引号出现
-            if (resultStr.Contains('\"') || resultStr.Contains('\'')) throw new Exception();
-
-            return resultStr;
-        }
-        catch (Exception)
-        {
-            throw new ArgumentException($"Parse Argument [{key}] failed!");
+            catch (Exception)
+            {
+                throw new ArgumentException($"Parse Argument [{key}] failed!");
+            }
         }
     }
 }
