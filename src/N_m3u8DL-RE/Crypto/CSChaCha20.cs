@@ -106,10 +106,7 @@ namespace N_m3u8DL_RE.Crypto
         /// </param>
         private void KeySetup(byte[] key)
         {
-            if (key == null)
-            {
-                throw new ArgumentNullException("Key is null");
-            }
+            ArgumentNullException.ThrowIfNull(key);
 
             if (key.Length != allowedKeyLength)
             {
