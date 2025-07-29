@@ -1,11 +1,12 @@
-﻿namespace N_m3u8DL_RE.Crypto
+﻿using Sodium;
+
+namespace N_m3u8DL_RE.Crypto
 {
     internal static class ChaCha20Util
     {
         public static byte[] DecryptInChunks(byte[] encryptedBuff, byte[] keyBytes, byte[] nonceBytes)
         {
             ArgumentNullException.ThrowIfNull(keyBytes);
-
             ArgumentNullException.ThrowIfNull(nonceBytes);
 
             if (keyBytes.Length != 32)
@@ -18,31 +19,14 @@
                 throw new ArgumentException("Nonce must be 12 or 8 bytes.", nameof(nonceBytes));
             }
 
+            // Extend 8-byte nonce to 12 bytes if needed
             if (nonceBytes.Length == 8)
             {
                 nonceBytes = [.. new byte[4] { 0, 0, 0, 0 }, .. nonceBytes];
             }
 
-            using MemoryStream decStream = new();
-            using BinaryReader reader = new(new MemoryStream(encryptedBuff));
-            using BinaryWriter writer = new(decStream);
-
-            ChaCha20 forDecrypting = new(keyBytes, nonceBytes, 0); // counter = 0
-
-            while (true)
-            {
-                byte[] buffer = reader.ReadBytes(1024);
-                if (buffer.Length == 0)
-                {
-                    break;
-                }
-
-                byte[] dec = new byte[buffer.Length];
-                forDecrypting.DecryptBytes(dec, buffer); // Continues from previous counter state
-                writer.Write(dec);
-            }
-
-            return decStream.ToArray();
+            // Use Sodium.Core for raw ChaCha20
+            return StreamEncryption.DecryptChaCha20(encryptedBuff, nonceBytes, keyBytes);
         }
     }
 }
