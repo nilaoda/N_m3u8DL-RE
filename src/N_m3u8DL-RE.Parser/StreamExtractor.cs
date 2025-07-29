@@ -13,10 +13,10 @@ namespace N_m3u8DL_RE.Parser
 {
     public class StreamExtractor(ParserConfig parserConfig)
     {
-        public ExtractorType ExtractorType => extractor.ExtractorType;
-        private IExtractor extractor;
+        public ExtractorType ExtractorType => extractor?.ExtractorType ?? throw new InvalidOperationException("Extractor not initialized");
+        private IExtractor? extractor;
         private readonly ParserConfig parserConfig = parserConfig;
-        private string rawText;
+        private string? rawText;
         private static readonly SemaphoreSlim semaphore = new(1, 1);
 
         public Dictionary<string, string> RawFiles { get; set; } = []; // 存储（文件名,文件内容）
@@ -42,7 +42,15 @@ namespace N_m3u8DL_RE.Parser
                 rawText = await File.ReadAllTextAsync(url);
                 parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
             }
-            rawText = rawText.Trim();
+            if (rawText != null)
+            {
+                rawText = rawText.Trim();
+                LoadSourceFromText(rawText);
+            }
+            else
+            {
+                throw new InvalidOperationException("Failed to load content from URL");
+            }
             LoadSourceFromText(rawText);
         }
 
@@ -91,6 +99,11 @@ namespace N_m3u8DL_RE.Parser
         /// <returns></returns>
         public async Task<List<StreamSpec>> ExtractStreamsAsync()
         {
+            if (extractor == null || rawText == null)
+            {
+                throw new InvalidOperationException("StreamExtractor not initialized. Call LoadSourceFromUrlAsync first.");
+            }
+
             try
             {
                 await semaphore.WaitAsync();
@@ -109,6 +122,10 @@ namespace N_m3u8DL_RE.Parser
         /// <param name="streamSpecs"></param>
         public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
         {
+            if (extractor == null)
+            {
+                throw new InvalidOperationException("StreamExtractor not initialized. Call LoadSourceFromUrlAsync first.");
+            }
             try
             {
                 await semaphore.WaitAsync();
@@ -123,6 +140,10 @@ namespace N_m3u8DL_RE.Parser
 
         public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
         {
+            if (extractor == null)
+            {
+                throw new InvalidOperationException("StreamExtractor not initialized. Call LoadSourceFromUrlAsync first.");
+            }
             try
             {
                 await semaphore.WaitAsync();
