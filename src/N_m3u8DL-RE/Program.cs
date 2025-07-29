@@ -1,5 +1,8 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 
 using N_m3u8DL_RE.CommandLine;
@@ -73,7 +76,7 @@ void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
         Console.CursorVisible = true;
         if (!OperatingSystem.IsWindows())
         {
-            System.Diagnostics.Process.Start("tput", "cnorm");
+            Process.Start("tput", "cnorm");
         }
     }
     catch { }
@@ -490,7 +493,7 @@ async Task CheckUpdateAsync()
 {
     try
     {
-        Version ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
+        Version ver = Assembly.GetExecutingAssembly().GetName().Version!;
         string nowVer = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
         string redirctUrl = await Get302Async("https://github.com/nilaoda/N_m3u8DL-RE/releases/latest");
         string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
@@ -524,7 +527,7 @@ async Task<string> Get302Async(string url)
         return redirectedUrl;
     }
 
-    System.Net.Http.Headers.HttpResponseHeaders headers = response.Headers;
+    HttpResponseHeaders headers = response.Headers;
     if (headers.Location != null)
     {
         redirectedUrl = headers.Location.AbsoluteUri;

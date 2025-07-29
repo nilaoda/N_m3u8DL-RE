@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+
 using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
@@ -37,7 +39,7 @@ namespace N_m3u8DL_RE.Downloader
                         {
                             byte[]? key = segment.EncryptInfo.Key;
                             byte[]? iv = segment.EncryptInfo.IV;
-                            AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, System.Security.Cryptography.CipherMode.ECB);
+                            AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!, CipherMode.ECB);
                             break;
                         }
                     case EncryptMethod.CHACHA20:

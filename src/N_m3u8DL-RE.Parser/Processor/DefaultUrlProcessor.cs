@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System.Collections.Specialized;
+using System.Web;
 
 using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Log;
@@ -21,10 +22,10 @@ namespace N_m3u8DL_RE.Parser.Processor
             }
 
             Uri uriFromConfig = new(paserConfig.Url);
-            System.Collections.Specialized.NameValueCollection uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
+            NameValueCollection uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
 
             Uri oldUri = new(oriUrl);
-            System.Collections.Specialized.NameValueCollection newQuery = HttpUtility.ParseQueryString(oldUri.Query);
+            NameValueCollection newQuery = HttpUtility.ParseQueryString(oldUri.Query);
             foreach (string? item in uriFromConfigQuery.AllKeys)
             {
                 if (newQuery.AllKeys.Contains(item))

@@ -1,4 +1,6 @@
-﻿using N_m3u8DL_RE.Common.Util;
+﻿using System.Text;
+
+using N_m3u8DL_RE.Common.Util;
 
 namespace N_m3u8DL_RE.Parser.Mp4
 {
@@ -77,7 +79,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
             }
             if (schmIndex + 8 < data.Length)
             {
-                info.Scheme = System.Text.Encoding.UTF8.GetString(data[schmIndex..][8..12]);
+                info.Scheme = Encoding.UTF8.GetString(data[schmIndex..][8..12]);
             }
 
             // if (info.Scheme != "cenc") return;
