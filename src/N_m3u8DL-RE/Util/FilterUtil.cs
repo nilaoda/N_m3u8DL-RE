@@ -212,7 +212,15 @@ namespace N_m3u8DL_RE.Util
             // 通过Date同步
             if (selectedSteams.All(x => x.Playlist!.MediaParts[0].MediaSegments.All(x => x.DateTime != null)))
             {
-                DateTime? minDate = selectedSteams.Max(s => s.Playlist!.MediaParts[0].MediaSegments.Min(s => s.DateTime))!;
+                DateTime? minDate = selectedSteams.Max(s =>
+                {
+                    static DateTime? selector(MediaSegment s)
+                    {
+                        return s.DateTime;
+                    }
+
+                    return s.Playlist!.MediaParts[0].MediaSegments.Min(selector);
+                })!;
                 foreach (StreamSpec item in selectedSteams)
                 {
                     foreach (MediaPart part in item.Playlist!.MediaParts)
@@ -224,7 +232,14 @@ namespace N_m3u8DL_RE.Util
             }
             else // 通过index同步
             {
-                long minIndex = selectedSteams.Max(s => s.Playlist!.MediaParts[0].MediaSegments.Min(s => s.Index));
+                long minIndex = selectedSteams.Max(s =>
+                {
+                    static long selector(MediaSegment s)
+                    {
+                        return s.Index;
+                    }
+                    return s.Playlist!.MediaParts[0].MediaSegments.Min(selector);
+                });
                 foreach (StreamSpec item in selectedSteams)
                 {
                     foreach (MediaPart part in item.Playlist!.MediaParts)

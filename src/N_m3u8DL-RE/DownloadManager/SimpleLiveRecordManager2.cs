@@ -820,7 +820,14 @@ namespace N_m3u8DL_RE.DownloadManager
             // 设置等待时间
             if (WAIT_SEC == 0)
             {
-                WAIT_SEC = (int)(SelectedSteams.Min(s => s.Playlist!.MediaParts[0].MediaSegments.Sum(s => s.Duration)) / 2);
+                WAIT_SEC = (int)(SelectedSteams.Min(s =>
+                {
+                    static double selector(MediaSegment s)
+                    {
+                        return s.Duration;
+                    }
+                    return s.Playlist!.MediaParts[0].MediaSegments.Sum(selector);
+                }) / 2);
                 WAIT_SEC -= 2; // 再提前两秒吧 留出冗余
                 if (DownloaderConfig.MyOptions.LiveWaitTime != null)
                 {

@@ -9,7 +9,15 @@
         // 直播刷新间隔毫秒（默认15秒）
         public double RefreshIntervalMs { get; set; } = 15000;
         // 所有分片时长总和
-        public double TotalDuration => MediaParts.Sum(x => x.MediaSegments.Sum(m => m.Duration));
+        public double TotalDuration => MediaParts.Sum(x =>
+        {
+            static double selector(MediaSegment m)
+            {
+                return m.Duration;
+            }
+
+            return x.MediaSegments.Sum(selector);
+        });
 
         // 所有分片中最长时长
         public double? TargetDuration { get; set; }
