@@ -31,7 +31,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 {
                     if (box.Version is not (0 or 1))
                     {
-                        throw new Exception("PSSH version can only be 0 or 1");
+                        throw new InvalidDataException($"PSSH version can only be 0 or 1, but got {box.Version}");
                     }
 
                     byte[] systemId = box.Reader.ReadBytes(16);

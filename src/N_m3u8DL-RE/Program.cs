@@ -17,6 +17,7 @@ using N_m3u8DL_RE.Processor;
 using N_m3u8DL_RE.Util;
 
 using Spectre.Console;
+
 // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
 if (OperatingSystem.IsWindows())
 {
@@ -362,7 +363,7 @@ async Task DoWorkAsync(MyOption option)
 
     if (selectedStreams.Count == 0)
     {
-        throw new Exception(ResString.NoStreamsToDownload);
+        throw new InvalidOperationException(ResString.NoStreamsToDownload);
     }
 
     // HLS: 选中流中若有没加载出playlist的，加载playlist

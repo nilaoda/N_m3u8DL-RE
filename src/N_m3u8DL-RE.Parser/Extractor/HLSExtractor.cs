@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
             M3u8Content = M3u8Content.Trim();
             if (!M3u8Content.StartsWith(HLSTags.ext_m3u))
             {
-                throw new Exception(ResString.BadM3u8);
+                throw new InvalidDataException(ResString.BadM3u8);
             }
 
             foreach (Processor.ContentProcessor p in ParserConfig.ContentProcessors)
@@ -506,7 +506,7 @@ namespace N_m3u8DL_RE.Parser.Extractor
                 }
             }
 
-            throw new Exception(ResString.KeyProcessorNotFound);
+            throw new InvalidOperationException(ResString.KeyProcessorNotFound);
         }
 
         public async Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)

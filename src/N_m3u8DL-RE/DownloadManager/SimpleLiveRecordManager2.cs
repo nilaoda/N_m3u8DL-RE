@@ -212,7 +212,10 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic[streamSpec.Playlist.MediaInit] = result;
                     if (result is not { Success: true })
                     {
-                        throw new Exception("Download init file failed!");
+                        string errorDetails = result?.ActualContentLength != null ?
+                            $"Expected: {result.RespContentLength} bytes, Got: {result.ActualContentLength} bytes" :
+                            "No content received";
+                        throw new InvalidOperationException($"Failed to download initialization file for stream '{streamSpec.ToShortString()}'. {errorDetails}. URL: {streamSpec.Playlist.MediaInit.Url}");
                     }
                     mp4InitFile = result.ActualFilePath;
                     task.Increment(1);
@@ -276,7 +279,10 @@ namespace N_m3u8DL_RE.DownloadManager
                     FileDic[seg] = result;
                     if (result is not { Success: true })
                     {
-                        throw new Exception("Download first segment failed!");
+                        string errorDetails = result?.ActualContentLength != null ?
+                            $"Expected: {result.RespContentLength} bytes, Got: {result.ActualContentLength} bytes" :
+                            "No content received";
+                        throw new InvalidOperationException($"Failed to download first segment (Index: {seg.Index}) for stream '{streamSpec.ToShortString()}'. {errorDetails}. URL: {seg.Url}");
                     }
                     task.Increment(1);
                     if (result is { Success: true })

@@ -213,7 +213,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             if (name.Length != 4)
             {
-                throw new Exception("Mp4 box names must be 4 characters long");
+                throw new ArgumentException("MP4 box names must be exactly 4 characters long.", nameof(name));
             }
 
             int code = 0;

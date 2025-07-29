@@ -147,7 +147,7 @@ namespace N_m3u8DL_RE.Crypto
             {
                 // There has already been some state set up. Clear it before exiting.
                 Dispose();
-                throw new ArgumentNullException("Nonce is null");
+                throw new ArgumentNullException(nameof(nonce));
             }
 
             if (nonce.Length != allowedNonceLength)

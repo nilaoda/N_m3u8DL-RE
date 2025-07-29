@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.Downloader
                             byte[]? nonce = segment.EncryptInfo.IV;
 
                             byte[] fileBytes = File.ReadAllBytes(dResult.ActualFilePath);
-                            byte[] decrypted = ChaCha20Util.DecryptPer1024Bytes(fileBytes, key!, nonce!);
+                            byte[] decrypted = ChaCha20Util.DecryptInChunks(fileBytes, key!, nonce!);
                             await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
                             break;
                         }
@@ -131,7 +131,7 @@ namespace N_m3u8DL_RE.Downloader
                 DownloadResult result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
                 return (des, result);
 
-                throw new Exception("please retry");
+                // throw new Exception("please retry"); // Dead code
             }
             catch (Exception ex)
             {

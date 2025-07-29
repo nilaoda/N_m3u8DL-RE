@@ -20,7 +20,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                 {
                     if (box.Version is not (0 or 1))
                     {
-                        throw new Exception("MDHD version can only be 0 or 1");
+                        throw new ArgumentOutOfRangeException($"MDHD version can only be 0 or 1, but got {box.Version}");
                     }
 
                     timescale = MP4Parser.ParseMDHD(box.Reader, box.Version);
@@ -42,7 +42,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
         {
             if (timescale == 0)
             {
-                throw new Exception("Missing timescale for VTT content!");
+                throw new ArgumentOutOfRangeException(nameof(timescale), "Missing timescale for VTT content.");
             }
 
             List<SubCue> cues = [];
@@ -69,7 +69,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                         sawTFDT = true;
                         if (box.Version is not (0 or 1))
                         {
-                            throw new Exception("TFDT version can only be 0 or 1");
+                            throw new InvalidDataException("TFDT version can only be 0 or 1.");
                         }
 
                         baseTime = MP4Parser.ParseTFDT(box.Reader, box.Version);
@@ -78,7 +78,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                     {
                         if (box.Flags == 1000)
                         {
-                            throw new Exception("A TFHD box should have a valid flags value");
+                            throw new InvalidDataException("A TFHD box should have a valid flags value");
                         }
 
                         defaultDuration = MP4Parser.ParseTFHD(box.Reader, box.Flags).DefaultSampleDuration;
@@ -88,12 +88,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
                         sawTRUN = true;
                         if (box.Version == 1000)
                         {
-                            throw new Exception("A TRUN box should have a valid version value");
+                            throw new InvalidDataException("A TRUN box should have a valid version value");
                         }
 
                         if (box.Flags == 1000)
                         {
-                            throw new Exception("A TRUN box should have a valid flags value");
+                            throw new InvalidDataException("A TRUN box should have a valid flags value");
                         }
 
                         presentations = MP4Parser.ParseTRUN(box.Reader, box.Version, box.Flags).SampleData;
@@ -102,7 +102,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
                     {
                         if (sawMDAT)
                         {
-                            throw new Exception("VTT cues in mp4 with multiple MDAT are not currently supported");
+                            throw new NotSupportedException("VTT cues in mp4 with multiple MDAT are not currently supported");
                         }
 
                         sawMDAT = true;
@@ -112,7 +112,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 
                 if (!sawMDAT && !sawTFDT && !sawTRUN)
                 {
-                    throw new Exception("A required box is missing");
+                    throw new InvalidDataException("A required MP4 box (MDAT, TFDT, or TRUN) is missing.");
                 }
 
                 ulong currentTime = baseTime;
@@ -182,12 +182,12 @@ namespace N_m3u8DL_RE.Parser.Mp4
                         }
                         else
                         {
-                            throw new Exception("WVTT sample duration unknown, and no default found!");
+                            throw new InvalidOperationException("WVTT sample duration unknown, and no default found!");
                         }
 
                         if (!(presentation.SampleSize == 0 || totalSize <= presentation.SampleSize))
                         {
-                            throw new Exception("The samples do not fit evenly into the sample sizes given in the TRUN box!");
+                            throw new InvalidDataException("The samples do not fit evenly into the sample sizes given in the TRUN box!");
                         }
 
                     } while (presentation.SampleSize != 0 && totalSize < presentation.SampleSize);

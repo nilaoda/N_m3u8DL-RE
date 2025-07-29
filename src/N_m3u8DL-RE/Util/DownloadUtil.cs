@@ -144,7 +144,7 @@ namespace N_m3u8DL_RE.Util
             catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationTokenSource.Token)
             {
                 speedContainer.ResetLowSpeedCount();
-                throw new Exception("Download speed too slow!");
+                throw new TimeoutException($"Download speed too slow! Current speed is below the minimum threshold. URL: {url}");
             }
         }
     }

@@ -8,19 +8,25 @@ namespace N_m3u8DL_RE.CommandLine
 
         public string? GetValue(string key)
         {
-            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(_arg))
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key), "Key cannot be null or empty.");
+            }
+
+            if (string.IsNullOrEmpty(_arg))
             {
                 return null;
             }
 
+            int index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
+            if (index == -1)
+            {
+                // Allow key to be interpreted as boolean flag (e.g., --flag instead of --flag=true)
+                return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
+            }
+
             try
             {
-                int index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
-                if (index == -1)
-                {
-                    return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
-                }
-
                 char[] chars = _arg[(index + key.Length + 1)..].ToCharArray();
                 StringBuilder result = new();
                 char last = '\0';
@@ -30,9 +36,8 @@ namespace N_m3u8DL_RE.CommandLine
                     {
                         if (last == '\\')
                         {
-                            result.Replace("\\", "");
-                            last = chars[i];
-                            result.Append(chars[i]);
+                            result.Replace("\\", "");  // unescape
+                            result.Append(':');
                         }
                         else
                         {
@@ -41,19 +46,24 @@ namespace N_m3u8DL_RE.CommandLine
                     }
                     else
                     {
-                        last = chars[i];
                         result.Append(chars[i]);
                     }
+                    last = chars[i];
                 }
 
-                string resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
+                string resultStr = result.ToString().Trim().Trim('"').Trim('\'');
 
-                // 不应该有引号出现
-                return resultStr.Contains('\"') || resultStr.Contains('\'') ? throw new Exception() : resultStr;
+                return resultStr.Contains('"') || resultStr.Contains('\'')
+                    ? throw new FormatException($"Unexpected quote in value for key '{key}': {resultStr}")
+                    : resultStr;
             }
-            catch (Exception)
+            catch (FormatException)
             {
-                throw new ArgumentException($"Parse Argument [{key}] failed!");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new FormatException($"Failed to parse argument value for key '{key}'.", ex);
             }
         }
     }
