@@ -29,7 +29,6 @@ if (OperatingSystem.IsWindows())
 }
 
 Console.CancelKeyPress += Console_CancelKeyPress;
-ServicePointManager.DefaultConnectionLimit = 1024;
 try { Console.CursorVisible = true; } catch { }
 
 string loc = ResString.CurrentLoc;
