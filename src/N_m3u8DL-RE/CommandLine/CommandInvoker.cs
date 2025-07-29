@@ -713,7 +713,7 @@ namespace N_m3u8DL_RE.CommandLine
             rootCommand.TreatUnmatchedTokensAsErrors = true;
             rootCommand.SetHandler(async myOption => await action(myOption), new MyOptionBinder());
 
-            System.CommandLine.Parsing.Parser parser = new CommandLineBuilder(rootCommand)
+            Parser parser = new CommandLineBuilder(rootCommand)
                 .UseDefaults()
                 .EnablePosixBundling(false)
                 .UseExceptionHandler((ex, context) =>
