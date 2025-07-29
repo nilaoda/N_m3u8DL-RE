@@ -156,12 +156,12 @@ namespace Mp4SubtitleParser
             {
                 byte[] dataSeg = File.ReadAllBytes(item);
 
-                bool sawMDAT = false;
+                // bool sawMDAT = false;
                 // parse media
                 new MP4Parser()
                     .Box("mdat", MP4Parser.AllData(data =>
                     {
-                        sawMDAT = true;
+                        // sawMDAT = true;
                         // Join this to any previous payload, in case the mp4 has multiple
                         // mdats.
                         if (segTimeMs != 0)
