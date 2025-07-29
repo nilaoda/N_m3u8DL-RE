@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Column
 {
     internal sealed class DownloadSpeedColumn(ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic) : ProgressColumn
     {
-        private readonly long _stopSpeed;
+        // private readonly long _stopSpeed;
         private readonly ConcurrentDictionary<int, string> DateTimeStringDic = new();
         protected override bool NoWrap => true;
         private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; } = SpeedContainerDic;
@@ -34,7 +34,7 @@ namespace N_m3u8DL_RE.Column
             {
                 speedContainer.NowSpeed = speedContainer.Downloaded;
                 // 速度为0，计数增加
-                if (speedContainer.Downloaded <= _stopSpeed) { speedContainer.AddLowSpeedCount(); }
+                if (speedContainer.Downloaded <= 0) { speedContainer.AddLowSpeedCount(); }
                 else
                 {
                     speedContainer.ResetLowSpeedCount();
