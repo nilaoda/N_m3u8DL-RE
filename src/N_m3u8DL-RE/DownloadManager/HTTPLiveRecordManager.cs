@@ -18,13 +18,21 @@ namespace N_m3u8DL_RE.DownloadManager
 {
     internal sealed class HTTPLiveRecordManager
     {
+#pragma warning disable IDE0052 // Remove unread private members
         private readonly IDownloader Downloader;
+#pragma warning restore IDE0052 // Remove unread private members
         private readonly DownloaderConfig DownloaderConfig;
+#pragma warning disable IDE0052 // Remove unread private members
         private readonly StreamExtractor StreamExtractor;
+#pragma warning restore IDE0052 // Remove unread private members
         private readonly List<StreamSpec> SelectedSteams;
+#pragma warning disable IDE0052 // Remove unread private members
         private readonly List<OutputFile> OutputFiles = [];
+#pragma warning restore IDE0052 // Remove unread private members
         private readonly DateTime NowDateTime;
+#pragma warning disable IDE0052 // Remove unread private members
         private readonly DateTime? PublishDateTime;
+#pragma warning restore IDE0052 // Remove unread private members
         private bool STOP_FLAG;
         private bool READ_IFO;
         private readonly ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长

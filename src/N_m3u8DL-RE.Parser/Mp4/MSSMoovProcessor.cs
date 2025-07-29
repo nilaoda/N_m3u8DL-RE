@@ -37,7 +37,9 @@ namespace N_m3u8DL_RE.Parser.Mp4
         private readonly string ProtectionSystemId;
         private readonly string ProtectionData;
         private string? ProtecitonKID;
+#pragma warning disable IDE0052 // Remove unread private members
         private string? ProtecitonKID_PR;
+#pragma warning restore IDE0052 // Remove unread private members
         private static byte[] UnityMatrix
         {
             get
