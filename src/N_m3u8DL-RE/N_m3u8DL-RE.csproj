@@ -1,24 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>N_m3u8DL_RE</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <!-- 
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>N_m3u8DL_RE</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <!-- 
       When enabling LangVersion preview, that enables first class span's which then prefers MemoryExtensions.Contains over Enumerable.Contains
       See details: https://github.com/dotnet/runtime/issues/109757
     -->
-    <LangVersion>13.0</LangVersion>
-    <Nullable>enable</Nullable>
-    <Version>0.3.0</Version>
-    <Platforms>AnyCPU;x64</Platforms>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\N_m3u8DL-RE.StreamParser\N_m3u8DL-RE.StreamParser.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="NiL.JS" />
-    <PackageReference Include="Sodium.Core" />
-    <PackageReference Include="System.CommandLine" />
-  </ItemGroup>
+        <LangVersion>13.0</LangVersion>
+        <Nullable>enable</Nullable>
+        <Version>0.3.0</Version>
+        <Platforms>AnyCPU;x64</Platforms>
+
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisMode>Recommended</AnalysisMode>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\N_m3u8DL-RE.StreamParser\N_m3u8DL-RE.StreamParser.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="NiL.JS" />
+        <PackageReference Include="Sodium.Core" />
+        <PackageReference Include="System.CommandLine" />
+    </ItemGroup>
 </Project>
