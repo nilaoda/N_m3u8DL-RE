@@ -38,7 +38,7 @@ namespace N_m3u8DL_RE.Util
                 return null;
             }
 
-            List<Clip> allClips = GetAllClips(url, fileSize);
+            List<Clip> allClips = GetAllClips(fileSize);
             List<MediaSegment> splitSegments = [];
             foreach (Clip clip in allClips)
             {
@@ -60,6 +60,10 @@ namespace N_m3u8DL_RE.Util
             try
             {
                 HttpRequestMessage request = new(HttpMethod.Head, url);
+                foreach (KeyValuePair<string, string> header in headers)
+                {
+                    request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
                 HttpResponseMessage response = (await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
                 bool supportsRangeRequests = response.Headers.Contains("Accept-Ranges");
 
@@ -87,7 +91,7 @@ namespace N_m3u8DL_RE.Util
         }
 
         // 此函数主要是切片下载逻辑
-        private static List<Clip> GetAllClips(string url, long fileSize)
+        private static List<Clip> GetAllClips(long fileSize)
         {
             List<Clip> clips = [];
             int index = 0;
