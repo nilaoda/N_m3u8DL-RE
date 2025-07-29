@@ -2,9 +2,9 @@
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Util;
-using N_m3u8DL_RE.Parser.Config;
-using N_m3u8DL_RE.Parser.Processor;
-using N_m3u8DL_RE.Parser.Processor.HLS;
+using N_m3u8DL_RE.StreamParser.Config;
+using N_m3u8DL_RE.StreamParser.Processor;
+using N_m3u8DL_RE.StreamParser.Processor.HLS;
 
 namespace N_m3u8DL_RE.Processor
 {

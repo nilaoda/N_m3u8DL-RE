@@ -9,7 +9,7 @@ using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
-using N_m3u8DL_RE.Parser;
+using N_m3u8DL_RE.StreamParser;
 using N_m3u8DL_RE.Util;
 
 using Spectre.Console;

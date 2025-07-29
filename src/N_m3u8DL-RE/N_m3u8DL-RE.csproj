@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
+    <ProjectReference Include="..\N_m3u8DL-RE.StreamParser\N_m3u8DL-RE.StreamParser.csproj" />
   </ItemGroup>
 
   <ItemGroup>

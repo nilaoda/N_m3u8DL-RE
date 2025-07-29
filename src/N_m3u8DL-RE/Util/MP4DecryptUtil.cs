@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Enumerations;
-using N_m3u8DL_RE.Parser.Mp4;
+using N_m3u8DL_RE.StreamParser.Mp4;
 
 namespace N_m3u8DL_RE.Util
 {
