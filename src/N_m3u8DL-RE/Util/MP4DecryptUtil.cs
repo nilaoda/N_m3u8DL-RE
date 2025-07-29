@@ -244,7 +244,7 @@ namespace N_m3u8DL_RE.Util
                 RedirectStandardError = true,
                 UseShellExecute = false
             };
-            p.Start();
+            _ = p.Start();
             string errorOutput = p.StandardError.ReadToEnd();
             p.WaitForExit();
             return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;

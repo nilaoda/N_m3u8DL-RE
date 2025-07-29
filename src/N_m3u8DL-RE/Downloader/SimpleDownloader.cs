@@ -97,7 +97,7 @@ namespace N_m3u8DL_RE.Downloader
                 // 已下载跳过
                 if (File.Exists(des))
                 {
-                    speedContainer.Add(new FileInfo(des).Length);
+                    _ = speedContainer.Add(new FileInfo(des).Length);
                     return (des, new DownloadResult() { ActualContentLength = 0, ActualFilePath = des });
                 }
 
@@ -105,7 +105,7 @@ namespace N_m3u8DL_RE.Downloader
                 string dec = Path.Combine(Path.GetDirectoryName(des)!, Path.GetFileNameWithoutExtension(des) + "_dec" + Path.GetExtension(des));
                 if (File.Exists(dec))
                 {
-                    speedContainer.Add(new FileInfo(dec).Length);
+                    _ = speedContainer.Add(new FileInfo(dec).Length);
                     return (dec, new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec });
                 }
 

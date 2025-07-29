@@ -133,12 +133,12 @@ namespace N_m3u8DL_RE.DownloadManager
             // 创建文件夹
             if (!Directory.Exists(tmpDir))
             {
-                Directory.CreateDirectory(tmpDir);
+                _ = Directory.CreateDirectory(tmpDir);
             }
 
             if (!Directory.Exists(saveDir))
             {
-                Directory.CreateDirectory(saveDir);
+                _ = Directory.CreateDirectory(saveDir);
             }
 
             int totalCount = segments.Count();
@@ -359,7 +359,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // shaka/ffmpeg实时解密不需要init文件用于合并
                 if (decryptEngine != DecryptEngine.MP4DECRYPT)
                 {
-                    FileDic!.Remove(streamSpec.Playlist!.MediaInit, out _);
+                    _ = FileDic!.Remove(streamSpec.Playlist!.MediaInit, out _);
                 }
             }
 
@@ -374,7 +374,7 @@ namespace N_m3u8DL_RE.DownloadManager
             IEnumerable<MediaSegment> badKeys = FileDic.Where(i => i.Value == null).Select(i => i.Key);
             foreach (MediaSegment? badKey in badKeys)
             {
-                FileDic!.Remove(badKey, out _);
+                _ = FileDic!.Remove(badKey, out _);
             }
 
             // 校验完整性
@@ -403,7 +403,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (first) { finalVtt = vtt; first = false; }
                     else
                     {
-                        finalVtt.AddCuesFromOne(vtt);
+                        _ = finalVtt.AddCuesFromOne(vtt);
                     }
                 }
                 // 写出字幕
@@ -492,7 +492,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (first) { finalVtt = vtt; first = false; }
                     else
                     {
-                        finalVtt.AddCuesFromOne(vtt);
+                        _ = finalVtt.AddCuesFromOne(vtt);
                     }
                 }
                 // 写出字幕
@@ -554,7 +554,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     if (first) { finalVtt = vtt; first = false; }
                     else
                     {
-                        finalVtt.AddCuesFromOne(vtt);
+                        _ = finalVtt.AddCuesFromOne(vtt);
                     }
                 }
 
@@ -719,7 +719,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 progressColumns = [.. progressColumns.SkipLast(1)];
             }
-            progress.Columns(progressColumns);
+            _ = progress.Columns(progressColumns);
 
             if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
             {

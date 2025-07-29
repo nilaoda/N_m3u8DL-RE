@@ -62,7 +62,7 @@ namespace N_m3u8DL_RE.Util
                 HttpRequestMessage request = new(HttpMethod.Head, url);
                 foreach (KeyValuePair<string, string> header in headers)
                 {
-                    request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                    _ = request.Headers.TryAddWithoutValidation(header.Key, header.Value);
                 }
                 HttpResponseMessage response = (await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
                 bool supportsRangeRequests = response.Headers.Contains("Accept-Ranges");
@@ -82,7 +82,7 @@ namespace N_m3u8DL_RE.Util
             httpRequestMessage.RequestUri = new(url);
             foreach (KeyValuePair<string, string> header in headers)
             {
-                httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                _ = httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
             HttpResponseMessage response = (await HTTPUtil.AppHttpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
             long totalSizeBytes = response.Content.Headers.ContentLength ?? 0;

@@ -670,9 +670,9 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
             sps = [.. encList];
 
             using BinaryReader2 reader = new(new MemoryStream(sps));
-            reader.ReadBytes(2); // Skip 2 bytes unit header
+            _ = reader.ReadBytes(2); // Skip 2 bytes unit header
             byte firstByte = reader.ReadByte();
-            int maxSubLayersMinus1 = (firstByte & 0xe) >> 1;
+            // int maxSubLayersMinus1 = (firstByte & 0xe) >> 1;
             byte nextByte = reader.ReadByte();
             int generalProfileSpace = (nextByte & 0xc0) >> 6;
             int generalTierFlag = (nextByte & 0x20) >> 5;

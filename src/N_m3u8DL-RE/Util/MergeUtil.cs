@@ -27,13 +27,13 @@ namespace N_m3u8DL_RE.Util
             if (files.Length == 1)
             {
                 FileInfo fi = new(files[0]);
-                fi.CopyTo(outputFilePath, true);
+                _ = fi.CopyTo(outputFilePath, true);
                 return;
             }
 
             if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
+                _ = Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
             }
 
             string[] inputFilePaths = files;
@@ -71,7 +71,7 @@ namespace N_m3u8DL_RE.Util
                     Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
                 }
             };
-            p.Start();
+            _ = p.Start();
             p.BeginErrorReadLine();
             p.WaitForExit();
             return p.ExitCode;
@@ -133,14 +133,14 @@ namespace N_m3u8DL_RE.Util
                 string text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
                 string tempFile = Path.GetTempFileName();
                 File.WriteAllText(tempFile, text);
-                command.Append($" -f concat -safe 0 -i \"{tempFile}");
+                _ = command.Append($" -f concat -safe 0 -i \"{tempFile}");
             }
             else
             {
-                command.Append(" -i concat:\"");
+                _ = command.Append(" -i concat:\"");
                 foreach (string t in files)
                 {
-                    command.Append(Path.GetFileName(t) + "|");
+                    _ = command.Append(Path.GetFileName(t) + "|");
                 }
             }
 
@@ -148,42 +148,42 @@ namespace N_m3u8DL_RE.Util
             switch (muxFormat.ToUpper())
             {
                 case "MP4":
-                    command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));
-                    command.Append(" " + (string.IsNullOrEmpty(ddpAudio) ? "" : "-i \"" + ddpAudio + "\""));
-                    command.Append(
+                    _ = command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));
+                    _ = command.Append(" " + (string.IsNullOrEmpty(ddpAudio) ? "" : "-i \"" + ddpAudio + "\""));
+                    _ = command.Append(
                         $" -map 0:v? {(string.IsNullOrEmpty(ddpAudio) ? "-map 0:a?" : $"-map {(string.IsNullOrEmpty(poster) ? "1" : "2")}:a -map 0:a?")} -map 0:s? " + (string.IsNullOrEmpty(poster) ? "" : addPoster)
                         + (writeDate ? " -metadata date=\"" + dateString + "\"" : "") +
                         " -metadata encoding_tool=\"" + encodingTool + "\" -metadata title=\"" + title +
                         "\" -metadata copyright=\"" + copyright + "\" -metadata comment=\"" + comment +
                         $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} title=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
-                    command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
+                    _ = command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
                     if (fastStart)
                     {
-                        command.Append("-movflags +faststart");
+                        _ = command.Append("-movflags +faststart");
                     }
 
-                    command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
+                    _ = command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
                     break;
                 case "MKV":
-                    command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mkv\"");
+                    _ = command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mkv\"");
                     break;
                 case "FLV":
-                    command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".flv\"");
+                    _ = command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".flv\"");
                     break;
                 case "M4A":
-                    command.Append("\" -map 0  -c copy -f mp4 -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".m4a\"");
+                    _ = command.Append("\" -map 0  -c copy -f mp4 -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".m4a\"");
                     break;
                 case "TS":
-                    command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
+                    _ = command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
                     break;
                 case "EAC3":
-                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
+                    _ = command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
                     break;
                 case "AAC":
-                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".m4a\"");
+                    _ = command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".m4a\"");
                     break;
                 case "AC3":
-                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
+                    _ = command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
                     break;
                 default:
                     break;
@@ -203,36 +203,32 @@ namespace N_m3u8DL_RE.Util
             // INPUT
             foreach (OutputFile item in files)
             {
-                command.Append($" -i \"{item.FilePath}\" ");
+                _ = command.Append($" -i \"{item.FilePath}\" ");
             }
 
             // MAP
             for (int i = 0; i < files.Length; i++)
             {
-                command.Append($" -map {i} ");
+                _ = command.Append($" -map {i} ");
             }
 
             bool srt = files.Any(x => x.FilePath.EndsWith(".srt"));
 
             if (muxFormat == MuxFormat.MP4)
             {
-                command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
-            }
-            else if (muxFormat == MuxFormat.TS)
-            {
-                command.Append($" -strict unofficial -c:a copy -c:v copy ");
-            }
-            else if (muxFormat == MuxFormat.MKV)
-            {
-                command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
+                _ = command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
             }
             else
             {
-                throw new ArgumentException($"unknown format: {muxFormat}");
+                _ = muxFormat == MuxFormat.TS
+                    ? command.Append($" -strict unofficial -c:a copy -c:v copy ")
+                    : muxFormat == MuxFormat.MKV
+                    ? command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ")
+                    : throw new ArgumentException($"unknown format: {muxFormat}");
             }
 
             // CLEAN
-            command.Append(" -map_metadata -1 ");
+            _ = command.Append(" -map_metadata -1 ");
 
             // LANG and NAME
             int streamIndex = 0;
@@ -240,10 +236,10 @@ namespace N_m3u8DL_RE.Util
             {
                 // 转换语言代码
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-                command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
+                _ = command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
-                    command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
+                    _ = command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
                 }
                 /**
                  * -metadata:s:xx标记的是 输出的第xx个流的metadata，
@@ -265,31 +261,31 @@ namespace N_m3u8DL_RE.Util
             IEnumerable<OutputFile> subTracks = files.Where(x => x.MediaType == MediaType.AUDIO);
             if (videoTracks.Any())
             {
-                command.Append(" -disposition:v:0 default ");
+                _ = command.Append(" -disposition:v:0 default ");
             }
             // 字幕都不设置默认
             if (subTracks.Any())
             {
-                command.Append(" -disposition:s 0 ");
+                _ = command.Append(" -disposition:s 0 ");
             }
 
             if (audioTracks.Any())
             {
                 // 音频除了第一个音轨 都不设置默认
-                command.Append(" -disposition:a:0 default ");
+                _ = command.Append(" -disposition:a:0 default ");
                 for (int i = 1; i < audioTracks.Count(); i++)
                 {
-                    command.Append($" -disposition:a:{i} 0 ");
+                    _ = command.Append($" -disposition:a:{i} 0 ");
                 }
             }
 
             if (dateinfo)
             {
-                command.Append($" -metadata date=\"{dateString}\" ");
+                _ = command.Append($" -metadata date=\"{dateString}\" ");
             }
 
-            command.Append($" -ignore_unknown -copy_unknown ");
-            command.Append($" \"{outputPath}{ext}\"");
+            _ = command.Append($" -ignore_unknown -copy_unknown ");
+            _ = command.Append($" \"{outputPath}{ext}\"");
 
             int code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
@@ -300,7 +296,7 @@ namespace N_m3u8DL_RE.Util
         {
             StringBuilder command = new($"-q --output \"{outputPath}.mkv\" ");
 
-            command.Append(" --no-chapters ");
+            _ = command.Append(" --no-chapters ");
 
             bool dFlag = false;
 
@@ -309,28 +305,28 @@ namespace N_m3u8DL_RE.Util
             {
                 // 转换语言代码
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-                command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
+                _ = command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
                 // 字幕都不设置默认
                 if (files[i].MediaType == MediaType.SUBTITLES)
                 {
-                    command.Append($" --default-track 0:no ");
+                    _ = command.Append($" --default-track 0:no ");
                 }
                 // 音频除了第一个音轨 都不设置默认
                 if (files[i].MediaType == MediaType.AUDIO)
                 {
                     if (dFlag)
                     {
-                        command.Append($" --default-track 0:no ");
+                        _ = command.Append($" --default-track 0:no ");
                     }
 
                     dFlag = true;
                 }
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
-                    command.Append($" --track-name 0:\"{files[i].Description}\" ");
+                    _ = command.Append($" --track-name 0:\"{files[i].Description}\" ");
                 }
 
-                command.Append($" \"{files[i].FilePath}\" ");
+                _ = command.Append($" \"{files[i].FilePath}\" ");
             }
 
             int code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);

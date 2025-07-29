@@ -34,11 +34,7 @@ namespace N_m3u8DL_RE.Column
             {
                 speedContainer.NowSpeed = speedContainer.Downloaded;
                 // 速度为0，计数增加
-                if (speedContainer.Downloaded <= 0) { speedContainer.AddLowSpeedCount(); }
-                else
-                {
-                    speedContainer.ResetLowSpeedCount();
-                }
+                _ = speedContainer.Downloaded <= 0 ? speedContainer.AddLowSpeedCount() : speedContainer.ResetLowSpeedCount();
 
                 speedContainer.Reset();
             }

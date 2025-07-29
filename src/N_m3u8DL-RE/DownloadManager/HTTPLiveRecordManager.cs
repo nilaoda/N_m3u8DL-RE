@@ -64,19 +64,19 @@ namespace N_m3u8DL_RE.DownloadManager
             // 创建文件夹
             if (!Directory.Exists(saveDir))
             {
-                Directory.CreateDirectory(saveDir);
+                _ = Directory.CreateDirectory(saveDir);
             }
 
             using HttpRequestMessage request = new(HttpMethod.Get, new Uri(streamSpec.Url));
             request.Headers.ConnectionClose = false;
             foreach (KeyValuePair<string, string> item in DownloaderConfig.Headers)
             {
-                request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+                _ = request.Headers.TryAddWithoutValidation(item.Key, item.Value);
             }
             Logger.Debug(request.Headers.ToString());
 
             using HttpResponseMessage response = await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
-            response.EnsureSuccessStatusCode();
+            _ = response.EnsureSuccessStatusCode();
 
             string output = Path.Combine(saveDir, saveName + ".ts");
             using FileStream stream = new(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
@@ -97,7 +97,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         InfoBuffer.AddRange(buffer);
                     }
-                    speedContainer.Add(size);
+                    _ = speedContainer.Add(size);
                     RecordingSizeDic[task.Id] += size;
                     await stream.WriteAsync(buffer.AsMemory(0, size));
                 }
@@ -231,7 +231,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 progressColumns = [.. progressColumns.SkipLast(1)];
             }
-            progress.Columns(progressColumns);
+            _ = progress.Columns(progressColumns);
 
             await progress.StartAsync(async ctx =>
             {

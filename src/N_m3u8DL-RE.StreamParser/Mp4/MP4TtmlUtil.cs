@@ -129,11 +129,11 @@ namespace Mp4SubtitleParser
             {
                 if (item.NodeType == XmlNodeType.Text)
                 {
-                    sb.Append(item.InnerText.Trim());
+                    _ = sb.Append(item.InnerText.Trim());
                 }
                 else if (item is { NodeType: XmlNodeType.Element, Name: "br" })
                 {
-                    sb.AppendLine();
+                    _ = sb.AppendLine();
                 }
             }
             return sb.ToString();
@@ -285,7 +285,7 @@ namespace Mp4SubtitleParser
                     {
                         XmlDocumentFragment _p = xmlDoc.CreateDocumentFragment();
                         _p.InnerXml = _tDiv.OuterXml.Replace("<div ", "<p ").Replace("</div>", "</p>");
-                        _div.AppendChild(_p);
+                        _ = _div.AppendChild(_p);
                     }
                 }
 
@@ -405,12 +405,12 @@ namespace Mp4SubtitleParser
 
 
             StringBuilder vtt = new();
-            vtt.AppendLine("WEBVTT");
+            _ = vtt.AppendLine("WEBVTT");
             foreach (KeyValuePair<string, string> item in dic)
             {
-                vtt.AppendLine(item.Key);
-                vtt.AppendLine(item.Value);
-                vtt.AppendLine();
+                _ = vtt.AppendLine(item.Key);
+                _ = vtt.AppendLine(item.Value);
+                _ = vtt.AppendLine();
             }
 
             return WebVttSub.Parse(vtt.ToString(), baseTimestamp);

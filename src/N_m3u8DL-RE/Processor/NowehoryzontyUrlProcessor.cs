@@ -29,7 +29,7 @@ namespace N_m3u8DL_RE.Processor
                     LOG = true;
                 }
                 Context context = [];
-                context.Eval(JS);
+                _ = context.Eval(JS);
                 Function = context.GetVariable("md5").As<Function>();
                 string argLine = parserConfig.UrlProcessorArgs![START.Length..];
                 TimeDifferenceStr = ParserUtil.GetAttribute(argLine, "timeDifference");

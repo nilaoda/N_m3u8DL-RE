@@ -131,9 +131,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                     break;
             }
 
-            BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition);
-
-            if (boxDefinition != null)
+            if (BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition))
             {
                 uint version = 1000;
                 uint flags = 1000;
@@ -186,7 +184,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                 long skipLength = Math.Min(
                   start + size - reader.GetPosition(),
                   reader.GetLength() - reader.GetPosition());
-                reader.ReadBytes((int)skipLength);
+                _ = reader.ReadBytes((int)skipLength);
             }
         }
 
@@ -244,13 +242,13 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
         {
             if (version == 1)
             {
-                reader.ReadBytes(8); // Skip "creation_time"
-                reader.ReadBytes(8); // Skip "modification_time"
+                _ = reader.ReadBytes(8); // Skip "creation_time"
+                _ = reader.ReadBytes(8); // Skip "modification_time"
             }
             else
             {
-                reader.ReadBytes(4); // Skip "creation_time"
-                reader.ReadBytes(4); // Skip "modification_time"
+                _ = reader.ReadBytes(4); // Skip "creation_time"
+                _ = reader.ReadBytes(4); // Skip "modification_time"
             }
 
             return reader.ReadUInt32();
@@ -270,13 +268,13 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
             // Skip "base_data_offset" if present.
             if ((flags & 0x000001) != 0)
             {
-                reader.ReadBytes(8);
+                _ = reader.ReadBytes(8);
             }
 
             // Skip "sample_description_index" if present.
             if ((flags & 0x000002) != 0)
             {
-                reader.ReadBytes(4);
+                _ = reader.ReadBytes(4);
             }
 
             // Read "default_sample_duration" if present.
@@ -304,13 +302,13 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
             // Skip "data_offset" if present.
             if ((flags & 0x000001) != 0)
             {
-                reader.ReadBytes(4);
+                _ = reader.ReadBytes(4);
             }
 
             // Skip "first_sample_flags" if present.
             if ((flags & 0x000004) != 0)
             {
-                reader.ReadBytes(4);
+                _ = reader.ReadBytes(4);
             }
 
             for (int i = 0; i < trun.SampleCount; i++)
@@ -332,7 +330,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                 // Skip "sample_flags" if present.
                 if ((flags & 0x000400) != 0)
                 {
-                    reader.ReadBytes(4);
+                    _ = reader.ReadBytes(4);
                 }
 
                 // Read "sample_time_offset" if present.

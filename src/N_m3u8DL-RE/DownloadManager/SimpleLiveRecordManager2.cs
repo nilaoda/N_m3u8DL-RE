@@ -173,12 +173,12 @@ namespace N_m3u8DL_RE.DownloadManager
             // 创建文件夹
             if (!Directory.Exists(tmpDir))
             {
-                Directory.CreateDirectory(tmpDir);
+                _ = Directory.CreateDirectory(tmpDir);
             }
 
             if (!Directory.Exists(saveDir))
             {
-                Directory.CreateDirectory(saveDir);
+                _ = Directory.CreateDirectory(saveDir);
             }
 
             while (true && await source.OutputAvailableAsync())
@@ -186,7 +186,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // 接收新片段 且总是拿全部未处理的片段
                 // 有时每次只有很少的片段，但是之前的片段下载慢，导致后面还没下载的片段都失效了
                 // TryReceiveAll可以稍微缓解一下
-                source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
+                _ = source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
                 IEnumerable<MediaSegment> segments = segmentsList!.SelectMany(s => s);
                 if (segments == null || !segments.Any())
                 {
@@ -397,7 +397,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         if (firstSub) { currentVtt = vtt; firstSub = false; }
                         else
                         {
-                            currentVtt.AddCuesFromOne(vtt);
+                            _ = currentVtt.AddCuesFromOne(vtt);
                         }
                     }
                 }
@@ -420,7 +420,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         else
                         {
                             WebVttSub vtt = MP4VttUtil.ExtractSub(mp4s, timescale);
-                            currentVtt.AddCuesFromOne(vtt);
+                            _ = currentVtt.AddCuesFromOne(vtt);
                         }
                     }
                 }
@@ -448,7 +448,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             if (first) { currentVtt = vtt; first = false; }
                             else
                             {
-                                currentVtt.AddCuesFromOne(vtt);
+                                _ = currentVtt.AddCuesFromOne(vtt);
                             }
                         }
                         firstSub = false;
@@ -463,7 +463,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             {
                                 vtt.MpegtsTimestamp = 90000 * (RecordedDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                             }
-                            currentVtt.AddCuesFromOne(vtt);
+                            _ = currentVtt.AddCuesFromOne(vtt);
                         }
                     }
                 }
@@ -496,7 +496,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             if (first) { currentVtt = vtt; first = false; }
                             else
                             {
-                                currentVtt.AddCuesFromOne(vtt);
+                                _ = currentVtt.AddCuesFromOne(vtt);
                             }
                         }
                         firstSub = false;
@@ -511,7 +511,7 @@ namespace N_m3u8DL_RE.DownloadManager
                             {
                                 vtt.MpegtsTimestamp = 90000 * (RecordedDurDic[task.Id] + (long)keys.Where(s => s.Index < seg.Index).Sum(s => s.Duration));
                             }
-                            currentVtt.AddCuesFromOne(vtt);
+                            _ = currentVtt.AddCuesFromOne(vtt);
                         }
                     }
                 }
@@ -554,7 +554,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     IEnumerable<MediaSegment> badKeys = FileDic.Where(i => i.Value == null).Select(i => i.Key);
                     foreach (MediaSegment? badKey in badKeys)
                     {
-                        FileDic!.Remove(badKey, out _);
+                        _ = FileDic!.Remove(badKey, out _);
                     }
 
                     // 设置输出流
@@ -724,7 +724,11 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         task.MaxValue += newList.Count;
                         // 推送给消费者
-                        await BlockDic[task.Id].SendAsync(newList);
+                        bool result = await BlockDic[task.Id].SendAsync(newList);
+                        if (!result)
+                        {
+                            Logger.ErrorMarkUp($"Failed to send media segments to consumer for stream {streamSpec.ToShortShortString()}");
+                        }
                         // 更新最新链接
                         LastFileNameDic[task.Id] = GetSegmentName(newList.Last(), allHasDatetime, value);
                         // 尝试更新时间戳
@@ -878,7 +882,7 @@ namespace N_m3u8DL_RE.DownloadManager
             {
                 progressColumns = [.. progressColumns.SkipLast(1)];
             }
-            progress.Columns(progressColumns);
+            _ = progress.Columns(progressColumns);
 
             await progress.StartAsync(async ctx =>
             {

@@ -29,7 +29,7 @@ namespace N_m3u8DL_RE.Util
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
-            p.Start();
+            _ = p.Start();
             p.WaitForExit();
             Thread.Sleep(200);
             return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
@@ -54,48 +54,41 @@ namespace N_m3u8DL_RE.Util
 
             if (!string.IsNullOrEmpty(customDest))
             {
-                command.Append(" -re ");
+                _ = command.Append(" -re ");
             }
 
             foreach (string item in pipeNames)
             {
                 if (OperatingSystem.IsWindows())
                 {
-                    command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
+                    _ = command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
                 }
                 else
                 {
                     // command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
-                    command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
+                    _ = command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
                 }
             }
 
             for (int i = 0; i < pipeNames.Length; i++)
             {
-                command.Append($" -map {i} ");
+                _ = command.Append($" -map {i} ");
             }
 
-            command.Append(" -strict unofficial -c copy ");
-            command.Append($" -metadata date=\"{dateString}\" ");
-            command.Append($" -ignore_unknown -copy_unknown ");
+            _ = command.Append(" -strict unofficial -c copy ");
+            _ = command.Append($" -metadata date=\"{dateString}\" ");
+            _ = command.Append($" -ignore_unknown -copy_unknown ");
 
 
             if (!string.IsNullOrEmpty(customDest))
             {
-                if (customDest.Trim().StartsWith('-'))
-                {
-                    command.Append(customDest);
-                }
-                else
-                {
-                    command.Append($" -f mpegts -shortest \"{customDest}\"");
-                }
+                _ = customDest.Trim().StartsWith('-') ? command.Append(customDest) : command.Append($" -f mpegts -shortest \"{customDest}\"");
 
                 Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
             }
             else
             {
-                command.Append($" -f mpegts -shortest \"{outputPath}\"");
+                _ = command.Append($" -f mpegts -shortest \"{outputPath}\"");
             }
 
             using Process p = new();
@@ -108,7 +101,7 @@ namespace N_m3u8DL_RE.Util
                 UseShellExecute = false
             };
             // p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
-            p.Start();
+            _ = p.Start();
             p.WaitForExit();
 
             return p.ExitCode == 0;

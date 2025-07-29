@@ -55,11 +55,11 @@ namespace N_m3u8DL_RE.Common.Entity
             WebVttSub webSub = new();
             bool needPayload = false;
             string timeLine = "";
-            Regex regex1 = TSMapRegex();
+            Match tsMapMatch = TSMapRegex().Match(text);
 
-            if (regex1.IsMatch(text))
+            if (tsMapMatch.Success)
             {
-                string timestamp = TSValueRegex().Match(regex1.Match(text).Value).Groups[1].Value;
+                string timestamp = TSValueRegex().Match(tsMapMatch.Value).Groups[1].Value;
                 webSub.MpegtsTimestamp = Convert.ToInt64(timestamp);
             }
 
@@ -226,11 +226,11 @@ namespace N_m3u8DL_RE.Common.Entity
             StringBuilder sb = new();
             foreach (SubCue c in GetCues())  // 输出时去除空串
             {
-                sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);
-                sb.AppendLine(c.Payload);
-                sb.AppendLine();
+                _ = sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);
+                _ = sb.AppendLine(c.Payload);
+                _ = sb.AppendLine();
             }
-            sb.AppendLine();
+            _ = sb.AppendLine();
             return sb.ToString();
         }
 
@@ -273,12 +273,12 @@ namespace N_m3u8DL_RE.Common.Entity
             int index = 1;
             foreach (SubCue c in GetCues())
             {
-                sb.AppendLine($"{index++}");
-                sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff"));
-                sb.AppendLine(c.Payload);
-                sb.AppendLine();
+                _ = sb.AppendLine($"{index++}");
+                _ = sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff"));
+                _ = sb.AppendLine(c.Payload);
+                _ = sb.AppendLine();
             }
-            sb.AppendLine();
+            _ = sb.AppendLine();
 
             string srt = sb.ToString();
 

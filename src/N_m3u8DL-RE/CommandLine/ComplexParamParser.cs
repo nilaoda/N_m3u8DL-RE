@@ -36,8 +36,8 @@ namespace N_m3u8DL_RE.CommandLine
                     {
                         if (last == '\\')
                         {
-                            result.Replace("\\", "");  // unescape
-                            result.Append(':');
+                            _ = result.Replace("\\", "");  // unescape
+                            _ = result.Append(':');
                         }
                         else
                         {
@@ -46,7 +46,7 @@ namespace N_m3u8DL_RE.CommandLine
                     }
                     else
                     {
-                        result.Append(chars[i]);
+                        _ = result.Append(chars[i]);
                     }
                     last = chars[i];
                 }

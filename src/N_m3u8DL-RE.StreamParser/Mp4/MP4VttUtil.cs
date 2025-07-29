@@ -149,12 +149,12 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                         {
                             // It's a vtte, which is a vtt cue that is empty. Ignore any data that
                             // does exist.
-                            reader.ReadBytes(payloadSize - 8);
+                            _ = reader.ReadBytes(payloadSize - 8);
                         }
                         else
                         {
                             Console.WriteLine($"Unknown box {payloadName}! Skipping!");
-                            reader.ReadBytes(payloadSize - 8);
+                            _ = reader.ReadBytes(payloadSize - 8);
                         }
 
                         if (duration != 0)

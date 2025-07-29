@@ -27,14 +27,14 @@ namespace N_m3u8DL_RE.Common.Util
         {
             Logger.Debug(ResString.Fetch + url);
             using HttpRequestMessage webRequest = new(HttpMethod.Get, url);
-            webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
+            _ = webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
             webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
             webRequest.Headers.Connection.Clear();
             if (headers != null)
             {
                 foreach (KeyValuePair<string, string> item in headers)
                 {
-                    webRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
+                    _ = webRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
                 }
             }
             Logger.Debug(webRequest.Headers.ToString());
@@ -67,7 +67,7 @@ namespace N_m3u8DL_RE.Common.Util
             }
             // 手动将跳转后的URL设置进去, 用于后续取用
             webResponse.Headers.Location = new Uri(url);
-            webResponse.EnsureSuccessStatusCode();
+            _ = webResponse.EnsureSuccessStatusCode();
             return webResponse;
         }
 
@@ -122,8 +122,8 @@ namespace N_m3u8DL_RE.Common.Util
         {
             string htmlCode;
             using HttpRequestMessage request = new(HttpMethod.Post, Url);
-            request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
-            request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());
+            _ = request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
+            _ = request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());
             request.Content = new ByteArrayContent(postData);
             HttpResponseMessage webResponse = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             htmlCode = await webResponse.Content.ReadAsStringAsync();

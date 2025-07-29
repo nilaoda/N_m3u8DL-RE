@@ -32,82 +32,82 @@ namespace N_m3u8DL_RE.Entity
 
             if (GroupIdReg != null)
             {
-                sb.Append($"GroupIdReg: {GroupIdReg} ");
+                _ = sb.Append($"GroupIdReg: {GroupIdReg} ");
             }
 
             if (LanguageReg != null)
             {
-                sb.Append($"LanguageReg: {LanguageReg} ");
+                _ = sb.Append($"LanguageReg: {LanguageReg} ");
             }
 
             if (NameReg != null)
             {
-                sb.Append($"NameReg: {NameReg} ");
+                _ = sb.Append($"NameReg: {NameReg} ");
             }
 
             if (CodecsReg != null)
             {
-                sb.Append($"CodecsReg: {CodecsReg} ");
+                _ = sb.Append($"CodecsReg: {CodecsReg} ");
             }
 
             if (ResolutionReg != null)
             {
-                sb.Append($"ResolutionReg: {ResolutionReg} ");
+                _ = sb.Append($"ResolutionReg: {ResolutionReg} ");
             }
 
             if (FrameRateReg != null)
             {
-                sb.Append($"FrameRateReg: {FrameRateReg} ");
+                _ = sb.Append($"FrameRateReg: {FrameRateReg} ");
             }
 
             if (ChannelsReg != null)
             {
-                sb.Append($"ChannelsReg: {ChannelsReg} ");
+                _ = sb.Append($"ChannelsReg: {ChannelsReg} ");
             }
 
             if (VideoRangeReg != null)
             {
-                sb.Append($"VideoRangeReg: {VideoRangeReg} ");
+                _ = sb.Append($"VideoRangeReg: {VideoRangeReg} ");
             }
 
             if (UrlReg != null)
             {
-                sb.Append($"UrlReg: {UrlReg} ");
+                _ = sb.Append($"UrlReg: {UrlReg} ");
             }
 
             if (SegmentsMinCount != null)
             {
-                sb.Append($"SegmentsMinCount: {SegmentsMinCount} ");
+                _ = sb.Append($"SegmentsMinCount: {SegmentsMinCount} ");
             }
 
             if (SegmentsMaxCount != null)
             {
-                sb.Append($"SegmentsMaxCount: {SegmentsMaxCount} ");
+                _ = sb.Append($"SegmentsMaxCount: {SegmentsMaxCount} ");
             }
 
             if (PlaylistMinDur != null)
             {
-                sb.Append($"PlaylistMinDur: {PlaylistMinDur} ");
+                _ = sb.Append($"PlaylistMinDur: {PlaylistMinDur} ");
             }
 
             if (PlaylistMaxDur != null)
             {
-                sb.Append($"PlaylistMaxDur: {PlaylistMaxDur} ");
+                _ = sb.Append($"PlaylistMaxDur: {PlaylistMaxDur} ");
             }
 
             if (BandwidthMin != null)
             {
-                sb.Append($"{nameof(BandwidthMin)}: {BandwidthMin} ");
+                _ = sb.Append($"{nameof(BandwidthMin)}: {BandwidthMin} ");
             }
 
             if (BandwidthMax != null)
             {
-                sb.Append($"{nameof(BandwidthMax)}: {BandwidthMax} ");
+                _ = sb.Append($"{nameof(BandwidthMax)}: {BandwidthMax} ");
             }
 
             if (Role.HasValue)
             {
-                sb.Append($"Role: {Role} ");
+                _ = sb.Append($"Role: {Role} ");
             }
 
             return sb + $"For: {For}";

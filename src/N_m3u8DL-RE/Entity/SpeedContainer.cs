@@ -29,19 +29,19 @@
 
         public long Add(long size)
         {
-            Interlocked.Add(ref _Rdownloaded, size);
+            _ = Interlocked.Add(ref _Rdownloaded, size);
             return Interlocked.Add(ref _downloaded, size);
         }
 
         public void Reset()
         {
-            Interlocked.Exchange(ref _downloaded, 0);
+            _ = Interlocked.Exchange(ref _downloaded, 0);
         }
 
         public void ResetVars()
         {
             Reset();
-            ResetLowSpeedCount();
+            _ = ResetLowSpeedCount();
             SingleSegment = false;
             ResponseLength = null;
             _Rdownloaded = 0L;

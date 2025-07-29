@@ -15,19 +15,19 @@ namespace N_m3u8DL_RE.Util
         {
             using FileStream inputStream = new(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
             using FileStream outputStream = new(path, FileMode.OpenOrCreate);
-            inputStream.Seek(fromPosition ?? 0L, SeekOrigin.Begin);
+            _ = inputStream.Seek(fromPosition ?? 0L, SeekOrigin.Begin);
             long expect = (toPosition ?? inputStream.Length) - inputStream.Position + 1;
             if (expect == inputStream.Length + 1)
             {
                 await inputStream.CopyToAsync(outputStream);
-                speedContainer.Add(inputStream.Length);
+                _ = speedContainer.Add(inputStream.Length);
             }
             else
             {
                 byte[] buffer = new byte[expect];
                 _ = await inputStream.ReadAsync(buffer);
                 await outputStream.WriteAsync(buffer);
-                speedContainer.Add(buffer.Length);
+                _ = speedContainer.Add(buffer.Length);
             }
             return new DownloadResult()
             {
@@ -74,7 +74,7 @@ namespace N_m3u8DL_RE.Util
             {
                 foreach (KeyValuePair<string, string> item in headers)
                 {
-                    request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+                    _ = request.Headers.TryAddWithoutValidation(item.Key, item.Value);
                 }
             }
             Logger.Debug(request.Headers.ToString());
@@ -101,7 +101,7 @@ namespace N_m3u8DL_RE.Util
                         return await DownloadToFileAsync(redirectedUrl, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
                     }
                 }
-                response.EnsureSuccessStatusCode();
+                _ = response.EnsureSuccessStatusCode();
                 long? contentLength = response.Content.Headers.ContentLength;
                 if (speedContainer.SingleSegment)
                 {
@@ -114,7 +114,7 @@ namespace N_m3u8DL_RE.Util
                 int size = 0;
 
                 size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token);
-                speedContainer.Add(size);
+                _ = speedContainer.Add(size);
                 await stream.WriteAsync(buffer.AsMemory(0, size));
                 // 检测imageHeader
                 bool imageHeader = ImageHeaderUtil.IsImageHeader(buffer);
@@ -123,7 +123,7 @@ namespace N_m3u8DL_RE.Util
 
                 while ((size = await responseStream.ReadAsync(buffer, cancellationTokenSource.Token)) > 0)
                 {
-                    speedContainer.Add(size);
+                    _ = speedContainer.Add(size);
                     await stream.WriteAsync(buffer.AsMemory(0, size));
                     // 限速策略
                     while (speedContainer.Downloaded > speedContainer.SpeedLimit)
@@ -143,7 +143,7 @@ namespace N_m3u8DL_RE.Util
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationTokenSource.Token)
             {
-                speedContainer.ResetLowSpeedCount();
+                _ = speedContainer.ResetLowSpeedCount();
                 throw new TimeoutException($"Download speed too slow! Current speed is below the minimum threshold. URL: {url}");
             }
         }

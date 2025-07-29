@@ -35,7 +35,7 @@ namespace N_m3u8DL_RE.Column
                 SizeDic[task.Id] = $"{GlobalUtil.FormatFileSize(size)}/{GlobalUtil.FormatFileSize(totalSize)}";
             }
             DateTimeStringDic[task.Id] = now;
-            SizeDic.TryGetValue(task.Id, out string? sizeStr);
+            _ = SizeDic.TryGetValue(task.Id, out string? sizeStr);
 
             if (task.IsFinished)
             {

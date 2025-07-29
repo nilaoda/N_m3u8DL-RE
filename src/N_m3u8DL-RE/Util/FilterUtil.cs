@@ -167,34 +167,34 @@ namespace N_m3u8DL_RE.Util
 
             // 默认选中第一个
             StreamSpec first = streamSpecs.First();
-            prompt.Select(first);
+            _ = prompt.Select(first);
 
             if (basicStreams.Count != 0)
             {
-                prompt.AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
+                _ = prompt.AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
             }
 
             if (audios.Count != 0)
             {
-                prompt.AddChoiceGroup(new StreamSpec() { Name = "__Audio" }, audios);
+                _ = prompt.AddChoiceGroup(new StreamSpec() { Name = "__Audio" }, audios);
                 // 默认音轨
                 if (first.AudioId != null)
                 {
-                    prompt.Select(audios.First(a => a.GroupId == first.AudioId));
+                    _ = prompt.Select(audios.First(a => a.GroupId == first.AudioId));
                 }
             }
             if (subs.Count != 0)
             {
-                prompt.AddChoiceGroup(new StreamSpec() { Name = "__Subtitle" }, subs);
+                _ = prompt.AddChoiceGroup(new StreamSpec() { Name = "__Subtitle" }, subs);
                 // 默认字幕轨
                 if (first.SubtitleId != null)
                 {
-                    prompt.Select(subs.First(s => s.GroupId == first.SubtitleId));
+                    _ = prompt.Select(subs.First(s => s.GroupId == first.SubtitleId));
                 }
             }
 
             // 如果此时还是没有选中任何流，自动选择一个
-            prompt.Select(basicStreams.Concat(audios).Concat(subs).First());
+            _ = prompt.Select(basicStreams.Concat(audios).Concat(subs).First());
 
             // 多选
             List<StreamSpec> selectedStreams = CustomAnsiConsole.Console.Prompt(prompt);

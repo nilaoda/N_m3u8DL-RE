@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.Common.Log
                 string logDir = Path.GetDirectoryName(LogFilePath) ?? (Path.GetDirectoryName(Environment.ProcessPath) + "/Logs");
                 if (!Directory.Exists(logDir))
                 {
-                    Directory.CreateDirectory(logDir);
+                    _ = Directory.CreateDirectory(logDir);
                 }
 
                 DateTime now = DateTime.Now;

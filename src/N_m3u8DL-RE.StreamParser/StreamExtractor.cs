@@ -112,7 +112,7 @@ namespace N_m3u8DL_RE.StreamParser
             }
             finally
             {
-                semaphore.Release();
+                _ = semaphore.Release();
             }
         }
 
@@ -134,7 +134,7 @@ namespace N_m3u8DL_RE.StreamParser
             }
             finally
             {
-                semaphore.Release();
+                _ = semaphore.Release();
             }
         }
 
@@ -147,7 +147,7 @@ namespace N_m3u8DL_RE.StreamParser
             try
             {
                 await semaphore.WaitAsync();
-                await RetryUtil.WebRequestRetryAsync(async () =>
+                _ = await RetryUtil.WebRequestRetryAsync(async () =>
                 {
                     await extractor.RefreshPlayListAsync(streamSpecs);
                     return true;
@@ -155,7 +155,7 @@ namespace N_m3u8DL_RE.StreamParser
             }
             finally
             {
-                semaphore.Release();
+                _ = semaphore.Release();
             }
         }
     }
