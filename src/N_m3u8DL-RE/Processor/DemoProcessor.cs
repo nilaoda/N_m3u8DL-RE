@@ -10,7 +10,7 @@ namespace N_m3u8DL_RE.Processor
 
         public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig)
         {
-            return extractorType == ExtractorType.MPEG_DASH && parserConfig.Url.Contains("bitmovin");
+            return extractorType == ExtractorType.MPEGDASH && parserConfig.Url.Contains("bitmovin");
         }
 
         public override string Process(string rawText, ParserConfig parserConfig)

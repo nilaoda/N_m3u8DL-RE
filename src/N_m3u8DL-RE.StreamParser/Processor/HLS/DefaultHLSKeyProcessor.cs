@@ -86,7 +86,7 @@ namespace N_m3u8DL_RE.StreamParser.Processor.HLS
             }
             catch (Exception ex)
             {
-                Logger.Error(ResString.Cmd_loadKeyFailed + ": " + ex.Message);
+                Logger.Error(ResString.CmdLoadKeyFailed + ": " + ex.Message);
                 encryptInfo.Method = EncryptMethod.UNKNOWN;
             }
 

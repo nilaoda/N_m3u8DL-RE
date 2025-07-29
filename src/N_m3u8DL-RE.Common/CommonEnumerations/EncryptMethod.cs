@@ -3,10 +3,10 @@
     public enum EncryptMethod
     {
         NONE,
-        AES_128,
-        AES_128_ECB,
-        SAMPLE_AES,
-        SAMPLE_AES_CTR,
+        AES128,
+        AES128ECB,
+        SAMPLEAES,
+        SAMPLEAESCTR,
         CENC,
         CHACHA20,
         UNKNOWN

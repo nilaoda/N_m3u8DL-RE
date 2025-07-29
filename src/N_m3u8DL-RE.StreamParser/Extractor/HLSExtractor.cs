@@ -145,7 +145,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     }
 
                     // 跳过CLOSED_CAPTIONS类型（目前不支持）
-                    if (streamSpec.MediaType == MediaType.CLOSED_CAPTIONS)
+                    if (streamSpec.MediaType == MediaType.CLOSEDCAPTIONS)
                     {
                         continue;
                     }

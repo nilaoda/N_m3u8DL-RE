@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
     {
         private static readonly EncryptMethod DEFAULT_METHOD = EncryptMethod.CENC;
 
-        public ExtractorType ExtractorType => ExtractorType.MPEG_DASH;
+        public ExtractorType ExtractorType => ExtractorType.MPEGDASH;
 
         private string MpdUrl = string.Empty;
         private string BaseUrl = string.Empty;

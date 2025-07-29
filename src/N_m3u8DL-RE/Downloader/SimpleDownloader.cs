@@ -28,14 +28,14 @@ namespace N_m3u8DL_RE.Downloader
             {
                 switch (segment.EncryptInfo.Method)
                 {
-                    case EncryptMethod.AES_128:
+                    case EncryptMethod.AES128:
                         {
                             byte[]? key = segment.EncryptInfo.Key;
                             byte[]? iv = segment.EncryptInfo.IV;
                             AESUtil.AES128Decrypt(dResult.ActualFilePath, key!, iv!);
                             break;
                         }
-                    case EncryptMethod.AES_128_ECB:
+                    case EncryptMethod.AES128ECB:
                         {
                             byte[]? key = segment.EncryptInfo.Key;
                             byte[]? iv = segment.EncryptInfo.IV;
@@ -52,12 +52,12 @@ namespace N_m3u8DL_RE.Downloader
                             await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
                             break;
                         }
-                    case EncryptMethod.SAMPLE_AES_CTR:
+                    case EncryptMethod.SAMPLEAESCTR:
                         // throw new NotSupportedException("SAMPLE-AES-CTR");
                         break;
                     case EncryptMethod.NONE:
                         break;
-                    case EncryptMethod.SAMPLE_AES:
+                    case EncryptMethod.SAMPLEAES:
                         break;
                     case EncryptMethod.CENC:
                         break;

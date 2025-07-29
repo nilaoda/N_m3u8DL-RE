@@ -2,9 +2,9 @@
 {
     public enum ExtractorType
     {
-        MPEG_DASH,
+        MPEGDASH,
         HLS,
-        HTTP_LIVE,
+        HTTPLIVE,
         MSS
     }
 }

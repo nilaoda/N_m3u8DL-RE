@@ -370,7 +370,7 @@ async Task DoWorkAsync(MyOption option)
 
     // HLS: 选中流中若有没加载出playlist的，加载playlist
     // DASH/MSS: 加载playlist (调用url预处理器)
-    if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH || extractor.ExtractorType == ExtractorType.MSS)
+    if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEGDASH || extractor.ExtractorType == ExtractorType.MSS)
     {
         await extractor.FetchPlayListAsync(selectedStreams);
     }
@@ -439,7 +439,7 @@ async Task DoWorkAsync(MyOption option)
 
     bool result = false;
 
-    if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+    if (extractor.ExtractorType == ExtractorType.HTTPLIVE)
     {
         HTTPLiveRecordManager sldm = new(downloadConfig, selectedStreams, extractor);
         result = await sldm.StartRecordAsync();

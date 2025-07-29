@@ -5,6 +5,6 @@
         AUDIO = 0,
         VIDEO = 1,
         SUBTITLES = 2,
-        CLOSED_CAPTIONS = 3
+        CLOSEDCAPTIONS = 3
     }
 }

@@ -7,7 +7,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
 {
     internal sealed class LiveTSExtractor(ParserConfig parserConfig) : IExtractor
     {
-        public ExtractorType ExtractorType => ExtractorType.HTTP_LIVE;
+        public ExtractorType ExtractorType => ExtractorType.HTTPLIVE;
 
         public ParserConfig ParserConfig { get; set; } = parserConfig;
 
