@@ -99,7 +99,7 @@ namespace N_m3u8DL_RE.Common.Util
 
         private static bool CheckMPEG2TS(HttpResponseMessage? webResponse)
         {
-            string? mediaType = webResponse?.Content.Headers.ContentType?.MediaType?.ToLower();
+            string? mediaType = webResponse?.Content.Headers.ContentType?.MediaType?.ToLowerInvariant();
             return (webResponse?.Content.Headers.ContentLength) == null && mediaType is "video/ts" or "video/mp2t" or "video/mpeg" or "application/octet-stream";
         }
 

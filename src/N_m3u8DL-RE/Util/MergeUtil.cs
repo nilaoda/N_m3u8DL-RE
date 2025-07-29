@@ -145,7 +145,7 @@ namespace N_m3u8DL_RE.Util
             }
 
 
-            switch (muxFormat.ToUpper())
+            switch (muxFormat.ToUpperInvariant())
             {
                 case "MP4":
                     _ = command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));

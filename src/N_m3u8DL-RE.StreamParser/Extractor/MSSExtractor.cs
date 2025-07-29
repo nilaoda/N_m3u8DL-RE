@@ -105,7 +105,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                 {
                     urlPattern = (qualityLevel.Attribute("Url")?.Value ?? urlPattern)!
                         .Replace(MSSTags.Bitrate_BK, MSSTags.Bitrate).Replace(MSSTags.StartTime_BK, MSSTags.StartTime);
-                    string fourCC = qualityLevel.Attribute("FourCC")!.Value.ToUpper();
+                    string fourCC = qualityLevel.Attribute("FourCC")!.Value.ToUpperInvariant();
                     string? samplingRateStr = qualityLevel.Attribute("SamplingRate")?.Value;
                     string? bitsPerSampleStr = qualityLevel.Attribute("BitsPerSample")?.Value;
                     string? nalUnitLengthFieldStr = qualityLevel.Attribute("NALUnitLengthField")?.Value;
@@ -295,7 +295,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     // AAC音频
                     "AAC" or "AACL" or "AACH" or "AACP" => ParseAACCodecs(fourCC, privateData),
                     // 默认返回fourCC本身
-                    _ => fourCC.ToLower()
+                    _ => fourCC.ToLowerInvariant()
                 };
         }
 

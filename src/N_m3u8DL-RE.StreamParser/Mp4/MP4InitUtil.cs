@@ -52,7 +52,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                         return;
                     }
 
-                    info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLower();
+                    info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLowerInvariant();
                     info.isMultiDRM = true;
                 })
                 .FullBox("encv", MP4Parser.AllData(data => ReadBox(data, info)))
@@ -97,7 +97,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
             }
             if (tencIndex != -1 && tencIndex + 12 < data.Length)
             {
-                info.KID = HexUtil.BytesToHex(data[tencIndex..][12..28]).ToLower();
+                info.KID = HexUtil.BytesToHex(data[tencIndex..][12..28]).ToLowerInvariant();
             }
         }
     }

@@ -120,7 +120,7 @@ namespace N_m3u8DL_RE.CommandLine
         /// <returns></returns>
         private static long? ParseSpeedLimit(ArgumentResult result)
         {
-            string input = result.Tokens[0].Value.ToUpper();
+            string input = result.Tokens[0].Value.ToUpperInvariant();
             try
             {
                 Regex reg = SpeedStrRegex();

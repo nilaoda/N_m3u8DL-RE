@@ -15,7 +15,7 @@ namespace N_m3u8DL_RE.Common.Util
         public static bool TryParseHexString(string input, out byte[]? bytes)
         {
             bytes = null;
-            input = input.ToUpper();
+            input = input.ToUpperInvariant();
             if (input.StartsWith("0X"))
             {
                 input = input[2..];
