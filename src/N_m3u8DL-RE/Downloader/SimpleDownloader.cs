@@ -20,7 +20,8 @@ namespace N_m3u8DL_RE.Downloader
         public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null)
         {
             string url = segment.Url;
-            (string des, DownloadResult dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
+            (string des, DownloadResult? dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
+
             if (dResult is { Success: true } && dResult.ActualFilePath != des)
             {
                 switch (segment.EncryptInfo.Method)
