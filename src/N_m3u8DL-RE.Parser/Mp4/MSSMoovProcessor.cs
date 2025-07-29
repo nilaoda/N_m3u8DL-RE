@@ -240,7 +240,7 @@ namespace N_m3u8DL_RE.Parser.Mp4
 0,
                 0x1, // default_IsProtected
                 0x8, // default_Per_Sample_IV_size
-                .. HexUtil.HexToBytes(ProtecitonKID), // default_KID
+                .. HexUtil.HexToBytes(ProtecitonKID ?? "00000000000000000000000000000000"), // default_KID
             ];
             // tencPayload.Add(0x8);// default_constant_IV_size
             // tencPayload.AddRange(new byte[8]);// default_constant_IV
