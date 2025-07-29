@@ -12,6 +12,10 @@
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <StripSymbols>true</StripSymbols>
+
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisMode>Recommended</AnalysisMode>
+
         <ObjCopyName Condition="'$(RuntimeIdentifier)' == 'linux-arm64' or '$(RuntimeIdentifier)' == 'linux-musl-arm64'">aarch64-linux-gnu-objcopy</ObjCopyName>
     </PropertyGroup>
 
