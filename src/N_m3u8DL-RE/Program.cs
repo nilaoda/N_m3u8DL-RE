@@ -280,7 +280,7 @@ async Task DoWorkAsync(MyOption option)
     }
 
     // 生成文件夹
-    string tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+    string tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture)}");
     // 记录文件
     extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
     // 写出文件

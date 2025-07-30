@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
@@ -55,9 +56,9 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                 return null;
             }
 
-            double d = Convert.ToDouble(frameRate.Split('/')[0]) / Convert.ToDouble(frameRate.Split('/')[1]);
-            frameRate = d.ToString("0.000");
-            return Convert.ToDouble(frameRate);
+            double d = Convert.ToDouble(frameRate.Split('/')[0], CultureInfo.InvariantCulture) / Convert.ToDouble(frameRate.Split('/')[1], CultureInfo.InvariantCulture);
+            frameRate = d.ToString("0.000", CultureInfo.InvariantCulture);
+            return Convert.ToDouble(frameRate, CultureInfo.InvariantCulture);
         }
 
         public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
@@ -152,7 +153,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                         };
                         streamSpec.Playlist.MediaParts.Add(new MediaPart());
                         streamSpec.GroupId = representation.Attribute("id")?.Value;
-                        streamSpec.Bandwidth = Convert.ToInt32(bandwidth?.Value ?? "0");
+                        streamSpec.Bandwidth = Convert.ToInt32(bandwidth?.Value ?? "0", CultureInfo.InvariantCulture);
                         streamSpec.Codecs = representation.Attribute("codecs")?.Value ?? adaptationSet.Attribute("codecs")?.Value;
                         streamSpec.Language = FilterLanguage(representation.Attribute("lang")?.Value ?? adaptationSet.Attribute("lang")?.Value);
                         streamSpec.FrameRate = frameRate ?? GetFrameRate(representation);
@@ -234,7 +235,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                         // 发布时间
                         if (!string.IsNullOrEmpty(publishTime))
                         {
-                            streamSpec.PublishTime = DateTime.Parse(publishTime);
+                            streamSpec.PublishTime = DateTime.Parse(publishTime, CultureInfo.InvariantCulture);
                         }
 
 
@@ -309,8 +310,8 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                                 XElement segmentURL = segmentURLs.ElementAt(segmentIndex);
                                 string mediaUrl = ParserUtil.CombineURL(segBaseUrl, segmentURL.Attribute("media")?.Value!);
                                 string? mediaRange = segmentURL.Attribute("mediaRange")?.Value;
-                                int timesacle = Convert.ToInt32(timescaleStr);
-                                long duration = Convert.ToInt64(durationStr);
+                                int timesacle = Convert.ToInt32(timescaleStr, CultureInfo.InvariantCulture);
+                                long duration = Convert.ToInt64(durationStr, CultureInfo.InvariantCulture);
                                 MediaSegment mediaSegment = new()
                                 {
                                     Duration = duration / (double)timesacle,
@@ -368,7 +369,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                             if (segmentTimeline != null)
                             {
                                 // 使用了SegmentTimeline 结果精确
-                                long segNumber = Convert.ToInt64(startNumberStr);
+                                long segNumber = Convert.ToInt64(startNumberStr, CultureInfo.InvariantCulture);
                                 IEnumerable<XElement> Ss = segmentTimeline.Elements().Where(e => e.Name.LocalName == "S");
                                 long currentTime = 0L;
                                 int segIndex = 0;
@@ -381,12 +382,12 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
 
                                     if (_startTimeStr != null)
                                     {
-                                        currentTime = Convert.ToInt64(_startTimeStr);
+                                        currentTime = Convert.ToInt64(_startTimeStr, CultureInfo.InvariantCulture);
                                     }
 
-                                    long _duration = Convert.ToInt64(_durationStr);
-                                    int timescale = Convert.ToInt32(timescaleStr);
-                                    long _repeatCount = Convert.ToInt64(_repeatCountStr);
+                                    long _duration = Convert.ToInt64(_durationStr, CultureInfo.InvariantCulture);
+                                    int timescale = Convert.ToInt32(timescaleStr, CultureInfo.InvariantCulture);
+                                    long _repeatCount = Convert.ToInt64(_repeatCountStr, CultureInfo.InvariantCulture);
                                     varDic[DASHTags.TemplateTime] = currentTime;
                                     varDic[DASHTags.TemplateNumber] = segNumber++;
                                     bool hasTime = mediaTemplate!.Contains(DASHTags.TemplateTime);
@@ -398,7 +399,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                                     };
                                     if (hasTime)
                                     {
-                                        mediaSegment.NameFromVar = currentTime.ToString();
+                                        mediaSegment.NameFromVar = currentTime.ToString(CultureInfo.InvariantCulture);
                                     }
 
                                     mediaSegment.Duration = _duration / (double)timescale;
@@ -423,7 +424,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                                         _mediaSegment.Duration = _duration / (double)timescale;
                                         if (_hashTime)
                                         {
-                                            _mediaSegment.NameFromVar = currentTime.ToString();
+                                            _mediaSegment.NameFromVar = currentTime.ToString(CultureInfo.InvariantCulture);
                                         }
 
                                         streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
@@ -434,17 +435,17 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                             else
                             {
                                 // 没用SegmentTimeline 需要计算总分片数量 不精确
-                                int timescale = Convert.ToInt32(timescaleStr);
-                                long startNumber = Convert.ToInt64(startNumberStr);
-                                int duration = Convert.ToInt32(durationStr);
+                                int timescale = Convert.ToInt32(timescaleStr, CultureInfo.InvariantCulture);
+                                long startNumber = Convert.ToInt64(startNumberStr, CultureInfo.InvariantCulture);
+                                int duration = Convert.ToInt32(durationStr, CultureInfo.InvariantCulture);
                                 long totalNumber = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / duration);
                                 // 直播的情况，需要自己计算totalNumber
                                 if (totalNumber == 0 && isLive)
                                 {
                                     DateTime now = DateTime.Now;
-                                    DateTime availableTime = DateTime.Parse(availabilityStartTime!);
+                                    DateTime availableTime = DateTime.Parse(availabilityStartTime!, CultureInfo.InvariantCulture);
                                     // 可用时间+偏移量
-                                    TimeSpan offsetMs = TimeSpan.FromMilliseconds(Convert.ToInt64(presentationTimeOffsetStr) / 1000);
+                                    TimeSpan offsetMs = TimeSpan.FromMilliseconds(Convert.ToInt64(presentationTimeOffsetStr, CultureInfo.InvariantCulture) / 1000);
                                     availableTime = availableTime.Add(offsetMs);
                                     TimeSpan ts = now - availableTime;
                                     TimeSpan updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth!);
@@ -464,7 +465,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                                     };
                                     if (hasNumber)
                                     {
-                                        mediaSegment.NameFromVar = index.ToString();
+                                        mediaSegment.NameFromVar = index.ToString(CultureInfo.InvariantCulture);
                                     }
 
                                     mediaSegment.Index = isLive ? index : segIndex; // 直播直接用startNumber

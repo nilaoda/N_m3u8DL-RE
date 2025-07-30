@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using N_m3u8DL_RE.Common.CommonEnumerations;
@@ -32,82 +33,82 @@ namespace N_m3u8DL_RE.Entity
 
             if (GroupIdReg != null)
             {
-                _ = sb.Append($"GroupIdReg: {GroupIdReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"GroupIdReg: {GroupIdReg} ");
             }
 
             if (LanguageReg != null)
             {
-                _ = sb.Append($"LanguageReg: {LanguageReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"LanguageReg: {LanguageReg} ");
             }
 
             if (NameReg != null)
             {
-                _ = sb.Append($"NameReg: {NameReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"NameReg: {NameReg} ");
             }
 
             if (CodecsReg != null)
             {
-                _ = sb.Append($"CodecsReg: {CodecsReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"CodecsReg: {CodecsReg} ");
             }
 
             if (ResolutionReg != null)
             {
-                _ = sb.Append($"ResolutionReg: {ResolutionReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"ResolutionReg: {ResolutionReg} ");
             }
 
             if (FrameRateReg != null)
             {
-                _ = sb.Append($"FrameRateReg: {FrameRateReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"FrameRateReg: {FrameRateReg} ");
             }
 
             if (ChannelsReg != null)
             {
-                _ = sb.Append($"ChannelsReg: {ChannelsReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"ChannelsReg: {ChannelsReg} ");
             }
 
             if (VideoRangeReg != null)
             {
-                _ = sb.Append($"VideoRangeReg: {VideoRangeReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"VideoRangeReg: {VideoRangeReg} ");
             }
 
             if (UrlReg != null)
             {
-                _ = sb.Append($"UrlReg: {UrlReg} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"UrlReg: {UrlReg} ");
             }
 
             if (SegmentsMinCount != null)
             {
-                _ = sb.Append($"SegmentsMinCount: {SegmentsMinCount} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"SegmentsMinCount: {SegmentsMinCount} ");
             }
 
             if (SegmentsMaxCount != null)
             {
-                _ = sb.Append($"SegmentsMaxCount: {SegmentsMaxCount} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"SegmentsMaxCount: {SegmentsMaxCount} ");
             }
 
             if (PlaylistMinDur != null)
             {
-                _ = sb.Append($"PlaylistMinDur: {PlaylistMinDur} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"PlaylistMinDur: {PlaylistMinDur} ");
             }
 
             if (PlaylistMaxDur != null)
             {
-                _ = sb.Append($"PlaylistMaxDur: {PlaylistMaxDur} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"PlaylistMaxDur: {PlaylistMaxDur} ");
             }
 
             if (BandwidthMin != null)
             {
-                _ = sb.Append($"{nameof(BandwidthMin)}: {BandwidthMin} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"{nameof(BandwidthMin)}: {BandwidthMin} ");
             }
 
             if (BandwidthMax != null)
             {
-                _ = sb.Append($"{nameof(BandwidthMax)}: {BandwidthMax} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"{nameof(BandwidthMax)}: {BandwidthMax} ");
             }
 
             if (Role.HasValue)
             {
-                _ = sb.Append($"Role: {Role} ");
+                _ = sb.Append(CultureInfo.InvariantCulture, $"Role: {Role} ");
             }
 
             return sb + $"For: {For}";

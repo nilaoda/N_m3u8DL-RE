@@ -1,4 +1,6 @@
-﻿using N_m3u8DL_RE.Common.CommonEnumerations;
+﻿using System.Globalization;
+
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -93,14 +95,14 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                         OriginalUrl = ParserConfig.OriginalUrl
                     };
                     string bandwidth = string.IsNullOrEmpty(ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH")) ? ParserUtil.GetAttribute(line, "BANDWIDTH") : ParserUtil.GetAttribute(line, "AVERAGE-BANDWIDTH");
-                    streamSpec.Bandwidth = Convert.ToInt32(bandwidth);
+                    streamSpec.Bandwidth = Convert.ToInt32(bandwidth, CultureInfo.InvariantCulture);
                     streamSpec.Codecs = ParserUtil.GetAttribute(line, "CODECS");
                     streamSpec.Resolution = ParserUtil.GetAttribute(line, "RESOLUTION");
 
                     string frameRate = ParserUtil.GetAttribute(line, "FRAME-RATE");
                     if (!string.IsNullOrEmpty(frameRate))
                     {
-                        streamSpec.FrameRate = Convert.ToDouble(frameRate);
+                        streamSpec.FrameRate = Convert.ToDouble(frameRate, CultureInfo.InvariantCulture);
                     }
 
                     string audioId = ParserUtil.GetAttribute(line, "AUDIO");
@@ -310,18 +312,18 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                 // 解析定义的分段长度
                 else if (line.StartsWith(HLSTags.ext_x_targetduration, StringComparison.OrdinalIgnoreCase))
                 {
-                    playlist.TargetDuration = Convert.ToDouble(ParserUtil.GetAttribute(line));
+                    playlist.TargetDuration = Convert.ToDouble(ParserUtil.GetAttribute(line), CultureInfo.InvariantCulture);
                 }
                 // 解析起始编号
                 else if (line.StartsWith(HLSTags.ext_x_media_sequence, StringComparison.OrdinalIgnoreCase))
                 {
-                    segIndex = Convert.ToInt64(ParserUtil.GetAttribute(line));
+                    segIndex = Convert.ToInt64(ParserUtil.GetAttribute(line), CultureInfo.InvariantCulture);
                     startIndex = segIndex;
                 }
                 // program date time
                 else if (line.StartsWith(HLSTags.ext_x_program_date_time, StringComparison.OrdinalIgnoreCase))
                 {
-                    segment.DateTime = DateTime.Parse(ParserUtil.GetAttribute(line));
+                    segment.DateTime = DateTime.Parse(ParserUtil.GetAttribute(line), CultureInfo.InvariantCulture);
                 }
                 // 解析不连续标记，需要单独合并（timestamp不同）
                 else if (line.StartsWith(HLSTags.ext_x_discontinuity, StringComparison.OrdinalIgnoreCase))
@@ -367,7 +369,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                 else if (line.StartsWith(HLSTags.extinf, StringComparison.OrdinalIgnoreCase))
                 {
                     string[] tmp = ParserUtil.GetAttribute(line).Split(',');
-                    segment.Duration = Convert.ToDouble(tmp[0]);
+                    segment.Duration = Convert.ToDouble(tmp[0], CultureInfo.InvariantCulture);
                     segment.Index = segIndex;
                     // 是否有加密，有的话写入KEY和IV
                     if (currentEncryptInfo.Method != EncryptMethod.NONE)

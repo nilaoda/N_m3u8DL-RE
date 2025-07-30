@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 
 using N_m3u8DL_RE.Common.CommonEnumerations;
@@ -94,7 +95,7 @@ namespace N_m3u8DL_RE.Util
                     continue;
                 }
 
-                string output = outputName + index.ToString("0000") + ".ts";
+                string output = outputName + index.ToString("0000", CultureInfo.InvariantCulture) + ".ts";
                 CombineMultipleFilesIntoSingleFile(items, output);
                 newFiles.Add(output);
                 // 合并后删除这些文件
@@ -133,7 +134,7 @@ namespace N_m3u8DL_RE.Util
                 string text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
                 string tempFile = Path.GetTempFileName();
                 File.WriteAllText(tempFile, text);
-                _ = command.Append($" -f concat -safe 0 -i \"{tempFile}");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -f concat -safe 0 -i \"{tempFile}");
             }
             else
             {
@@ -203,13 +204,13 @@ namespace N_m3u8DL_RE.Util
             // INPUT
             foreach (OutputFile item in files)
             {
-                _ = command.Append($" -i \"{item.FilePath}\" ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -i \"{item.FilePath}\" ");
             }
 
             // MAP
             for (int i = 0; i < files.Length; i++)
             {
-                _ = command.Append($" -map {i} ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -map {i} ");
             }
 
             bool srt = files.Any(x => x.FilePath.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
@@ -223,7 +224,7 @@ namespace N_m3u8DL_RE.Util
                 _ = muxFormat == MuxFormat.TS
                     ? command.Append($" -strict unofficial -c:a copy -c:v copy ")
                     : muxFormat == MuxFormat.MKV
-                    ? command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ")
+                    ? command.Append(CultureInfo.InvariantCulture, $" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ")
                     : throw new ArgumentException($"unknown format: {muxFormat}");
             }
 
@@ -236,10 +237,10 @@ namespace N_m3u8DL_RE.Util
             {
                 // 转换语言代码
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-                _ = command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
-                    _ = command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
+                    _ = command.Append(CultureInfo.InvariantCulture, $" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
                 }
                 /**
                  * -metadata:s:xx标记的是 输出的第xx个流的metadata，
@@ -275,17 +276,17 @@ namespace N_m3u8DL_RE.Util
                 _ = command.Append(" -disposition:a:0 default ");
                 for (int i = 1; i < audioTracks.Count(); i++)
                 {
-                    _ = command.Append($" -disposition:a:{i} 0 ");
+                    _ = command.Append(CultureInfo.InvariantCulture, $" -disposition:a:{i} 0 ");
                 }
             }
 
             if (dateinfo)
             {
-                _ = command.Append($" -metadata date=\"{dateString}\" ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -metadata date=\"{dateString}\" ");
             }
 
             _ = command.Append($" -ignore_unknown -copy_unknown ");
-            _ = command.Append($" \"{outputPath}{ext}\"");
+            _ = command.Append(CultureInfo.InvariantCulture, $" \"{outputPath}{ext}\"");
 
             int code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
 
@@ -305,7 +306,7 @@ namespace N_m3u8DL_RE.Util
             {
                 // 转换语言代码
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-                _ = command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" --language 0:\"{files[i].LangCode ?? "und"}\" ");
                 // 字幕都不设置默认
                 if (files[i].MediaType == MediaType.SUBTITLES)
                 {
@@ -323,10 +324,10 @@ namespace N_m3u8DL_RE.Util
                 }
                 if (!string.IsNullOrEmpty(files[i].Description))
                 {
-                    _ = command.Append($" --track-name 0:\"{files[i].Description}\" ");
+                    _ = command.Append(CultureInfo.InvariantCulture, $" --track-name 0:\"{files[i].Description}\" ");
                 }
 
-                _ = command.Append($" \"{files[i].FilePath}\" ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" \"{files[i].FilePath}\" ");
             }
 
             int code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);

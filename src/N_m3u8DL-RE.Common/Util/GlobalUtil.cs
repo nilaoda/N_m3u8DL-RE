@@ -1,4 +1,5 @@
-﻿using System.Text.Encodings.Web;
+﻿using System.Globalization;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -51,7 +52,7 @@ namespace N_m3u8DL_RE.Common.Util
         public static string FormatTime(int time)
         {
             TimeSpan ts = new(0, 0, time);
-            string str = (ts.Hours.ToString("00") == "00" ? "" : ts.Hours.ToString("00") + "h") + ts.Minutes.ToString("00") + "m" + ts.Seconds.ToString("00") + "s";
+            string str = (ts.Hours.ToString("00", CultureInfo.InvariantCulture) == "00" ? "" : ts.Hours.ToString("00", CultureInfo.InvariantCulture) + "h") + ts.Minutes.ToString("00", CultureInfo.InvariantCulture) + "m" + ts.Seconds.ToString("00", CultureInfo.InvariantCulture) + "s";
             return str;
         }
 

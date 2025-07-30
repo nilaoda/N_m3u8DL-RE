@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 using N_m3u8DL_RE.StreamParser.Constants;
 
@@ -55,8 +56,8 @@ namespace N_m3u8DL_RE.StreamParser.Util
             return t.Length switch
             {
                 <= 0 => (0, null),
-                1 => (Convert.ToInt64(t[0]), null),
-                2 => (Convert.ToInt64(t[0]), Convert.ToInt64(t[1])),
+                1 => (Convert.ToInt64(t[0], CultureInfo.InvariantCulture), null),
+                2 => (Convert.ToInt64(t[0], CultureInfo.InvariantCulture), Convert.ToInt64(t[1], CultureInfo.InvariantCulture)),
                 _ => (0, null)
             };
         }
@@ -68,8 +69,8 @@ namespace N_m3u8DL_RE.StreamParser.Util
         /// <returns>StartRange, ExpectLength</returns>
         public static (long, long) ParseRange(string range)
         {
-            long start = Convert.ToInt64(range.Split('-')[0]);
-            long end = Convert.ToInt64(range.Split('-')[1]);
+            long start = Convert.ToInt64(range.Split('-')[0], CultureInfo.InvariantCulture);
+            long end = Convert.ToInt64(range.Split('-')[1], CultureInfo.InvariantCulture);
             return (start, end - start + 1);
         }
 
@@ -95,7 +96,7 @@ namespace N_m3u8DL_RE.StreamParser.Util
             {
                 foreach (Match m in regex.Matches(text))
                 {
-                    text = text.Replace(m.Value, keyValuePair?.ToString()?.PadLeft(Convert.ToInt32(m.Groups[1].Value), '0'));
+                    text = text.Replace(m.Value, keyValuePair?.ToString()?.PadLeft(Convert.ToInt32(m.Groups[1].Value, CultureInfo.InvariantCulture), '0'));
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Common.Entity
@@ -60,7 +61,7 @@ namespace N_m3u8DL_RE.Common.Entity
             if (tsMapMatch.Success)
             {
                 string timestamp = TSValueRegex().Match(tsMapMatch.Value).Groups[1].Value;
-                webSub.MpegtsTimestamp = Convert.ToInt64(timestamp);
+                webSub.MpegtsTimestamp = Convert.ToInt64(timestamp, CultureInfo.InvariantCulture);
             }
 
             List<string> payloads = [];
@@ -201,7 +202,7 @@ namespace N_m3u8DL_RE.Common.Entity
             // 17.0s
             if (str.EndsWith('s'))
             {
-                double sec = Convert.ToDouble(str[..^1]);
+                double sec = Convert.ToDouble(str[..^1], CultureInfo.InvariantCulture);
                 return TimeSpan.FromSeconds(sec);
             }
 
@@ -210,13 +211,13 @@ namespace N_m3u8DL_RE.Common.Entity
             string[] parts = str.Split('.');
             if (parts.Length > 1)
             {
-                time += Convert.ToInt32(parts.Last().PadRight(3, '0'));
+                time += Convert.ToInt32(parts.Last().PadRight(3, '0'), CultureInfo.InvariantCulture);
                 str = parts.First();
             }
             List<string> t = [.. str.Split(':').Reverse()];
             for (int i = 0; i < t.Count; i++)
             {
-                time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i]) * 1000;
+                time += (long)Math.Pow(60, i) * Convert.ToInt32(t[i], CultureInfo.InvariantCulture) * 1000;
             }
             return TimeSpan.FromMilliseconds(time);
         }
@@ -226,7 +227,7 @@ namespace N_m3u8DL_RE.Common.Entity
             StringBuilder sb = new();
             foreach (SubCue c in GetCues())  // 输出时去除空串
             {
-                _ = sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff") + " " + c.Settings);
+                _ = sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture) + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture) + " " + c.Settings);
                 _ = sb.AppendLine(c.Payload);
                 _ = sb.AppendLine();
             }
@@ -273,8 +274,8 @@ namespace N_m3u8DL_RE.Common.Entity
             int index = 1;
             foreach (SubCue c in GetCues())
             {
-                _ = sb.AppendLine($"{index++}");
-                _ = sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff") + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff"));
+                _ = sb.AppendLine(CultureInfo.InvariantCulture, $"{index++}");
+                _ = sb.AppendLine(c.StartTime.ToString(@"hh\:mm\:ss\,fff", CultureInfo.InvariantCulture) + " --> " + c.EndTime.ToString(@"hh\:mm\:ss\,fff", CultureInfo.InvariantCulture));
                 _ = sb.AppendLine(c.Payload);
                 _ = sb.AppendLine();
             }

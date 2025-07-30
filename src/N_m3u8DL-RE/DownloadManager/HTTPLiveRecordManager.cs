@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text;
 
 using N_m3u8DL_RE.Column;
@@ -55,7 +56,7 @@ namespace N_m3u8DL_RE.DownloadManager
             task.MaxValue = 1;
             task.StartTask();
             _ = streamSpec.ToShortString();
-            string dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
+            string dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture)}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
             string saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
             string saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
 
@@ -147,7 +148,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         // PAT
                         if (pid == 0x0000)
                         {
-                            programId = ConvertToUint16(tsPayload.Skip(9).Take(2)).ToString();
+                            programId = ConvertToUint16(tsPayload.Skip(9).Take(2)).ToString(CultureInfo.InvariantCulture);
                         }
                         // SDT, BAT, ST
                         else if (pid == 0x0011)

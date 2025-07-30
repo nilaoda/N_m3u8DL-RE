@@ -129,7 +129,7 @@ namespace N_m3u8DL_RE.CommandLine
                     throw new ArgumentException($"Invalid Speed Limit: {input}");
                 }
 
-                double number = double.Parse(reg.Match(input).Groups[1].Value);
+                double number = double.Parse(reg.Match(input).Groups[1].Value, CultureInfo.InvariantCulture);
                 return reg.Match(input).Groups[2].Value == "M" ? (long)(number * 1024 * 1024) : (long)(number * 1024);
             }
             catch (Exception)
@@ -179,8 +179,8 @@ namespace N_m3u8DL_RE.CommandLine
                     return new CustomRange()
                     {
                         InputStr = input,
-                        StartSegIndex = left == "" ? 0 : long.Parse(left),
-                        EndSegIndex = right == "" ? long.MaxValue : long.Parse(right),
+                        StartSegIndex = left == "" ? 0 : long.Parse(left, CultureInfo.InvariantCulture),
+                        EndSegIndex = right == "" ? long.MaxValue : long.Parse(right, CultureInfo.InvariantCulture),
                     };
                 }
 
@@ -409,13 +409,13 @@ namespace N_m3u8DL_RE.CommandLine
             string? segsMin = p.GetValue("segsMin");
             if (!string.IsNullOrEmpty(segsMin))
             {
-                streamFilter.SegmentsMinCount = long.Parse(segsMin);
+                streamFilter.SegmentsMinCount = long.Parse(segsMin, CultureInfo.InvariantCulture);
             }
 
             string? segsMax = p.GetValue("segsMax");
             if (!string.IsNullOrEmpty(segsMax))
             {
-                streamFilter.SegmentsMaxCount = long.Parse(segsMax);
+                streamFilter.SegmentsMaxCount = long.Parse(segsMax, CultureInfo.InvariantCulture);
             }
 
             string? plistDurMin = p.GetValue("plistDurMin");
@@ -433,13 +433,13 @@ namespace N_m3u8DL_RE.CommandLine
             string? bwMin = p.GetValue("bwMin");
             if (!string.IsNullOrEmpty(bwMin))
             {
-                streamFilter.BandwidthMin = int.Parse(bwMin) * 1000;
+                streamFilter.BandwidthMin = int.Parse(bwMin, CultureInfo.InvariantCulture) * 1000;
             }
 
             string? bwMax = p.GetValue("bwMax");
             if (!string.IsNullOrEmpty(bwMax))
             {
-                streamFilter.BandwidthMax = int.Parse(bwMax) * 1000;
+                streamFilter.BandwidthMax = int.Parse(bwMax, CultureInfo.InvariantCulture) * 1000;
             }
 
             string? role = p.GetValue("role");

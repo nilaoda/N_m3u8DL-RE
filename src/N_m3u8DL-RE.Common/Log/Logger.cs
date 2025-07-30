@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using Spectre.Console;
@@ -46,7 +47,7 @@ namespace N_m3u8DL_RE.Common.Log
                 DateTime now = DateTime.Now;
                 if (string.IsNullOrEmpty(LogFilePath))
                 {
-                    LogFilePath = Path.Combine(logDir, now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".log");
+                    LogFilePath = Path.Combine(logDir, now.ToString("yyyy-MM-dd_HH-mm-ss-fff", CultureInfo.InvariantCulture) + ".log");
                     int index = 1;
                     string fileName = Path.GetFileNameWithoutExtension(LogFilePath);
                     // 若文件存在则加序号
@@ -56,9 +57,9 @@ namespace N_m3u8DL_RE.Common.Log
                     }
                 }
 
-                string init = "LOG " + now.ToString("yyyy/MM/dd") + Environment.NewLine
+                string init = "LOG " + now.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture) + Environment.NewLine
                               + "Save Path: " + Path.GetDirectoryName(LogFilePath) + Environment.NewLine
-                              + "Task Start: " + now.ToString("yyyy/MM/dd HH:mm:ss") + Environment.NewLine
+                              + "Task Start: " + now.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture) + Environment.NewLine
                               + "Task CommandLine: " + Environment.CommandLine;
                 init += $"{Environment.NewLine}{Environment.NewLine}";
                 File.WriteAllText(LogFilePath, init, Encoding.UTF8);
@@ -71,7 +72,7 @@ namespace N_m3u8DL_RE.Common.Log
 
         private static string GetCurrTime()
         {
-            return DateTime.Now.ToString("HH:mm:ss.fff");
+            return DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         }
 
         private static void HandleLog(string write, string subWrite = "")

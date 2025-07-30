@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
@@ -21,7 +22,7 @@ namespace N_m3u8DL_RE.Column
         {
             int taskId = task.Id;
             SpeedContainer speedContainer = SpeedContainerDic[taskId];
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
             bool flag = task.IsFinished || !task.IsStarted;
             // 单文件下载汇报进度
             if (!flag && speedContainer is { SingleSegment: true, ResponseLength: not null })

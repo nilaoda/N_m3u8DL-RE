@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.IO.Pipes;
 using System.Text;
 
@@ -61,34 +62,34 @@ namespace N_m3u8DL_RE.Util
             {
                 if (OperatingSystem.IsWindows())
                 {
-                    _ = command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
+                    _ = command.Append(CultureInfo.InvariantCulture, $" -i \"\\\\.\\pipe\\{item}\" ");
                 }
                 else
                 {
                     // command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
-                    _ = command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
+                    _ = command.Append(CultureInfo.InvariantCulture, $" -i \"{Path.Combine(pipeDir, item)}\" ");
                 }
             }
 
             for (int i = 0; i < pipeNames.Length; i++)
             {
-                _ = command.Append($" -map {i} ");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -map {i} ");
             }
 
             _ = command.Append(" -strict unofficial -c copy ");
-            _ = command.Append($" -metadata date=\"{dateString}\" ");
+            _ = command.Append(CultureInfo.InvariantCulture, $" -metadata date=\"{dateString}\" ");
             _ = command.Append($" -ignore_unknown -copy_unknown ");
 
 
             if (!string.IsNullOrEmpty(customDest))
             {
-                _ = customDest.Trim().StartsWith('-') ? command.Append(customDest) : command.Append($" -f mpegts -shortest \"{customDest}\"");
+                _ = customDest.Trim().StartsWith('-') ? command.Append(customDest) : command.Append(CultureInfo.InvariantCulture, $" -f mpegts -shortest \"{customDest}\"");
 
                 Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
             }
             else
             {
-                _ = command.Append($" -f mpegts -shortest \"{outputPath}\"");
+                _ = command.Append(CultureInfo.InvariantCulture, $" -f mpegts -shortest \"{outputPath}\"");
             }
 
             using Process p = new();

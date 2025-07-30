@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 
 using N_m3u8DL_RE.Common.Util;
 
@@ -17,7 +18,7 @@ namespace N_m3u8DL_RE.Column
 
         public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
             int taskId = task.Id;
             // 一秒汇报一次即可
             if (DateTimeStringDic.TryGetValue(taskId, out string? oldTime) && oldTime != now)

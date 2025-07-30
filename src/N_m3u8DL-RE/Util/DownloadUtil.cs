@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Globalization;
+using System.Net.Http.Headers;
 
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -81,7 +82,7 @@ namespace N_m3u8DL_RE.Util
             try
             {
                 using HttpResponseMessage response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
-                if (((int)response.StatusCode).ToString().StartsWith("30", StringComparison.OrdinalIgnoreCase))
+                if (((int)response.StatusCode).ToString(CultureInfo.InvariantCulture).StartsWith("30", StringComparison.OrdinalIgnoreCase))
                 {
                     HttpResponseHeaders respHeaders = response.Headers;
                     Logger.Debug(respHeaders.ToString());

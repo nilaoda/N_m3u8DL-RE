@@ -1,4 +1,6 @@
-﻿using N_m3u8DL_RE.Common.CommonEnumerations;
+﻿using System.Globalization;
+
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.StreamParser.Config;
 using N_m3u8DL_RE.StreamParser.Processor;
@@ -36,7 +38,7 @@ namespace N_m3u8DL_RE.Processor
                 SecureToken = ParserUtil.GetAttribute(argLine, "filminfo.secureToken");
                 if (TimeDifferenceStr != null && SecureToken != null)
                 {
-                    TimeDifference = Convert.ToInt32(TimeDifferenceStr);
+                    TimeDifference = Convert.ToInt32(TimeDifferenceStr, CultureInfo.InvariantCulture);
                 }
                 return true;
             }

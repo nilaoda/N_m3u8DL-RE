@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Globalization;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 
 using N_m3u8DL_RE.Enumerations;
@@ -28,7 +29,7 @@ namespace N_m3u8DL_RE.Util
         }
 
         private static readonly char[] InvalidChars = [.. "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
-            .Split(',').Select(s => (char)int.Parse(s))];
+            .Split(',').Select(s => (char)int.Parse(s, CultureInfo.InvariantCulture))];
         public static string GetValidFileName(string input, string re = "_", bool filterSlash = false)
         {
             string title = InvalidChars.Aggregate(input, (current, invalidChar) => current.Replace(invalidChar.ToString(), re));
@@ -48,7 +49,7 @@ namespace N_m3u8DL_RE.Util
         /// <returns></returns>
         public static string GetFileNameFromInput(string input, bool addSuffix = true)
         {
-            string saveName = addSuffix ? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") : string.Empty;
+            string saveName = addSuffix ? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture) : string.Empty;
             if (File.Exists(input))
             {
                 saveName = Path.GetFileNameWithoutExtension(input) + "_" + saveName;
@@ -74,7 +75,7 @@ namespace N_m3u8DL_RE.Util
             int hours = -1;
             int mins = -1;
             int secs = -1;
-            arr.Reverse().Select(i => Convert.ToInt32(i)).ToList().ForEach(item =>
+            arr.Reverse().Select(i => Convert.ToInt32(i, CultureInfo.InvariantCulture)).ToList().ForEach(item =>
             {
                 if (secs == -1)
                 {
@@ -134,9 +135,9 @@ namespace N_m3u8DL_RE.Util
                 throw new ArgumentException("时间格式无效");
             }
 
-            int hours = match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 0;
-            int minutes = match.Groups[2].Success ? int.Parse(match.Groups[2].Value) : 0;
-            int seconds = match.Groups[3].Success ? int.Parse(match.Groups[3].Value) : 0;
+            int hours = match.Groups[1].Success ? int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) : 0;
+            int minutes = match.Groups[2].Success ? int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture) : 0;
+            int seconds = match.Groups[3].Success ? int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture) : 0;
 
             return (hours * 3600) + (minutes * 60) + seconds;
         }

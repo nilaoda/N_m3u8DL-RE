@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text;
 
 using Mp4SubtitleParser;
@@ -219,7 +220,7 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             // 计算填零个数
-            string pad = "0".PadLeft(segments.Count().ToString().Length, '0');
+            string pad = "0".PadLeft(segments.Count().ToString(CultureInfo.InvariantCulture).Length, '0');
 
             // 下载第一个分片
             if (!readInfo || StreamExtractor.ExtractorType == ExtractorType.MSS)
@@ -228,7 +229,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 segments = segments.Skip(1);
 
                 long index = seg.Index;
-                string path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
+                string path = Path.Combine(tmpDir, index.ToString(pad, CultureInfo.InvariantCulture) + $".{streamSpec.Extension ?? "clip"}.tmp");
                 DownloadResult? result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
                 if (result is not { Success: true })
@@ -304,7 +305,7 @@ namespace N_m3u8DL_RE.DownloadManager
             await Parallel.ForEachAsync(segments, options, async (seg, _) =>
             {
                 long index = seg.Index;
-                string path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
+                string path = Path.Combine(tmpDir, index.ToString(pad, CultureInfo.InvariantCulture) + $".{streamSpec.Extension ?? "clip"}.tmp");
                 DownloadResult? result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
                 FileDic[seg] = result;
                 if (result is { Success: true })
@@ -415,7 +416,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 FileDic.Clear();
                 int index = 0;
-                string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
+                string path = Path.Combine(tmpDir, index.ToString(pad, CultureInfo.InvariantCulture) + ".fix.vtt");
                 // 设置字幕偏移
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 string subContentFixed = finalVtt.ToVtt();
@@ -455,7 +456,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                     FileDic.Clear();
                     int index = 0;
-                    string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
+                    string path = Path.Combine(tmpDir, index.ToString(pad, CultureInfo.InvariantCulture) + ".fix.vtt");
                     // 设置字幕偏移
                     finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                     string subContentFixed = finalVtt.ToVtt();
@@ -513,7 +514,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 FileDic.Clear();
                 int index = 0;
-                string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
+                string path = Path.Combine(tmpDir, index.ToString(pad, CultureInfo.InvariantCulture) + ".fix.vtt");
                 // 设置字幕偏移
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 string subContentFixed = finalVtt.ToVtt();
@@ -576,7 +577,7 @@ namespace N_m3u8DL_RE.DownloadManager
 
                 FileDic.Clear();
                 int index = 0;
-                string path = Path.Combine(tmpDir, index.ToString(pad) + ".fix.vtt");
+                string path = Path.Combine(tmpDir, index.ToString(pad, CultureInfo.InvariantCulture) + ".fix.vtt");
                 // 设置字幕偏移
                 finalVtt.LeftShiftTime(TimeSpan.FromSeconds(skippedDur));
                 string subContentFixed = finalVtt.ToVtt();

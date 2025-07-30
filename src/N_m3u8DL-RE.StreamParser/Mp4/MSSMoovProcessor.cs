@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using N_m3u8DL_RE.Common.Entity;
@@ -24,8 +25,8 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
         private readonly int Timesacle;
         private readonly long Duration;
         private string Language => StreamSpec.Language ?? "und";
-        private int Width => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').First());
-        private int Height => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').Last());
+        private int Width => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').First(), CultureInfo.InvariantCulture);
+        private int Height => int.Parse((StreamSpec.Resolution ?? "0x0").Split('x').Last(), CultureInfo.InvariantCulture);
         private readonly string StreamType;
         private readonly int Channels;
         private readonly int BitsPerSample;

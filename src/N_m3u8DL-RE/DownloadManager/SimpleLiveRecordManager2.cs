@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Globalization;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading.Tasks.Dataflow;
@@ -99,11 +100,11 @@ namespace N_m3u8DL_RE.DownloadManager
 
             if (hls && allHasDatetime)
             {
-                name = GetUnixTimestamp(segment.DateTime!.Value).ToString();
+                name = GetUnixTimestamp(segment.DateTime!.Value).ToString(CultureInfo.InvariantCulture);
             }
             else if (hls)
             {
-                name = segment.Index.ToString();
+                name = segment.Index.ToString(CultureInfo.InvariantCulture);
             }
 
             return name;

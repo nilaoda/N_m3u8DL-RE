@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using N_m3u8DL_RE.Common.CommonEnumerations;
@@ -55,9 +56,9 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
             XElement ssmElement = xmlDocument.Elements().First(e => e.Name.LocalName == "SmoothStreamingMedia");
             string timeScaleStr = ssmElement.Attribute("TimeScale")?.Value ?? "10000000";
             string? durationStr = ssmElement.Attribute("Duration")?.Value;
-            int timescale = Convert.ToInt32(timeScaleStr);
+            int timescale = Convert.ToInt32(timeScaleStr, CultureInfo.InvariantCulture);
             string? isLiveStr = ssmElement.Attribute("IsLive")?.Value;
-            bool isLive = Convert.ToBoolean(isLiveStr ?? "FALSE");
+            bool isLive = Convert.ToBoolean(isLiveStr ?? "FALSE", CultureInfo.InvariantCulture);
 
             bool isProtection = false;
             string protectionSystemId = "";
@@ -112,9 +113,9 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     string? indexStr = qualityLevel.Attribute("Index")?.Value;
                     string codecPrivateData = qualityLevel.Attribute("CodecPrivateData")?.Value ?? "";
                     string? audioTag = qualityLevel.Attribute("AudioTag")?.Value;
-                    int bitrate = Convert.ToInt32(qualityLevel.Attribute("Bitrate")?.Value ?? "0");
-                    int width = Convert.ToInt32(qualityLevel.Attribute("MaxWidth")?.Value ?? "0");
-                    int height = Convert.ToInt32(qualityLevel.Attribute("MaxHeight")?.Value ?? "0");
+                    int bitrate = Convert.ToInt32(qualityLevel.Attribute("Bitrate")?.Value ?? "0", CultureInfo.InvariantCulture);
+                    int width = Convert.ToInt32(qualityLevel.Attribute("MaxWidth")?.Value ?? "0", CultureInfo.InvariantCulture);
+                    int height = Convert.ToInt32(qualityLevel.Attribute("MaxHeight")?.Value ?? "0", CultureInfo.InvariantCulture);
                     string? channels = qualityLevel.Attribute("Channels")?.Value;
 
                     StreamSpec streamSpec = new()
@@ -166,11 +167,11 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
 
                         if (_startTimeStr != null)
                         {
-                            currentTime = Convert.ToInt64(_startTimeStr);
+                            currentTime = Convert.ToInt64(_startTimeStr, CultureInfo.InvariantCulture);
                         }
 
-                        long _duration = Convert.ToInt64(_durationStr);
-                        long _repeatCount = Convert.ToInt64(_repeatCountStr);
+                        long _duration = Convert.ToInt64(_durationStr, CultureInfo.InvariantCulture);
+                        long _repeatCount = Convert.ToInt64(_repeatCountStr, CultureInfo.InvariantCulture);
                         if (_repeatCount > 0)
                         {
                             // This value is one-based. (A value of 2 means two fragments in the contiguous series).
@@ -186,7 +187,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                         };
                         if (oriUrl.Contains(MSSTags.StartTime))
                         {
-                            mediaSegment.NameFromVar = currentTime.ToString();
+                            mediaSegment.NameFromVar = currentTime.ToString(CultureInfo.InvariantCulture);
                         }
 
                         mediaSegment.Duration = _duration / (double)timescale;
@@ -195,7 +196,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                         if (_repeatCount < 0)
                         {
                             // 负数表示一直重复 直到period结束 注意减掉已经加入的1个片段
-                            _repeatCount = (long)Math.Ceiling(Convert.ToInt64(durationStr) / (double)_duration) - 1;
+                            _repeatCount = (long)Math.Ceiling(Convert.ToInt64(durationStr, CultureInfo.InvariantCulture) / (double)_duration) - 1;
                         }
                         for (long i = 0; i < _repeatCount; i++)
                         {
@@ -209,7 +210,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                             _mediaSegment.Duration = _duration / (double)timescale;
                             if (_oriUrl.Contains(MSSTags.StartTime))
                             {
-                                _mediaSegment.NameFromVar = currentTime.ToString();
+                                _mediaSegment.NameFromVar = currentTime.ToString(CultureInfo.InvariantCulture);
                             }
 
                             streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
@@ -225,12 +226,12 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                             FourCC = fourCC!,
                             CodecPrivateData = codecPrivateData,
                             Type = type!,
-                            Timesacle = Convert.ToInt32(timeScaleStr),
-                            Duration = Convert.ToInt64(durationStr),
-                            SamplingRate = Convert.ToInt32(samplingRateStr ?? "48000"),
-                            Channels = Convert.ToInt32(channels ?? "2"),
-                            BitsPerSample = Convert.ToInt32(bitsPerSampleStr ?? "16"),
-                            NalUnitLengthField = Convert.ToInt32(nalUnitLengthFieldStr ?? "4"),
+                            Timesacle = Convert.ToInt32(timeScaleStr, CultureInfo.InvariantCulture),
+                            Duration = Convert.ToInt64(durationStr, CultureInfo.InvariantCulture),
+                            SamplingRate = Convert.ToInt32(samplingRateStr ?? "48000", CultureInfo.InvariantCulture),
+                            Channels = Convert.ToInt32(channels ?? "2", CultureInfo.InvariantCulture),
+                            BitsPerSample = Convert.ToInt32(bitsPerSampleStr ?? "16", CultureInfo.InvariantCulture),
+                            NalUnitLengthField = Convert.ToInt32(nalUnitLengthFieldStr ?? "4", CultureInfo.InvariantCulture),
                             IsProtection = isProtection,
                             ProtectionData = protectionData,
                             ProtectionSystemID = protectionSystemId,
