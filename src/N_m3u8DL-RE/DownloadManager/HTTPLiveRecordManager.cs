@@ -16,7 +16,7 @@ using Spectre.Console;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
-    internal sealed class HTTPLiveRecordManager
+    internal sealed class HTTPLiveRecordManager : IDisposable
     {
 #pragma warning disable IDE0052 // Remove unread private members
         private readonly IDownloader Downloader;
@@ -268,6 +268,11 @@ namespace N_m3u8DL_RE.DownloadManager
             bool success = Results.Values.All(v => v == true);
 
             return success;
+        }
+
+        public void Dispose()
+        {
+            CancellationTokenSource.Dispose();
         }
     }
 }

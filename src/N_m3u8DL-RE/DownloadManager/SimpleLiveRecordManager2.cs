@@ -23,7 +23,7 @@ using Spectre.Console;
 
 namespace N_m3u8DL_RE.DownloadManager
 {
-    internal sealed class SimpleLiveRecordManager2
+    internal sealed class SimpleLiveRecordManager2 : IDisposable
     {
         private readonly SimpleDownloader Downloader;
         private readonly DownloaderConfig DownloaderConfig;
@@ -1001,6 +1001,11 @@ namespace N_m3u8DL_RE.DownloadManager
             }
 
             return success;
+        }
+
+        public void Dispose()
+        {
+            CancellationTokenSource.Dispose();
         }
     }
 }
