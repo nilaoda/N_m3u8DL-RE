@@ -9,17 +9,17 @@ namespace N_m3u8DL_RE.StreamParser.Processor.DASH
     /// </summary>
     public class DefaultDASHContentProcessor : ContentProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string mpdContent, ParserConfig parserConfig)
+        public override bool CanProcess(ExtractorType extractorType, string rawText, ParserConfig parserConfig)
         {
-            return extractorType == ExtractorType.MPEGDASH && mpdContent.Contains("<mas:") && !mpdContent.Contains("xmlns:mas");
+            return extractorType == ExtractorType.MPEGDASH && rawText.Contains("<mas:") && !rawText.Contains("xmlns:mas");
         }
 
-        public override string Process(string mpdContent, ParserConfig parserConfig)
+        public override string Process(string rawText, ParserConfig parserConfig)
         {
             Logger.Debug("Fix xigua mpd...");
-            mpdContent = mpdContent.Replace("<MPD ", "<MPD xmlns:mas=\"urn:marlin:mas:1-0:services:schemas:mpd\" ");
+            rawText = rawText.Replace("<MPD ", "<MPD xmlns:mas=\"urn:marlin:mas:1-0:services:schemas:mpd\" ");
 
-            return mpdContent;
+            return rawText;
         }
     }
 }

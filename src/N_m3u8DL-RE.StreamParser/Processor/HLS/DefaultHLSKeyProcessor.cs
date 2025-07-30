@@ -12,7 +12,7 @@ namespace N_m3u8DL_RE.StreamParser.Processor.HLS
 {
     public class DefaultHLSKeyProcessor : KeyProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig)
+        public override bool CanProcess(ExtractorType extractorType, string keyLine, string m3u8Url, string m3u8Content, ParserConfig parserConfig)
         {
             return extractorType == ExtractorType.HLS;
         }

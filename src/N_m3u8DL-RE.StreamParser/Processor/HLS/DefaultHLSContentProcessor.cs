@@ -26,19 +26,19 @@ namespace N_m3u8DL_RE.StreamParser.Processor.HLS
             return extractorType == ExtractorType.HLS;
         }
 
-        public override string Process(string m3u8Content, ParserConfig parserConfig)
+        public override string Process(string rawText, ParserConfig parserConfig)
         {
             // 处理content以\r作为换行符的情况
-            if (m3u8Content.Contains('\r') && !m3u8Content.Contains('\n'))
+            if (rawText.Contains('\r') && !rawText.Contains('\n'))
             {
-                m3u8Content = m3u8Content.Replace("\r", Environment.NewLine);
+                rawText = rawText.Replace("\r", Environment.NewLine);
             }
 
             string m3u8Url = parserConfig.Url;
             // YSP回放
             if (m3u8Url.Contains("tlivecloud-playback-cdn.ysp.cctv.cn") && m3u8Url.Contains("endtime="))
             {
-                m3u8Content += Environment.NewLine + HLSTags.ext_x_endlist;
+                rawText += Environment.NewLine + HLSTags.ext_x_endlist;
             }
 
             // IMOOC
@@ -48,54 +48,54 @@ namespace N_m3u8DL_RE.StreamParser.Processor.HLS
             }
 
             // 针对YK #EXT-X-VERSION:7杜比视界片源修正
-            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Content.Contains("ott.cibntv.net") && m3u8Content.Contains("ccode="))
+            if (rawText.Contains("#EXT-X-DISCONTINUITY") && rawText.Contains("#EXT-X-MAP") && rawText.Contains("ott.cibntv.net") && rawText.Contains("ccode="))
             {
                 Regex ykmap = YkDVRegex();
-                foreach (Match m in ykmap.Matches(m3u8Content))
+                foreach (Match m in ykmap.Matches(rawText))
                 {
-                    m3u8Content = m3u8Content.Replace(m.Value, $"#EXTINF:0.000000,\n#EXT-X-BYTERANGE:{m.Groups[2].Value}\n{m.Groups[1].Value}");
+                    rawText = rawText.Replace(m.Value, $"#EXTINF:0.000000,\n#EXT-X-BYTERANGE:{m.Groups[2].Value}\n{m.Groups[1].Value}");
                 }
             }
 
             // 针对Disney+修正
-            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && m3u8Url.Contains("media.dssott.com/"))
+            if (rawText.Contains("#EXT-X-DISCONTINUITY") && rawText.Contains("#EXT-X-MAP") && m3u8Url.Contains("media.dssott.com/"))
             {
                 Regex ykmap = DNSPRegex();
-                if (ykmap.IsMatch(m3u8Content))
+                if (ykmap.IsMatch(rawText))
                 {
-                    m3u8Content = m3u8Content.Replace(ykmap.Match(m3u8Content).Value, "#XXX");
+                    rawText = rawText.Replace(ykmap.Match(rawText).Value, "#XXX");
                 }
             }
 
             // 针对Disney+字幕修正
-            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("seg_00000.vtt") && m3u8Url.Contains("media.dssott.com/"))
+            if (rawText.Contains("#EXT-X-DISCONTINUITY") && rawText.Contains("seg_00000.vtt") && m3u8Url.Contains("media.dssott.com/"))
             {
                 Regex ykmap = DNSPSubRegex();
-                if (ykmap.IsMatch(m3u8Content))
+                if (ykmap.IsMatch(rawText))
                 {
-                    m3u8Content = m3u8Content.Replace(ykmap.Match(m3u8Content).Value, "#XXX");
+                    rawText = rawText.Replace(ykmap.Match(rawText).Value, "#XXX");
                 }
             }
 
             // 针对AppleTv修正
-            if (m3u8Content.Contains("#EXT-X-DISCONTINUITY") && m3u8Content.Contains("#EXT-X-MAP") && (m3u8Url.Contains(".apple.com/") || ATVRegex().IsMatch(m3u8Content)))
+            if (rawText.Contains("#EXT-X-DISCONTINUITY") && rawText.Contains("#EXT-X-MAP") && (m3u8Url.Contains(".apple.com/") || ATVRegex().IsMatch(rawText)))
             {
                 // 只取加密部分即可
                 Regex ykmap = ATVRegex2();
-                if (ykmap.IsMatch(m3u8Content))
+                if (ykmap.IsMatch(rawText))
                 {
-                    m3u8Content = "#EXTM3U\r\n" + ykmap.Match(m3u8Content).Groups[1].Value + "\r\n#EXT-X-ENDLIST";
+                    rawText = "#EXTM3U\r\n" + ykmap.Match(rawText).Groups[1].Value + "\r\n#EXT-X-ENDLIST";
                 }
             }
 
             // 修复#EXT-X-KEY与#EXTINF出现次序异常问题
             Regex regex = OrderFixRegex();
-            if (regex.IsMatch(m3u8Content))
+            if (regex.IsMatch(rawText))
             {
-                m3u8Content = regex.Replace(m3u8Content, "$3$2$1");
+                rawText = regex.Replace(rawText, "$3$2$1");
             }
 
-            return m3u8Content;
+            return rawText;
         }
     }
 }

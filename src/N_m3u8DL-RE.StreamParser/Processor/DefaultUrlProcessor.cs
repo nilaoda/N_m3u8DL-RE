@@ -9,19 +9,19 @@ namespace N_m3u8DL_RE.StreamParser.Processor
 {
     public class DefaultUrlProcessor : UrlProcessor
     {
-        public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig paserConfig)
+        public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig parserConfig)
         {
-            return paserConfig.AppendUrlParams;
+            return parserConfig.AppendUrlParams;
         }
 
-        public override string Process(string oriUrl, ParserConfig paserConfig)
+        public override string Process(string oriUrl, ParserConfig parserConfig)
         {
             if (!oriUrl.StartsWith("http"))
             {
                 return oriUrl;
             }
 
-            Uri uriFromConfig = new(paserConfig.Url);
+            Uri uriFromConfig = new(parserConfig.Url);
             NameValueCollection uriFromConfigQuery = HttpUtility.ParseQueryString(uriFromConfig.Query);
 
             Uri oldUri = new(oriUrl);
