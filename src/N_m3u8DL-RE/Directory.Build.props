@@ -12,6 +12,7 @@
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <StripSymbols>true</StripSymbols>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisMode>Recommended</AnalysisMode>
