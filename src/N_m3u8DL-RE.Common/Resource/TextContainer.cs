@@ -1,15 +1,9 @@
-﻿namespace N_m3u8DL_RE.Common.Resource;
-
-internal class TextContainer
+﻿namespace N_m3u8DL_RE.Common.Resource
 {
-    public string ZH_CN { get; }
-    public string ZH_TW { get; }
-    public string EN_US { get; }
-
-    public TextContainer(string zhCN, string zhTW, string enUS)
+    internal sealed class TextContainer(string zhCN, string zhTW, string enUS)
     {
-        ZH_CN = zhCN;
-        ZH_TW = zhTW;
-        EN_US = enUS;
+        public string ZH_CN { get; } = zhCN;
+        public string ZH_TW { get; } = zhTW;
+        public string EN_US { get; } = enUS;
     }
 }

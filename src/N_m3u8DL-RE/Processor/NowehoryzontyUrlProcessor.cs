@@ -1,62 +1,65 @@
-﻿using N_m3u8DL_RE.Common.Enum;
+﻿using System.Globalization;
+
+using N_m3u8DL_RE.Common.CommonEnumerations;
 using N_m3u8DL_RE.Common.Log;
-using N_m3u8DL_RE.Parser.Config;
-using N_m3u8DL_RE.Parser.Processor;
-using N_m3u8DL_RE.Parser.Util;
+using N_m3u8DL_RE.StreamParser.Config;
+using N_m3u8DL_RE.StreamParser.Processor;
+using N_m3u8DL_RE.StreamParser.Util;
+
 using NiL.JS.BaseLibrary;
 using NiL.JS.Core;
 using NiL.JS.Extensions;
 
-namespace N_m3u8DL_RE.Processor;
-
-// "https://1429754964.rsc.cdn77.org/r/nh22/2022/VNUS_DE_NYKE/19_07_22_2302_skt/h264.mpd?secure=mSvVfvuciJt9wufUyzuBnA==,1658505709774" --urlprocessor-args "nowehoryzonty:timeDifference=-2274,filminfo.secureToken=vx54axqjal4f0yy2"
-internal class NowehoryzontyUrlProcessor : UrlProcessor
+namespace N_m3u8DL_RE.Processor
 {
-    private static string START = "nowehoryzonty:";
-    private static string? TimeDifferenceStr = null;
-    private static int? TimeDifference = null;
-    private static string? SecureToken = null;
-    private static bool LOG = false;
-    private static Function? Function = null;
-    public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig parserConfig)
+    // "https://1429754964.rsc.cdn77.org/r/nh22/2022/VNUS_DE_NYKE/19_07_22_2302_skt/h264.mpd?secure=mSvVfvuciJt9wufUyzuBnA==,1658505709774" --urlprocessor-args "nowehoryzonty:timeDifference=-2274,filminfo.secureToken=vx54axqjal4f0yy2"
+    internal sealed class NowehoryzontyUrlProcessor : UrlProcessor
     {
-        if (extractorType == ExtractorType.MPEG_DASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START)) 
+        private static readonly string START = "nowehoryzonty:";
+        private static string? TimeDifferenceStr;
+        private static int? TimeDifference;
+        private static string? SecureToken;
+        private static bool LOG;
+        private static Function? Function;
+        public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig parserConfig)
         {
-            if (!LOG)
+            if (extractorType == ExtractorType.MPEGDASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START, StringComparison.OrdinalIgnoreCase))
             {
-                Logger.WarnMarkUp($"[white on green]www.nowehoryzonty.pl[/] matched! waiting for calc...");
-                LOG = true;
+                if (!LOG)
+                {
+                    Logger.WarnMarkUp($"[white on green]www.nowehoryzonty.pl[/] matched! waiting for calc...");
+                    LOG = true;
+                }
+                Context context = [];
+                _ = context.Eval(JS);
+                Function = context.GetVariable("md5").As<Function>();
+                string argLine = parserConfig.UrlProcessorArgs![START.Length..];
+                TimeDifferenceStr = ParserUtil.GetAttribute(argLine, "timeDifference");
+                SecureToken = ParserUtil.GetAttribute(argLine, "filminfo.secureToken");
+                if (TimeDifferenceStr != null && SecureToken != null)
+                {
+                    TimeDifference = Convert.ToInt32(TimeDifferenceStr, CultureInfo.InvariantCulture);
+                }
+                return true;
             }
-            var context = new Context();
-            context.Eval(JS);
-            Function = context.GetVariable("md5").As<Function>();
-            var argLine = parserConfig.UrlProcessorArgs![START.Length..];
-            TimeDifferenceStr = ParserUtil.GetAttribute(argLine, "timeDifference");
-            SecureToken = ParserUtil.GetAttribute(argLine, "filminfo.secureToken");
-            if (TimeDifferenceStr != null && SecureToken != null)
-            {
-                TimeDifference = Convert.ToInt32(TimeDifferenceStr);
-            }
-            return true;
+            return false;
         }
-        return false;
-    }
 
-    public override string Process(string oriUrl, ParserConfig parserConfig)
-    {
-        var a = new Uri(oriUrl).AbsolutePath;
-        var n = oriUrl + "?secure=" + Calc(a);
-        return n;
-    }
+        public override string Process(string oriUrl, ParserConfig parserConfig)
+        {
+            string a = new Uri(oriUrl).AbsolutePath;
+            string n = oriUrl + "?secure=" + Calc(a);
+            return n;
+        }
 
-    private static string Calc(string a)
-    {
-        string returnStr = Function!.Call(new Arguments { a, SecureToken, TimeDifference }).ToString();
-        return returnStr;
-    }
+        private static string Calc(string a)
+        {
+            string returnStr = Function!.Call(new Arguments { a, SecureToken, TimeDifference }).ToString();
+            return returnStr;
+        }
 
-    ////https://www.nowehoryzonty.pl/packed/videonho.js?v=1114377281:formatted
-    private static readonly string JS = """
+        ////https://www.nowehoryzonty.pl/packed/videonho.js?v=1114377281:formatted
+        private static readonly string JS = """
                                         var p = function(f, e) {
                                             var d = f[0]
                                               , a = f[1]
@@ -213,4 +216,5 @@ internal class NowehoryzontyUrlProcessor : UrlProcessor
                                         //console.log(md5('/r/nh22/2022/VNUS_DE_NYKE/19_07_22_2302_skt/subtitle_pl/34.m4s','vx54axqjal4f0yy2',-2274));
 
                                         """;
+    }
 }

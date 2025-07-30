@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>library</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>N_m3u8DL_RE.StreamParser</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>13.0</LangVersion>
+        <Nullable>enable</Nullable>
+
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisMode>Recommended</AnalysisMode>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\N_m3u8DL-RE.Common\N_m3u8DL-RE.Common.csproj" />
+    </ItemGroup>
+
+</Project>

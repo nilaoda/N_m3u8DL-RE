@@ -1,37 +1,32 @@
-﻿using CSChaCha20;
+﻿using Sodium;
 
-namespace N_m3u8DL_RE.Crypto;
-
-internal static class ChaCha20Util
+namespace N_m3u8DL_RE.Crypto
 {
-    public static byte[] DecryptPer1024Bytes(byte[] encryptedBuff, byte[] keyBytes, byte[] nonceBytes)
+    internal static class ChaCha20Util
     {
-        if (keyBytes.Length != 32)
-            throw new Exception("Key must be 32 bytes!");
-        if (nonceBytes.Length != 12 && nonceBytes.Length != 8)
-            throw new Exception("Key must be 12 or 8 bytes!");
-        if (nonceBytes.Length == 8)
-            nonceBytes = (new byte[4] { 0, 0, 0, 0 }).Concat(nonceBytes).ToArray();
+        public static byte[] DecryptInChunks(byte[] encryptedBuff, byte[] keyBytes, byte[] nonceBytes)
+        {
+            ArgumentNullException.ThrowIfNull(keyBytes);
+            ArgumentNullException.ThrowIfNull(nonceBytes);
 
-        var decStream = new MemoryStream();
-        using BinaryReader reader = new BinaryReader(new MemoryStream(encryptedBuff));
-        using (BinaryWriter writer = new BinaryWriter(decStream))
-            while (true)
+            if (keyBytes.Length != 32)
             {
-                var buffer = reader.ReadBytes(1024);
-                byte[] dec = new byte[buffer.Length];
-                if (buffer.Length > 0)
-                {
-                    ChaCha20 forDecrypting = new ChaCha20(keyBytes, nonceBytes, 0);
-                    forDecrypting.DecryptBytes(dec, buffer);
-                    writer.Write(dec, 0, dec.Length);
-                }
-                else
-                {
-                    break;
-                }
+                throw new ArgumentException("Key must be 32 bytes.", nameof(keyBytes));
             }
 
-        return decStream.ToArray();
+            if (nonceBytes.Length is not 12 and not 8)
+            {
+                throw new ArgumentException("Nonce must be 12 or 8 bytes.", nameof(nonceBytes));
+            }
+
+            // Extend 8-byte nonce to 12 bytes if needed
+            if (nonceBytes.Length == 8)
+            {
+                nonceBytes = [.. new byte[4] { 0, 0, 0, 0 }, .. nonceBytes];
+            }
+
+            // Use Sodium.Core for raw ChaCha20
+            return StreamEncryption.DecryptChaCha20(encryptedBuff, nonceBytes, keyBytes);
+        }
     }
 }

@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>library</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <RootNamespace>N_m3u8DL_RE.Common</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>13.0</LangVersion>
+        <Nullable>enable</Nullable>
 
-  <PropertyGroup>
-	<OutputType>library</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <RootNamespace>N_m3u8DL_RE.Common</RootNamespace>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>13.0</LangVersion>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-	  <PackageReference Include="Spectre.Console" Version="0.49.2-preview.0.50" />
-  </ItemGroup>
-	
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisMode>Recommended</AnalysisMode>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Spectre.Console" />
+    </ItemGroup>
 </Project>

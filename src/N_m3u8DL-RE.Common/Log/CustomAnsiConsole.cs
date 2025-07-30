@@ -1,99 +1,101 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
+
 using Spectre.Console;
 
-namespace N_m3u8DL_RE.Common.Log;
-
-public partial class NonAnsiWriter : TextWriter
+namespace N_m3u8DL_RE.Common.Log
 {
-    public override Encoding Encoding => Console.OutputEncoding;
-
-    private string? _lastOut = "";
-
-    public override void Write(char value)
+    public partial class NonAnsiWriter : TextWriter
     {
-        Console.Write(value);
-    }
+        public override Encoding Encoding => Console.OutputEncoding;
 
-    public override void Write(string? value)
-    {
-        if (_lastOut == value)
+        private string? _lastOut = "";
+
+        public override void Write(char value)
         {
-            return;
+            Console.Write(value);
         }
-        _lastOut = value;
-        RemoveAnsiEscapeSequences(value);
-    }
 
-    private void RemoveAnsiEscapeSequences(string? input)
-    {
-        // Use regular expression to remove ANSI escape sequences
-        var output = MyRegex().Replace(input ?? "", "");
-        output = MyRegex1().Replace(output, "");
-        output = MyRegex2().Replace(output, "");
-        if (string.IsNullOrWhiteSpace(output))
+        public override void Write(string? value)
         {
-            return;
-        }
-        Console.Write(output);
-    }
-
-    [GeneratedRegex(@"\x1B\[(\d+;?)+m")]
-    private static partial Regex MyRegex();
-    [GeneratedRegex(@"\[\??\d+[AKlh]")]
-    private static partial Regex MyRegex1();
-    [GeneratedRegex("[\r\n] +")]
-    private static partial Regex MyRegex2();
-}
-
-/// <summary>
-/// A console capable of writing ANSI escape sequences.
-/// </summary>
-public static class CustomAnsiConsole
-{
-    public static IAnsiConsole Console { get; set; } = AnsiConsole.Console;
-
-    public static void InitConsole(bool forceAnsi, bool noAnsiColor)
-    {
-        if (forceAnsi)
-        {
-            var ansiConsoleSettings = new AnsiConsoleSettings();
-            if (noAnsiColor)
+            if (_lastOut == value)
             {
-                ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
+                return;
             }
+            _lastOut = value;
+            RemoveAnsiEscapeSequences(value);
+        }
 
-            ansiConsoleSettings.Interactive = InteractionSupport.Yes;
-            ansiConsoleSettings.Ansi = AnsiSupport.Yes;
-            Console = AnsiConsole.Create(ansiConsoleSettings);
-            Console.Profile.Width = int.MaxValue;
-        }
-        else
+        private static void RemoveAnsiEscapeSequences(string? input)
         {
-            var ansiConsoleSettings = new AnsiConsoleSettings();
-            if (noAnsiColor)
+            // Use regular expression to remove ANSI escape sequences
+            string output = MyRegex().Replace(input ?? "", "");
+            output = MyRegex1().Replace(output, "");
+            output = MyRegex2().Replace(output, "");
+            if (string.IsNullOrWhiteSpace(output))
             {
-                ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
+                return;
             }
-            Console = AnsiConsole.Create(ansiConsoleSettings);
+            Console.Write(output);
         }
+
+        [GeneratedRegex(@"\x1B\[(\d+;?)+m")]
+        private static partial Regex MyRegex();
+        [GeneratedRegex(@"\[\??\d+[AKlh]")]
+        private static partial Regex MyRegex1();
+        [GeneratedRegex("[\r\n] +")]
+        private static partial Regex MyRegex2();
     }
 
     /// <summary>
-    /// Writes the specified markup to the console.
+    /// A console capable of writing ANSI escape sequences.
     /// </summary>
-    /// <param name="value">The value to write.</param>
-    public static void Markup(string value)
+    public static class CustomAnsiConsole
     {
-        Console.Markup(value);
-    }
+        public static IAnsiConsole Console { get; set; } = AnsiConsole.Console;
 
-    /// <summary>
-    /// Writes the specified markup, followed by the current line terminator, to the console.
-    /// </summary>
-    /// <param name="value">The value to write.</param>
-    public static void MarkupLine(string value)
-    {
-        Console.MarkupLine(value);
+        public static void InitConsole(bool forceAnsi, bool noAnsiColor)
+        {
+            if (forceAnsi)
+            {
+                AnsiConsoleSettings ansiConsoleSettings = new();
+                if (noAnsiColor)
+                {
+                    ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
+                }
+
+                ansiConsoleSettings.Interactive = InteractionSupport.Yes;
+                ansiConsoleSettings.Ansi = AnsiSupport.Yes;
+                Console = AnsiConsole.Create(ansiConsoleSettings);
+                Console.Profile.Width = int.MaxValue;
+            }
+            else
+            {
+                AnsiConsoleSettings ansiConsoleSettings = new();
+                if (noAnsiColor)
+                {
+                    ansiConsoleSettings.Out = new AnsiConsoleOutput(new NonAnsiWriter());
+                }
+                Console = AnsiConsole.Create(ansiConsoleSettings);
+            }
+        }
+
+        /// <summary>
+        /// Writes the specified markup to the console.
+        /// </summary>
+        /// <param name="value">The value to write.</param>
+        public static void Markup(string value)
+        {
+            Console.Markup(value);
+        }
+
+        /// <summary>
+        /// Writes the specified markup, followed by the current line terminator, to the console.
+        /// </summary>
+        /// <param name="value">The value to write.</param>
+        public static void MarkupLine(string value)
+        {
+            Console.MarkupLine(value);
+        }
     }
 }

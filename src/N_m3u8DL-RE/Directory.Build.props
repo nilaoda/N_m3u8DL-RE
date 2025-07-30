@@ -1,25 +1,31 @@
 <Project>
 
-  <PropertyGroup>
-    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
-    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
-    <StaticallyLinked Condition="$(RuntimeIdentifier.StartsWith('win'))">true</StaticallyLinked>
-    <TrimMode>full</TrimMode>
-    <TrimmerDefaultAction>link</TrimmerDefaultAction>
-    <IlcTrimMetadata>true</IlcTrimMetadata>
-    <IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>
-    <SatelliteResourceLanguages>zh-CN;zh-TW;en-US</SatelliteResourceLanguages>
-    <PublishAot>true</PublishAot>
-    <StripSymbols>true</StripSymbols>
-    <ObjCopyName Condition="'$(RuntimeIdentifier)' == 'linux-arm64' or '$(RuntimeIdentifier)' == 'linux-musl-arm64'">aarch64-linux-gnu-objcopy</ObjCopyName>
-  </PropertyGroup>
+    <PropertyGroup>
+        <!--<IlcOptimizationPreference>Speed</IlcOptimizationPreference>-->
+        <!--<IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>-->
+        <!--<StaticallyLinked Condition="$(RuntimeIdentifier.StartsWith('win'))">true</StaticallyLinked>-->
+        <!--<TrimMode>partial</TrimMode>-->
+        <!--<IlcTrimMetadata>true</IlcTrimMetadata>-->
+        <!--<IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>-->
+        <SatelliteResourceLanguages>zh-CN;zh-TW;en-US</SatelliteResourceLanguages>
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <StripSymbols>true</StripSymbols>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisMode>Recommended</AnalysisMode>
+
+        <ObjCopyName Condition="'$(RuntimeIdentifier)' == 'linux-arm64' or '$(RuntimeIdentifier)' == 'linux-musl-arm64'">aarch64-linux-gnu-objcopy</ObjCopyName>
+    </PropertyGroup>
 
     <!--<ItemGroup Condition="'$(PublishAot)' == 'true' and '$(RuntimeIdentifier)' != 'win-arm64' and '$(RuntimeIdentifier)' != 'linux-arm64' and '$(RuntimeIdentifier)' != 'osx-arm64' and '$(RuntimeIdentifier)' != 'osx-x64'">
         <PackageReference Include="PublishAotCompressed" Version="1.0.3" />
     </ItemGroup>-->
-    
-  <ItemGroup>
-    <RdXmlFile Include="rd.xml" />
-  </ItemGroup>
+
+    <ItemGroup>
+        <RdXmlFile Include="rd.xml" />
+    </ItemGroup>
 
 </Project>

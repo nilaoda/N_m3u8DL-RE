@@ -1,43 +1,49 @@
-﻿using N_m3u8DL_RE.Common.Util;
+﻿using System.Collections.Concurrent;
+using System.Globalization;
+
+using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
+
 using Spectre.Console;
 using Spectre.Console.Rendering;
-using System.Collections.Concurrent;
 
-namespace N_m3u8DL_RE.Column;
-
-internal class DownloadStatusColumn : ProgressColumn
+namespace N_m3u8DL_RE.Column
 {
-    private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; }
-    private ConcurrentDictionary<int, string> DateTimeStringDic = new();
-    private ConcurrentDictionary<int, string> SizeDic = new();
-    public Style MyStyle { get; set; } = new Style(foreground: Color.DarkCyan);
-    public Style FinishedStyle { get; set; } = new Style(foreground: Color.Green);
-
-    public DownloadStatusColumn(ConcurrentDictionary<int, SpeedContainer> speedContainerDic)
+    internal sealed class DownloadStatusColumn(ConcurrentDictionary<int, SpeedContainer> speedContainerDic) : ProgressColumn
     {
-        this.SpeedContainerDic = speedContainerDic;
-    }
+        private ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic { get; set; } = speedContainerDic;
+        private readonly ConcurrentDictionary<int, string> DateTimeStringDic = new();
+        private readonly ConcurrentDictionary<int, string> SizeDic = new();
+        public Style MyStyle { get; set; } = new Style(foreground: Color.DarkCyan);
+        public Style FinishedStyle { get; set; } = new Style(foreground: Color.Green);
 
-    public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
-    {
-        if (task.Value == 0) return new Text("-", MyStyle).RightJustified();
-        var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-        var speedContainer = SpeedContainerDic[task.Id];
-        var size = speedContainer.RDownloaded;
-
-        // 一秒汇报一次即可
-        if (DateTimeStringDic.TryGetValue(task.Id, out var oldTime) && oldTime != now)
+        public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
         {
-            var totalSize = speedContainer.SingleSegment ? (speedContainer.ResponseLength ?? 0) : (long)(size / (task.Value / task.MaxValue));
-            SizeDic[task.Id] = $"{GlobalUtil.FormatFileSize(size)}/{GlobalUtil.FormatFileSize(totalSize)}";
+            if (task.Value == 0)
+            {
+                return new Text("-", MyStyle).RightJustified();
+            }
+
+            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+            SpeedContainer speedContainer = SpeedContainerDic[task.Id];
+            long size = speedContainer.RDownloaded;
+
+            // 一秒汇报一次即可
+            if (DateTimeStringDic.TryGetValue(task.Id, out string? oldTime) && oldTime != now)
+            {
+                long totalSize = speedContainer.SingleSegment ? (speedContainer.ResponseLength ?? 0) : (long)(size / (task.Value / task.MaxValue));
+                SizeDic[task.Id] = $"{GlobalUtil.FormatFileSize(size)}/{GlobalUtil.FormatFileSize(totalSize)}";
+            }
+            DateTimeStringDic[task.Id] = now;
+            _ = SizeDic.TryGetValue(task.Id, out string? sizeStr);
+
+            if (task.IsFinished)
+            {
+                sizeStr = GlobalUtil.FormatFileSize(size);
+            }
+
+            return new Text(sizeStr ?? "-", MyStyle).RightJustified();
         }
-        DateTimeStringDic[task.Id] = now;
-        SizeDic.TryGetValue(task.Id, out var sizeStr);
-
-        if (task.IsFinished) sizeStr = GlobalUtil.FormatFileSize(size);
-
-        return new Text(sizeStr ?? "-", MyStyle).RightJustified();
     }
 }

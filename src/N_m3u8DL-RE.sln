@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE", "N_m3u8DL-RE\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE.Common", "N_m3u8DL-RE.Common\N_m3u8DL-RE.Common.csproj", "{18D8BC30-512C-4A07-BD4C-E96DF5CF6341}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE.Parser", "N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj", "{0DA02925-AF3A-4598-AF01-91AE5539FCA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE.StreamParser", "N_m3u8DL-RE.StreamParser\N_m3u8DL-RE.StreamParser.csproj", "{0DA02925-AF3A-4598-AF01-91AE5539FCA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

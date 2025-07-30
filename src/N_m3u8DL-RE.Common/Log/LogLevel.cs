@@ -1,10 +1,11 @@
-﻿namespace N_m3u8DL_RE.Common.Log;
-
-public enum LogLevel
+﻿namespace N_m3u8DL_RE.Common.Log
 {
-    OFF,
-    ERROR,
-    WARN,
-    INFO,
-    DEBUG,
+    public enum LogLevel
+    {
+        OFF,
+        ERROR,
+        WARN,
+        INFO,
+        DEBUG,
+    }
 }

@@ -1,56 +1,70 @@
 ﻿using System.Text;
 
-namespace N_m3u8DL_RE.CommandLine;
-
-internal class ComplexParamParser
+namespace N_m3u8DL_RE.CommandLine
 {
-    private readonly string _arg;
-    public ComplexParamParser(string arg)
+    internal sealed class ComplexParamParser(string arg)
     {
-        _arg = arg;
-    }
+        private readonly string _arg = arg;
 
-    public string? GetValue(string key)
-    {
-        if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(_arg)) return null;
-
-        try
+        public string? GetValue(string key)
         {
-            var index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
-            if (index == -1) return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
-
-            var chars = _arg[(index + key.Length + 1)..].ToCharArray();
-            var result = new StringBuilder();
-            char last = '\0';
-            for (int i = 0; i < chars.Length; i++)
+            if (string.IsNullOrEmpty(key))
             {
-                if (chars[i] == ':')
-                {
-                    if (last == '\\')
-                    {
-                        result.Replace("\\", "");
-                        last = chars[i];
-                        result.Append(chars[i]);
-                    }
-                    else break;
-                }
-                else
-                {
-                    last = chars[i];
-                    result.Append(chars[i]);
-                }
+                throw new ArgumentNullException(nameof(key), "Key cannot be null or empty.");
             }
 
-            var resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
+            if (string.IsNullOrEmpty(_arg))
+            {
+                return null;
+            }
 
-            // 不应该有引号出现
-            if (resultStr.Contains('\"') || resultStr.Contains('\'')) throw new Exception();
+            int index = _arg.IndexOf(key + "=", StringComparison.Ordinal);
+            if (index == -1)
+            {
+                // Allow key to be interpreted as boolean flag (e.g., --flag instead of --flag=true)
+                return (_arg.Contains(key) && _arg.EndsWith(key, StringComparison.OrdinalIgnoreCase)) ? "true" : null;
+            }
 
-            return resultStr;
-        }
-        catch (Exception)
-        {
-            throw new ArgumentException($"Parse Argument [{key}] failed!");
+            try
+            {
+                char[] chars = _arg[(index + key.Length + 1)..].ToCharArray();
+                StringBuilder result = new();
+                char last = '\0';
+                for (int i = 0; i < chars.Length; i++)
+                {
+                    if (chars[i] == ':')
+                    {
+                        if (last == '\\')
+                        {
+                            _ = result.Replace("\\", "");  // unescape
+                            _ = result.Append(':');
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        _ = result.Append(chars[i]);
+                    }
+                    last = chars[i];
+                }
+
+                string resultStr = result.ToString().Trim().Trim('"').Trim('\'');
+
+                return resultStr.Contains('"') || resultStr.Contains('\'')
+                    ? throw new FormatException($"Unexpected quote in value for key '{key}': {resultStr}")
+                    : resultStr;
+            }
+            catch (FormatException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new FormatException($"Failed to parse argument value for key '{key}'.", ex);
+            }
         }
     }
 }
