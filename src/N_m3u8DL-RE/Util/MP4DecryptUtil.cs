@@ -32,7 +32,7 @@ namespace N_m3u8DL_RE.Util
 
             if (!string.IsNullOrEmpty(kid))
             {
-                List<string> test = [.. keyPairs.Where(k => k.StartsWith(kid))];
+                List<string> test = [.. keyPairs.Where(k => k.StartsWith(kid, StringComparison.OrdinalIgnoreCase))];
                 if (test.Count != 0)
                 {
                     keyPair = test.First();
@@ -59,7 +59,7 @@ namespace N_m3u8DL_RE.Util
             }
 
             // shakaPackager/ffmpeg 无法单独解密init文件
-            if (source.EndsWith("_init.mp4") && decryptEngine != DecryptEngine.MP4DECRYPT)
+            if (source.EndsWith("_init.mp4", StringComparison.OrdinalIgnoreCase) && decryptEngine != DecryptEngine.MP4DECRYPT)
             {
                 return false;
             }
@@ -180,7 +180,7 @@ namespace N_m3u8DL_RE.Util
                 using StreamReader reader = new(stream);
                 while (await reader.ReadLineAsync() is { } line)
                 {
-                    if (!line.Trim().StartsWith(kid))
+                    if (!line.Trim().StartsWith(kid, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }

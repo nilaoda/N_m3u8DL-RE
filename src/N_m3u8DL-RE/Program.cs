@@ -40,7 +40,7 @@ if (currLoc is "zh-CN" or "zh-SG")
 {
     loc = "zh-CN";
 }
-else if (currLoc.StartsWith("zh-"))
+else if (currLoc.StartsWith("zh-", StringComparison.OrdinalIgnoreCase))
 {
     loc = "zh-TW";
 }
@@ -497,7 +497,7 @@ async Task CheckUpdateAsync()
         string nowVer = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
         string redirctUrl = await Get302Async("https://github.com/nilaoda/N_m3u8DL-RE/releases/latest");
         string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
-        if (!latestVer.StartsWith(nowVer) && !latestVer.StartsWith("https"))
+        if (!latestVer.StartsWith(nowVer, StringComparison.OrdinalIgnoreCase) && !latestVer.StartsWith("https", StringComparison.OrdinalIgnoreCase))
         {
             Console.Title = $"{ResString.NewVersionFound} {latestVer}";
             Logger.InfoMarkUp($"[cyan]{ResString.NewVersionFound}[/] [red]{latestVer}[/]");

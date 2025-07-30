@@ -24,13 +24,13 @@ namespace N_m3u8DL_RE.StreamParser
         public async Task LoadSourceFromUrlAsync(string url)
         {
             Logger.Info(ResString.LoadingUrl + url);
-            if (url.StartsWith("file:"))
+            if (url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
             {
                 Uri uri = new(url);
                 rawText = await File.ReadAllTextAsync(uri.LocalPath);
                 parserConfig.OriginalUrl = parserConfig.Url = url;
             }
-            else if (url.StartsWith("http"))
+            else if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 parserConfig.OriginalUrl = url;
                 (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
@@ -60,7 +60,7 @@ namespace N_m3u8DL_RE.StreamParser
             string rawType = "txt";
             rawText = rawText.Trim();
             this.rawText = rawText;
-            if (rawText.StartsWith(HLSTags.ext_m3u))
+            if (rawText.StartsWith(HLSTags.ext_m3u, StringComparison.OrdinalIgnoreCase))
             {
                 Logger.InfoMarkUp(ResString.MatchHLS);
                 extractor = new HLSExtractor(parserConfig);

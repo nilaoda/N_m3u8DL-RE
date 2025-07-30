@@ -21,7 +21,7 @@ namespace N_m3u8DL_RE.Processor
         private static Function? Function;
         public override bool CanProcess(ExtractorType extractorType, string oriUrl, ParserConfig parserConfig)
         {
-            if (extractorType == ExtractorType.MPEGDASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START))
+            if (extractorType == ExtractorType.MPEGDASH && parserConfig.UrlProcessorArgs != null && parserConfig.UrlProcessorArgs.StartsWith(START, StringComparison.OrdinalIgnoreCase))
             {
                 if (!LOG)
                 {

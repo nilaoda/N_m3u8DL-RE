@@ -39,12 +39,12 @@ namespace N_m3u8DL_RE.Util
         public static async Task<DownloadResult> DownloadToFileAsync(string url, string path, SpeedContainer speedContainer, CancellationTokenSource cancellationTokenSource, Dictionary<string, string>? headers = null, long? fromPosition = null, long? toPosition = null)
         {
             Logger.Debug(ResString.Fetch + url);
-            if (url.StartsWith("file:"))
+            if (url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
             {
                 string file = new Uri(url).LocalPath;
                 return await CopyFileAsync(file, path, speedContainer, fromPosition, toPosition);
             }
-            if (url.StartsWith("base64://"))
+            if (url.StartsWith("base64://", StringComparison.OrdinalIgnoreCase))
             {
                 byte[] bytes = Convert.FromBase64String(url[9..]);
                 await File.WriteAllBytesAsync(path, bytes);
@@ -54,7 +54,7 @@ namespace N_m3u8DL_RE.Util
                     ActualFilePath = path,
                 };
             }
-            if (url.StartsWith("hex://"))
+            if (url.StartsWith("hex://", StringComparison.OrdinalIgnoreCase))
             {
                 byte[] bytes = HexUtil.HexToBytes(url[6..]);
                 await File.WriteAllBytesAsync(path, bytes);
@@ -81,7 +81,7 @@ namespace N_m3u8DL_RE.Util
             try
             {
                 using HttpResponseMessage response = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationTokenSource.Token);
-                if (((int)response.StatusCode).ToString().StartsWith("30"))
+                if (((int)response.StatusCode).ToString().StartsWith("30", StringComparison.OrdinalIgnoreCase))
                 {
                     HttpResponseHeaders respHeaders = response.Headers;
                     Logger.Debug(respHeaders.ToString());

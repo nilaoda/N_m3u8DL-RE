@@ -437,13 +437,13 @@ namespace N_m3u8DL_RE.DownloadManager
             if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES
                                                            && streamSpec.Codecs != "stpp" && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s"))
             {
-                DownloadResult? initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init"));
+                DownloadResult? initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init", StringComparison.OrdinalIgnoreCase));
                 byte[] iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                 (bool sawVtt, uint timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                 if (sawVtt)
                 {
                     Logger.WarnMarkUp(ResString.FixingVTTmp4);
-                    string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s"))];
+                    string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s", StringComparison.OrdinalIgnoreCase))];
                     WebVttSub finalVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
                     // 写出字幕
                     MediaSegment firstKey = FileDic.Keys.First();
@@ -542,7 +542,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
                 bool first = true;
                 WebVttSub finalVtt = new();
-                IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
+                IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s", StringComparison.OrdinalIgnoreCase)).Select(s => s.Key);
                 foreach (MediaSegment? seg in keys)
                 {
                     WebVttSub vtt = MP4TtmlUtil.ExtractFromMp4(FileDic[seg]!.ActualFilePath, 0);

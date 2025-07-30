@@ -143,7 +143,7 @@
         {
             return !StaticText.LANG_DIC.TryGetValue(key, out TextContainer? textObj)
                 ? "<...LANG TEXT MISSING...>"
-                : CurrentLoc is "zh-CN" or "zh-SG" or "zh-Hans" ? textObj.ZH_CN : CurrentLoc.StartsWith("zh-") ? textObj.ZH_TW : textObj.EN_US;
+                : CurrentLoc is "zh-CN" or "zh-SG" or "zh-Hans" ? textObj.ZH_CN : CurrentLoc.StartsWith("zh-", StringComparison.OrdinalIgnoreCase) ? textObj.ZH_TW : textObj.EN_US;
         }
     }
 }

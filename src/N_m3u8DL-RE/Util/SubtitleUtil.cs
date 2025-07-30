@@ -14,11 +14,11 @@ namespace N_m3u8DL_RE.Util
         /// <returns></returns>
         public static async Task TryWriteImagePngsAsync(WebVttSub? finalVtt, string tmpDir)
         {
-            if (finalVtt != null && finalVtt.Cues.Any(v => v.Payload.StartsWith("Base64::")))
+            if (finalVtt != null && finalVtt.Cues.Any(v => v.Payload.StartsWith("Base64::", StringComparison.OrdinalIgnoreCase)))
             {
                 Logger.WarnMarkUp(ResString.ProcessImageSub);
                 int i = 0;
-                foreach (SubCue? img in finalVtt.Cues.Where(v => v.Payload.StartsWith("Base64::")))
+                foreach (SubCue? img in finalVtt.Cues.Where(v => v.Payload.StartsWith("Base64::", StringComparison.OrdinalIgnoreCase)))
                 {
                     string name = $"{i++}.png";
                     string dest = "";

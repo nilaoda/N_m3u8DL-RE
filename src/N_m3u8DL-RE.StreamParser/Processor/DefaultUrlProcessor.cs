@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.StreamParser.Processor
 
         public override string Process(string oriUrl, ParserConfig parserConfig)
         {
-            if (!oriUrl.StartsWith("http"))
+            if (!oriUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 return oriUrl;
             }

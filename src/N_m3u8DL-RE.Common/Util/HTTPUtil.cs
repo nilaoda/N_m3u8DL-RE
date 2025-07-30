@@ -40,7 +40,7 @@ namespace N_m3u8DL_RE.Common.Util
             Logger.Debug(webRequest.Headers.ToString());
             // 手动处理跳转，以免自定义Headers丢失
             HttpResponseMessage webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
-            if (((int)webResponse.StatusCode).ToString().StartsWith("30"))
+            if (((int)webResponse.StatusCode).ToString().StartsWith("30", StringComparison.OrdinalIgnoreCase))
             {
                 HttpResponseHeaders respHeaders = webResponse.Headers;
                 Logger.Debug(respHeaders.ToString());
@@ -73,7 +73,7 @@ namespace N_m3u8DL_RE.Common.Util
 
         public static async Task<byte[]> GetBytesAsync(string url, Dictionary<string, string>? headers = null)
         {
-            if (url.StartsWith("file:"))
+            if (url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
             {
                 return await File.ReadAllBytesAsync(new Uri(url).LocalPath);
             }

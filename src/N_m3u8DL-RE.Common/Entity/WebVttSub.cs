@@ -45,7 +45,7 @@ namespace N_m3u8DL_RE.Common.Entity
         /// <returns></returns>
         public static WebVttSub Parse(string text, long BaseTimestamp = 0L)
         {
-            if (!text.Trim().StartsWith("WEBVTT"))
+            if (!text.Trim().StartsWith("WEBVTT", StringComparison.OrdinalIgnoreCase))
             {
                 throw new FormatException("Bad vtt!");
             }

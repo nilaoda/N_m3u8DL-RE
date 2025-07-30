@@ -22,7 +22,7 @@ namespace N_m3u8DL_RE.CommandLine
             if (index == -1)
             {
                 // Allow key to be interpreted as boolean flag (e.g., --flag instead of --flag=true)
-                return (_arg.Contains(key) && _arg.EndsWith(key)) ? "true" : null;
+                return (_arg.Contains(key) && _arg.EndsWith(key, StringComparison.OrdinalIgnoreCase)) ? "true" : null;
             }
 
             try

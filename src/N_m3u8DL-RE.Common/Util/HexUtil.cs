@@ -16,7 +16,7 @@ namespace N_m3u8DL_RE.Common.Util
         {
             bytes = null;
             input = input.ToUpperInvariant();
-            if (input.StartsWith("0X"))
+            if (input.StartsWith("0X", StringComparison.OrdinalIgnoreCase))
             {
                 input = input[2..];
             }

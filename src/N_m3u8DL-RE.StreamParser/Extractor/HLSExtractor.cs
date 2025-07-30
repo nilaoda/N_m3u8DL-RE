@@ -38,7 +38,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
         public void PreProcessContent()
         {
             M3u8Content = M3u8Content.Trim();
-            if (!M3u8Content.StartsWith(HLSTags.ext_m3u))
+            if (!M3u8Content.StartsWith(HLSTags.ext_m3u, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidDataException(ResString.BadM3u8);
             }
@@ -86,7 +86,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     continue;
                 }
 
-                if (line.StartsWith(HLSTags.ext_x_stream_inf))
+                if (line.StartsWith(HLSTags.ext_x_stream_inf, StringComparison.OrdinalIgnoreCase))
                 {
                     streamSpec = new()
                     {
@@ -135,7 +135,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
 
                     expectPlaylist = true;
                 }
-                else if (line.StartsWith(HLSTags.ext_x_media))
+                else if (line.StartsWith(HLSTags.ext_x_media, StringComparison.OrdinalIgnoreCase))
                 {
                     streamSpec = new();
                     string type = ParserUtil.GetAttribute(line, "TYPE").Replace("-", "_");
@@ -278,7 +278,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                 }
 
                 // 只下载部分字节
-                if (line.StartsWith(HLSTags.ext_x_byterange))
+                if (line.StartsWith(HLSTags.ext_x_byterange, StringComparison.OrdinalIgnoreCase))
                 {
                     string p = ParserUtil.GetAttribute(line);
                     (long n, long? o) = ParserUtil.GetRange(p);
@@ -286,12 +286,12 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     segment.StartRange = o ?? segments.Last().StartRange + segments.Last().ExpectLength;
                     expectSegment = true;
                 }
-                else if (line.StartsWith(HLSTags.ext_x_playlist_type))
+                else if (line.StartsWith(HLSTags.ext_x_playlist_type, StringComparison.OrdinalIgnoreCase))
                 {
-                    isEndlist = line.Trim().EndsWith("VOD");
+                    isEndlist = line.Trim().EndsWith("VOD", StringComparison.OrdinalIgnoreCase);
                 }
                 // 国家地理去广告
-                else if (line.StartsWith("#UPLYNK-SEGMENT"))
+                else if (line.StartsWith("#UPLYNK-SEGMENT", StringComparison.OrdinalIgnoreCase))
                 {
                     if (line.Contains(",ad"))
                     {
@@ -308,23 +308,23 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     continue;
                 }
                 // 解析定义的分段长度
-                else if (line.StartsWith(HLSTags.ext_x_targetduration))
+                else if (line.StartsWith(HLSTags.ext_x_targetduration, StringComparison.OrdinalIgnoreCase))
                 {
                     playlist.TargetDuration = Convert.ToDouble(ParserUtil.GetAttribute(line));
                 }
                 // 解析起始编号
-                else if (line.StartsWith(HLSTags.ext_x_media_sequence))
+                else if (line.StartsWith(HLSTags.ext_x_media_sequence, StringComparison.OrdinalIgnoreCase))
                 {
                     segIndex = Convert.ToInt64(ParserUtil.GetAttribute(line));
                     startIndex = segIndex;
                 }
                 // program date time
-                else if (line.StartsWith(HLSTags.ext_x_program_date_time))
+                else if (line.StartsWith(HLSTags.ext_x_program_date_time, StringComparison.OrdinalIgnoreCase))
                 {
                     segment.DateTime = DateTime.Parse(ParserUtil.GetAttribute(line));
                 }
                 // 解析不连续标记，需要单独合并（timestamp不同）
-                else if (line.StartsWith(HLSTags.ext_x_discontinuity))
+                else if (line.StartsWith(HLSTags.ext_x_discontinuity, StringComparison.OrdinalIgnoreCase))
                 {
                     // 修复YK去除广告后的遗留问题
                     if (hasAd && mediaParts.Count > 0)
@@ -347,7 +347,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     segments = [];
                 }
                 // 解析KEY
-                else if (line.StartsWith(HLSTags.ext_x_key))
+                else if (line.StartsWith(HLSTags.ext_x_key, StringComparison.OrdinalIgnoreCase))
                 {
                     string uri = ParserUtil.GetAttribute(line, "URI");
                     string uri_last = ParserUtil.GetAttribute(lastKeyLine, "URI");
@@ -364,7 +364,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     lastKeyLine = line;
                 }
                 // 解析分片时长
-                else if (line.StartsWith(HLSTags.extinf))
+                else if (line.StartsWith(HLSTags.extinf, StringComparison.OrdinalIgnoreCase))
                 {
                     string[] tmp = ParserUtil.GetAttribute(line).Split(',');
                     segment.Duration = Convert.ToDouble(tmp[0]);
@@ -380,7 +380,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     segIndex++;
                 }
                 // m3u8主体结束
-                else if (line.StartsWith(HLSTags.ext_x_endlist))
+                else if (line.StartsWith(HLSTags.ext_x_endlist, StringComparison.OrdinalIgnoreCase))
                 {
                     if (segments.Count > 0)
                     {
@@ -393,7 +393,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     isEndlist = true;
                 }
                 // #EXT-X-MAP
-                else if (line.StartsWith(HLSTags.ext_x_map))
+                else if (line.StartsWith(HLSTags.ext_x_map, StringComparison.OrdinalIgnoreCase))
                 {
                     if (playlist.MediaInit == null || hasAd)
                     {
@@ -442,7 +442,7 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
                     continue;
                 }
                 // 空白行不解析
-                else if (line.StartsWith("\r\n"))
+                else if (line.StartsWith("\r\n", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -536,12 +536,12 @@ namespace N_m3u8DL_RE.StreamParser.Extractor
         private async Task LoadM3u8FromUrlAsync(string url)
         {
             // Logger.Info(ResString.loadingUrl + url);
-            if (url.StartsWith("file:"))
+            if (url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
             {
                 Uri uri = new(url);
                 M3u8Content = File.ReadAllText(uri.LocalPath);
             }
-            else if (url.StartsWith("http"))
+            else if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {

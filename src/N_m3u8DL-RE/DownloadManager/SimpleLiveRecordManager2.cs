@@ -406,12 +406,12 @@ namespace N_m3u8DL_RE.DownloadManager
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec.MediaType == MediaType.SUBTITLES
                                                                && streamSpec.Codecs != "stpp" && streamSpec.Extension != null && streamSpec.Extension.Contains("m4s"))
                 {
-                    DownloadResult? initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init"));
+                    DownloadResult? initFile = FileDic.Values.FirstOrDefault(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init", StringComparison.OrdinalIgnoreCase));
                     byte[] iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                     (bool sawVtt, uint timescale) = MP4VttUtil.CheckInit(iniFileBytes);
                     if (sawVtt)
                     {
-                        string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s"))];
+                        string[] mp4s = [.. FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).Where(p => p.EndsWith(".m4s", StringComparison.OrdinalIgnoreCase))];
                         if (firstSub)
                         {
                             currentVtt = MP4VttUtil.ExtractSub(mp4s, timescale);
@@ -428,7 +428,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 // 自动修复TTML raw字幕
                 if (DownloaderConfig.MyOptions.AutoSubtitleFix && streamSpec is { MediaType: MediaType.SUBTITLES, Extension: not null } && streamSpec.Extension.Contains("ttml"))
                 {
-                    List<MediaSegment> keys = [.. FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key)];
+                    List<MediaSegment> keys = [.. FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s", StringComparison.OrdinalIgnoreCase)).Select(s => s.Key)];
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
@@ -476,7 +476,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     // var initFile = FileDic.Values.Where(v => Path.GetFileName(v!.ActualFilePath).StartsWith("_init")).FirstOrDefault();
                     // var iniFileBytes = File.ReadAllBytes(initFile!.ActualFilePath);
                     // var sawTtml = MP4TtmlUtil.CheckInit(iniFileBytes);
-                    IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s")).Select(s => s.Key);
+                    IEnumerable<MediaSegment> keys = FileDic.OrderBy(s => s.Key.Index).Where(v => v.Value!.ActualFilePath.EndsWith(".m4s", StringComparison.OrdinalIgnoreCase)).Select(s => s.Key);
                     if (firstSub)
                     {
                         if (baseTimestamp != 0)
@@ -612,7 +612,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         }
                         if (!DownloaderConfig.MyOptions.LiveKeepSegments)
                         {
-                            foreach (string? inputFilePath in files.Where(x => !Path.GetFileName(x).StartsWith("_init")))
+                            foreach (string? inputFilePath in files.Where(x => !Path.GetFileName(x).StartsWith("_init", StringComparison.OrdinalIgnoreCase)))
                             {
                                 File.Delete(inputFilePath);
                             }
@@ -629,7 +629,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         string[] files = [.. FileDic.OrderBy(s => s.Key.Index).Select(f => f.Value).Select(v => v!.ActualFilePath)];
                         foreach (string? inputFilePath in files)
                         {
-                            if (!DownloaderConfig.MyOptions.LiveKeepSegments && !Path.GetFileName(inputFilePath).StartsWith("_init"))
+                            if (!DownloaderConfig.MyOptions.LiveKeepSegments && !Path.GetFileName(inputFilePath).StartsWith("_init", StringComparison.OrdinalIgnoreCase))
                             {
                                 File.Delete(inputFilePath);
                             }

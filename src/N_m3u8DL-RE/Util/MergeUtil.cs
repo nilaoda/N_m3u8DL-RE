@@ -212,7 +212,7 @@ namespace N_m3u8DL_RE.Util
                 _ = command.Append($" -map {i} ");
             }
 
-            bool srt = files.Any(x => x.FilePath.EndsWith(".srt"));
+            bool srt = files.Any(x => x.FilePath.EndsWith(".srt", StringComparison.OrdinalIgnoreCase));
 
             if (muxFormat == MuxFormat.MP4)
             {

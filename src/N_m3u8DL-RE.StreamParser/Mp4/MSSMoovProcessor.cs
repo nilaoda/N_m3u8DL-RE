@@ -147,7 +147,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                 CodecPrivateData = HexUtil.BytesToHex(BitConverter.GetBytes(arr16[0])).PadLeft(16, '0');
                 CodecPrivateData += HexUtil.BytesToHex(BitConverter.GetBytes(arr16[1])).PadLeft(16, '0');
             }
-            else if (FourCC.StartsWith("AAC"))
+            else if (FourCC.StartsWith("AAC", StringComparison.OrdinalIgnoreCase))
             {
                 // 2 bytes :     XXXXX         XXXX          XXXX              XXX
                 //           ' ObjectType' 'Freq Index' 'Channels value'   'GAS = 000'
@@ -504,7 +504,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                 byte[] esdsBox = GenEsds(audioSpecificConfig);
                 writer.Write(esdsBox);
 
-                if (FourCC.StartsWith("AAC"))
+                if (FourCC.StartsWith("AAC", StringComparison.OrdinalIgnoreCase))
                 {
                     if (IsProtection)
                     {

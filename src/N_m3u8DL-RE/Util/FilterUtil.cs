@@ -157,7 +157,7 @@ namespace N_m3u8DL_RE.Util
                     .Title(ResString.PromptTitle)
                     .UseConverter(x =>
                     {
-                        return x.Name != null && x.Name.StartsWith("__") ? $"[darkslategray1]{x.Name[2..]}[/]" : x.ToString().EscapeMarkup().RemoveMarkup();
+                        return x.Name != null && x.Name.StartsWith("__", StringComparison.OrdinalIgnoreCase) ? $"[darkslategray1]{x.Name[2..]}[/]" : x.ToString().EscapeMarkup().RemoveMarkup();
                     })
                     .Required()
                     .PageSize(10)
