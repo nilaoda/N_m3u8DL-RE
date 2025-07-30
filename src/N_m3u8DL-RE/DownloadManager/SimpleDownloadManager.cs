@@ -200,7 +200,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     {
                         string enc = result.ActualFilePath;
                         string dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
-                        bool dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, isMultiDRM: mp4Info.isMultiDRM);
+                        bool dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, isMultiDRM: mp4Info.IsMultiDRM);
                         if (dResult)
                         {
                             FileDic[streamSpec.Playlist.MediaInit]!.ActualFilePath = dec;
@@ -277,7 +277,7 @@ namespace N_m3u8DL_RE.DownloadManager
                         string enc = result.ActualFilePath;
                         string dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                         mp4Info = MP4DecryptUtil.GetMP4Info(enc);
-                        bool dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, mp4InitFile, isMultiDRM: mp4Info.isMultiDRM);
+                        bool dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, mp4InitFile, isMultiDRM: mp4Info.IsMultiDRM);
                         if (dResult)
                         {
                             File.Delete(enc);
@@ -317,7 +317,7 @@ namespace N_m3u8DL_RE.DownloadManager
                     string enc = result.ActualFilePath;
                     string dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                     mp4Info = MP4DecryptUtil.GetMP4Info(enc);
-                    bool dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, mp4InitFile, isMultiDRM: mp4Info.isMultiDRM);
+                    bool dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, mp4InitFile, isMultiDRM: mp4Info.IsMultiDRM);
                     if (dResult)
                     {
                         File.Delete(enc);
@@ -671,7 +671,7 @@ namespace N_m3u8DL_RE.DownloadManager
                 string dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                 mp4Info = MP4DecryptUtil.GetMP4Info(enc);
                 Logger.InfoMarkUp($"[grey]Decrypting using {decryptEngine}...[/]");
-                bool result = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, isMultiDRM: mp4Info.isMultiDRM);
+                bool result = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, isMultiDRM: mp4Info.IsMultiDRM);
                 if (result)
                 {
                     File.Delete(enc);

@@ -6,10 +6,10 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
 {
     public class ParsedMP4Info
     {
-        public string? PSSH;
-        public string? KID;
-        public string? Scheme;
-        public bool isMultiDRM;
+        public string? PSSH { get; set; }
+        public string? KID { get; set; }
+        public string? Scheme { get; set; }
+        public bool IsMultiDRM { get; set; }
     }
 
     public static class MP4InitUtil
@@ -53,7 +53,7 @@ namespace N_m3u8DL_RE.StreamParser.Mp4
                     }
 
                     info.KID = HexUtil.BytesToHex(psshData[2..18]).ToLowerInvariant();
-                    info.isMultiDRM = true;
+                    info.IsMultiDRM = true;
                 })
                 .FullBox("encv", MP4Parser.AllData(data => ReadBox(data, info)))
                 .FullBox("enca", MP4Parser.AllData(data => ReadBox(data, info)))
