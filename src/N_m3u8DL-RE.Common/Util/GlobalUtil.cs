@@ -66,7 +66,11 @@ public static class GlobalUtil
     public static string? FindExecutable(string name)
     {
         var fileExt = OperatingSystem.IsWindows() ? ".exe" : "";
-        var searchPath = new[] { Environment.CurrentDirectory, Path.GetDirectoryName(Environment.ProcessPath) };
+        var searchPath = new List<string> { Environment.CurrentDirectory, Path.GetDirectoryName(Environment.ProcessPath) };
+        if (OperatingSystem.IsWindows())
+        {
+            searchPath.Add("C:\\");
+        }
         var envPath = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? [];
         return searchPath.Concat(envPath).Select(p => Path.Combine(p!, name + fileExt)).FirstOrDefault(File.Exists);
     }
