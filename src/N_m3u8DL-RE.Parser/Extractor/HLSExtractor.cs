@@ -499,7 +499,7 @@ internal class HLSExtractor : IExtractor
             {
                 (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
             }
-            catch (HttpRequestException) when (url != ParserConfig.OriginalUrl)
+            catch (HttpRequestException) when (ParserConfig.OriginalUrl.StartsWith("http") && url != ParserConfig.OriginalUrl)
             {
                 // 当URL无法访问时，再请求原始URL
                 (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
