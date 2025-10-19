@@ -170,4 +170,119 @@ internal static partial class OtherUtil
 
     [GeneratedRegex(@"^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$")]
     private static partial Regex TimeStrRegex();
+
+    /// <summary>
+    /// 格式化保存模板
+    /// </summary>
+    /// <param name="savePattern">模板字符串</param>
+    /// <param name="streamSpec">流规格</param>
+    /// <param name="saveName">保存名称</param>
+    /// <param name="taskId">任务ID</param>
+    /// <returns>格式化后的文件名(不含扩展名)</returns>
+    public static string FormatSavePattern(string savePattern, Common.Entity.StreamSpec streamSpec, string? saveName, int taskId)
+    {
+        var result = savePattern;
+
+        // 替换基本变量
+        result = result.Replace("<SaveName>", saveName ?? "");
+        result = result.Replace("<Id>", taskId.ToString());
+        result = result.Replace("<Codecs>", streamSpec.Codecs ?? "");
+        result = result.Replace("<Language>", streamSpec.Language ?? "");
+        result = result.Replace("<Bandwidth>", streamSpec.Bandwidth?.ToString() ?? "");
+        result = result.Replace("<Resolution>", streamSpec.Resolution ?? "");
+        result = result.Replace("<FrameRate>", streamSpec.FrameRate?.ToString() ?? "");
+        result = result.Replace("<Channels>", streamSpec.Channels ?? "");
+        result = result.Replace("<VideoRange>", streamSpec.VideoRange ?? "");
+        result = result.Replace("<MediaType>", streamSpec.MediaType?.ToString() ?? "");
+        result = result.Replace("<GroupId>", streamSpec.GroupId ?? "");
+
+        // 清理多余的分隔符
+        result = result.Replace("__", "_").Replace("..", ".").Trim('_').Trim('.');
+
+        // 清理文件名中的非法字符
+        return GetValidFileName(result);
+    }
+
+    /// <summary>
+    /// 处理文件名冲突，使用流元数据生成唯一文件名
+    /// </summary>
+    /// <param name="originalPath">原始文件路径</param>
+    /// <param name="streamSpec">流规格（用于获取元数据）</param>
+    /// <returns>不冲突的文件路径</returns>
+    public static string HandleFileCollision(string originalPath, Common.Entity.StreamSpec streamSpec)
+    {
+        if (!File.Exists(originalPath))
+            return originalPath;
+
+        var dir = Path.GetDirectoryName(originalPath) ?? "";
+        var nameWithoutExt = Path.GetFileNameWithoutExtension(originalPath);
+        var ext = Path.GetExtension(originalPath);
+
+        // 尝试使用元数据生成唯一文件名
+        var attempts = new List<string>();
+
+        // 对于视频流，尝试添加分辨率和带宽
+        if (streamSpec.MediaType == Common.Enum.MediaType.VIDEO)
+        {
+            if (!string.IsNullOrEmpty(streamSpec.Resolution))
+            {
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Resolution}{ext}");
+            }
+            if (streamSpec.Bandwidth.HasValue)
+            {
+                var bandwidthMbps = streamSpec.Bandwidth.Value / 1000000.0;
+                attempts.Add($"{nameWithoutExt}.{bandwidthMbps:F1}Mbps{ext}");
+            }
+            if (!string.IsNullOrEmpty(streamSpec.Resolution) && streamSpec.Bandwidth.HasValue)
+            {
+                var bandwidthMbps = streamSpec.Bandwidth.Value / 1000000.0;
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Resolution}.{bandwidthMbps:F1}Mbps{ext}");
+            }
+        }
+        // 对于音频流，尝试添加语言、声道和带宽
+        else if (streamSpec.MediaType == Common.Enum.MediaType.AUDIO)
+        {
+            if (!string.IsNullOrEmpty(streamSpec.Language))
+            {
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}{ext}");
+            }
+            if (!string.IsNullOrEmpty(streamSpec.Channels))
+            {
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Channels}ch{ext}");
+            }
+            if (!string.IsNullOrEmpty(streamSpec.Language) && !string.IsNullOrEmpty(streamSpec.Channels))
+            {
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}.{streamSpec.Channels}ch{ext}");
+            }
+            if (streamSpec.Bandwidth.HasValue)
+            {
+                var bandwidthKbps = streamSpec.Bandwidth.Value / 1000;
+                attempts.Add($"{nameWithoutExt}.{bandwidthKbps}kbps{ext}");
+            }
+        }
+        // 对于字幕流，尝试添加语言
+        else if (streamSpec.MediaType == Common.Enum.MediaType.SUBTITLES)
+        {
+            if (!string.IsNullOrEmpty(streamSpec.Language))
+            {
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}{ext}");
+            }
+        }
+
+        // 尝试所有基于元数据的文件名
+        foreach (var attempt in attempts)
+        {
+            var attemptPath = Path.Combine(dir, attempt);
+            if (!File.Exists(attemptPath))
+                return attemptPath;
+        }
+
+        // 所有元数据方案都失败，回退到 "copy" 方案
+        var output = originalPath;
+        while (File.Exists(output))
+        {
+            output = Path.Combine(dir, $"{Path.GetFileNameWithoutExtension(output)}.copy{Path.GetExtension(output)}");
+        }
+        return output;
+    }
 }

@@ -162,7 +162,17 @@ internal class SimpleLiveRecordManager2
         var dirName = $"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
         var tmpDir = Path.Combine(DownloaderConfig.DirPrefix, dirName);
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-        var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
+
+        // Use SavePattern if provided, otherwise use SaveName or dirName
+        var saveName = dirName;
+        if (!string.IsNullOrWhiteSpace(DownloaderConfig.MyOptions.SavePattern))
+        {
+            saveName = OtherUtil.FormatSavePattern(DownloaderConfig.MyOptions.SavePattern, streamSpec, DownloaderConfig.MyOptions.SaveName, task.Id);
+        }
+        else if (DownloaderConfig.MyOptions.SaveName != null)
+        {
+            saveName = $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.');
+        }
         var headers = DownloaderConfig.Headers;
         var decryptEngine = DownloaderConfig.MyOptions.DecryptionEngine;
 
@@ -514,10 +524,12 @@ internal class SimpleLiveRecordManager2
                 // 设置输出流
                 if (fileOutputStream == null)
                 {
-                    // 检测目标文件是否存在
-                    while (File.Exists(output))
+                    // 检测目标文件是否存在，使用智能重命名
+                    var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec);
+                    if (finalOutput != output)
                     {
-                        Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
+                        Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(finalOutput)}");
+                        output = finalOutput;
                     }
 
                     if (!DownloaderConfig.MyOptions.LivePipeMux || streamSpec.MediaType == MediaType.SUBTITLES)
