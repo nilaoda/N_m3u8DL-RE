@@ -48,7 +48,17 @@ internal class HTTPLiveRecordManager
         var name = streamSpec.ToShortString();
         var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-        var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
+
+        // Use SavePattern if provided, otherwise use SaveName or dirName
+        var saveName = dirName;
+        if (!string.IsNullOrWhiteSpace(DownloaderConfig.MyOptions.SavePattern))
+        {
+            saveName = OtherUtil.FormatSavePattern(DownloaderConfig.MyOptions.SavePattern, streamSpec, DownloaderConfig.MyOptions.SaveName, task.Id);
+        }
+        else if (DownloaderConfig.MyOptions.SaveName != null)
+        {
+            saveName = $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.');
+        }
 
         Logger.Debug($"dirName: {dirName}; saveDir: {saveDir}; saveName: {saveName}");
 

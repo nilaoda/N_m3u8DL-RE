@@ -30,7 +30,7 @@ internal static partial class CommandInvoker
     private static readonly Option<string?> TmpDir = new(["--tmp-dir"], description: ResString.cmd_tmpDir);
     private static readonly Option<string?> SaveDir = new(["--save-dir"], description: ResString.cmd_saveDir);
     private static readonly Option<string?> SaveName = new(["--save-name"], description: ResString.cmd_saveName, parseArgument: ParseSaveName);
-    private static readonly Option<string?> SavePattern = new(["--save-pattern"], description: ResString.cmd_savePattern, getDefaultValue: () => "<SaveName>_<Id>_<Codecs>_<Language>_<Ext>");
+    private static readonly Option<string?> SavePattern = new(["--save-pattern"], description: ResString.cmd_savePattern);
     private static readonly Option<string?> LogFilePath = new(["--log-file-path"], description: ResString.cmd_logFilePath, parseArgument: ParseFilePath);
     private static readonly Option<string?> UILanguage = new Option<string?>(["--ui-language"], description: ResString.cmd_uiLanguage).FromAmong("en-US", "zh-CN", "zh-TW");
     private static readonly Option<string?> UrlProcessorArgs = new(["--urlprocessor-args"], description: ResString.cmd_urlProcessorArgs);
@@ -639,8 +639,8 @@ internal static partial class CommandInvoker
 
         var rootCommand = new RootCommand(VERSION_INFO)
         {
-            Input, TmpDir, SaveDir, SaveName, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, /**SavePattern,**/ SubOnly, SubtitleFormat, AutoSubtitleFix,
+            Input, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
             MaxSpeed,
