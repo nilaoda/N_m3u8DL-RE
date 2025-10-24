@@ -136,6 +136,7 @@ public static class ResString
     public static string streamsInfo => GetText("streamsInfo");
     public static string writeJson => GetText("writeJson");
     public static string noStreamsToDownload => GetText("noStreamsToDownload");
+    public static string loadUrlFailed => GetText("loadUrlFailed");
     public static string newVersionFound => GetText("newVersionFound");
     public static string processImageSub => GetText("processImageSub");
 

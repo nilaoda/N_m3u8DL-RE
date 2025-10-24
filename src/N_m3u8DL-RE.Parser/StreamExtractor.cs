@@ -46,6 +46,12 @@ public class StreamExtractor
             this.rawText = await File.ReadAllTextAsync(url);
             parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
         }
+
+        if (string.IsNullOrWhiteSpace(rawText))
+        {
+            throw new Exception(ResString.loadUrlFailed);
+        }
+        
         this.rawText = rawText.Trim();
         LoadSourceFromText(this.rawText);
     }

@@ -970,6 +970,12 @@ internal static class StaticText
             zhTW: "沒有找到需要下載的流",
             enUS: "No stream found to download"
         ),
+        ["loadUrlFailed"] = new TextContainer
+        (
+            zhCN: "加载URL失败",
+            zhTW: "載入URL失敗",
+            enUS: "Failed to load URL"
+        ),
 
     };
 }
