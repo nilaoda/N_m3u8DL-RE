@@ -107,7 +107,17 @@ internal class SimpleDownloadManager
         var dirName = $"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
         var tmpDir = Path.Combine(DownloaderConfig.DirPrefix, dirName);
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
-        var saveName = DownloaderConfig.MyOptions.SaveName != null ? $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.') : dirName;
+
+        // Use SavePattern if provided, otherwise use SaveName or dirName
+        var saveName = dirName;
+        if (!string.IsNullOrWhiteSpace(DownloaderConfig.MyOptions.SavePattern))
+        {
+            saveName = OtherUtil.FormatSavePattern(DownloaderConfig.MyOptions.SavePattern, streamSpec, DownloaderConfig.MyOptions.SaveName, task.Id);
+        }
+        else if (DownloaderConfig.MyOptions.SaveName != null)
+        {
+            saveName = $"{DownloaderConfig.MyOptions.SaveName}.{streamSpec.Language}".TrimEnd('.');
+        }
         var headers = DownloaderConfig.Headers;
 
         var decryptionBinaryPath = DownloaderConfig.MyOptions.DecryptionBinaryPath!;
@@ -313,10 +323,12 @@ internal class SimpleDownloadManager
         }
         var output = Path.Combine(saveDir, saveName + outputExt);
 
-        // 检测目标文件是否存在
-        while (File.Exists(output))
+        // 检测目标文件是否存在，使用智能重命名
+        var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec);
+        if (finalOutput != output)
         {
-            Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(output = Path.ChangeExtension(output, $"copy" + Path.GetExtension(output)))}");
+            Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(finalOutput)}");
+            output = finalOutput;
         }
 
         if (!string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, Keys.Length: > 0 } && mp4InitFile != "")
@@ -550,10 +562,12 @@ internal class SimpleDownloadManager
                 Logger.InfoMarkUp(ResString.ffmpegMerge);
                 var ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
                 var ffOut = Path.Combine(Path.GetDirectoryName(output)!, Path.GetFileNameWithoutExtension(output) + $".{ext}");
-                // 检测目标文件是否存在
-                while (File.Exists(ffOut))
+                // 检测目标文件是否存在，使用智能重命名
+                var finalFfOut = OtherUtil.HandleFileCollision(ffOut, streamSpec);
+                if (finalFfOut != ffOut)
                 {
-                    Logger.WarnMarkUp($"{Path.GetFileName(ffOut)} => {Path.GetFileName(ffOut = Path.ChangeExtension(ffOut, $"copy" + Path.GetExtension(ffOut)))}");
+                    Logger.WarnMarkUp($"{Path.GetFileName(ffOut)} => {Path.GetFileName(finalFfOut)}");
+                    ffOut = finalFfOut;
                 }
                 // 大于1800分片，需要分步骤合并
                 if (files.Length >= 1800)

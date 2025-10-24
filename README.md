@@ -37,6 +37,11 @@ Options:
   --tmp-dir <tmp-dir>                                     设置临时文件存储目录
   --save-dir <save-dir>                                   设置输出目录
   --save-name <save-name>                                 设置保存文件名
+  --save-pattern <PATTERN>                                设置保存文件命名模板, 支持变量:
+                                                          <SaveName>, <Id>, <Codecs>, <Language>, <Resolution>,
+                                                          <Bandwidth>, <MediaType>, <Channels>, <FrameRate>,
+                                                          <VideoRange>, <GroupId>
+                                                          示例: --save-pattern "<SaveName>_<Resolution>_<Bandwidth>"
   --base-url <base-url>                                   设置BaseURL
   --thread-count <number>                                 设置下载线程数 [default: 本机CPU线程数]
   --download-retry-count <number>                         每个分片下载异常时的重试次数 [default: 3]
@@ -209,6 +214,49 @@ More Help:
 --custom-range -99
 # 下载第5分钟到20分钟的内容
 --custom-range 05:00-20:00
+```
+```
+More Help:
+
+  --save-pattern
+
+使用变量设置输出文件命名模板. 支持的变量:
+
+* <SaveName>: 用户指定的保存名称 (--save-name)
+* <Id>: 流的任务ID
+* <Codecs>: 编解码器信息 (例如: avc1.64001f, mp4a.40.2)
+* <Language>: 语言代码 (例如: en, zh-CN)
+* <Resolution>: 视频分辨率 (例如: 1920x1080)
+* <Bandwidth>: 流的带宽/比特率
+* <MediaType>: 媒体类型 (VIDEO, AUDIO, SUBTITLES)
+* <Channels>: 音频声道配置
+* <FrameRate>: 帧率
+* <VideoRange>: 视频色域/HDR信息 (SDR, HDR10等)
+* <GroupId>: 流组标识符
+
+使用场景:
+当下载多个相同类型的流时(例如多个不同分辨率的视频)，使用此选项可以避免文件名冲突。
+
+例如:
+# 下载1080p和720p视频，文件名包含分辨率
+--save-pattern "<SaveName>_<Resolution>" --save-name "video"
+# 输出: video_1920x1080.mp4, video_1280x720.mp4
+
+# 包含带宽信息
+--save-pattern "<SaveName>_<Resolution>_<Bandwidth>kbps"
+# 输出: video_1920x1080_5000000kbps.mp4
+
+# 下载多个音频流，包含语言和声道
+--save-pattern "<SaveName>_<Language>_<Channels>ch"
+# 输出: audio_en_2ch.m4a, audio_es_2ch.m4a, audio_en_6ch.m4a
+
+# 复杂模板
+--save-pattern "<MediaType>_<Resolution>_<Codecs>_<Language>"
+# 输出: VIDEO_1920x1080_avc1.64001f_en.mp4
+
+注意:
+如果不使用 --save-pattern，程序会在文件名冲突时自动使用流的元数据(分辨率、带宽等)
+生成唯一的文件名，而不是简单地添加 ".copy" 后缀。
 ```
 
 </details>
