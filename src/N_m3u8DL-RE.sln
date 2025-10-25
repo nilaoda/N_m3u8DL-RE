@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE.Common", "N_m3u
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE.Parser", "N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj", "{0DA02925-AF3A-4598-AF01-91AE5539FCA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "N_m3u8DL-RE.Parser.Tests", "N_m3u8DL-RE.Parser.Tests\N_m3u8DL-RE.Parser.Tests.csproj", "{EA47AA74-8D22-48B8-8FD1-3E0F92B98AEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{0DA02925-AF3A-4598-AF01-91AE5539FCA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DA02925-AF3A-4598-AF01-91AE5539FCA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DA02925-AF3A-4598-AF01-91AE5539FCA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA47AA74-8D22-48B8-8FD1-3E0F92B98AEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA47AA74-8D22-48B8-8FD1-3E0F92B98AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA47AA74-8D22-48B8-8FD1-3E0F92B98AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA47AA74-8D22-48B8-8FD1-3E0F92B98AEE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
