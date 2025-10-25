@@ -25,6 +25,26 @@ public static class HexUtil
         bytes = HexToBytes(input);
         return true;
     }
+    
+    /// <summary>
+    /// 判断是不是Base64字符串
+    /// </summary>
+    /// <param name="s">input</param>
+    /// <param name="key">hex string</param>
+    /// <returns></returns>
+    public static bool TryParseBase64(string s, out string? key)
+    {
+        key = null;
+        try
+        {
+            key = BytesToHex(Convert.FromBase64String(s));
+            return true;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+    }
 
     public static byte[] HexToBytes(string hex)
     {
