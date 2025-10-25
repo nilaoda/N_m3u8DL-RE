@@ -312,9 +312,9 @@ internal static class StaticText
         ),
         ["cmd_logFilePath"] = new TextContainer
         (
-            zhCN: "设置日志文件路径",
-            zhTW: "設定日誌檔案路徑",
-            enUS: "Set log file path"
+            zhCN: @"设置日志文件路径, 例如 C:\Logs\log.txt",
+            zhTW: @"設定日誌檔案路徑, 例如 C:\Logs\log.txt",
+            enUS: @"Set log file path, Example: C:\Logs\log.txt"
         ),
         ["cmd_skipDownload"] = new TextContainer
         (
