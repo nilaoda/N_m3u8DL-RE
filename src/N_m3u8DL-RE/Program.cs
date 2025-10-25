@@ -269,7 +269,10 @@ internal class Program
         // 生成文件夹
         var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
         // 记录文件
-        extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
+        if (option.WriteMetaJson)
+        {
+            extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
+        }
         // 写出文件
         await WriteRawFilesAsync(option, extractor, tmpDir);
 
@@ -354,7 +357,10 @@ internal class Program
         FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
 
         // 记录文件
-        extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
+        if (option.WriteMetaJson)
+        {
+            extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
+        }
 
         Logger.Info(ResString.selectedStream);
         foreach (var item in selectedStreams)
