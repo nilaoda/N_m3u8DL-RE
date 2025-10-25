@@ -23,6 +23,12 @@ internal static partial class CommandInvoker
     private static partial Regex RangeRegex();
     [GeneratedRegex(@"([\d\\.]+)(M|K)")]
     private static partial Regex SpeedStrRegex();
+    [GeneratedRegex("^[0-9a-fA-f]{32}:[0-9a-fA-f]{32}$")]
+    private static partial Regex PairKeyRegex();
+    [GeneratedRegex("^[0-9]{1,}:[0-9a-fA-f]{32}$")]
+    private static partial Regex IdHexKeyRegex();
+    [GeneratedRegex("^[0-9a-fA-f]{32}$")]
+    private static partial Regex SingleHexKeyRegex();
 
     private static readonly Argument<string> Input = new("input") { Description = ResString.cmd_Input };
     private static readonly Option<string?> TmpDir = new("--tmp-dir") { Description = ResString.cmd_tmpDir };
@@ -32,7 +38,6 @@ internal static partial class CommandInvoker
     private static readonly Option<string?> LogFilePath = new("--log-file-path") { Description = ResString.cmd_logFilePath, CustomParser = ParseFilePath};
     private static readonly Option<string?> UILanguage = new Option<string?>("--ui-language") { Description = ResString.cmd_uiLanguage }.AcceptOnlyFromAmong("en-US", "zh-CN", "zh-TW");
     private static readonly Option<string?> UrlProcessorArgs = new("--urlprocessor-args") { Description = ResString.cmd_urlProcessorArgs };
-    private static readonly Option<string[]?> Keys = new("--key") { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = ResString.cmd_keys };
     private static readonly Option<string> KeyTextFile = new("--key-text-file") { Description = ResString.cmd_keyText };
     private static readonly Option<Dictionary<string, string>> Headers = new("-H", "--header") { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = ResString.cmd_header, CustomParser = ParseHeaders };
     private static readonly Option<LogLevel> LogLevel = new("--log-level") { Description = ResString.cmd_logLevel, DefaultValueFactory = _ => Common.Log.LogLevel.INFO };
@@ -83,6 +88,7 @@ internal static partial class CommandInvoker
     private static readonly Option<EncryptMethod?> CustomHLSMethod = new("--custom-hls-method") { HelpName = "METHOD", Description = ResString.cmd_customHLSMethod };
     private static readonly Option<byte[]?> CustomHLSKey = new("--custom-hls-key") { HelpName = "FILE|HEX|BASE64", Description = ResString.cmd_customHLSKey, CustomParser = ParseHLSCustomKey };
     private static readonly Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv") { HelpName = "FILE|HEX|BASE64", Description = ResString.cmd_customHLSIv, CustomParser = ParseHLSCustomKey };
+    private static readonly Option<string[]?> Keys = new("--key") { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = ResString.cmd_keys, CustomParser = ParseCustomKeys};
 
     // 任务开始时间
     private static readonly Option<DateTime?> TaskStartAt = new("--task-start-at") { HelpName = "yyyyMMddHHmmss", Description = ResString.cmd_taskStartAt, CustomParser = ParseStartTime };
@@ -211,6 +217,72 @@ internal static partial class CommandInvoker
         catch (Exception ex)
         {
             result.AddError("error in parse proxy: " + ex.Message);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// 解析自定义KEY（用于mp4decrypt等第三方程序）
+    /// 支持格式：<br/>
+    /// - KEY（hex）<br/>
+    /// - KID:KEY（hex）<br/>
+    /// - Base64KEY<br/>
+    /// - Base64KID:Base64KEY
+    /// </summary>
+    private static string[]? ParseCustomKeys(ArgumentResult result)
+    {
+        const int KeyBytes = 16;
+        const int KeyHexLen = KeyBytes * 2;
+        
+        string ParsePart(string part, string label)
+        {
+            if (SingleHexKeyRegex().IsMatch(part))
+                return part.ToLowerInvariant();
+
+            if (HexUtil.TryParseBase64(part, out var hex) && hex is { Length: KeyHexLen })
+                return hex.ToLowerInvariant();
+
+            throw new ArgumentException($"{label} must be valid 16-byte HEX or Base64. Input string: {part}");
+        }
+
+        var keys = new List<string>();
+        var inputs = result.Tokens.Select(t => t.Value).ToList();
+
+        try
+        {
+            foreach (var input in inputs)
+            {
+                // 已匹配标准格式的，直接添加
+                if (PairKeyRegex().IsMatch(input) || IdHexKeyRegex().IsMatch(input) || SingleHexKeyRegex().IsMatch(input))
+                {
+                    keys.Add(input);
+                    continue;
+                }
+
+                // 拆分KID:KEY
+                var parts = input.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (parts.Length is < 1 or > 2)
+                    throw new ArgumentException("Input must be KEY or KID:KEY format.");
+
+                if (parts.Length == 1)
+                {
+                    var key = ParsePart(parts[0], "KEY");
+                    keys.Add(key);
+                }
+                else // KID:KEY
+                {
+                    var kid = ParsePart(parts[0], "KID");
+                    var key = ParsePart(parts[1], "KEY");
+                    keys.Add($"{kid}:{key}");
+                }
+            }
+
+            return [.. keys];
+        }
+        catch (Exception ex)
+        {
+            result.AddError($"error in parse custom key: {ex.Message}. All Inputs=[{string.Join(", ", inputs)}]");
             return null;
         }
     }
