@@ -13,6 +13,7 @@
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.0"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageReference Include="Shouldly" Version="4.3.0" />
         <PackageReference Include="xunit" Version="2.5.3"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3"/>
     </ItemGroup>
@@ -22,7 +23,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\N_m3u8DL-RE.Common\N_m3u8DL-RE.Common.csproj" />
+        <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\**\*.mpd"/>
+        <EmbeddedResource Include="Resources\**\*.m3u8"/>
+        <EmbeddedResource Include="Resources\**\*.ism"/>
+    </ItemGroup>
 </Project>
