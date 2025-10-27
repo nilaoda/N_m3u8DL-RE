@@ -25,7 +25,7 @@ yay -Syu n-m3u8dl-re-git
 # 命令行参数
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20241201
+  N_m3u8DL-RE (Beta version) 20251027
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -37,11 +37,12 @@ Options:
   --tmp-dir <tmp-dir>                                     设置临时文件存储目录
   --save-dir <save-dir>                                   设置输出目录
   --save-name <save-name>                                 设置保存文件名
-  --save-pattern <PATTERN>                                设置保存文件命名模板, 支持变量:
-                                                          <SaveName>, <Id>, <Codecs>, <Language>, <Resolution>,
-                                                          <Bandwidth>, <MediaType>, <Channels>, <FrameRate>,
-                                                          <VideoRange>, <GroupId>
+  --save-pattern <save-pattern>                           设置保存文件命名模板, 支持使用变量: 
+                                                          <SaveName>, <Id>, <Codecs>, <Language>, <Resolution>, 
+                                                          <Bandwidth>, <MediaType>, <Channels>, <FrameRate>, 
+                                                          <VideoRange>, <GroupId>, <Ext>
                                                           示例: --save-pattern "<SaveName>_<Resolution>_<Bandwidth>"
+  --log-file-path <log-file-path>                         设置日志文件路径, 例如 C:\Logs\log.txt
   --base-url <base-url>                                   设置BaseURL
   --thread-count <number>                                 设置下载线程数 [default: 本机CPU线程数]
   --download-retry-count <number>                         每个分片下载异常时的重试次数 [default: 3]
@@ -104,8 +105,8 @@ Options:
   --disable-update-check                                  禁用版本更新检测 [default: False]
   --allow-hls-multi-ext-map                               允许HLS中的多个#EXT-X-MAP(实验性) [default: False]
   --morehelp <OPTION>                                     查看某个选项的详细帮助信息
-  --version                                               Show version information
   -?, -h, --help                                          Show help and usage information
+  --version                                               Show version information
 ```
 
 <details>
