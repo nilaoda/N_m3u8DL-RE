@@ -87,6 +87,11 @@ public class StreamExtractor
             Logger.InfoMarkUp(ResString.matchTS);
             extractor = new LiveTSExtractor(parserConfig);
         }
+        else if (rawText == ResString.ReBinaryData)
+        {
+            Logger.InfoMarkUp(ResString.matchBinaryData);
+            throw new NotSupportedException(ResString.notSupported);
+        }
         else
         {
             throw new NotSupportedException(ResString.notSupported);

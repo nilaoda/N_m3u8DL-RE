@@ -892,6 +892,12 @@ internal static class StaticText
             zhTW: "內容匹配: [white on deepskyblue1]HTTP Live Streaming[/]",
             enUS: "Content Matched: [white on deepskyblue1]HTTP Live Streaming[/]"
         ),
+        ["matchBinaryData"] = new TextContainer
+        (
+            zhCN: "内容匹配: [white on deepskyblue1]Binary Data[/]",
+            zhTW: "內容匹配: [white on deepskyblue1]Binary Data[/]",
+            enUS: "Content Matched: [white on deepskyblue1]Binary Data[/]"
+        ),
         ["partMerge"] = new TextContainer
         (
             zhCN: "分片数量大于1800个，开始分块合并...",
@@ -900,9 +906,9 @@ internal static class StaticText
         ),
         ["notSupported"] = new TextContainer
         (
-            zhCN: "当前输入不受支持: ",
-            zhTW: "當前輸入不受支援: ",
-            enUS: "Input not supported: "
+            zhCN: "当前输入不受支持 ",
+            zhTW: "當前輸入不受支援 ",
+            enUS: "Input not supported "
         ),
         ["parsingStream"] = new TextContainer
         (

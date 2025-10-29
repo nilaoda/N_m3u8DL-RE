@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 
@@ -24,7 +25,7 @@ public static class HTTPUtil
 
     private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
     {
-        Logger.Debug(ResString.fetch + url); 
+        Logger.Debug(ResString.fetch + url);
         using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
         webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
         webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
@@ -36,6 +37,7 @@ public static class HTTPUtil
                 webRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
             }
         }
+
         Logger.Debug(webRequest.Headers.ToString());
         // 手动处理跳转，以免自定义Headers丢失
         var webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
@@ -56,7 +58,7 @@ public static class HTTPUtil
                 {
                     redirectedUrl = respHeaders.Location.AbsoluteUri;
                 }
-                    
+
                 if (redirectedUrl != url)
                 {
                     Logger.Extra($"Redirected => {redirectedUrl}");
@@ -64,6 +66,7 @@ public static class HTTPUtil
                 }
             }
         }
+
         // 手动将跳转后的URL设置进去, 用于后续取用
         webResponse.Headers.Location = new Uri(url);
         webResponse.EnsureSuccessStatusCode();
@@ -76,6 +79,7 @@ public static class HTTPUtil
         {
             return await File.ReadAllBytesAsync(new Uri(url).LocalPath);
         }
+
         var webResponse = await DoGetAsync(url, headers);
         var bytes = await webResponse.Content.ReadAsByteArrayAsync();
         Logger.Debug(HexUtil.BytesToHex(bytes, " "));
@@ -96,14 +100,6 @@ public static class HTTPUtil
         return htmlCode;
     }
 
-    private static bool CheckMPEG2TS(HttpResponseMessage? webResponse)
-    {
-        var mediaType = webResponse?.Content.Headers.ContentType?.MediaType?.ToLower();
-        if (webResponse?.Content.Headers.ContentLength != null)
-            return false;
-        return mediaType is "video/ts" or "video/mp2t" or "video/mpeg" or "application/octet-stream";
-    }
-
     /// <summary>
     /// 获取网页源码和跳转后的URL
     /// </summary>
@@ -112,18 +108,66 @@ public static class HTTPUtil
     /// <returns>(Source Code, RedirectedUrl)</returns>
     public static async Task<(string, string)> GetWebSourceAndNewUrlAsync(string url, Dictionary<string, string>? headers = null)
     {
-        string htmlCode;
         var webResponse = await DoGetAsync(url, headers);
-        if (CheckMPEG2TS(webResponse))
+        var htmlCode = "";
+
+        // 如果响应是压缩的（gzip/deflate/br），直接按文本处理
+        var encodings = webResponse.Content.Headers.ContentEncoding;
+        if (encodings.Count != 0)
         {
-            htmlCode = ResString.ReLiveTs;
-        }
-        else
-        {
+            Logger.Debug($"Detected compression: {string.Join(",", encodings)}");
             htmlCode = await webResponse.Content.ReadAsStringAsync();
+            return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
         }
-        Logger.Debug(htmlCode);
-        return (htmlCode, webResponse.Headers.Location != null ? webResponse.Headers.Location.AbsoluteUri : url);
+
+        // 打开流，读取少量样本检测类型
+        const int sampleSize = 4096;
+        await using var responseStream = await webResponse.Content.ReadAsStreamAsync();
+
+        var buffer = new byte[sampleSize];
+        var bytesRead = await responseStream.ReadAsync(buffer.AsMemory(0, sampleSize));
+
+        // MPEG-TS 检测
+        if (BinaryContentCheckUtil.IsMpeg2TsBuffer(buffer.AsSpan(0, bytesRead)))
+        {
+            Logger.Debug("Detected MPEG-TS stream");
+            return (ResString.ReLiveTs, url);
+        }
+
+        // 启发式判断二进制
+        if (BinaryContentCheckUtil.LooksLikeBinary(buffer.AsSpan(0, bytesRead)))
+        {
+            Logger.Debug("Heuristic detection: binary data");
+            return (ResString.ReBinaryData, url);
+        }
+
+        // 否则是文本，完整读取
+        using var ms = new MemoryStream();
+        ms.Write(buffer, 0, bytesRead);
+        await responseStream.CopyToAsync(ms);
+
+        var allBytes = ms.ToArray();
+        var encoding = GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
+        htmlCode = encoding.GetString(allBytes);
+
+        return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+    }
+
+    private static Encoding? GetEncodingFromResponse(HttpResponseMessage response)
+    {
+        var contentType = response.Content.Headers.ContentType;
+        if (contentType?.CharSet == null) return null;
+        
+        try
+        {
+            return Encoding.GetEncoding(contentType.CharSet);
+        }
+        catch (ArgumentException)
+        {
+            // 无效 charset，回退
+        }
+
+        return null;
     }
 
     public static async Task<string> GetPostResponseAsync(string Url, byte[] postData)

@@ -5,6 +5,7 @@ public static class ResString
     public static string CurrentLoc { get; set; } = "en-US";
 
     public static readonly string ReLiveTs = "<RE_LIVE_TS>";
+    public static readonly string ReBinaryData = "<RE_BINARY_DATA>";
     public static string singleFileRealtimeDecryptWarn => GetText("singleFileRealtimeDecryptWarn");
     public static string singleFileSplitWarn => GetText("singleFileSplitWarn");
     public static string customRangeWarn => GetText("customRangeWarn");
@@ -122,6 +123,7 @@ public static class ResString
     public static string matchMSS => GetText("matchMSS");
     public static string matchTS => GetText("matchTS");
     public static string matchHLS => GetText("matchHLS");
+    public static string matchBinaryData => GetText("matchBinaryData");
     public static string notSupported => GetText("notSupported");
     public static string parsingStream => GetText("parsingStream");
     public static string promptChoiceText => GetText("promptChoiceText");
