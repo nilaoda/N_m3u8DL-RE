@@ -11,7 +11,7 @@
     -->
     <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
-    <Version>0.5.0</Version>
+    <Version>0.5.1</Version>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 

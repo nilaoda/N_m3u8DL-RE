@@ -19,3 +19,4 @@
 * http://amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest
 * https://azclwds01.akamaized.net/4e8f6858-5d05-4e28-83ab-48c7a2b259e1/XVuosg_tab_hd.ism/Manifest (`e5114f87b3e54b9faca331e6e6d646a6:55c5d9f1cedfd018b75623f2565a1d29`)
 * https://akm.eu.prd.media.max.com/bolt-glo-prod/78cccdce-2592-4a2b-a023-91034c43366e/packager-mp4-cenc/main.mpd (缺失Namespace)
+* https://cdn01.vdocipher.com/media/6YI1GS6X5lAr7/b4550743/stream.mpd (单mp4链接 无法使用Bytes: 0-)
