@@ -29,7 +29,7 @@ internal static class LargeSingleFileSplitUtil
         long fileSize = await GetFileSizeAsync(url, headers);
         if (fileSize == 0) return null;
 
-        List<Clip> allClips = GetAllClips(url, fileSize);
+        List<Clip> allClips = GetAllClips(fileSize);
         var splitSegments = new List<MediaSegment>();
         foreach (Clip clip in allClips)
         {
@@ -66,6 +66,7 @@ internal static class LargeSingleFileSplitUtil
     private static async Task<long> GetFileSizeAsync(string url, Dictionary<string, string> headers)
     {
         using var httpRequestMessage = new HttpRequestMessage();
+        httpRequestMessage.Method = HttpMethod.Head;
         httpRequestMessage.RequestUri = new(url);
         foreach (var header in headers)
         {
@@ -78,8 +79,9 @@ internal static class LargeSingleFileSplitUtil
     }
 
     // 此函数主要是切片下载逻辑
-    private static List<Clip> GetAllClips(string url, long fileSize)
+    private static List<Clip> GetAllClips(long fileSize)
     {
+        long originalFileSize = fileSize;
         List<Clip> clips = [];
         int index = 0;
         long counter = 0;
@@ -103,7 +105,7 @@ internal static class LargeSingleFileSplitUtil
             // 已到最后
             else
             {
-                c.To = -1;
+                c.To = originalFileSize;
                 clips.Add(c);
                 break;
             }
