@@ -146,6 +146,10 @@ public static class FilterUtil
     /// <param name="takeLastCount"></param>
     public static void SyncStreams(List<StreamSpec> selectedSteams, int takeLastCount = 15)
     {
+        // 过滤出需要处理的流
+        selectedSteams = selectedSteams
+            .Where(s => s.Playlist?.MediaParts?.Any(p => p.MediaSegments.Count != 0) == true)
+            .ToList();
         // 通过Date同步
         if (selectedSteams.All(x => x.Playlist!.MediaParts[0].MediaSegments.All(x => x.DateTime != null)))
         {
