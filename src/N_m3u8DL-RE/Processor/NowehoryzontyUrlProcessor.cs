@@ -33,7 +33,7 @@ internal class NowehoryzontyUrlProcessor : UrlProcessor
             var argLine = parserConfig.UrlProcessorArgs![ProcessorTag.Length..];
             
             _secureToken = ParserUtil.GetAttribute(argLine, "filminfo.secureToken")!;
-            _timeDifference = Convert.ToInt32(ParserUtil.GetAttribute(argLine, "timeDifference")!);
+            _timeDifference = Convert.ToInt32(ParserUtil.GetAttribute(argLine, "timeDifference") ?? "0");
             
             return true;
         }
