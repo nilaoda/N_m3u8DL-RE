@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
@@ -267,7 +267,8 @@ internal class Program
         }
 
         // 生成文件夹
-        var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+        var baseDir = option.SaveDir ?? option.TmpDir ?? Environment.CurrentDirectory;
+        var tmpDir = Path.Combine(baseDir, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
         // 记录文件
         if (option.WriteMetaJson)
         {
