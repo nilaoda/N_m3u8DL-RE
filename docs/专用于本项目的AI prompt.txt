@@ -1,0 +1,163 @@
+
+## AI 智能体操作指南
+
+### 操作原则
+
+#### 1. 保守修改原则
+- **优先扩展**而非修改现有功能
+- **保持接口稳定**，内部实现可优化
+- **向后兼容**是最高优先级
+
+#### 2. 调用链保护原则
+- 任何修改前必须分析完整的调用链
+- 禁止破坏关键路径的方法签名
+- 确保跨模块调用的完整性
+
+#### 3. 测试驱动原则
+- 修改前确认测试覆盖
+- 修改后立即运行测试验证
+- 新增功能必须包含相应测试
+
+### 具体操作步骤
+
+#### 步骤1：修改前的分析（必须执行）
+```bash
+# 1. 搜索目标方法的所有调用位置
+grep -r "目标方法名" /workspace/N_m3u8DL-RE-src/src/ --include="*.cs"
+
+# 2. 分析项目依赖关系
+find /workspace/N_m3u8DL-RE-src/src -name "*.csproj" -exec cat {} \;
+
+# 3. 检查接口实现一致性
+grep -r "interface" /workspace/N_m3u8DL-RE-src/src/ --include="*.cs" | grep -i "目标接口"
+```
+
+#### 步骤2：安全修改策略
+```csharp
+// 策略1：使用可选参数保持兼容
+public async Task<bool> ExistingMethod(string requiredParam, string newParam = null)
+
+// 策略2：使用方法重载
+public async Task<bool> ExistingMethod() => ExistingMethod("default");
+public async Task<bool> ExistingMethod(string param) { /* 实现 */ }
+
+// 策略3：创建新方法而非修改旧方法
+public async Task<bool> NewMethodWithImprovement()
+{
+    // 新功能实现
+}
+```
+
+#### 步骤3：修改后的验证（必须执行）
+```bash
+# 1. 编译验证
+dotnet build /workspace/N_m3u8DL-RE-src/src/N_m3u8DL-RE.sln
+
+# 2. 测试验证
+dotnet test /workspace/N_m3u8DL-RE-src/src/N_m3u8DL-RE.Tests
+
+# 3. 功能验证（模拟用户操作）
+dotnet run --project /workspace/N_m3u8DL-RE-src/src/N_m3u8DL-RE --help
+```
+
+### 常见风险场景及应对
+
+#### 风险场景1：方法重命名
+**风险**：调用链断裂，"找不到方法"错误
+**应对**：
+```csharp
+// 错误做法：直接重命名
+public async Task<bool> NewMethodName() // ❌ 破坏调用链
+
+// 正确做法：保持旧方法，标记为过时
+[Obsolete("请使用NewMethodName方法")]
+public async Task<bool> OldMethodName() => NewMethodName();
+public async Task<bool> NewMethodName() { /* 新实现 */ }
+```
+
+#### 风险场景2：参数变更
+**风险**：调用方参数不匹配
+**应对**：
+```csharp
+// 错误做法：强制要求新参数
+public async Task<bool> Method(string newRequiredParam) // ❌
+
+// 正确做法：保持可选参数
+public async Task<bool> Method(string param = null) // ✅
+{
+    param ??= GetDefaultParam();
+    // 实现逻辑
+}
+```
+
+#### 风险场景3：返回类型变更
+**风险**：调用方类型转换错误
+**应对**：
+```csharp
+// 错误做法：改变返回类型
+public async Task<NewResultType> Method() // ❌
+
+// 正确做法：添加新方法
+public async Task<NewResultType> NewMethod() { /* 新实现 */ }
+// 保持旧方法兼容性
+public async Task<bool> Method() => await NewMethod().IsSuccess;
+```
+
+## 项目特定约束和限制
+
+### 技术约束
+1. **.NET 9.0限制**：不能使用更高版本的.NET特性
+2. **C# 13.0限制**：语法特性受版本限制
+3. **依赖版本锁定**：System.CommandLine等依赖版本固定
+
+### 架构约束
+1. **模块依赖方向**：只能从高层模块依赖低层模块
+2. **接口稳定性**：公共接口必须保持向后兼容
+3. **数据流方向**：数据必须按照既定流程传递
+
+### 性能约束
+1. **内存使用**：流媒体处理需要控制内存占用
+2. **网络IO**：下载操作需要合理的并发控制
+3. **文件IO**：大文件处理需要优化IO操作
+
+## 最佳实践总结
+
+### 代码修改最佳实践
+1. **分析先行**：修改前全面分析影响范围
+2. **测试驱动**：先写测试，再实现功能
+3. **小步提交**：每次修改保持小范围，便于回滚
+4. **文档更新**：修改后及时更新相关文档
+
+### 调用链保护最佳实践
+1. **接口契约**：严格遵守接口定义
+2. **方法签名**：保持关键方法签名稳定
+3. **异常处理**：完善的错误处理和恢复机制
+4. **日志记录**：详细的调用链日志记录
+
+### 质量保证最佳实践
+1. **编译检查**：每次修改后必须通过编译
+2. **测试覆盖**：确保测试覆盖关键路径
+3. **集成验证**：验证跨模块功能正常
+4. **性能监控**：监控修改对性能的影响
+
+## 紧急情况处理
+
+### 调用链断裂应急方案
+1. **立即回滚**：恢复到修改前的稳定状态
+2. **日志分析**：分析错误日志定位问题
+3. **测试修复**：编写针对性测试修复问题
+4. **逐步发布**：修复后小范围验证再全面发布
+
+### 编译错误处理
+1. **依赖检查**：确认所有依赖项正确引用
+2. **版本兼容**：检查.NET和目标框架版本
+3. **语法验证**：使用IDE工具验证语法正确性
+4. **构建清理**：清理构建缓存重新编译
+
+---
+
+## 最终提醒
+
+**重要提示**：本提示词基于对 N_m3u8DL-RE 项目的深入分析，所有指导原则都旨在保护项目的稳定性和可维护性。在进行任何代码修改时，请务必遵循本提示词中的规范和要求，确保函数调用链的完整性，避免因修改导致的方法引用失效问题。
+
+**记住**：一个稳定的调用链比一个新功能更重要！

@@ -8,6 +8,7 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
 using System.Text;
 using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Plugin;
 using N_m3u8DL_RE.Processor;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Util;
@@ -15,6 +16,9 @@ using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
 using N_m3u8DL_RE.Enum;
+using System.Reflection;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace N_m3u8DL_RE;
 
@@ -22,6 +26,26 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
+        // 初始化插件系统
+        // 由于命名空间问题，直接通过反射调用
+        try 
+        {
+            var pluginManagerType = Type.GetType("N_m3u8DL_RE.Plugin.PluginManager, N_m3u8DL-RE");
+            if (pluginManagerType != null)
+            {
+                var loadPluginsMethod = pluginManagerType.GetMethod("LoadPlugins");
+                if (loadPluginsMethod != null)
+                {
+                    loadPluginsMethod.Invoke(null, null);
+                    Console.WriteLine("[Plugin] Plugin system initialized");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Plugin] Failed to initialize plugin system: {ex.Message}");
+        }
+        
         // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
         if (OperatingSystem.IsWindows()) 
         {
@@ -237,6 +261,93 @@ internal class Program
             }
         }
 
+        // 检查是否启用批量下载插件
+        bool batchDownloadEnabled = false;
+        dynamic? batchPlugin = null;
+        
+        try 
+        {
+            var pluginManagerType = Type.GetType("N_m3u8DL_RE.Plugin.PluginManager, N_m3u8DL-RE");
+            if (pluginManagerType != null)
+            {
+                // 使用新的配置提取方法获取批处理下载启用状态
+                var extractEnabledMethod = pluginManagerType.GetMethod("ExtractBatchDownloadEnabledFromConfig", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                if (extractEnabledMethod != null)
+                {
+                    batchDownloadEnabled = (bool?)extractEnabledMethod.Invoke(null, null) ?? false;
+                }
+                
+                // 获取批量下载插件实例（无论是否启用，因为用户可能显式使用--batch参数）
+                try
+                {
+                    var getPluginsMethod = pluginManagerType.GetMethod("GetPlugins");
+                    if (getPluginsMethod != null)
+                    {
+                        var plugins = getPluginsMethod.Invoke(null, null) as List<IPlugin>;
+                        if (plugins != null)
+                        {
+                            foreach (var plugin in plugins)
+                            {
+                                if (plugin.GetType().Name == "BatchDownloadPlugin")
+                                {
+                                    batchPlugin = plugin;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[BatchDownload] Failed to get plugins: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[BatchDownload] Failed to check batch download status: {ex.Message}");
+        }
+
+        // 如果启用批量下载且有URL列表，或者用户显式指定了批量模式，则执行批量下载
+        if (option.BatchMode || (batchDownloadEnabled && batchPlugin != null))
+        {
+            Console.WriteLine($"[BatchDownload] Detecting batch mode... BatchMode={option.BatchMode}, PluginEnabled={batchDownloadEnabled}, PluginInstance={batchPlugin != null}");
+            
+            // 如果用户显式指定了批量模式，则执行批量下载
+            if (option.BatchMode)
+            {
+                Console.WriteLine("[BatchDownload] Batch mode explicitly enabled by user");
+                await ExecuteBatchDownload(batchPlugin, option);
+                return;
+            }
+            else if (batchPlugin != null)
+            {
+                var hasUrlsMethod = batchPlugin.GetType().GetMethod("HasUrls");
+                if (hasUrlsMethod?.Invoke(batchPlugin, null) as bool? == true)
+                {
+                    Console.WriteLine("[BatchDownload] Batch download plugin detected and has URLs");
+                    await ExecuteBatchDownload(batchPlugin, option);
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("[BatchDownload] Plugin detected but no URLs available");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[BatchDownload] Batch download configuration found but plugin instance not available");
+            }
+        }
+
+        // 如果没有输入URL且没有启用批量下载，显示帮助信息
+        if (string.IsNullOrEmpty(option.Input) && !option.BatchMode)
+        {
+            Console.WriteLine("Error: No input URL provided and batch download is not enabled.");
+            Console.WriteLine("Please provide a URL with --input or use --batch to enable batch download mode");
+            return;
+        }
+
         var url = option.Input;
 
         // 流提取器配置
@@ -442,6 +553,328 @@ internal class Program
                 if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
             }
         }
+    }
+
+    static async Task ExecuteBatchDownload(dynamic batchPlugin, MyOption option)
+    {
+        List<string> urls = new List<string>();
+        bool createSubdirectories = false;
+        
+        try
+        {
+            // 如果有batchPlugin，从插件获取URL列表和配置
+            if (batchPlugin != null)
+            {
+                Logger.Info($"[BatchDebug] batchPlugin type: {batchPlugin.GetType().Name}");
+                
+                try
+                {
+                    if (batchPlugin is N_m3u8DL_RE.Plugin.BatchDownloadPlugin realPlugin)
+                    {
+                        urls = realPlugin.GetUrlList();
+                        var config = realPlugin.GetConfig();
+                        
+                        // 从匿名对象中提取CreateSubdirectories配置
+                        var createSubdirsProperty = config?.GetType().GetProperty("CreateSubdirectories");
+                        createSubdirectories = createSubdirsProperty?.GetValue(config) as bool? == true;
+                        
+                        // 获取输出目录配置并设置到option中
+                        var outputDirectory = realPlugin.GetOutputDirectory();
+                        if (!string.IsNullOrEmpty(outputDirectory) && Directory.Exists(outputDirectory))
+                        {
+                            // 如果用户没有显式指定输出目录，使用配置文件中的目录
+                            if (string.IsNullOrEmpty(option.SaveDir))
+                            {
+                                option.SaveDir = outputDirectory;
+                                Logger.Info($"[BatchDownload] Using configured output directory: {outputDirectory}");
+                            }
+                            else
+                            {
+                                Logger.Info($"[BatchDownload] Using user-specified output directory: {option.SaveDir}");
+                            }
+                        }
+                        
+                        Logger.Info($"[BatchDebug] Direct method calls successful. URLs: {urls.Count}, CreateSubdirectories: {createSubdirectories}");
+                    }
+                    else
+                    {
+                        // 备用反射调用方法
+                        var getUrlListMethod = batchPlugin.GetType().GetMethod("GetUrlList");
+                        var getConfigMethod = batchPlugin.GetType().GetMethod("GetConfig");
+                        
+                        if (getUrlListMethod != null)
+                        {
+                            urls = getUrlListMethod.Invoke(batchPlugin, null) as List<string> ?? new List<string>();
+                        }
+                        
+                        if (getConfigMethod != null)
+                        {
+                            var config = getConfigMethod.Invoke(batchPlugin, null);
+                            var createSubdirsProperty = config?.GetType().GetProperty("CreateSubdirectories");
+                            createSubdirectories = createSubdirsProperty?.GetValue(config) as bool? == true;
+                        }
+                        
+                        Logger.Info($"[BatchDebug] Reflection method calls. URLs: {urls.Count}, CreateSubdirectories: {createSubdirectories}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"[BatchDebug] Failed to call plugin methods: {ex.Message}");
+                }
+            }
+            
+            // 如果没有从插件获取到URL列表，批量下载无法继续
+            if (urls.Count == 0)
+            {
+                Logger.Error("[BatchDownload] No URLs available. Please check plugin configuration and batch file.");
+                return;
+            }
+            
+            Logger.InfoMarkUp($"[BatchDownload] Starting batch download with {urls.Count} URLs");
+            
+            int successCount = 0;
+            int failCount = 0;
+            
+            for (int i = 0; i < urls.Count; i++)
+            {
+                var url = urls[i];
+                Logger.InfoMarkUp($"[BatchDownload] Processing URL {i + 1}/{urls.Count}: {url}");
+                
+                try
+                {
+                    // 重置SaveName，确保每个URL都能生成唯一文件名
+                    option.SaveName = null;
+                    
+                    // 创建子目录（如果配置允许）
+                    var originalSaveDir = option.SaveDir;
+                    if (createSubdirectories)
+                    {
+                        var subDir = Path.Combine(originalSaveDir ?? ".", $"batch_item_{i + 1}");
+                        Directory.CreateDirectory(subDir);
+                        option.SaveDir = subDir;
+                    }
+                    
+                    // 执行单个URL下载，传递批量下载索引和URL信息
+                    await ExecuteSingleDownload(url, option, i + 1, urls.Count, batchDownload: true);
+                    successCount++;
+                    
+                    // 恢复原始保存目录
+                    option.SaveDir = originalSaveDir;
+                }
+                catch (Exception ex)
+                {
+                    Logger.ErrorMarkUp($"[BatchDownload] Failed to download URL {i + 1}: {ex.Message}");
+                    failCount++;
+                }
+            }
+            
+            Logger.InfoMarkUp($"[BatchDownload] Batch download completed. Success: {successCount}, Failed: {failCount}");
+        }
+        catch (Exception ex)
+        {
+            Logger.ErrorMarkUp($"[BatchDownload] Error during batch download: {ex.Message}");
+        }
+    }
+
+    static async Task ExecuteSingleDownload(string url, MyOption option, int batchIndex = 0, int totalBatches = 0, bool batchDownload = false)
+    {
+        bool livingFlag = false; // 声明livingFlag变量
+        
+        // 创建解析器配置
+        var headers = new Dictionary<string, string>()
+        {
+            ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
+        };
+        
+        foreach (var item in option.Headers)
+        {
+            headers[item.Key] = item.Value;
+        }
+
+        var parserConfig = new ParserConfig()
+        {
+            AppendUrlParams = option.AppendUrlParams,
+            UrlProcessorArgs = option.UrlProcessorArgs,
+            BaseUrl = option.BaseUrl!,
+            Headers = headers,
+            CustomMethod = option.CustomHLSMethod,
+            CustomeKey = option.CustomHLSKey,
+            CustomeIV = option.CustomHLSIv,
+        };
+
+        if (option.AllowHlsMultiExtMap)
+        {
+            parserConfig.CustomParserArgs.Add("AllowHlsMultiExtMap", "true");
+        }
+
+        // 流提取器配置
+        var extractor = new StreamExtractor(parserConfig);
+        
+        // 从链接加载内容
+        await RetryUtil.WebRequestRetryAsync(async () =>
+        {
+            await extractor.LoadSourceFromUrlAsync(url);
+            return true;
+        });
+        
+        // 解析流信息
+        var streams = await extractor.ExtractStreamsAsync();
+
+        // 设置保存名称
+        if (string.IsNullOrEmpty(option.SaveName))
+        {
+            if (batchDownload && batchIndex > 0)
+            {
+                // 批量下载模式下生成唯一文件名
+                var baseName = GetUniqueFileNameFromUrl(url, batchIndex, totalBatches);
+                option.SaveName = baseName;
+            }
+            else
+            {
+                option.SaveName = OtherUtil.GetFileNameFromInput(url);
+            }
+        }
+
+        // 生成文件夹
+        var baseDir = option.SaveDir ?? option.TmpDir ?? Environment.CurrentDirectory;
+        var tmpDir = Path.Combine(baseDir, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+        
+        // 记录文件
+        if (option.WriteMetaJson)
+        {
+            extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(streams);
+        }
+
+        // 写出文件
+        await WriteRawFilesAsync(option, extractor, tmpDir);
+
+        Logger.Info($"Streams info: {streams.Count} streams found");
+
+        // 选择流（简化逻辑，使用自动选择）
+        var selectedStreams = new List<StreamSpec>();
+        var basicStreams = streams.Where(x => x.MediaType is null or MediaType.VIDEO).ToList();
+        var audios = streams.Where(x => x.MediaType == MediaType.AUDIO).ToList();
+        var subs = streams.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
+
+        if (basicStreams.Count != 0)
+            selectedStreams.Add(basicStreams.First());
+        
+        var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
+        foreach (var lang in langs)
+        {
+            selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
+        }
+        selectedStreams.AddRange(subs);
+
+        if (selectedStreams.Count == 0)
+            throw new Exception("No streams to download");
+
+        // 加载播放列表
+        if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH || extractor.ExtractorType == ExtractorType.MSS)
+            await extractor.FetchPlayListAsync(selectedStreams);
+
+        // 创建下载管理器并开始下载
+        var downloadConfig = new DownloaderConfig()
+        {
+            MyOptions = option,
+            DirPrefix = tmpDir,
+            Headers = parserConfig.Headers, // 使用命令行解析得到的Headers
+        };
+
+        var result = false;
+
+        if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+        {
+            var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
+            result = await sldm.StartRecordAsync();
+        }
+        else if (!livingFlag)
+        {
+            // 开始下载
+            var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
+            result = await sdm.StartDownloadAsync();
+        }
+        else
+        {
+            var sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
+            result = await sldm.StartRecordAsync();
+        }
+
+        if (result)
+        {
+            Logger.InfoMarkUp("[white on green]Done[/]");
+        }
+        else
+        {
+            Logger.ErrorMarkUp("[white on red]Failed[/]");
+            Environment.ExitCode = 1;
+        }
+    }
+
+    /// <summary>
+    /// 为批量下载生成唯一的文件名
+    /// </summary>
+    /// <param name="url">源URL</param>
+    /// <param name="batchIndex">批量下载索引（从1开始）</param>
+    /// <param name="totalBatches">总批量数</param>
+    /// <returns>唯一文件名</returns>
+    static string GetUniqueFileNameFromUrl(string url, int batchIndex, int totalBatches)
+    {
+        try
+        {
+            // 从URL提取基础名称
+            var uri = new Uri(url.Split('?').First());
+            var baseName = Path.GetFileNameWithoutExtension(uri.LocalPath);
+            
+            // 清理文件名，移除特殊字符
+            baseName = GetValidFileName(baseName);
+            
+            // 如果基础名称为空或只有扩展名，使用URL主机名
+            if (string.IsNullOrWhiteSpace(baseName) || baseName == ".m3u8" || baseName == ".mpd")
+            {
+                baseName = uri.Host.Replace(".", "_");
+            }
+            
+            // 生成时间戳（精确到秒，避免同一秒内的文件名冲突）
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            
+            // 生成序号部分
+            var indexInfo = totalBatches > 1 ? $"_batch{batchIndex:00}_of_{totalBatches:00}" : "_batch";
+            
+            // 生成最终文件名
+            var finalName = $"{baseName}{indexInfo}_{timestamp}";
+            
+            return finalName;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"[BatchDownload] Failed to generate unique filename for URL: {ex.Message}");
+            // 如果解析失败，使用简单的备用名称
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            return $"batch_item_{batchIndex:00}_{timestamp}";
+        }
+    }
+    
+    /// <summary>
+    /// 清理文件名中的无效字符
+    /// </summary>
+    static string GetValidFileName(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return "unnamed";
+            
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var validName = new string(fileName.Where(c => !invalidChars.Contains(c)).ToArray());
+        
+        // 移除连续的下划线和空格
+        validName = System.Text.RegularExpressions.Regex.Replace(validName, @"_{2,}", "_");
+        validName = System.Text.RegularExpressions.Regex.Replace(validName, @"\s+", "_");
+        
+        // 限制长度
+        if (validName.Length > 100)
+            validName = validName.Substring(0, 100);
+            
+        return validName.Trim('_');
     }
 
     static async Task CheckUpdateAsync()

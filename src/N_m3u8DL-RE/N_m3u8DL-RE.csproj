@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -17,6 +17,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extend\PluginConfig.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
   <ItemGroup>

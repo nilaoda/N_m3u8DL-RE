@@ -89,6 +89,8 @@ internal class SimpleDownloader : IDownloader
             if (File.Exists(des))
             {
                 speedContainer.Add(new FileInfo(des).Length);
+                // 触发插件事件 - 文件已存在
+                TriggerPluginEvent(des);
                 return (des, new DownloadResult() { ActualContentLength = 0, ActualFilePath = des });
             }
 
@@ -97,6 +99,8 @@ internal class SimpleDownloader : IDownloader
             if (File.Exists(dec))
             {
                 speedContainer.Add(new FileInfo(dec).Length);
+                // 触发插件事件 - 文件已解密
+                TriggerPluginEvent(dec);
                 return (dec, new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec });
             }
 
@@ -119,6 +123,13 @@ internal class SimpleDownloader : IDownloader
 
             // 调用下载
             var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
+            
+            // 触发插件事件 - 文件下载完成
+            if (result != null)
+            {
+                TriggerPluginEvent(result.ActualFilePath);
+            }
+            
             return (des, result);
 
             throw new Exception("please retry");
@@ -149,6 +160,30 @@ internal class SimpleDownloader : IDownloader
                 cancellationTokenSource.Dispose();
                 cancellationTokenSource = null;
             }
+        }
+    }
+    
+    /// <summary>
+    /// 触发插件事件
+    /// </summary>
+    /// <param name="filePath">文件路径</param>
+    private void TriggerPluginEvent(string filePath)
+    {
+        try
+        {
+            var pluginManagerType = Type.GetType("N_m3u8DL_RE.Plugin.PluginManager, N_m3u8DL-RE");
+            if (pluginManagerType != null)
+            {
+                var onFileDownloadedMethod = pluginManagerType.GetMethod("OnFileDownloaded");
+                if (onFileDownloadedMethod != null)
+                {
+                    onFileDownloadedMethod.Invoke(null, new object[] { filePath });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"[Plugin] Failed to trigger plugin event: {ex.Message}");
         }
     }
 }

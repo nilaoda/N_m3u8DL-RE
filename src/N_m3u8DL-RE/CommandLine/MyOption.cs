@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
@@ -9,9 +9,13 @@ namespace N_m3u8DL_RE.CommandLine;
 internal class MyOption
 {
     /// <summary>
-    /// See: <see cref="CommandInvoker.Input"/>.
+    /// See: <see cref="CommandInvoker.Input"/>
     /// </summary>
-    public string Input { get; set; } = default!;
+    public string? Input { get; set; }
+    /// <summary>
+    /// See: <see cref="CommandInvoker.BatchMode"/>
+    /// </summary>
+    public bool BatchMode { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.Headers"/>.
     /// </summary>

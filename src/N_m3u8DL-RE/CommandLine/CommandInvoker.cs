@@ -30,7 +30,8 @@ internal static partial class CommandInvoker
     [GeneratedRegex("^[0-9a-fA-f]{32}$")]
     private static partial Regex SingleHexKeyRegex();
 
-    private static readonly Argument<string> Input = new("input") { Description = ResString.cmd_Input };
+    private static readonly Option<string?> Input = new("--input", "-i") { Description = ResString.cmd_Input };
+    private static readonly Option<bool> BatchMode = new("--batch") { Description = "Enable batch download mode" };
     private static readonly Option<string?> TmpDir = new("--tmp-dir") { Description = ResString.cmd_tmpDir };
     private static readonly Option<string?> SaveDir = new("--save-dir") { Description = ResString.cmd_saveDir };
     private static readonly Option<string?> SaveName = new("--save-name") { Description = ResString.cmd_saveName, CustomParser = ParseSaveName};
@@ -612,7 +613,8 @@ internal static partial class CommandInvoker
     {
         var option = new MyOption
         {
-            Input = result.GetRequiredValue(Input),
+            Input = result.GetValue(Input),
+            BatchMode = result.GetValue(BatchMode),
             ForceAnsiConsole = result.GetValue(ForceAnsiConsole),
             NoAnsiColor = result.GetValue(NoAnsiColor),
             LogLevel = result.GetValue(LogLevel),
@@ -727,7 +729,7 @@ internal static partial class CommandInvoker
 
         var rootCommand = new RootCommand(VERSION_INFO)
         {
-            Input, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+            Input, BatchMode, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
