@@ -15,14 +15,14 @@ public static partial class ParserUtil
     /// <param name="line">等待被解析的一行文本</param>
     /// <param name="key">留空则获取第一个英文冒号后的全部字符</param>
     /// <returns></returns>
-    public static string GetAttribute(string line, string key = "")
+    public static string? GetAttribute(string line, string key = "")
     {
         line = line.Trim();
         if (key == "")
             return line[(line.IndexOf(':') + 1)..];
 
-        var index = -1;
-        var result = string.Empty;
+        int index;
+        string? result = null;
         if ((index = line.IndexOf(key + "=\"", StringComparison.Ordinal)) > -1)
         {
             var startIndex = index + (key + "=\"").Length;
