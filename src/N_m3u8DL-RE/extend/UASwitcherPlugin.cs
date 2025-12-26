@@ -47,5 +47,21 @@ namespace N_m3u8DL_RE.Plugin
                 // HttpClient.DefaultRequestHeaders.Add("User-Agent", newUA);
             }
         }
+
+        // 新增接口方法 - 提供空实现以保持向后兼容
+        public void OnInputReceived(object args, object option)
+        {
+            // 空实现 - 可在后续阶段中扩展
+        }
+
+        public void OnOutputGenerated(string outputPath, string outputType)
+        {
+            // 空实现 - 可在后续阶段中扩展
+        }
+
+        public void OnLogGenerated(string logMessage, PluginLogLevel logLevel)
+        {
+            // 空实现 - 可在后续阶段中扩展
+        }
     }
 }

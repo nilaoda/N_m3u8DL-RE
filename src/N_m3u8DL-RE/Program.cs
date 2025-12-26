@@ -46,6 +46,95 @@ internal class Program
             Console.WriteLine($"[Plugin] Failed to initialize plugin system: {ex.Message}");
         }
         
+        // 【日志拦截】由PluginManager.cs统一调用此方法进行日志流拦截初始化
+        // 初始化日志拦截器，重定向Console输出到拦截器
+        try
+        {
+            // 首先尝试通过Assembly.GetExecutingAssembly()获取当前程序集
+            var executingAssembly = Assembly.GetExecutingAssembly();
+            var logInterceptorType = executingAssembly.GetType("N_m3u8DL_RE.Plugin.LogStreamInterceptor");
+            
+            if (logInterceptorType == null)
+            {
+                // 如果找不到，尝试通过Type.GetType
+                logInterceptorType = Type.GetType("N_m3u8DL_RE.Plugin.LogStreamInterceptor, N_m3u8DL-RE");
+            }
+            
+            Console.WriteLine($"[LogInterceptor] 正在查找LogStreamInterceptor类型: {logInterceptorType != null}");
+            
+            if (logInterceptorType != null)
+            {
+                // 检查配置是否启用StreamInterceptor
+                bool isLogInterceptorEnabled = false;
+                try
+                {
+                    var pluginManagerType = Type.GetType("N_m3u8DL_RE.Plugin.PluginManager, N_m3u8DL-RE");
+                    if (pluginManagerType != null)
+                    {
+                        var getConfigMethod = pluginManagerType.GetMethod("GetConfig");
+                        if (getConfigMethod != null)
+                        {
+                            var config = getConfigMethod.Invoke(null, null);
+                            if (config != null)
+                            {
+                                var configType = config.GetType();
+                                var streamInterceptorProp = configType.GetProperty("StreamInterceptor");
+                                if (streamInterceptorProp != null)
+                                {
+                                    var streamConfig = streamInterceptorProp.GetValue(config);
+                                    if (streamConfig != null)
+                                    {
+                                        var enabledProp = streamConfig.GetType().GetProperty("Enabled");
+                                        if (enabledProp != null)
+                                        {
+                                            isLogInterceptorEnabled = (bool)(enabledProp.GetValue(streamConfig) ?? false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception configEx)
+                {
+                    Console.WriteLine($"[LogInterceptor] 配置检查失败，使用默认设置: {configEx.Message}");
+                }
+                
+                Console.WriteLine($"[LogInterceptor] StreamInterceptor配置启用状态: {isLogInterceptorEnabled}");
+                
+                var initializeMethod = logInterceptorType.GetMethod("Initialize");
+                if (initializeMethod != null)
+                {
+                    Console.WriteLine("[LogInterceptor] 找到Initialize方法，正在调用...");
+                    try
+                    {
+                        // 根据配置决定是否启用日志拦截器
+                        initializeMethod.Invoke(null, new object[] { isLogInterceptorEnabled });
+                        Console.WriteLine($"[LogInterceptor] 日志拦截器已{(isLogInterceptorEnabled ? "启用" : "禁用")}");
+                    }
+                    catch (Exception invokeEx)
+                    {
+                        Console.WriteLine($"[LogInterceptor] Initialize方法调用异常: {invokeEx.Message}");
+                        Console.WriteLine($"[LogInterceptor] 异常详情: {invokeEx.StackTrace}");
+                    }
+                    // 初始化信息由LogStreamInterceptor内部输出
+                }
+                else
+                {
+                    Console.WriteLine("[LogInterceptor] 未找到Initialize方法");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[LogInterceptor] 未找到LogStreamInterceptor类型");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LogInterceptor] 初始化失败: {ex.Message}");
+            Console.WriteLine($"[LogInterceptor] 异常详情: {ex.StackTrace}");
+        }
+        
         // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
         if (OperatingSystem.IsWindows()) 
         {

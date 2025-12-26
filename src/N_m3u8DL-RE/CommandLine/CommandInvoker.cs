@@ -4,11 +4,13 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Plugin;
 using N_m3u8DL_RE.Util;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using System.Net;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.CommandLine;
@@ -708,6 +710,47 @@ internal static partial class CommandInvoker
 
     public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
     {
+        // 【输入流拦截】由PluginManager.cs统一管理和调用
+        try
+        {
+            // 参数拦截
+            args = InputStreamInterceptor.InterceptArgs(args);
+            
+            // 选项拦截 - 简化实现，避免复杂的CommandLineBuilder API
+            try
+            {
+                // 直接解析参数用于插件通知
+                object? option = args;
+                
+                // 插件输入事件通知
+                try
+                {
+                    var pluginManagerType = Type.GetType("N_m3u8DL_RE.Plugin.PluginManager, N_m3u8DL-RE");
+                    if (pluginManagerType != null)
+                    {
+                        var notifyInputMethod = pluginManagerType.GetMethod("NotifyPluginsOnInput", 
+                            BindingFlags.NonPublic | BindingFlags.Static);
+                        if (notifyInputMethod != null)
+                        {
+                            notifyInputMethod.Invoke(null, new object[] { args, option });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[InputInterceptor] Plugin notification failed: {ex.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[InputInterceptor] Failed to process options: {ex.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[InputInterceptor] Failed to process input: {ex.Message}");
+        }
+
         var argList = new List<string>(args);
         var index = -1;
         if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)

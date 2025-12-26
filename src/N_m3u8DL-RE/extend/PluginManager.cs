@@ -8,11 +8,102 @@ using N_m3u8DL_RE.Common.Entity;
 
 namespace N_m3u8DL_RE.Plugin
 {
+    public enum PluginLogLevel
+    {
+        Debug,
+        Info,
+        Warn,
+        Error,
+        Fatal
+    }
+
     public static class PluginManager
     {
         private static readonly List<IPlugin> _plugins = new List<IPlugin>();
+        private static readonly List<IStreamInterceptor> _streamInterceptors = new List<IStreamInterceptor>();
         private static int _downloadCount = 0;
         private static PluginConfig? _config;
+
+        // 【插件管理】由PluginManager.cs统一管理插件系统核心功能
+        
+        // 新增流拦截器管理方法
+        public static void RegisterStreamInterceptor(IStreamInterceptor interceptor)
+        {
+            if (!_streamInterceptors.Contains(interceptor))
+            {
+                _streamInterceptors.Add(interceptor);
+                
+                // 注册到各个拦截器
+                InputStreamInterceptor.RegisterInterceptor(interceptor);
+                OutputStreamInterceptor.RegisterInterceptor(interceptor);
+                LogStreamInterceptor.RegisterInterceptor(interceptor);
+                
+                // 使用Debug输出避免触发Console输出拦截
+                System.Diagnostics.Debug.WriteLine($"[PluginManager] 已注册流拦截器: {interceptor.GetType().Name}");
+            }
+        }
+
+        // 新增插件事件通知方法
+        internal static void NotifyPluginsOnOutput(string outputPath, string outputType)
+        {
+            foreach (var plugin in _plugins)
+            {
+                try
+                {
+                    plugin.OnOutputGenerated(outputPath, outputType);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PluginManager] Output notification failed for {plugin.GetType().Name}: {ex.Message}");
+                }
+            }
+        }
+        
+        internal static void RedirectOutput(string originalPath, string newPath)
+        {
+            foreach (var plugin in _plugins)
+            {
+                try
+                {
+                    plugin.OnOutputGenerated(newPath, "redirected");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PluginManager] Output redirection failed for {plugin.GetType().Name}: {ex.Message}");
+                }
+            }
+        }
+        
+        internal static void NotifyPluginsOnLog(string logMessage, PluginLogLevel logLevel)
+        {
+            foreach (var plugin in _plugins)
+            {
+                try
+                {
+                    plugin.OnLogGenerated(logMessage, logLevel);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[PluginManager] Log notification failed for {plugin.GetType().Name}: {ex.Message}");
+                }
+            }
+        }
+
+        // 新增插件输入事件通知方法
+        internal static void NotifyPluginsOnInput(object args, object option)
+        {
+            foreach (var plugin in _plugins)
+            {
+                try
+                {
+                    plugin.OnInputReceived(args, option);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Plugin] Input notification failed for {plugin.GetType().Name}: {ex.Message}");
+                }
+            }
+        }
 
         public static void LoadPlugins()
         {
@@ -47,6 +138,15 @@ namespace N_m3u8DL_RE.Plugin
                             {
                                 plugin.Initialize(_config);
                                 _plugins.Add(plugin);
+                                
+                                // 检查是否实现流拦截器接口
+                                if (plugin is IStreamInterceptor interceptor)
+                                {
+                                    RegisterStreamInterceptor(interceptor);
+                                    // 使用Debug输出避免触发Console输出拦截
+                                    System.Diagnostics.Debug.WriteLine($"[PluginManager] Registered stream interceptor: {pluginName}");
+                                }
+                                
                                 Console.WriteLine($"[Plugin] Loaded plugin: {pluginName}");
                             }
                         }
@@ -113,6 +213,21 @@ namespace N_m3u8DL_RE.Plugin
                         Console.WriteLine($"[Plugin] ProxySwitcher config: Enabled={proxyEnabled}");
                     }
                     
+                    if (json.Contains("\"StreamInterceptor\""))
+                    {
+                        var streamInterceptorEnabled = ExtractJsonBoolValue(json, "StreamInterceptor", "Enabled");
+                        var interceptLevel = ExtractJsonValue(json, "InterceptLevel", "Info");
+                        var logDestination = ExtractJsonValue(json, "LogDestination", "Console");
+                        
+                        _config.StreamInterceptor = new StreamInterceptorConfig
+                        {
+                            Enabled = streamInterceptorEnabled,
+                            InterceptLevel = interceptLevel,
+                            LogDestination = logDestination
+                        };
+                        Console.WriteLine($"[Plugin] StreamInterceptor config: Enabled={streamInterceptorEnabled}, InterceptLevel={interceptLevel}, LogDestination={logDestination}");
+                    }
+                    
                     Console.WriteLine($"[Plugin] Config loaded manually");
                 }
                 catch (Exception ex)
@@ -166,6 +281,7 @@ namespace N_m3u8DL_RE.Plugin
                 "UASwitcher" => _config?.UASwitcher?.Enabled ?? false,
                 "ProxySwitcher" => _config?.ProxySwitcher?.Enabled ?? false,
                 "BatchDownload" => ExtractBatchDownloadEnabledFromConfig(),
+                "StreamInterceptor" => _config?.StreamInterceptor?.Enabled ?? false,
                 _ => false
             };
         }
@@ -231,12 +347,33 @@ namespace N_m3u8DL_RE.Plugin
     {
         void Initialize(PluginConfig? config);
         void OnFileDownloaded(string filePath, int downloadCount);
+        
+        // 新增插件接口方法 - 使用更通用的参数类型
+        void OnInputReceived(object args, object option);
+        void OnOutputGenerated(string outputPath, string outputType);
+        void OnLogGenerated(string logMessage, PluginLogLevel logLevel);
+    }
+
+    public interface IStreamInterceptor
+    {
+        // 输入流拦截
+        string[] InterceptInput(string[] originalArgs);
+        object InterceptOptions(object originalOption);
+        
+        // 输出流拦截
+        string InterceptOutput(string originalOutput, string outputType);
+        void OnOutputRedirect(string originalPath, string newPath);
+        
+        // 日志流拦截
+        string InterceptLog(string originalLog, PluginLogLevel level);
+        void OnLogRedirect(string originalLog, PluginLogLevel level, string newDestination);
     }
 
     public class PluginConfig
     {
         public UASwitcherConfig? UASwitcher { get; set; }
         public ProxySwitcherConfig? ProxySwitcher { get; set; }
+        public StreamInterceptorConfig? StreamInterceptor { get; set; }
         // BatchDownload配置现在由插件直接读取，不再通过PluginConfig传递
     }
 
@@ -251,5 +388,12 @@ namespace N_m3u8DL_RE.Plugin
         public bool Enabled { get; set; } = false;
         public string ClashApiUrl { get; set; } = "http://127.0.0.1:9090";
         public int SwitchInterval { get; set; } = 3;
+    }
+
+    public class StreamInterceptorConfig
+    {
+        public bool Enabled { get; set; } = false;
+        public string InterceptLevel { get; set; } = "Info";
+        public string LogDestination { get; set; } = "Console";
     }
 }
