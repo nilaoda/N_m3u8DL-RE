@@ -19,7 +19,7 @@ on:
         default: 'main'
 
 env:
-  DOTNET_SDK_VERSION: "9.0.306"
+  DOTNET_SDK_VERSION: "10.0.101"
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
 
-      - run: powershell -Command "(Get-Content src/N_m3u8DL-RE/N_m3u8DL-RE.csproj) -replace '<TargetFramework>.*</TargetFramework>', '<TargetFramework>net9.0-windows</TargetFramework>' | Set-Content src/N_m3u8DL-RE/N_m3u8DL-RE.csproj"
+      - run: powershell -Command "(Get-Content src/N_m3u8DL-RE/N_m3u8DL-RE.csproj) -replace '<TargetFramework>.*</TargetFramework>', '<TargetFramework>net10.0-windows</TargetFramework>' | Set-Content src/N_m3u8DL-RE/N_m3u8DL-RE.csproj"
       - run: dotnet add src/N_m3u8DL-RE/N_m3u8DL-RE.csproj package YY-Thunks --version 1.1.4
       - run: dotnet add src/N_m3u8DL-RE/N_m3u8DL-RE.csproj package VC-LTL --version 5.1.1
       - run: dotnet publish src/N_m3u8DL-RE -p:TargetPlatformMinVersion=6.0 -r win-x86 -c Release -o artifact-x86
@@ -117,82 +117,6 @@ jobs:
           name: win-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_win-arm64_${{ needs.set-date.outputs.date }}.zip
 
-  build-linux-x64-arm64:
-    runs-on: ubuntu-latest
-    needs: set-date
-
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          ref: ${{ github.event.inputs.ref }}
-      
-      - name: Build x64 in Ubuntu 18.04 container (for glibc 2.27 compatibility)
-        run: |
-          # 在 Ubuntu 18.04 容器中执行完整构建流程
-          docker run --rm \
-            -v "$PWD:/workspace" \
-            -w /workspace \
-            ubuntu:18.04 \
-            bash -c "
-              set -e
-  
-              # 安装编译和运行依赖
-              apt-get update
-              DEBIAN_FRONTEND=noninteractive apt-get install -y wget build-essential clang libicu-dev zlib1g libcurl4-openssl-dev libkrb5-dev
-  
-              # 下载并安装 .NET SDK
-              DOTNET_SDK_VERSION='${{ env.DOTNET_SDK_VERSION }}'
-              DOTNET_SDK_URL=\"https://builds.dotnet.microsoft.com/dotnet/Sdk/\${DOTNET_SDK_VERSION}/dotnet-sdk-\${DOTNET_SDK_VERSION}-linux-x64.tar.gz\"
-              wget -nv \"\$DOTNET_SDK_URL\" -O dotnet-sdk.tar.gz
-              mkdir -p /opt/dotnet
-              tar -xzf dotnet-sdk.tar.gz -C /opt/dotnet
-              export PATH=\"/opt/dotnet:\$PATH\"
-  
-              # 编译 Native AOT 输出到挂载的 artifact 目录
-              dotnet publish src/N_m3u8DL-RE -r linux-x64 -c Release -o /workspace/artifact
-            "
-      
-      - name: Build arm64 in Ubuntu 18.04 container (for glibc 2.27 compatibility)
-        run: |
-          # 在 Ubuntu 18.04 容器中执行完整构建流程
-          docker run --rm \
-            -v "$PWD:/workspace" \
-            -w /workspace \
-            mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-cross-arm64-20220312201346-b2c2436 \
-            bash -c "
-              set -e
-  
-              # 下载并安装 .NET SDK
-              DOTNET_SDK_VERSION='${{ env.DOTNET_SDK_VERSION }}'
-              DOTNET_SDK_URL=\"https://builds.dotnet.microsoft.com/dotnet/Sdk/\${DOTNET_SDK_VERSION}/dotnet-sdk-\${DOTNET_SDK_VERSION}-linux-x64.tar.gz\"
-              wget -nv \"\$DOTNET_SDK_URL\" -O dotnet-sdk.tar.gz
-              mkdir -p /opt/dotnet
-              tar -xzf dotnet-sdk.tar.gz -C /opt/dotnet
-              export PATH=\"/opt/dotnet:\$PATH\"
-  
-              # 编译 Native AOT 输出到挂载的 artifact 目录
-              dotnet publish src/N_m3u8DL-RE -r linux-arm64 -c Release -p:StripSymbols=true -p:CppCompilerAndLinker=clang-9 -p:SysRoot=/crossrootfs/arm64 -o /workspace/artifact-arm64
-            "
-
-      - name: Package [linux]
-        run: |
-          cd artifact
-          tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
-          cd ../artifact-arm64
-          tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
-
-      - name: Upload Artifact [linux-x64]
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-x64
-          path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz
-
-      - name: Upload Artifact[linux-arm64]
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-arm64
-          path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz
-
   build-android-bionic-x64-arm64:
     runs-on: windows-latest
     needs: set-date
@@ -217,7 +141,7 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
-      
+
       - run: dotnet publish src/N_m3u8DL-RE -r linux-bionic-x64 -p:DisableUnsupportedError=true -p:PublishAotUsingRuntimePack=true -o artifact
       - run: dotnet publish src/N_m3u8DL-RE -r linux-bionic-arm64 -p:DisableUnsupportedError=true -p:PublishAotUsingRuntimePack=true -o artifact-arm64
 
@@ -240,59 +164,128 @@ jobs:
           name: android-bionic-arm64
           path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_android-bionic-arm64_${{ needs.set-date.outputs.date }}.tar.gz
 
-  build-linux-musl-x64:
+  build-linux-x64:
     runs-on: ubuntu-latest
     needs: set-date
-    container: mcr.microsoft.com/dotnet/sdk:9.0-alpine-amd64
 
     steps:
       - uses: actions/checkout@v1
         with:
           ref: ${{ github.event.inputs.ref }}
 
-      - run: apk add clang build-base zlib-dev
-      - run: dotnet publish src/N_m3u8DL-RE -r linux-musl-x64 -c Release -o artifact -p:InvariantGlobalization=true
+      - name: Build x64 in alpine container
+        run: |
+          # 在 alpine 容器中执行完整构建流程
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            alpine:3.21 \
+            sh -c "
+              set -e
+          
+              # 安装编译和运行依赖
+              apk add --no-cache bash wget tar clang build-base cmake icu-dev icu-data-full zlib-static openssl-dev openssl-libs-static
+  
+              # 下载并安装 .NET SDK
+              DOTNET_SDK_VERSION='${{ env.DOTNET_SDK_VERSION }}'
+              DOTNET_SDK_URL=\"https://builds.dotnet.microsoft.com/dotnet/Sdk/\${DOTNET_SDK_VERSION}/dotnet-sdk-\${DOTNET_SDK_VERSION}-linux-musl-x64.tar.gz\"
+              wget -nv \"\$DOTNET_SDK_URL\" -O dotnet-sdk.tar.gz
+              mkdir -p /opt/dotnet
+              tar -xzf dotnet-sdk.tar.gz -C /opt/dotnet
+              export PATH=\"/opt/dotnet:\$PATH\"
+          
+              # 编译 Native AOT 输出到挂载的 artifact 目录
+              dotnet publish src/N_m3u8DL-RE -r linux-musl-x64 -c Release -o /workspace/artifact
+            "
 
-      - name: Package [linux-musl-x64]
+      - name: Package [linux-x64]
         run: |
           cd artifact
-          tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
-      - name: Upload Artifact [linux-musl-x64]
+      - name: Upload Artifact [linux-x64]
         uses: actions/upload-artifact@v4
         with:
-          name: linux-musl-x64
-          path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-x64_${{ needs.set-date.outputs.date }}.tar.gz
+          name: linux-x64
+          path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-x64_${{ needs.set-date.outputs.date }}.tar.gz
 
-  build-linux-musl-arm64:
+  build-linux-arm64:
     runs-on: ubuntu-latest
     needs: set-date
-    container: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-22.04-cross-arm64-alpine
 
     steps:
       - uses: actions/checkout@v1
         with:
           ref: ${{ github.event.inputs.ref }}
 
-      - name: Set up dotnet
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+      - name: Build arm64 in alpine container
+        run: |
+          # 在交叉编译环境容器中执行完整构建流程
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -w /workspace \
+            mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-22.04-cross-arm64-alpine \
+            bash -c "
+              set -e
+              
+              # 确保 Ubuntu 宿主环境有所有依赖
+              apt-get update && apt-get install -y build-essential clang binutils-aarch64-linux-gnu
+          
+              # 动态获取 Alpine 最新 OpenSSL 版本号
+              ALPINE_REPO='https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64'
+              echo \"Fetching latest OpenSSL version from Alpine...\"
+              # 自动抓取 openssl-dev 的完整文件名并解析版本号
+              SSL_APK_NAME=\$(wget -qO- \$ALPINE_REPO/ | grep -o 'openssl-dev-[0-9.]\+-r[0-9]\+.apk' | head -n 1)
+              SSL_VER=\$(echo \$SSL_APK_NAME | sed 's/openssl-dev-//;s/.apk//')
+              echo \"Detected OpenSSL Version: \$SSL_VER\"
+              
+              # 下载并提取 ARM64 的 OpenSSL 静态库到 SysRoot
+              mkdir -p /tmp/ssl_setup && cd /tmp/ssl_setup
+              wget -q \$ALPINE_REPO/openssl-libs-static-\$SSL_VER.apk
+              wget -q \$ALPINE_REPO/openssl-dev-\$SSL_VER.apk
+              
+              # 解压到交叉编译系统的根目录
+              for f in *.apk; do tar -xf \$f -C /crossrootfs/arm64; done
+              cd /workspace
+              
+              # 设置交叉编译环境变量 (强制 CMake 和编译器使用正确路径)
+              export CROSS_COMPILE_PREFIX=\"aarch64-alpine-linux-musl-\"
+              export CC=\"\${CROSS_COMPILE_PREFIX}clang\"
+              export CXX=\"\${CROSS_COMPILE_PREFIX}clang++\"
+              
+              # 告知 .NET 本地脚本去哪里找 OpenSSL 静态库
+              export OPENSSL_ROOT_DIR=\"/crossrootfs/arm64/usr\"
+              export OPENSSL_USE_STATIC_LIBS=TRUE
+              
+              # 额外保险：设置 CFLAGS 让 CMake 内部探测更准确
+              export CFLAGS=\"--sysroot=/crossrootfs/arm64 --target=aarch64-alpine-linux-musl\"
+          
+              # 下载并安装 .NET SDK
+              DOTNET_SDK_VERSION='${{ env.DOTNET_SDK_VERSION }}'
+              DOTNET_SDK_URL=\"https://builds.dotnet.microsoft.com/dotnet/Sdk/\${DOTNET_SDK_VERSION}/dotnet-sdk-\${DOTNET_SDK_VERSION}-linux-x64.tar.gz\"
+              wget -nv \"\$DOTNET_SDK_URL\" -O dotnet-sdk.tar.gz
+              mkdir -p /opt/dotnet
+              tar -xzf dotnet-sdk.tar.gz -C /opt/dotnet
+              export PATH=\"/opt/dotnet:\$PATH\"
+          
+              # 交叉编译
+              dotnet publish src/N_m3u8DL-RE -r linux-musl-arm64 -c Release \
+                -p:SysRoot=/crossrootfs/arm64 \
+                -p:CppCompilerAndLinker=clang \
+                -p:StripSymbols=true \
+                -o /workspace/artifact
+            "
 
-      - run: apt-get update
-      - run: apt-get install -y build-essential clang binutils-aarch64-linux-gnu
-      - run: dotnet publish src/N_m3u8DL-RE -r linux-musl-arm64 -c Release -o artifact -p:CppCompilerAndLinker=clang -p:SysRoot=/crossrootfs/arm64 -p:InvariantGlobalization=true
-
-      - name: Package [linux-musl-arm64]
+      - name: Package [linux-arm64]
         run: |
           cd artifact
-          tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
+          tar -czvf ../N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz N_m3u8DL-RE
 
-      - name: Upload Artifact [linux-musl-arm64]
+      - name: Upload Artifact [linux-x64]
         uses: actions/upload-artifact@v4
         with:
-          name: linux-musl-arm64
-          path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-musl-arm64_${{ needs.set-date.outputs.date }}.tar.gz
+          name: linux-arm64
+          path: N_m3u8DL-RE_${{ needs.set-date.outputs.tag }}_linux-arm64_${{ needs.set-date.outputs.date }}.tar.gz
 
   build-mac-x64-arm64:
     runs-on: macos-latest
@@ -335,8 +328,8 @@ jobs:
     permissions:
       contents: write
     if: ${{ github.event.inputs.doRelease == 'true' }}
-    needs: [set-date,build-win-nt6_0-x86,build-win-x64-arm64,build-linux-x64-arm64,build-android-bionic-x64-arm64,build-linux-musl-x64,build-linux-musl-arm64,build-mac-x64-arm64]
-    
+    needs: [set-date,build-win-nt6_0-x86,build-win-x64-arm64,build-android-bionic-x64-arm64,build-linux-x64,build-linux-arm64,build-mac-x64-arm64]
+
     steps:
       - name: Fetch artifacts
         uses: actions/download-artifact@v4
