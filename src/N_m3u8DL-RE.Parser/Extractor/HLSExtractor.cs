@@ -310,26 +310,14 @@ internal class HLSExtractor : IExtractor
             // 解析KEY
             else if (line.StartsWith(HLSTags.ext_x_key))
             {
-                var uri = ParserUtil.GetAttribute(line, "URI");
-                var uri_last = ParserUtil.GetAttribute(lastKeyLine, "URI");
-                    
-                // 如果KEY URL相同，不进行重复解析KEY，但仍需解析IV
-                if (uri != uri_last)
+                // 如果KEY line相同则不再重复解析
+                if (line != lastKeyLine)
                 {
                     // 调用处理器进行解析
                     var parsedInfo = ParseKey(line);
                     currentEncryptInfo.Method = parsedInfo.Method;
                     currentEncryptInfo.Key = parsedInfo.Key;
                     currentEncryptInfo.IV = parsedInfo.IV;
-                }
-                else
-                {
-                    // URI相同时，只重新解析IV（IV可能不同）
-                    var iv = ParserUtil.GetAttribute(line, "IV");
-                    if (!string.IsNullOrEmpty(iv))
-                    {
-                        currentEncryptInfo.IV = HexUtil.HexToBytes(iv);
-                    }
                 }
                 lastKeyLine = line;
             }
