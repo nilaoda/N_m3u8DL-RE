@@ -36,10 +36,7 @@ internal class Program
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
 
-        string loc = ResString.CurrentLoc;
-        string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
-        if (currLoc is "zh-CN" or "zh-SG") loc = "zh-CN";
-        else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
+        string loc = CultureUtil.GetCurrentCultureName();
 
         // 处理用户-h等请求
         var index = -1;
@@ -51,16 +48,7 @@ internal class Program
         
         ResString.CurrentLoc = loc;
 
-        try
-        {
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
-        }
-        catch 
-        {
-            // Culture not work on NT6.0, so catch the exception
-        }
+        CultureUtil.ChangeCurrentCultureName(loc);
 
         await CommandInvoker.InvokeArgs(args, DoWorkAsync);
     }
