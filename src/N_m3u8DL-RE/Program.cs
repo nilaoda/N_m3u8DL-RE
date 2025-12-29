@@ -719,7 +719,7 @@ internal class Program
                 return;
             }
             
-            Logger.InfoMarkUp($"[BatchDownload] Starting batch download with {urls.Count} URLs");
+            Logger.Info($"[BatchDownload] Starting batch download with {urls.Count} URLs");
             
             int successCount = 0;
             int failCount = 0;
@@ -727,7 +727,7 @@ internal class Program
             for (int i = 0; i < urls.Count; i++)
             {
                 var url = urls[i];
-                Logger.InfoMarkUp($"[BatchDownload] Processing URL {i + 1}/{urls.Count}: {url}");
+                Logger.Info($"[BatchDownload] Processing URL {i + 1}/{urls.Count}: {url}");
                 
                 try
                 {
@@ -752,16 +752,16 @@ internal class Program
                 }
                 catch (Exception ex)
                 {
-                    Logger.ErrorMarkUp($"[BatchDownload] Failed to download URL {i + 1}: {ex.Message}");
+                    Logger.Error($"[BatchDownload] Failed to download URL {i + 1}: {ex.Message}");
                     failCount++;
                 }
             }
             
-            Logger.InfoMarkUp($"[BatchDownload] Batch download completed. Success: {successCount}, Failed: {failCount}");
+            Logger.Info($"[BatchDownload] Batch download completed. Success: {successCount}, Failed: {failCount}");
         }
         catch (Exception ex)
         {
-            Logger.ErrorMarkUp($"[BatchDownload] Error during batch download: {ex.Message}");
+            Logger.Error($"[BatchDownload] Error during batch download: {ex.Message}");
         }
     }
 

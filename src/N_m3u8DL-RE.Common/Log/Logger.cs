@@ -102,9 +102,10 @@ public static partial class Logger
                 LogWriteLock.ExitWriteLock();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Console.WriteLine("Failed to write: " + write);
+            Console.WriteLine($"Failed to write log: {ex.GetType().Name} - {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
     }
 
