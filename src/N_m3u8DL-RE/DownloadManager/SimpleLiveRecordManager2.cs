@@ -668,6 +668,10 @@ internal class SimpleLiveRecordManager2
                 if (RecordLimitReachedDic[task.Id])
                     return;
 
+                // 如果 MediaParts 为空，播放列表可能已损坏，跳过并下次重试
+                if (streamSpec.Playlist!.MediaParts.Count == 0)
+                    return;
+                
                 var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
                 if (!SamePathDic.ContainsKey(task.Id))
                 {
