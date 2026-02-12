@@ -940,6 +940,18 @@ internal static class StaticText
             zhTW: "讀取媒體訊息...",
             enUS: "Reading media info..."
         ),
+        ["resolutionFilterNotMatch"] = new TextContainer
+        (
+            zhCN: "-sv res 与实际视频分辨率不符",
+            zhTW: "-sv res 與實際影片解析度不符",
+            enUS: "-sv res does not match the actual video resolution"
+        ),
+        ["resolutionFilterExpectedActual"] = new TextContainer
+        (
+            zhCN: "期望: {} | 实际: {}",
+            zhTW: "期望: {} | 實際: {}",
+            enUS: "Expected: {} | Actual: {}"
+        ),
         ["searchKey"] = new TextContainer
         (
             zhCN: "正在尝试从文本文件搜索KEY...",
