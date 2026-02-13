@@ -94,7 +94,7 @@ internal class SimpleDownloadManager
         if (!resolutionReg.IsMatch(videoResolution))
         {
             Logger.ErrorMarkUp($"[red]{ResString.resolutionFilterNotMatch}[/]");
-            Logger.ErrorMarkUp($"[grey]{ResString.resolutionFilterExpectedActual}[/]", resolutionReg, videoResolution);
+            Logger.ErrorMarkUp($"[grey]{ResString.resolutionFilterExpectedActual}[/]", resolutionReg.ToString().EscapeMarkup(), videoResolution.EscapeMarkup());
             return false;
         }
 
