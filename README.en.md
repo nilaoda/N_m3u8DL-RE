@@ -138,16 +138,16 @@ More Help:
 
   --mux-after-done
 
-When all work is done try to mix the separated audio and video. You can specify the following parameters in :separated form:
+When all work is done try to mux the separated audio and video. You can specify the following parameters in :separated form:
 
-* format=FORMAT: Specify mixed flow container mkv, mp4
-* muxer=MUXER: Specify the mixing program ffmpeg, mkvmerge (default: ffmpeg)
+* format=FORMAT: Specify muxed flow container mkv, mp4
+* muxer=MUXER: Specify the muxing program ffmpeg, mkvmerge (default: ffmpeg)
 * bin_path=PATH: Specify the program path (default: automatically search)
 * skip_sub=BOOL: whether to ignore subtitle files (default: false)
-* keep=BOOL: whether to keep the file after mixing is completed true, false (default: false)
+* keep=BOOL: whether to keep the file after muxing is completed true, false (default: false)
 
 For example:
-# Mix stream into mp4 container
+# mux stream into mp4 container
 -M format=mp4
 # Use mkvmerge to automatically find programs
 -M format=mkv:muxer=mkvmerge
@@ -255,7 +255,7 @@ Examples:
 
 ![RE1](img/RE.gif)
 
-Can also download in parallel and automatically mix streams
+Can also download in parallel and automatically mux streams
 
 ![RE2](img/RE2.gif)
 
@@ -269,7 +269,7 @@ Record MPD live source:
 
 [click to show gif](http://pan.iqiyi.com/file/paopao/nmAV5MOh0yIyHhnxdgM_6th_p2nqrFsM4k-o3cUPwUa8Eh8QOU4uyPkLa_BlBrMa3GBnKWSk8rOaUwbsjKN14g.gif)
 
-During recording, use ffmpeg to mix audio and video in real time
+During recording, use ffmpeg to mux audio and video in real time
 
 ```bash
 ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a -c copy 2022-09-21_19-54-42_V.ts
