@@ -403,7 +403,7 @@ internal partial class DASHExtractor2 : IExtractor
                             // 没用SegmentTimeline 需要计算总分片数量 不精确
                             var timescale = Convert.ToInt32(timescaleStr);
                             var startNumber = Convert.ToInt64(startNumberStr);
-                            var duration = Convert.ToInt32(durationStr);
+                            var duration = Convert.ToInt64(durationStr);
                             var totalNumber = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / duration);
                             // 直播的情况，需要自己计算totalNumber
                             if (totalNumber == 0 && isLive)

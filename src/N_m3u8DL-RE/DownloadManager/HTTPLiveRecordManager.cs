@@ -16,6 +16,8 @@ namespace N_m3u8DL_RE.DownloadManager;
 
 internal class HTTPLiveRecordManager
 {
+    private static HttpClient HttpClient = new();
+    
     IDownloader Downloader;
     DownloaderConfig DownloaderConfig;
     StreamExtractor StreamExtractor;
@@ -73,7 +75,7 @@ internal class HTTPLiveRecordManager
         }
         Logger.Debug(request.Headers.ToString());
 
-        using var response = await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
+        using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
         response.EnsureSuccessStatusCode();
 
         var output = Path.Combine(saveDir, saveName + ".ts");
