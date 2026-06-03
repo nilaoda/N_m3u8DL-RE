@@ -141,12 +141,10 @@ public static partial class MP4TtmlUtil
         {
             var dataSeg = File.ReadAllBytes(item);
 
-            var sawMDAT = false;
             // parse media
             new MP4Parser()
                 .Box("mdat", MP4Parser.AllData(data =>
                 {
-                    sawMDAT = true;
                     // Join this to any previous payload, in case the mp4 has multiple
                     // mdats.
                     if (segTimeMs != 0)

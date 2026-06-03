@@ -33,7 +33,6 @@ internal class Program
         }
         
         Console.CancelKeyPress += Console_CancelKeyPress;
-        ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
 
         string loc = CultureUtil.GetCurrentCultureName();
@@ -109,11 +108,6 @@ internal class Program
         if (option is { MuxAfterDone: false, MuxImports.Count: > 0 })
         {
             throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
-        }
-
-        if (option.UseShakaPackager) 
-        {
-            option.DecryptionEngine = DecryptEngine.SHAKA_PACKAGER;
         }
 
         // LivePipeMux开启时 LiveRealTimeMerge必须开启
