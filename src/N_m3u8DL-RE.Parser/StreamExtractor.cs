@@ -7,6 +7,7 @@ using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Extractor;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Common.Enum;
+using System.Text;
 
 namespace N_m3u8DL_RE.Parser;
 
@@ -53,10 +54,47 @@ public class StreamExtractor
         }
         
         this.rawText = rawText.Trim();
+        if (parserConfig.ChangeMpd && IsDashContent(this.rawText))
+        {
+            this.rawText = await WaitForMpdReplacementAsync(this.rawText);
+        }
         LoadSourceFromText(this.rawText);
     }
 
-    [MemberNotNull(nameof(this.rawText), nameof(this.extractor))]
+    private static bool IsDashContent(string rawText)
+    {
+        return rawText.Contains("</MPD>") && rawText.Contains("<MPD");
+    }
+
+    private async Task<string> WaitForMpdReplacementAsync(string mpdContent)
+    {
+        var mpdPath = parserConfig.ChangeMpdFilePath;
+        if (string.IsNullOrWhiteSpace(mpdPath))
+        {
+            mpdPath = Path.Combine(Environment.CurrentDirectory, "raw.mpd");
+        }
+
+        var dir = Path.GetDirectoryName(mpdPath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+
+        await File.WriteAllTextAsync(mpdPath, mpdContent, Encoding.UTF8);
+        Logger.Warn($"MPD saved to: {mpdPath}");
+        Logger.Warn("请替换该 MPD 文件，替换完成后按 y 继续处理。");
+
+        ConsoleKeyInfo key;
+        do
+        {
+            key = Console.ReadKey(intercept: true);
+        } while (char.ToLowerInvariant(key.KeyChar) != 'y');
+
+        Console.WriteLine();
+        return (await File.ReadAllTextAsync(mpdPath)).Trim();
+    }
+
+    [MemberNotNull(nameof(rawText), nameof(extractor))]
     private void LoadSourceFromText(string rawText)
     {
         var rawType = "txt";
@@ -68,7 +106,7 @@ public class StreamExtractor
             extractor = new HLSExtractor(parserConfig);
             rawType = "m3u8";
         }
-        else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
+        else if (IsDashContent(rawText))
         {
             Logger.InfoMarkUp(ResString.matchDASH);
             // extractor = new DASHExtractor(parserConfig);
