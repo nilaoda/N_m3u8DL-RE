@@ -278,6 +278,18 @@ From v0.1.5, you can try to enable `live-pipe-mux` instead of the above command
 
 From v0.1.8, you can set the environment variable `RE_LIVE_PIPE_OPTIONS` to change some options of ffmpeg when `live-pipe-mux` is enabled: <https://github.com/nilaoda/N_m3u8DL-RE/issues/162#issuecomment-1592462532>
 
+---
+
+**Disclaimer**
+
+This software is open-sourced under the [MIT License](LICENSE) and is provided "as is", without any express or implied warranties (including but not limited to the warranties of merchantability and fitness for a particular purpose). In no event shall the authors be liable for any direct or indirect damages arising from the use of this software.
+
+**Legal Use**
+
+This software is intended for learning and technical research purposes only. Users shall comply with applicable laws and regulations in their country or region, and only download streaming content for which they have legal permission. Any illegal or infringing use is unrelated to the original author, and users shall bear all legal responsibilities themselves.
+
+---
+
 ## Donate
 
 <a href="https://www.buymeacoffee.com/nilaoda" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
