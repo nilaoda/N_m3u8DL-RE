@@ -142,7 +142,7 @@ public partial class WebVttSub
             
             // 如果相差只有1ms，且payload相同，则拼接
             var last = this.Cues.LastOrDefault();
-            if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload) 
+            if (last != null && this.Cues.Count > 0 && (item.StartTime - last.EndTime).TotalMilliseconds <= 1 && item.Payload == last.Payload && item.Settings == last.Settings)
             {
                 last.EndTime = item.EndTime;
             }
