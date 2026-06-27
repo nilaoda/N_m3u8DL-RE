@@ -240,8 +240,8 @@ public static class FilterUtil
     public static void CleanAd(List<StreamSpec> selectedSteams, string[]? keywords)
     {
         if (keywords == null) return;
-        var regList = keywords.Select(s => new Regex(s)).ToList();
-        foreach ( var reg in regList)
+        var regList = ParseAdKeywords(keywords);
+        foreach (var reg in regList)
         {
             Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
         }
@@ -255,16 +255,22 @@ public static class FilterUtil
             foreach (var part in stream.Playlist.MediaParts)
             {
                 // 没有找到广告分片
-                if (part.MediaSegments.All(x => regList.All(reg => !reg.IsMatch(x.Url))))
+                if (part.MediaSegments.All(x => !IsAd(x.Url, regList)))
                 {
                     continue;
                 }
                 // 找到广告分片 清理
-                part.MediaSegments = part.MediaSegments.Where(x => regList.All(reg => !reg.IsMatch(x.Url))).ToList();
+                part.MediaSegments = CleanAdSegments(part.MediaSegments, regList);
             }
 
             // 清理已经为空的 part
             stream.Playlist.MediaParts = stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0).ToList();
+
+            // 如果 #EXT-X-MAP 初始化分片本身命中广告关键字，也一并清除
+            if (stream.Playlist.MediaInit != null && IsAd(stream.Playlist.MediaInit.Url, regList))
+            {
+                stream.Playlist.MediaInit = null;
+            }
 
             var countAfter = stream.SegmentsCount;
 
@@ -273,5 +279,35 @@ public static class FilterUtil
                 Logger.WarnMarkUp("[grey]{} segments => {} segments[/]", countBefore, countAfter);
             }
         }
+    }
+
+    /// <summary>
+    /// 将广告关键字编译为正则表达式列表（供 VOD 与直播复用）
+    /// </summary>
+    /// <param name="keywords"></param>
+    public static List<Regex> ParseAdKeywords(string[]? keywords)
+    {
+        return keywords == null ? [] : keywords.Select(s => new Regex(s)).ToList();
+    }
+
+    /// <summary>
+    /// 判断给定的URL是否命中任意一个广告关键字正则
+    /// </summary>
+    /// <param name="url"></param>
+    /// <param name="regList"></param>
+    public static bool IsAd(string url, IEnumerable<Regex> regList)
+    {
+        return regList.Any(reg => reg.IsMatch(url));
+    }
+
+    /// <summary>
+    /// 从分片列表中剔除命中广告关键字的分片，返回过滤后的新列表
+    /// </summary>
+    /// <param name="segments"></param>
+    /// <param name="regList"></param>
+    public static List<MediaSegment> CleanAdSegments(List<MediaSegment> segments, List<Regex> regList)
+    {
+        if (regList.Count == 0) return segments;
+        return segments.Where(x => !IsAd(x.Url, regList)).ToList();
     }
 }
