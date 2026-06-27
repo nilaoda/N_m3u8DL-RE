@@ -1,5 +1,6 @@
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
@@ -433,6 +434,20 @@ internal partial class DASHExtractor2 : IExtractor
                                 mediaSegment.Duration = duration / (double)timescale;
                                 streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
                             }
+                        }
+                    }
+
+                    // 去除重复分片(重叠Period/SegmentTimeline/connectivity duplicates等会导致同一分片被引用多次)
+                    // 以 URL + 字节范围 作为唯一标识, 保持原始顺序, 避免同一分片被下载两次 (#684)
+                    var _segs = streamSpec.Playlist.MediaParts[0].MediaSegments;
+                    if (_segs.Count > 1)
+                    {
+                        var _seen = new HashSet<string>();
+                        var _deduped = _segs.Where(s => _seen.Add($"{s.Url}|{s.StartRange}|{s.ExpectLength}")).ToList();
+                        if (_deduped.Count != _segs.Count)
+                        {
+                            Logger.Debug($"[DASH] removed {_segs.Count - _deduped.Count} duplicate segment(s) in {streamSpec.GroupId}");
+                            streamSpec.Playlist.MediaParts[0].MediaSegments = _deduped;
                         }
                     }
 
