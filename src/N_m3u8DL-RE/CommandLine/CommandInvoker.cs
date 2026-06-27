@@ -58,6 +58,7 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> CheckSegmentsCount = new Option<bool>("--check-segments-count") { Description = ResString.cmd_checkSegmentsCount }.WithDefault(true);
     private static readonly Option<bool> WriteMetaJson = new Option<bool>("--write-meta-json") { Description = ResString.cmd_writeMetaJson }.WithDefault(true);
     private static readonly Option<bool> AppendUrlParams = new Option<bool>("--append-url-params") { Description = ResString.cmd_appendUrlParams }.WithDefault(false);
+    private static readonly Option<bool> ChangeMpd = new Option<bool>("--change-mpd") { Description = "Write downloaded MPD to raw.mpd, wait for replacement, then continue." }.WithDefault(false);
     private static readonly Option<bool> MP4RealTimeDecryption = new Option<bool>("--mp4-real-time-decryption") { Description = ResString.cmd_MP4RealTimeDecryption }.WithDefault(false);
     private static readonly Option<bool> UseShakaPackager = new Option<bool>("--use-shaka-packager") { Hidden = true, Description = ResString.cmd_useShakaPackager }.WithDefault(false);
     private static readonly Option<DecryptEngine> DecryptionEngine = new ("--decryption-engine") { Description = ResString.cmd_decryptionEngine, DefaultValueFactory = _ => DecryptEngine.MP4DECRYPT };
@@ -635,6 +636,7 @@ internal static partial class CommandInvoker
             SkipDownload = result.GetValue(SkipDownload),
             WriteMetaJson = result.GetValue(WriteMetaJson),
             AppendUrlParams = result.GetValue(AppendUrlParams),
+            ChangeMpd = result.GetValue(ChangeMpd),
             SavePattern = result.GetValue(SavePattern),
             Keys = result.GetValue(Keys),
             UrlProcessorArgs = result.GetValue(UrlProcessorArgs),
@@ -726,7 +728,7 @@ internal static partial class CommandInvoker
         var rootCommand = new RootCommand(VERSION_INFO)
         {
             Input, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
+            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ChangeMpd, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
             MaxSpeed,
