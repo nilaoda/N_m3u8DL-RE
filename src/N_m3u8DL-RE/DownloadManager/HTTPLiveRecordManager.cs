@@ -75,41 +75,71 @@ internal class HTTPLiveRecordManager
         }
         Logger.Debug(request.Headers.ToString());
 
-        using var response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
-        response.EnsureSuccessStatusCode();
-
-        var output = Path.Combine(saveDir, saveName + ".ts");
-        using var stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-        using var responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
-        var buffer = new byte[16 * 1024];
-        var size = 0;
-
-        // 计时器
-        _ = TimeCounterAsync();
-        // 读取INFO
-        _ = ReadInfoAsync();
-
+        HttpResponseMessage? response = null;
         try
         {
-            while ((size = await responseStream.ReadAsync(buffer, CancellationTokenSource.Token)) > 0)
+            response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
+
+            // 手动处理重定向（例如 HTTPS -> HTTP 的跳转）
+            var redirectCount = 0;
+            while (((int)response.StatusCode).ToString().StartsWith("30") && redirectCount < 10)
             {
-                if (!READ_IFO && InfoBuffer.Count < 188 * 5000)
+                var redirectUrl = response.Headers.Location;
+                if (redirectUrl == null) break;
+                if (!redirectUrl.IsAbsoluteUri) redirectUrl = new Uri(request.RequestUri!, redirectUrl);
+
+                Logger.Debug($"Following redirect to: {redirectUrl}");
+                response.Dispose();
+
+                var redirectRequest = new HttpRequestMessage(HttpMethod.Get, redirectUrl);
+                redirectRequest.Headers.ConnectionClose = false;
+                foreach (var item in DownloaderConfig.Headers)
                 {
-                    InfoBuffer.AddRange(buffer);
+                    redirectRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
                 }
-                speedContainer.Add(size);
-                RecordingSizeDic[task.Id] += size;
-                await stream.WriteAsync(buffer, 0, size);
+
+                response = await HttpClient.SendAsync(redirectRequest, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
+                redirectCount++;
             }
+            response.EnsureSuccessStatusCode();
+
+            var output = Path.Combine(saveDir, saveName + ".ts");
+            using var stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+            using var responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
+            var buffer = new byte[16 * 1024];
+            var size = 0;
+
+            // 计时器
+            _ = TimeCounterAsync();
+            // 读取INFO
+            _ = ReadInfoAsync();
+
+            try
+            {
+                while ((size = await responseStream.ReadAsync(buffer, CancellationTokenSource.Token)) > 0)
+                {
+                    if (!READ_IFO && InfoBuffer.Count < 188 * 5000)
+                    {
+                        InfoBuffer.AddRange(buffer);
+                    }
+                    speedContainer.Add(size);
+                    RecordingSizeDic[task.Id] += size;
+                    await stream.WriteAsync(buffer, 0, size);
+                }
+            }
+            catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
+            {
+                ;
+            }
+
+            Logger.InfoMarkUp("File Size: " + GlobalUtil.FormatFileSize(RecordingSizeDic[task.Id]));
+
+            return true;
         }
-        catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
+        finally
         {
-            ;
+            response?.Dispose();
         }
-
-        Logger.InfoMarkUp("File Size: " + GlobalUtil.FormatFileSize(RecordingSizeDic[task.Id]));
-
-        return true;
     }
 
     public async Task ReadInfoAsync()
