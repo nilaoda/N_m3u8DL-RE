@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Synthetic multi-Period DASH manifest for unit tests.
+Entirely generic: uses example.com only. Two Periods (ad + main) with
+distinguishable Period id values and distinct segment URLs.
+-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" minBufferTime="PT1.500S" type="static" mediaPresentationDuration="PT0H0M40.000S" maxSegmentDuration="PT0H0M4.000S" profiles="urn:mpeg:dash:profile:isoff-live:2011">
+	<BaseURL>https://example.com/dash/</BaseURL>
+	<Period id="ad-period" duration="PT0H0M10.000S">
+		<BaseURL>ad/</BaseURL>
+		<AdaptationSet segmentAlignment="true" group="1" par="16:9" lang="und">
+			<Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+			<SegmentTemplate timescale="24" media="$RepresentationID$/$Number%04d$.m4s" startNumber="1" duration="96" initialization="$RepresentationID$/init.mp4" />
+			<Representation id="ad-v0" mimeType="video/mp4" codecs="avc1.64001f" width="640" height="360" frameRate="24" sar="1:1" startWithSAP="1" bandwidth="500000"></Representation>
+		</AdaptationSet>
+		<AdaptationSet segmentAlignment="true" group="2" lang="en">
+			<Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+			<SegmentTemplate timescale="24000" media="$RepresentationID$/$Number%04d$.m4s" startNumber="1" duration="95232" initialization="$RepresentationID$/init.mp4" />
+			<Representation id="ad-a0" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="48000" startWithSAP="1" bandwidth="128000">
+				<AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+			</Representation>
+		</AdaptationSet>
+	</Period>
+	<Period id="main-period" duration="PT0H0M30.000S">
+		<BaseURL>main/</BaseURL>
+		<AdaptationSet segmentAlignment="true" group="1" par="16:9" lang="und">
+			<Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+			<SegmentTemplate timescale="24" media="$RepresentationID$/$Number%04d$.m4s" startNumber="1" duration="96" initialization="$RepresentationID$/init.mp4" />
+			<Representation id="main-v0" mimeType="video/mp4" codecs="avc1.640028" width="1280" height="720" frameRate="24" sar="1:1" startWithSAP="1" bandwidth="2000000"></Representation>
+			<Representation id="main-v1" mimeType="video/mp4" codecs="avc1.640033" width="1920" height="1080" frameRate="24" sar="1:1" startWithSAP="1" bandwidth="4000000"></Representation>
+		</AdaptationSet>
+		<AdaptationSet segmentAlignment="true" group="2" lang="en">
+			<Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+			<SegmentTemplate timescale="24000" media="$RepresentationID$/$Number%04d$.m4s" startNumber="1" duration="95232" initialization="$RepresentationID$/init.mp4" />
+			<Representation id="main-a0" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="48000" startWithSAP="1" bandwidth="128000">
+				<AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+			</Representation>
+		</AdaptationSet>
+	</Period>
+</MPD>

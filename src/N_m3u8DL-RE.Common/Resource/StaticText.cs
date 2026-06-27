@@ -521,6 +521,7 @@ internal static class StaticText
                   "* channel=REGEX: 按音频声道数匹配 (如 6, 2)\r\n" +
                   "* range=REGEX: 按视频动态范围匹配 (如 SDR, HDR, PQ)\r\n" +
                   "* url=REGEX: 按分片URL匹配\r\n" +
+                  "* period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如广告/分段)\r\n" +
                   "* segsMin=number: 仅保留分片数 >= number 的流\r\n" +
                   "* segsMax=number: 仅保留分片数 <= number 的流\r\n" +
                   "* plistDurMin=hms: 仅保留时长 >= hms 的流 (如 1h20m30s, 90s)\r\n" +
@@ -540,7 +541,11 @@ internal static class StaticText
                   "# 选择码率在800Kbps至1Mbps之间的视频\r\n" +
                   "-sv bwMin=800:bwMax=1000\r\n" +
                   "# 去除分片数不超过2的字幕流 (如 trick-play/广告列表)\r\n" +
-                  "-ds segsMax=2:for=all --auto-select\r\n",
+                  "-ds segsMax=2:for=all --auto-select\r\n" +
+                  "# 仅保留主内容 Period (排除广告 Period)\r\n" +
+                  "-sv period=\"main\":for=best\r\n" +
+                  "# 去除广告 Period 的视频\r\n" +
+                  "-dv period=\"ad\":for=all\r\n",
             zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數.\r\n" +
                   "同樣的參數也適用於 --select-audio/-sa, --select-subtitle/-ss 以及對應的 --drop-video/--drop-audio/--drop-subtitle 選項.\r\n\r\n" +
                   "* id=REGEX: 按 GroupId 匹配\r\n" +
@@ -552,6 +557,7 @@ internal static class StaticText
                   "* channel=REGEX: 按音訊聲道數匹配 (如 6, 2)\r\n" +
                   "* range=REGEX: 按影片動態範圍匹配 (如 SDR, HDR, PQ)\r\n" +
                   "* url=REGEX: 按分片URL匹配\r\n" +
+                  "* period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如廣告/分段)\r\n" +
                   "* segsMin=number: 僅保留分片數 >= number 的串流\r\n" +
                   "* segsMax=number: 僅保留分片數 <= number 的串流\r\n" +
                   "* plistDurMin=hms: 僅保留時長 >= hms 的串流 (如 1h20m30s, 90s)\r\n" +
@@ -571,7 +577,11 @@ internal static class StaticText
                   "# 選擇碼率在800Kbps至1Mbps之間的影片\r\n" +
                   "-sv bwMin=800:bwMax=1000\r\n" +
                   "# 去除分片數不超過2的字幕串流 (如 trick-play/廣告列表)\r\n" +
-                  "-ds segsMax=2:for=all --auto-select\r\n",
+                  "-ds segsMax=2:for=all --auto-select\r\n" +
+                  "# 僅保留主內容 Period (排除廣告 Period)\r\n" +
+                  "-sv period=\"main\":for=best\r\n" +
+                  "# 去除廣告 Period 的影片\r\n" +
+                  "-dv period=\"ad\":for=all\r\n",
             enUS: "Select video streams by regular expressions. OPTIONS is a colon (:) separated list of the following sub-keys.\r\n" +
                   "The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and the matching --drop-video/--drop-audio/--drop-subtitle options.\r\n\r\n" +
                   "* id=REGEX: match by group/stream id\r\n" +
@@ -583,6 +593,7 @@ internal static class StaticText
                   "* channel=REGEX: match by audio channel count (e.g. 6, 2)\r\n" +
                   "* range=REGEX: match by video range (e.g. SDR, HDR, PQ)\r\n" +
                   "* url=REGEX: match by segment url\r\n" +
+                  "* period=REGEX: match by DASH Period id (multi-Period MPD, e.g. ads/chapters)\r\n" +
                   "* segsMin=number: keep streams with at least number segments\r\n" +
                   "* segsMax=number: keep streams with at most number segments\r\n" +
                   "* plistDurMin=hms: keep streams whose playlist duration >= hms (e.g. 1h20m30s, 90s)\r\n" +
@@ -602,7 +613,11 @@ internal static class StaticText
                   "# Select video with bandwidth between 800Kbps and 1Mbps\r\n" +
                   "-sv bwMin=800:bwMax=1000\r\n" +
                   "# Drop subtitle streams that have at most 2 segments (e.g. trick-play/ad playlists)\r\n" +
-                  "-ds segsMax=2:for=all --auto-select\r\n"
+                  "-ds segsMax=2:for=all --auto-select\r\n" +
+                  "# Keep only the main content Period (exclude ad Periods)\r\n" +
+                  "-sv period=\"main\":for=best\r\n" +
+                  "# Drop video from the ad Period\r\n" +
+                  "-dv period=\"ad\":for=all\r\n"
         ),
         ["cmd_selectAudio"] = new TextContainer
         (
