@@ -67,13 +67,14 @@ internal class SimpleLiveRecordManager2
     }
 
     /// <summary>
-    /// 获取时间戳
+    /// 获取时间戳(毫秒)。使用毫秒而非秒, 避免同一秒内的多个分片(如低延迟HLS或带亚秒
+    /// PROGRAM-DATE-TIME的直播源)生成相同的文件名而互相覆盖, 导致录制内容丢失。see #751
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
     private long GetUnixTimestamp(DateTime dateTime)
     {
-        return new DateTimeOffset(dateTime.ToUniversalTime()).ToUnixTimeSeconds();
+        return new DateTimeOffset(dateTime.ToUniversalTime()).ToUnixTimeMilliseconds();
     }
 
     /// <summary>
