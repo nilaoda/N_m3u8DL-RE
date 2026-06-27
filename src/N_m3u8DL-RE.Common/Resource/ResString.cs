@@ -107,6 +107,7 @@ public static class ResString
     public static string partMerge => GetText("partMerge");
     public static string fetch => GetText("fetch");
     public static string ffmpegMerge => GetText("ffmpegMerge");
+    public static string ffmpegMergeReachLimit => GetText("ffmpegMergeReachLimit");
     public static string ffmpegNotFound => GetText("ffmpegNotFound");
     public static string mkvmergeNotFound => GetText("mkvmergeNotFound");
     public static string mp4decryptNotFound => GetText("mp4decryptNotFound");

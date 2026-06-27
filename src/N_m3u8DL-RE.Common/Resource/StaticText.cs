@@ -844,6 +844,12 @@ internal static class StaticText
             zhTW: "調用ffmpeg合併中...",
             enUS: "ffmpeg merging..."
         ),
+        ["ffmpegMergeReachLimit"] = new TextContainer
+        (
+            zhCN: "合并失败：打开的文件过多(Too many open files)。已下载的分片仍保留在临时目录，可提高系统文件句柄上限(如 ulimit -n)后重试，或改用 --binary-merge / --use-ffmpeg-concat-demuxer 重新合并。",
+            zhTW: "合併失敗：開啟的檔案過多(Too many open files)。已下載的分片仍保留在臨時目錄，可提高系統檔案句柄上限(如 ulimit -n)後重試，或改用 --binary-merge / --use-ffmpeg-concat-demuxer 重新合併。",
+            enUS: "Merge failed: too many open files. The downloaded segments are kept in the temp directory; raise the open-file limit (e.g. ulimit -n) and retry, or re-merge with --binary-merge / --use-ffmpeg-concat-demuxer."
+        ),
         ["ffmpegNotFound"] = new TextContainer
         (
             zhCN: "找不到ffmpeg，请自行下载：https://ffmpeg.org/download.html",
