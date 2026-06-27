@@ -106,7 +106,9 @@ internal class SimpleLiveRecordManager2
             name = segment.Index.ToString();
         }
 
-        return name;
+        // URL 衍生的分片名(尤其是 DASH 带超长查询串的场景, 如 YouTube)可能超过文件系统
+        // 单个组件 255 字节的限制导致创建临时文件失败, 这里统一截断到安全长度。see #650
+        return OtherUtil.TruncateFileName(name, 200);
     }
 
     private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
