@@ -12,5 +12,9 @@
   <ItemGroup>
 	  <PackageReference Include="Spectre.Console" Version="0.57.1" />
   </ItemGroup>
-	
+
+  <ItemGroup>
+	  <InternalsVisibleTo Include="N_m3u8DL-RE.Tests" />
+  </ItemGroup>
+
 </Project>
