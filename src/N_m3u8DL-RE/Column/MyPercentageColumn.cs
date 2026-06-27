@@ -19,7 +19,7 @@ internal class MyPercentageColumn : ProgressColumn
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
         var percentage = task.Percentage;
-        var style = percentage == 100 ? CompletedStyle : Style ?? Style.Plain;
+        var style = percentage >= 100 ? CompletedStyle : Style;
         return new Text($"{task.Value}/{task.MaxValue} {percentage:F2}%", style).RightJustified();
     }
 }
