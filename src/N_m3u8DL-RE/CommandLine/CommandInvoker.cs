@@ -59,7 +59,6 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> WriteMetaJson = new Option<bool>("--write-meta-json") { Description = ResString.cmd_writeMetaJson }.WithDefault(true);
     private static readonly Option<bool> AppendUrlParams = new Option<bool>("--append-url-params") { Description = ResString.cmd_appendUrlParams }.WithDefault(false);
     private static readonly Option<bool> MP4RealTimeDecryption = new Option<bool>("--mp4-real-time-decryption") { Description = ResString.cmd_MP4RealTimeDecryption }.WithDefault(false);
-    private static readonly Option<bool> UseShakaPackager = new Option<bool>("--use-shaka-packager") { Hidden = true, Description = ResString.cmd_useShakaPackager }.WithDefault(false);
     private static readonly Option<DecryptEngine> DecryptionEngine = new ("--decryption-engine") { Description = ResString.cmd_decryptionEngine, DefaultValueFactory = _ => DecryptEngine.MP4DECRYPT };
     private static readonly Option<bool> ForceAnsiConsole = new("--force-ansi-console") { Description = ResString.cmd_forceAnsiConsole };
     private static readonly Option<bool> NoAnsiColor = new("--no-ansi-color") { Description = ResString.cmd_noAnsiColor };
@@ -371,7 +370,7 @@ internal static partial class CommandInvoker
         {
             path = Path.GetFullPath(input);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             result.AddError("Invalid log path!");
             return null;
@@ -639,7 +638,6 @@ internal static partial class CommandInvoker
             Keys = result.GetValue(Keys),
             UrlProcessorArgs = result.GetValue(UrlProcessorArgs),
             MP4RealTimeDecryption = result.GetValue(MP4RealTimeDecryption),
-            UseShakaPackager = result.GetValue(UseShakaPackager),
             DecryptionEngine = result.GetValue(DecryptionEngine),
             DecryptionBinaryPath = result.GetValue(DecryptionBinaryPath),
             FFmpegBinaryPath = result.GetValue(FFmpegBinaryPath),
@@ -705,6 +703,16 @@ internal static partial class CommandInvoker
     public static async Task<int> InvokeArgs(string[] args, Func<MyOption, Task> action)
     {
         var argList = new List<string>(args);
+        // Map legacy hidden flag --use-shaka-packager to new --decryption-engine SHAKA_PACKAGER
+        if (argList.Contains("--use-shaka-packager"))
+        {
+            // remove all occurrences
+            argList = argList.Where(a => a != "--use-shaka-packager").ToList();
+            // inject decryption engine option
+            argList.Add("--decryption-engine");
+            argList.Add("SHAKA_PACKAGER");
+            args = argList.ToArray();
+        }
         var index = -1;
         if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)
         {
@@ -728,7 +736,7 @@ internal static partial class CommandInvoker
             Input, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
-            LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
+            LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, MP4RealTimeDecryption,
             MaxSpeed,
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,

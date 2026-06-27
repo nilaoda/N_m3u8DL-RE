@@ -225,7 +225,7 @@ public partial class MSSMoovProcessor
         tencPayload.AddRange([0, 0]);
         tencPayload.Add(0x1); // default_IsProtected
         tencPayload.Add(0x8); // default_Per_Sample_IV_size
-        tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID)); // default_KID
+        tencPayload.AddRange(HexUtil.HexToBytes(ProtecitonKID ?? "")); // default_KID
         // tencPayload.Add(0x8);// default_constant_IV_size
         // tencPayload.AddRange(new byte[8]);// default_constant_IV
         var tencBox = FullBox("tenc", 0, 0, tencPayload.ToArray());

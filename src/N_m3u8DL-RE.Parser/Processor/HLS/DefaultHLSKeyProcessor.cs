@@ -18,11 +18,11 @@ public class DefaultHLSKeyProcessor : KeyProcessor
     {
         var iv = ParserUtil.GetAttribute(keyLine, "IV");
         var method = ParserUtil.GetAttribute(keyLine, "METHOD");
-        var uri = ParserUtil.GetAttribute(keyLine, "URI");
+        var uri = ParserUtil.GetAttribute(keyLine, "URI") ?? "";
 
-        Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
+        Logger.Debug("METHOD:{},URI:{},IV:{}", method ?? "", uri ?? "", iv ?? "");
 
-        var encryptInfo = new EncryptInfo(method);
+        var encryptInfo = new EncryptInfo(method ?? "");
 
         // IV
         if (!string.IsNullOrEmpty(iv))
@@ -42,17 +42,17 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             {
                 encryptInfo.Key = parserConfig.CustomeKey;
             }
-            else if (uri.ToLower().StartsWith("base64:"))
+            else if ((uri ?? "").ToLower().StartsWith("base64:"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                encryptInfo.Key = Convert.FromBase64String((uri ?? "")[7..]);
             }
-            else if (uri.ToLower().StartsWith("data:;base64,"))
+            else if ((uri ?? "").ToLower().StartsWith("data:;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[13..]);
+                encryptInfo.Key = Convert.FromBase64String((uri ?? "")[13..]);
             }
-            else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
+            else if ((uri ?? "").ToLower().StartsWith("data:text/plain;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[23..]);
+                encryptInfo.Key = Convert.FromBase64String((uri ?? "")[23..]);
             }
             else if (File.Exists(uri))
             {
@@ -87,7 +87,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
         
         // 处理自定义加密方式
         encryptInfo.Method = parserConfig.CustomMethod.Value;
-        Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
+        Logger.Warn("METHOD changed from {} to {}", method ?? "", encryptInfo.Method);
 
         return encryptInfo;
     }
