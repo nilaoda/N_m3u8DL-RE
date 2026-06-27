@@ -42,14 +42,8 @@ public static partial class Logger
             var now = DateTime.Now;
             if (string.IsNullOrEmpty(LogFilePath))
             {
-                LogFilePath = Path.Combine(logDir, now.ToString("yyyy-MM-dd_HH-mm-ss-fff") + ".log");
-                int index = 1;
-                var fileName = Path.GetFileNameWithoutExtension(LogFilePath);
-                // 若文件存在则加序号
-                while (File.Exists(LogFilePath))
-                {
-                    LogFilePath = Path.Combine(Path.GetDirectoryName(LogFilePath)!, $"{fileName}-{index++}.log");
-                }
+                // 原子地占用一个唯一的日志文件名，避免多个进程在同一毫秒内选中相同文件名而冲突
+                LogFilePath = ClaimAutoLogFile(logDir, now);
             }
 
             string init = "LOG " + now.ToString("yyyy/MM/dd") + Environment.NewLine
@@ -62,6 +56,33 @@ public static partial class Logger
         catch (Exception ex)
         {
             Error($"Init log failed! {ex.Message.RemoveMarkup()}");
+        }
+    }
+
+    /// <summary>
+    /// 以独占方式创建并占用一个唯一的日志文件，返回其完整路径。
+    /// 若文件名已被占用（例如另一个进程在同一毫秒内启动）则递增序号后重试，
+    /// 从而消除“先判断存在再创建”所带来的竞态。
+    /// </summary>
+    internal static string ClaimAutoLogFile(string logDir, DateTime now)
+    {
+        var baseName = now.ToString("yyyy-MM-dd_HH-mm-ss-fff");
+        var fileName = baseName;
+        var index = 1;
+        while (true)
+        {
+            var path = Path.Combine(logDir, fileName + ".log");
+            try
+            {
+                // CreateNew 在文件已存在时会抛出 IOException，借此原子地占用文件名
+                using (new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite)) { }
+                return path;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+                // 该文件名已被占用，换一个序号继续尝试
+                fileName = $"{baseName}-{index++}";
+            }
         }
     }
 
