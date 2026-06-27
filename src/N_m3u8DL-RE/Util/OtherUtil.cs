@@ -1,5 +1,7 @@
 ﻿using N_m3u8DL_RE.Enum;
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Util;
@@ -25,7 +27,7 @@ internal static partial class OtherUtil
 
     private static readonly char[] InvalidChars = "34,60,62,124,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,58,42,63,92,47"
         .Split(',').Select(s => (char)int.Parse(s)).ToArray();
-    public static string GetValidFileName(string input, string re = "_", bool filterSlash = false)
+    public static string GetValidFileName(string input, string re = "_", bool filterSlash = false, int maxLength = 0)
     {
         var title = InvalidChars.Aggregate(input, (current, invalidChar) => current.Replace(invalidChar.ToString(), re));
         if (filterSlash)
@@ -33,7 +35,38 @@ internal static partial class OtherUtil
             title = title.Replace("/", re);
             title = title.Replace("\\", re);
         }
-        return title.Trim('.');
+        title = title.Trim('.');
+        if (maxLength > 0)
+            title = TruncateFileName(title, maxLength);
+        return title;
+    }
+
+    /// <summary>
+    /// 将文件名截断到指定的最大 UTF-8 字节数, 避免超出文件系统单个路径组件 255 字节的限制。
+    /// 截断时附加一段基于完整名称的稳定短哈希, 以保证截断后的名称仍然唯一且可复现
+    /// (直播录制依赖分片名称去重, 见 SimpleLiveRecordManager2.FilterMediaSegments)。
+    /// </summary>
+    public static string TruncateFileName(string name, int maxBytes)
+    {
+        if (maxBytes <= 0 || Encoding.UTF8.GetByteCount(name) <= maxBytes)
+            return name;
+
+        var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(name)))[..8].ToLowerInvariant();
+        var suffix = "_" + hash;
+        var budget = maxBytes - suffix.Length;
+        if (budget < 0) budget = 0;
+
+        // 按 Rune 累加, 避免在多字节字符(或代理对)中间截断
+        var sb = new StringBuilder();
+        var used = 0;
+        foreach (var rune in name.EnumerateRunes())
+        {
+            if (used + rune.Utf8SequenceLength > budget) break;
+            used += rune.Utf8SequenceLength;
+            sb.Append(rune.ToString());
+        }
+
+        return sb.Append(suffix).ToString();
     }
 
     /// <summary>
