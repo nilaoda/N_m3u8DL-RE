@@ -1,4 +1,5 @@
 ﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
 using System.Diagnostics;
@@ -40,8 +41,15 @@ internal static class MergeUtil
 
     private static int InvokeFFmpeg(string binary, string command, string workingDirectory)
     {
+        return InvokeFFmpeg(binary, command, workingDirectory, out _);
+    }
+
+    private static int InvokeFFmpeg(string binary, string command, string workingDirectory, out string errorOutput)
+    {
         Logger.DebugMarkUp($"{binary}: {command}");
 
+        // 收集 ffmpeg 的 stderr 输出，便于后续判断失败原因（如句柄耗尽）
+        var errorBuilder = new StringBuilder();
         using var p = new Process();
         p.StartInfo = new ProcessStartInfo()
         {
@@ -56,13 +64,25 @@ internal static class MergeUtil
         {
             if (!string.IsNullOrEmpty(output.Data))
             {
+                errorBuilder.AppendLine(output.Data);
                 Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
             }
         };
         p.Start();
         p.BeginErrorReadLine();
         p.WaitForExit();
+        errorOutput = errorBuilder.ToString();
         return p.ExitCode;
+    }
+
+    /// <summary>
+    /// 判断 ffmpeg 的输出是否为文件句柄耗尽（Too many open files）导致的错误。
+    /// concat 协议会一次性打开全部分片，分片过多 + 系统句柄上限过低时会触发该错误。
+    /// </summary>
+    internal static bool IsTooManyOpenFilesError(string ffmpegOutput)
+    {
+        return !string.IsNullOrEmpty(ffmpegOutput)
+            && ffmpegOutput.Contains("too many open files", StringComparison.OrdinalIgnoreCase);
     }
 
     public static string[] PartialCombineMultipleFiles(string[] files)
@@ -103,70 +123,86 @@ internal static class MergeUtil
 
         string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
 
-        StringBuilder command = new StringBuilder("-loglevel warning -nostdin ");
         string ddpAudio = string.Empty;
         string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
         ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
         if (!string.IsNullOrEmpty(ddpAudio)) useAACFilter = false;
 
-        if (useConcatDemuxer)
+        // 根据是否使用 concat demuxer 构建 ffmpeg 命令
+        string BuildCommand()
         {
-            // 使用 concat demuxer合并
-            var text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
-            var tempFile = Path.GetTempFileName();
-            File.WriteAllText(tempFile, text);
-            command.Append($" -f concat -safe 0 -i \"{tempFile}");
-        }
-        else
-        {
-            command.Append(" -i concat:\"");
-            foreach (string t in files)
+            StringBuilder command = new StringBuilder("-loglevel warning -nostdin ");
+            if (useConcatDemuxer)
             {
-                command.Append(Path.GetFileName(t) + "|");
+                // 使用 concat demuxer合并
+                var text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
+                var tempFile = Path.GetTempFileName();
+                File.WriteAllText(tempFile, text);
+                command.Append($" -f concat -safe 0 -i \"{tempFile}");
             }
+            else
+            {
+                command.Append(" -i concat:\"");
+                foreach (string t in files)
+                {
+                    command.Append(Path.GetFileName(t) + "|");
+                }
+            }
+
+
+            switch (muxFormat.ToUpper())
+            {
+                case ("MP4"):
+                    command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));
+                    command.Append(" " + (string.IsNullOrEmpty(ddpAudio) ? "" : "-i \"" + ddpAudio + "\""));
+                    command.Append(
+                        $" -map 0:v? {(string.IsNullOrEmpty(ddpAudio) ? "-map 0:a?" : $"-map {(string.IsNullOrEmpty(poster) ? "1" : "2")}:a -map 0:a?")} -map 0:s? " + (string.IsNullOrEmpty(poster) ? "" : addPoster)
+                        + (writeDate ? " -metadata date=\"" + dateString + "\"" : "") +
+                        " -metadata encoding_tool=\"" + encodingTool + "\" -metadata title=\"" + title +
+                        "\" -metadata copyright=\"" + copyright + "\" -metadata comment=\"" + comment +
+                        $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} title=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
+                    command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
+                    if (fastStart)
+                        command.Append("-movflags +faststart");
+                    command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
+                    break;
+                case ("MKV"):
+                    command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mkv\"");
+                    break;
+                case ("FLV"):
+                    command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".flv\"");
+                    break;
+                case ("M4A"):
+                    command.Append("\" -map 0  -c copy -f mp4 -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".m4a\"");
+                    break;
+                case ("TS"):
+                    command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
+                    break;
+                case ("EAC3"):
+                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
+                    break;
+                case ("AAC"):
+                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".m4a\"");
+                    break;
+                case ("AC3"):
+                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
+                    break;
+            }
+
+            return command.ToString();
         }
 
+        var workingDirectory = Path.GetDirectoryName(files[0])!;
+        var code = InvokeFFmpeg(binary, BuildCommand(), workingDirectory, out var errorOutput);
 
-        switch (muxFormat.ToUpper())
+        // concat 协议会一次性打开全部分片。当系统文件句柄上限过低（如 macOS 默认 256）
+        // 且分片数量过多时，ffmpeg 会报 "Too many open files" 导致合并失败。这里给出明确提示，
+        // 引导用户提高句柄上限或改用其它合并方式；已下载的分片仍保留在临时目录中，不会丢失。
+        // See: https://github.com/nilaoda/N_m3u8DL-RE/issues/338 and #89
+        if (code != 0 && IsTooManyOpenFilesError(errorOutput))
         {
-            case ("MP4"):
-                command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));
-                command.Append(" " + (string.IsNullOrEmpty(ddpAudio) ? "" : "-i \"" + ddpAudio + "\""));
-                command.Append(
-                    $" -map 0:v? {(string.IsNullOrEmpty(ddpAudio) ? "-map 0:a?" : $"-map {(string.IsNullOrEmpty(poster) ? "1" : "2")}:a -map 0:a?")} -map 0:s? " + (string.IsNullOrEmpty(poster) ? "" : addPoster)
-                    + (writeDate ? " -metadata date=\"" + dateString + "\"" : "") +
-                    " -metadata encoding_tool=\"" + encodingTool + "\" -metadata title=\"" + title +
-                    "\" -metadata copyright=\"" + copyright + "\" -metadata comment=\"" + comment +
-                    $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} title=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
-                command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
-                if (fastStart)
-                    command.Append("-movflags +faststart");
-                command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
-                break;
-            case ("MKV"):
-                command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mkv\"");
-                break;
-            case ("FLV"):
-                command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".flv\"");
-                break;
-            case ("M4A"):
-                command.Append("\" -map 0  -c copy -f mp4 -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".m4a\"");
-                break;
-            case ("TS"):
-                command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
-                break;
-            case ("EAC3"):
-                command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
-                break;
-            case ("AAC"):
-                command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".m4a\"");
-                break;
-            case ("AC3"):
-                command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
-                break;
+            Logger.WarnMarkUp(ResString.ffmpegMergeReachLimit);
         }
-
-        var code = InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
 
         return code == 0;
     }
