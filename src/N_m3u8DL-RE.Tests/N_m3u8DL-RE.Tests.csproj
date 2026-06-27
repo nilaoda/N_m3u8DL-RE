@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
+        <ProjectReference Include="..\N_m3u8DL-RE\N_m3u8DL-RE.csproj" />
     </ItemGroup>
 
     <ItemGroup>
