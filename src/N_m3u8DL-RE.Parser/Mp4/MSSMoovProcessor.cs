@@ -34,7 +34,7 @@ public partial class MSSMoovProcessor
     private long CreationTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
     private bool IsProtection;
-    private string ProtectionSystemId;
+    private Guid ProtectionSystemId;
     private string ProtectionData;
     private string? ProtecitonKID;
     private string? ProtecitonKID_PR;
@@ -79,7 +79,7 @@ public partial class MSSMoovProcessor
         this.BitsPerSample = data.BitsPerSample;
         this.IsProtection = data.IsProtection;
         this.ProtectionData = data.ProtectionData;
-        this.ProtectionSystemId = data.ProtectionSystemID;
+        this.ProtectionSystemId = Guid.Parse(data.ProtectionSystemID);
 
         // 需要手动生成CodecPrivateData
         if (string.IsNullOrEmpty(CodecPrivateData))
@@ -160,7 +160,7 @@ public partial class MSSMoovProcessor
     private void ExtractKID()
     {
         // playready
-        if (ProtectionSystemId.ToUpper() == "9A04F079-9840-4286-AB92-E65BE0885F95")
+        if (ProtectionSystemId == Guid.Parse("9A04F079-9840-4286-AB92-E65BE0885F95"))
         {
             var bytes = HexUtil.HexToBytes(ProtectionData.Replace("00", ""));
             var text = Encoding.ASCII.GetString(bytes);
@@ -175,7 +175,7 @@ public partial class MSSMoovProcessor
             this.ProtecitonKID = HexUtil.BytesToHex(kidBytes);
         }
         // widevine
-        else if (ProtectionSystemId.ToUpper() == "EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED")
+        else if (ProtectionSystemId == Guid.Parse("EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED"))
         {
             throw new NotSupportedException();
         }
@@ -738,7 +738,7 @@ public partial class MSSMoovProcessor
     {
         using var _stream = new MemoryStream();
         using var _writer = new BinaryWriter2(_stream);
-        var sysIdData = HexUtil.HexToBytes(ProtectionSystemId.Replace("-", ""));
+        var sysIdData = HexUtil.HexToBytes(ProtectionSystemId.ToString("N"));
         var psshData = HexUtil.HexToBytes(ProtectionData);
 
         _writer.Write(sysIdData);  // SystemID 16 bytes
