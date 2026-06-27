@@ -577,6 +577,13 @@ internal class SimpleLiveRecordManager2
                     }
                     foreach (var inputFilePath in files)
                     {
+                        // 开启实时删除分片(--live-keep-segments false)时, 分片可能已被提前删除
+                        // (例如并发解密时同名分片把源文件删掉)。此时直接打开会抛出 "Could not find file"
+                        // 使整个直播录制中断, 这里静默跳过缺失分片以保证长时间录制不被打断。see #142
+                        if (!File.Exists(inputFilePath))
+                        {
+                            continue;
+                        }
                         using (var inputStream = File.OpenRead(inputFilePath))
                         {
                             inputStream.CopyTo(fileOutputStream);
