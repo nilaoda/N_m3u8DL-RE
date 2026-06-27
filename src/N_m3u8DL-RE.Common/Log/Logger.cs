@@ -91,10 +91,8 @@ public static partial class Logger
             {
                 // 进入写入
                 LogWriteLock.EnterWriteLock();
-                using (StreamWriter sw = File.AppendText(LogFilePath))
-                {
-                    sw.WriteLine(plain);
-                }
+                using StreamWriter sw = new StreamWriter(LogFilePath, append: true, Encoding.UTF8);
+                sw.WriteLine(plain);
             }
             finally
             {
@@ -216,10 +214,8 @@ public static partial class Logger
         {
             // 进入写入
             LogWriteLock.EnterWriteLock();
-            using (StreamWriter sw = File.AppendText(LogFilePath))
-            {
-                sw.WriteLine(plain, Encoding.UTF8);
-            }
+            using StreamWriter sw = new StreamWriter(LogFilePath, append: true, Encoding.UTF8);
+            sw.WriteLine(plain);
         }
         finally
         {
