@@ -772,6 +772,12 @@ internal static class StaticText
             zhTW: "到達直播錄製上限，即將停止錄製",
             enUS: "Live recording limit reached, will stop recording soon"
         ),
+        ["liveStreamEnded"] = new TextContainer
+        (
+            zhCN: "直播已结束，即将停止录制",
+            zhTW: "直播已結束，即將停止錄製",
+            enUS: "Live stream ended, will stop recording soon"
+        ),
         ["saveName"] = new TextContainer
         (
             zhCN: "保存文件名: ",

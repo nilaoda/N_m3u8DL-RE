@@ -36,6 +36,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
     ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
+    ConcurrentDictionary<int, bool> LiveEndDic = new(); // 各流是否已结束直播(出现ENDLIST)
     ConcurrentDictionary<int, string> LastFileNameDic = new(); // 上次下载的文件名
     ConcurrentDictionary<int, long> MaxIndexDic = new(); // 最大Index
     ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
@@ -667,8 +668,8 @@ internal class SimpleLiveRecordManager2
                 var streamSpec = dic.Key;
                 var task = dic.Value;
 
-                // 达到上限时 不需要刷新了
-                if (RecordLimitReachedDic[task.Id])
+                // 达到上限 或 该流直播已结束时 不需要刷新了
+                if (RecordLimitReachedDic[task.Id] || LiveEndDic[task.Id])
                     return;
 
                 var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
@@ -700,10 +701,25 @@ internal class SimpleLiveRecordManager2
                     RecordLimitReachedDic[task.Id] = true;
                 }
 
+                // 检测直播是否结束 (出现 #EXT-X-ENDLIST 后 HLSExtractor 会将 IsLive 置为 false)
+                // 此处在上方推送完最后一批片段之后再标记 避免漏掉收尾片段
+                if (!STOP_FLAG && streamSpec.Playlist!.IsLive == false)
+                {
+                    LiveEndDic[task.Id] = true;
+                }
+
                 // 检测时长限制
                 if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
                 {
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                    STOP_FLAG = true;
+                    CancellationTokenSource.Cancel();
+                }
+
+                // 检测直播结束 所有流都已结束(或达到上限)时优雅停止 让消费者收尾混流
+                if (!STOP_FLAG && RecordLimitReachedDic.Keys.All(id => RecordLimitReachedDic[id] || LiveEndDic[id]))
+                {
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveStreamEnded}[/]");
                     STOP_FLAG = true;
                     CancellationTokenSource.Cancel();
                 }
@@ -730,6 +746,13 @@ internal class SimpleLiveRecordManager2
                     target.Complete();
                 }
             }
+        }
+
+        // 循环结束(直播结束/达到上限/异常) 标记所有Block完成
+        // 确保即使最后一次刷新没有新片段 消费者也能被唤醒并收尾混流
+        foreach (var target in BlockDic.Values)
+        {
+            target.Complete();
         }
     }
 
@@ -837,6 +860,7 @@ internal class SimpleLiveRecordManager2
                 }
                 LastFileNameDic[task.Id] = "";
                 RecordLimitReachedDic[task.Id] = false;
+                LiveEndDic[task.Id] = false;
                 DateTimeDic[task.Id] = 0L;
                 RecordedDurDic[task.Id] = 0;
                 RefreshedDurDic[task.Id] = 0;
