@@ -118,14 +118,7 @@ public partial class WebVttSub
 
     private static string RemoveClassTag(string text)
     {
-        if (VttClassRegex().IsMatch(text))
-        {
-            return string.Join(Environment.NewLine, text.Split('\n').Select(line => line.TrimEnd()).Select(line =>
-            {
-                return string.Concat(VttClassRegex().Matches(line).Select(x => x.Groups[1].Value + " "));
-            })).TrimEnd();
-        }
-        return text;
+        return VttClassRegex().Replace(text, "$1");
     }
 
     /// <summary>
