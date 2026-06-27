@@ -15,6 +15,7 @@ using Spectre.Console;
 using System.Collections.Concurrent;
 using System.IO.Pipes;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks.Dataflow;
 using N_m3u8DL_RE.Enum;
 
@@ -40,6 +41,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, long> MaxIndexDic = new(); // 最大Index
     ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
+    List<Regex> AdKeywordRegexList = []; // 广告关键字正则（直播刷新时复用）
 
     private readonly Lock lockObj = new();
     TimeSpan? audioStart = null;
@@ -681,6 +683,12 @@ internal class SimpleLiveRecordManager2
                 // 过滤不需要下载的片段
                 FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
                 var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
+                // 过滤广告分片（在更新去重边界/时长记录之前剔除，避免污染统计）
+                if (AdKeywordRegexList.Count > 0)
+                {
+                    newList = FilterUtil.CleanAdSegments(newList, AdKeywordRegexList);
+                    streamSpec.Playlist!.MediaParts[0].MediaSegments = newList;
+                }
                 if (newList.Count > 0)
                 {
                     task.MaxValue += newList.Count;
@@ -780,6 +788,12 @@ internal class SimpleLiveRecordManager2
         ConcurrentDictionary<StreamSpec, bool?> Results = new();
         // 同步流
         FilterUtil.SyncStreams(SelectedSteams, takeLastCount);
+        // 初始化广告关键字正则，仅在启动时记录一次（直播刷新时复用，避免每次刷新刷屏）
+        AdKeywordRegexList = FilterUtil.ParseAdKeywords(DownloaderConfig.MyOptions.AdKeywords);
+        foreach (var reg in AdKeywordRegexList)
+        {
+            Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
+        }
         // 设置等待时间
         if (WAIT_SEC == 0)
         {
