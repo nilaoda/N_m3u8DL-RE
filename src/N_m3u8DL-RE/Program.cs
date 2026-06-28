@@ -56,9 +56,9 @@ internal class Program
 
     static void RestoreTerminal()
     {
-        Logger.WarnMarkUp("Program Exit...");
         try
         {
+            Logger.Extra("Program Exit...");
             Console.CursorVisible = true;
             if (!OperatingSystem.IsWindows())
             {
