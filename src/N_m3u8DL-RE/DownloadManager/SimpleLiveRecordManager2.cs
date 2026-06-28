@@ -224,6 +224,12 @@ internal class SimpleLiveRecordManager2
                 if (result is { Success: true })
                 {
                     currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
+                    // MPD的cenc:default_KID优先
+                    if (streamSpec.Playlist?.MediaInit?.EncryptInfo.KID != null)
+                    {
+                        currentKID = streamSpec.Playlist.MediaInit.EncryptInfo.KID;
+                        Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
+                    }
                     // 从文件读取KEY
                     await SearchKeyAsync(currentKID);
                     // 实时解密
@@ -301,7 +307,16 @@ internal class SimpleLiveRecordManager2
                     // 读取init信息
                     if (string.IsNullOrEmpty(currentKID))
                     {
-                        currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
+                        // MPD的cenc:default_KID优先
+                        if (streamSpec.Playlist?.MediaInit?.EncryptInfo.KID != null)
+                        {
+                            currentKID = streamSpec.Playlist.MediaInit.EncryptInfo.KID;
+                            Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
+                        }
+                        else
+                        {
+                            currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
+                        }
                     }
                     // 从文件读取KEY
                     await SearchKeyAsync(currentKID);

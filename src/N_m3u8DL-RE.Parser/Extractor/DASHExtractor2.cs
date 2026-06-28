@@ -461,6 +461,17 @@ internal partial class DASHExtractor2 : IExtractor
                         {
                             item.EncryptInfo.Method = DEFAULT_METHOD;
                         }
+
+                        // 尝试从 cenc:default_KID 提取 KID
+                        XNamespace cencNs = "urn:mpeg:cenc:2013";
+                        var cpKid = adaptationSet.Elements().Concat(representation.Elements())
+                            .FirstOrDefault(e => e.Name.LocalName == "ContentProtection" && e.Attribute(cencNs + "default_KID") != null);
+                        if (cpKid != null && streamSpec.Playlist.MediaInit != null)
+                        {
+                            var kidRaw = cpKid.Attribute(cencNs + "default_KID")!.Value;
+                            // UUID格式 -> 十六进制小写无分隔符
+                            streamSpec.Playlist.MediaInit.EncryptInfo.KID = kidRaw.Replace("-", "").ToLower();
+                        }
                     }
 
                     // 处理同一ID分散在不同Period的情况

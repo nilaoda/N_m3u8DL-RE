@@ -12,6 +12,11 @@ public class EncryptInfo
     public byte[]? Key { get; set; }
     public byte[]? IV { get; set; }
 
+    /// <summary>
+    /// KID (十六进制小写，不带分隔符)，从MPD的cenc:default_KID提取
+    /// </summary>
+    public string? KID { get; set; }
+
     public EncryptInfo() { }
 
     /// <summary>
