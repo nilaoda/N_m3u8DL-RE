@@ -33,7 +33,7 @@ internal class Program
             }
         }
         
-        Console.CancelKeyPress += Console_CancelKeyPress;
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
 
@@ -54,16 +54,18 @@ internal class Program
         await CommandInvoker.InvokeArgs(args, DoWorkAsync);
     }
 
-    private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+    static void RestoreTerminal()
     {
-        Logger.WarnMarkUp("Force Exit...");
-        try 
-        { 
+        Logger.WarnMarkUp("Program Exit...");
+        try
+        {
             Console.CursorVisible = true;
             if (!OperatingSystem.IsWindows())
+            {
                 System.Diagnostics.Process.Start("tput", "cnorm");
-        } catch { }
-        Environment.Exit(0);
+            }
+        }
+        catch { }
     }
 
     static int GetOrder(StreamSpec streamSpec)
