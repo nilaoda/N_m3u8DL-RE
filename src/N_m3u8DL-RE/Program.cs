@@ -58,6 +58,7 @@ internal class Program
     {
         try
         {
+            Logger.Extra("Program Exit...");
             Console.CursorVisible = true;
             if (!OperatingSystem.IsWindows())
             {
