@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT8S" minBufferTime="PT2S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011">
+  <Period id="0">
+    <AdaptationSet contentType="video" mimeType="video/mp4">
+      <Representation id="video" bandwidth="500000" width="640" height="360" codecs="avc1.64001f">
+        <SegmentList timescale="1" duration="2">
+          <Initialization sourceURL="init.mp4"/>
+          <SegmentURL media="seg-1.m4s"/>
+          <SegmentURL media="seg-2.m4s"/>
+          <SegmentURL media="seg-2.m4s"/>
+          <SegmentURL media="seg-3.m4s"/>
+        </SegmentList>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
