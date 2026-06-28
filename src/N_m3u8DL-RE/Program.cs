@@ -33,6 +33,7 @@ internal class Program
             }
         }
         
+        Console.CancelKeyPress += (_, _) => RestoreTerminal();
         AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
