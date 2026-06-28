@@ -15,6 +15,7 @@ public class StreamFilter
     public Regex? ChannelsReg { get; set; }
     public Regex? VideoRangeReg { get; set; }
     public Regex? UrlReg { get; set; }
+    public Regex? PeriodReg { get; set; }
     public long? SegmentsMinCount { get; set; }
     public long? SegmentsMaxCount { get; set; }
     public double? PlaylistMinDur {  get; set; }
@@ -38,6 +39,7 @@ public class StreamFilter
         if (ChannelsReg != null) sb.Append($"ChannelsReg: {ChannelsReg} ");
         if (VideoRangeReg != null) sb.Append($"VideoRangeReg: {VideoRangeReg} ");
         if (UrlReg != null) sb.Append($"UrlReg: {UrlReg} ");
+        if (PeriodReg != null) sb.Append($"PeriodReg: {PeriodReg} ");
         if (SegmentsMinCount != null) sb.Append($"SegmentsMinCount: {SegmentsMinCount} ");
         if (SegmentsMaxCount != null) sb.Append($"SegmentsMaxCount: {SegmentsMaxCount} ");
         if (PlaylistMinDur != null) sb.Append($"PlaylistMinDur: {PlaylistMinDur} ");
