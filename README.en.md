@@ -2,7 +2,11 @@
 
 Cross-platform DASH/HLS/MSS download tool. Supports on-demand and live streaming (DASH/HLS).
 
-[![img](https://img.shields.io/github/stars/nilaoda/N_m3u8DL-RE?label=%E7%82%B9%E8%B5%9E)](https://github.com/nilaoda/N_m3u8DL-RE)  [![img](https://img.shields.io/github/last-commit/nilaoda/N_m3u8DL-RE?label=%E6%9C%80%E8%BF%91%E6%8F%90%E4%BA%A4)](https://github.com/nilaoda/N_m3u8DL-RE)  [![img](https://img.shields.io/github/release/nilaoda/N_m3u8DL-RE?label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)](https://github.com/nilaoda/N_m3u8DL-RE/releases)  [![img](https://img.shields.io/github/license/nilaoda/N_m3u8DL-RE?label=%E8%AE%B8%E5%8F%AF%E8%AF%81)](https://github.com/nilaoda/N_m3u8DL-RE)   [![img](https://img.shields.io/github/downloads/nilaoda/N_m3u8DL-RE/total?label=%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://github.com/nilaoda/N_m3u8DL-RE/releases)
+[![img](https://img.shields.io/github/stars/nilaoda/N_m3u8DL-RE?label=Like)](https://github.com/nilaoda/N_m3u8DL-RE) 
+[![img](https://img.shields.io/github/last-commit/nilaoda/N_m3u8DL-RE?label=Latest%20Commit)](https://github.com/nilaoda/N_m3u8DL-RE/commits/main/) 
+[![img](https://img.shields.io/github/release/nilaoda/N_m3u8DL-RE?label=latest%20version)](https://github.com/nilaoda/N_m3u8DL-RE/releases) 
+[![img](https://img.shields.io/github/license/nilaoda/N_m3u8DL-RE?label=LICENSE)](https://github.com/nilaoda/N_m3u8DL-RE/blob/master/LICENSE) 
+[![img](https://img.shields.io/github/downloads/nilaoda/N_m3u8DL-RE/total?label=Downloads)](https://github.com/nilaoda/N_m3u8DL-RE/releases)
 
 If you encounter a bug, please first confirm whether you are using the latest version of the software. (If you are using a release version, it is recommended to go to the [Actions](https://github.com/nilaoda/N_m3u8DL-RE/actions) page to download the latest automatically built version and check if the issue has already been fixed.) If you are using the latest version and the issue still exists, you can check the [Issues](https://github.com/nilaoda/N_m3u8DL-RE/issues) section to see if someone else has encountered a similar problem. If not, feel free to open a new issue.
 
@@ -134,20 +138,20 @@ More Help:
 
   --mux-after-done
 
-所有工作完成时尝试混流分离的音视频. 你能够以:分隔形式指定如下参数:
+When all work is done try to mux the separated audio and video. You can specify the following parameters in :separated form:
 
-* format=FORMAT: 指定混流容器 mkv, mp4
-* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)
-* bin_path=PATH: 指定程序路径 (默认: 自动寻找)
-* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)
-* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)
+* format=FORMAT: Specify muxed flow container mkv, mp4
+* muxer=MUXER: Specify the muxing program ffmpeg, mkvmerge (default: ffmpeg)
+* bin_path=PATH: Specify the program path (default: automatically search)
+* skip_sub=BOOL: whether to ignore subtitle files (default: false)
+* keep=BOOL: whether to keep the file after muxing is completed true, false (default: false)
 
-例如:
-# 混流为mp4容器
+For example:
+# mux stream into mp4 container
 -M format=mp4
-# 使用mkvmerge, 自动寻找程序
+# Use mkvmerge to automatically find programs
 -M format=mkv:muxer=mkvmerge
-# 使用mkvmerge, 自定义程序路径
+# Use mkvmerge to customize the program path
 -M format=mkv:muxer=mkvmerge:bin_path="C\:\Program Files\MKVToolNix\mkvmerge.exe"
 ```
 
@@ -251,7 +255,7 @@ Examples:
 
 ![RE1](img/RE.gif)
 
-Can also download in parallel and automatically mix streams
+Can also download in parallel and automatically mux streams
 
 ![RE2](img/RE2.gif)
 
@@ -265,7 +269,7 @@ Record MPD live source:
 
 [click to show gif](http://pan.iqiyi.com/file/paopao/nmAV5MOh0yIyHhnxdgM_6th_p2nqrFsM4k-o3cUPwUa8Eh8QOU4uyPkLa_BlBrMa3GBnKWSk8rOaUwbsjKN14g.gif)
 
-During recording, use ffmpeg to mix audio and video in real time
+During recording, use ffmpeg to mux audio and video in real time
 
 ```bash
 ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a -c copy 2022-09-21_19-54-42_V.ts
