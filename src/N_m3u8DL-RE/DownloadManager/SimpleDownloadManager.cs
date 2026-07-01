@@ -77,6 +77,30 @@ internal class SimpleDownloadManager
         }
     }
 
+    private bool ValidateVideoResolution(StreamSpec streamSpec, List<Mediainfo> mediainfos)
+    {
+        var resolutionReg = DownloaderConfig.MyOptions.VideoFilter?.ResolutionReg;
+        if (resolutionReg == null)
+            return true;
+
+        if (streamSpec.MediaType is MediaType.AUDIO or MediaType.SUBTITLES)
+            return true;
+
+        var videoResolution = mediainfos.FirstOrDefault(m => m.Type == "Video" && !string.IsNullOrEmpty(m.Resolution))?.Resolution;
+        if (string.IsNullOrEmpty(videoResolution))
+            return true;
+
+        streamSpec.Resolution ??= videoResolution;
+        if (!resolutionReg.IsMatch(videoResolution))
+        {
+            Logger.ErrorMarkUp($"[red]{ResString.resolutionFilterNotMatch}[/]");
+            Logger.ErrorMarkUp($"[grey]{ResString.resolutionFilterExpectedActual}[/]", resolutionReg.ToString().EscapeMarkup(), videoResolution.EscapeMarkup());
+            return false;
+        }
+
+        return true;
+    }
+
     private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer)
     {
         speedContainer.ResetVars();
@@ -212,6 +236,8 @@ internal class SimpleDownloadManager
                     Logger.WarnMarkUp(ResString.readingInfo);
                     mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                     mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                    if (!ValidateVideoResolution(streamSpec, mediaInfos))
+                        return false;
                     ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                     readInfo = true;
                 }
@@ -295,6 +321,8 @@ internal class SimpleDownloadManager
                     Logger.WarnMarkUp(ResString.readingInfo);
                     mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                     mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
+                    if (!ValidateVideoResolution(streamSpec, mediaInfos))
+                        return false;
                     ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                     readInfo = true;
                 }
