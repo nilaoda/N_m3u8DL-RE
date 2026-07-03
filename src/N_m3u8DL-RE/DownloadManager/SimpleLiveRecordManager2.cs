@@ -15,6 +15,7 @@ using Spectre.Console;
 using System.Collections.Concurrent;
 using System.IO.Pipes;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks.Dataflow;
 using N_m3u8DL_RE.Enum;
 
@@ -36,10 +37,12 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
     ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
+    ConcurrentDictionary<int, bool> LiveEndDic = new(); // 各流是否已结束直播(出现ENDLIST)
     ConcurrentDictionary<int, string> LastFileNameDic = new(); // 上次下载的文件名
     ConcurrentDictionary<int, long> MaxIndexDic = new(); // 最大Index
     ConcurrentDictionary<int, long> DateTimeDic = new(); // 上次下载的dateTime
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
+    List<Regex> AdKeywordRegexList = []; // 广告关键字正则（直播刷新时复用）
 
     private readonly Lock lockObj = new();
     TimeSpan? audioStart = null;
@@ -67,13 +70,14 @@ internal class SimpleLiveRecordManager2
     }
 
     /// <summary>
-    /// 获取时间戳
+    /// 获取时间戳(毫秒)。使用毫秒而非秒, 避免同一秒内的多个分片(如低延迟HLS或带亚秒
+    /// PROGRAM-DATE-TIME的直播源)生成相同的文件名而互相覆盖, 导致录制内容丢失。see #751
     /// </summary>
     /// <param name="dateTime"></param>
     /// <returns></returns>
     private long GetUnixTimestamp(DateTime dateTime)
     {
-        return new DateTimeOffset(dateTime.ToUniversalTime()).ToUnixTimeSeconds();
+        return new DateTimeOffset(dateTime.ToUniversalTime()).ToUnixTimeMilliseconds();
     }
 
     /// <summary>
@@ -106,7 +110,9 @@ internal class SimpleLiveRecordManager2
             name = segment.Index.ToString();
         }
 
-        return name;
+        // URL 衍生的分片名(尤其是 DASH 带超长查询串的场景, 如 YouTube)可能超过文件系统
+        // 单个组件 255 字节的限制导致创建临时文件失败, 这里统一截断到安全长度。see #650
+        return OtherUtil.TruncateFileName(name, 200);
     }
 
     private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
@@ -218,6 +224,12 @@ internal class SimpleLiveRecordManager2
                 if (result is { Success: true })
                 {
                     currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
+                    // MPD的cenc:default_KID优先
+                    if (streamSpec.Playlist?.MediaInit?.EncryptInfo.KID != null)
+                    {
+                        currentKID = streamSpec.Playlist.MediaInit.EncryptInfo.KID;
+                        Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
+                    }
                     // 从文件读取KEY
                     await SearchKeyAsync(currentKID);
                     // 实时解密
@@ -295,7 +307,16 @@ internal class SimpleLiveRecordManager2
                     // 读取init信息
                     if (string.IsNullOrEmpty(currentKID))
                     {
-                        currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
+                        // MPD的cenc:default_KID优先
+                        if (streamSpec.Playlist?.MediaInit?.EncryptInfo.KID != null)
+                        {
+                            currentKID = streamSpec.Playlist.MediaInit.EncryptInfo.KID;
+                            Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
+                        }
+                        else
+                        {
+                            currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
+                        }
                     }
                     // 从文件读取KEY
                     await SearchKeyAsync(currentKID);
@@ -664,8 +685,8 @@ internal class SimpleLiveRecordManager2
                 var streamSpec = dic.Key;
                 var task = dic.Value;
 
-                // 达到上限时 不需要刷新了
-                if (RecordLimitReachedDic[task.Id])
+                // 达到上限 或 该流直播已结束时 不需要刷新了
+                if (RecordLimitReachedDic[task.Id] || LiveEndDic[task.Id])
                     return;
 
                 var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
@@ -678,6 +699,12 @@ internal class SimpleLiveRecordManager2
                 // 过滤不需要下载的片段
                 FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
                 var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
+                // 过滤广告分片（在更新去重边界/时长记录之前剔除，避免污染统计）
+                if (AdKeywordRegexList.Count > 0)
+                {
+                    newList = FilterUtil.CleanAdSegments(newList, AdKeywordRegexList);
+                    streamSpec.Playlist!.MediaParts[0].MediaSegments = newList;
+                }
                 if (newList.Count > 0)
                 {
                     task.MaxValue += newList.Count;
@@ -697,10 +724,25 @@ internal class SimpleLiveRecordManager2
                     RecordLimitReachedDic[task.Id] = true;
                 }
 
+                // 检测直播是否结束 (出现 #EXT-X-ENDLIST 后 HLSExtractor 会将 IsLive 置为 false)
+                // 此处在上方推送完最后一批片段之后再标记 避免漏掉收尾片段
+                if (!STOP_FLAG && streamSpec.Playlist!.IsLive == false)
+                {
+                    LiveEndDic[task.Id] = true;
+                }
+
                 // 检测时长限制
                 if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
                 {
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                    STOP_FLAG = true;
+                    CancellationTokenSource.Cancel();
+                }
+
+                // 检测直播结束 所有流都已结束(或达到上限)时优雅停止 让消费者收尾混流
+                if (!STOP_FLAG && RecordLimitReachedDic.Keys.All(id => RecordLimitReachedDic[id] || LiveEndDic[id]))
+                {
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveStreamEnded}[/]");
                     STOP_FLAG = true;
                     CancellationTokenSource.Cancel();
                 }
@@ -727,6 +769,13 @@ internal class SimpleLiveRecordManager2
                     target.Complete();
                 }
             }
+        }
+
+        // 循环结束(直播结束/达到上限/异常) 标记所有Block完成
+        // 确保即使最后一次刷新没有新片段 消费者也能被唤醒并收尾混流
+        foreach (var target in BlockDic.Values)
+        {
+            target.Complete();
         }
     }
 
@@ -777,6 +826,12 @@ internal class SimpleLiveRecordManager2
         ConcurrentDictionary<StreamSpec, bool?> Results = new();
         // 同步流
         FilterUtil.SyncStreams(SelectedSteams, takeLastCount);
+        // 初始化广告关键字正则，仅在启动时记录一次（直播刷新时复用，避免每次刷新刷屏）
+        AdKeywordRegexList = FilterUtil.ParseAdKeywords(DownloaderConfig.MyOptions.AdKeywords);
+        foreach (var reg in AdKeywordRegexList)
+        {
+            Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
+        }
         // 设置等待时间
         if (WAIT_SEC == 0)
         {
@@ -834,6 +889,7 @@ internal class SimpleLiveRecordManager2
                 }
                 LastFileNameDic[task.Id] = "";
                 RecordLimitReachedDic[task.Id] = false;
+                LiveEndDic[task.Id] = false;
                 DateTimeDic[task.Id] = 0L;
                 RecordedDurDic[task.Id] = 0;
                 RefreshedDurDic[task.Id] = 0;

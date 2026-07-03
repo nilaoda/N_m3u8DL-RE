@@ -15,7 +15,7 @@ namespace N_m3u8DL_RE.CommandLine;
 
 internal static partial class CommandInvoker
 {
-    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20251228";
+    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20260628";
 
     [GeneratedRegex("((best|worst)\\d*|all)")]
     private static partial Regex ForStrRegex();
@@ -451,6 +451,10 @@ internal static partial class CommandInvoker
         var url = p.GetValue("url");
         if (!string.IsNullOrEmpty(url))
             streamFilter.UrlReg = new Regex(url);
+
+        var period = p.GetValue("period");
+        if (!string.IsNullOrEmpty(period))
+            streamFilter.PeriodIdReg = new Regex(period);
 
         var segsMin = p.GetValue("segsMin");
         if (!string.IsNullOrEmpty(segsMin))

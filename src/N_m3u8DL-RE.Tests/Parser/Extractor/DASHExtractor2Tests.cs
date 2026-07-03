@@ -35,4 +35,24 @@ public class DASHExtractor2Tests
         first.Playlist.MediaInit.ShouldNotBeNull();
         first.Playlist.MediaInit.Url.ShouldBe("1/init.mp4");
     }
+
+    [Fact]
+    public async Task DASHExtractor2_RemovesDuplicateSegments()
+    {
+        // 该MPD含有一个重复引用的分片(seg-2.m4s 出现两次), 解析后应只保留一次 (#684)
+        const string mpdName = "Dash.Manifest_DuplicateSegments.mpd";
+        var config = CreateTestConfig(mpdName);
+        var content = ResourceHelper.Read(mpdName);
+        var extractor = new DASHExtractor2(config);
+        var results = await extractor.ExtractStreamsAsync(content);
+
+        results.ShouldNotBeNull();
+        results.Count.ShouldBe(1);
+
+        var segments = results.First().Playlist!.MediaParts[0].MediaSegments;
+        // 原始MPD有4个SegmentURL(seg-2重复), 去重后应为3个
+        segments.Count.ShouldBe(3);
+        // 顺序保持不变
+        segments.Select(s => s.Url).ShouldBe(new[] { "seg-1.m4s", "seg-2.m4s", "seg-3.m4s" });
+    }
 }

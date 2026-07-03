@@ -303,6 +303,18 @@ ffmpeg -readrate 1 -i 2022-09-21_19-54-42_V.mp4 -i 2022-09-21_19-54-42_V.chi.m4a
 
 从 v0.1.8 开始，能够通过设置环境变量 `RE_LIVE_PIPE_OPTIONS` 来改变 `live-pipe-mux` 时 ffmpeg 的某些选项： <https://github.com/nilaoda/N_m3u8DL-RE/issues/162#issuecomment-1592462532>
 
+---
+
+**免责声明**
+
+本软件基于 [MIT License](LICENSE) 开源，按"原样"提供，不附带任何明示或暗示的保证（包括但不限于对适销性、特定用途适用性的保证）。在任何情况下，作者均不对因使用本软件而产生的任何直接或间接损失承担责任。
+
+**合法使用**
+
+本软件仅用于学习和技术研究目的。使用者应遵守所在国家或地区的法律法规，仅下载和获取拥有合法权限的流媒体内容。任何非法或侵权使用行为均与原作者无关，使用者需自行承担全部法律责任。
+
+---
+
 ## 赞助
 
 <a href="https://www.buymeacoffee.com/nilaoda" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>

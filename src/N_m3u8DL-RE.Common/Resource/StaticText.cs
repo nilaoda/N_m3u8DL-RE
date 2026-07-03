@@ -504,16 +504,31 @@ internal static class StaticText
         ),
         ["cmd_dropVideo"] = new TextContainer
         (
-            zhCN: "通过正则表达式去除符合要求的视频流.",
-            zhTW: "通過正則表達式去除符合要求的影片串流.",
-            enUS: "Drop video streams by regular expressions."
+            zhCN: "通过正则表达式去除符合要求的视频流. 支持与 --select-video 相同的参数, 输入 \"--morehelp select-video\" 以查看详细信息",
+            zhTW: "通過正則表達式去除符合要求的影片串流. 支援與 --select-video 相同的參數, 輸入 \"--morehelp select-video\" 以查看詳細訊息",
+            enUS: "Drop video streams by regular expressions. Accepts the same options as --select-video, use \"--morehelp select-video\" for more details"
         ),
         ["cmd_selectVideo_more"] = new TextContainer
         (
-            zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
-                  "id=REGEX:lang=REGEX:name=REGEX:codecs=REGEX:res=REGEX:frame=REGEX\r\n" +
-                  "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
-                  "plistDurMin=hms:plistDurMax=hms:bwMin=int:bwMax=int:role=string:for=FOR\r\n\r\n" +
+            zhCN: "通过正则表达式选择符合要求的视频流. 你能够以:分隔形式指定如下参数.\r\n" +
+                  "同样的参数也适用于 --select-audio/-sa, --select-subtitle/-ss 以及对应的 --drop-video/--drop-audio/--drop-subtitle 选项.\r\n\r\n" +
+                  "* id=REGEX: 按 GroupId 匹配\r\n" +
+                  "* lang=REGEX: 按语言代码匹配\r\n" +
+                  "* name=REGEX: 按名称匹配\r\n" +
+                  "* codecs=REGEX: 按编码匹配 (如 hvc1, avc1, mp4a)\r\n" +
+                  "* res=REGEX: 按分辨率匹配 (如 1920*, 3840*)\r\n" +
+                  "* frame=REGEX: 按帧率匹配\r\n" +
+                  "* channel=REGEX: 按音频声道数匹配 (如 6, 2)\r\n" +
+                  "* range=REGEX: 按视频动态范围匹配 (如 SDR, HDR, PQ)\r\n" +
+                  "* url=REGEX: 按分片URL匹配\r\n" +
+                  "* period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如广告/分段)\r\n" +
+                  "* segsMin=number: 仅保留分片数 >= number 的流\r\n" +
+                  "* segsMax=number: 仅保留分片数 <= number 的流\r\n" +
+                  "* plistDurMin=hms: 仅保留时长 >= hms 的流 (如 1h20m30s, 90s)\r\n" +
+                  "* plistDurMax=hms: 仅保留时长 <= hms 的流\r\n" +
+                  "* bwMin=int: 仅保留码率 >= int Kbps 的流\r\n" +
+                  "* bwMax=int: 仅保留码率 <= int Kbps 的流\r\n" +
+                  "* role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
                   "* for=FOR: 选择方式. best[number], worst[number], all (默认: best)\r\n\r\n" +
                   "例如: \r\n" +
                   "# 选择最佳视频\r\n" +
@@ -524,11 +539,32 @@ internal static class StaticText
                   "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
                   "-sv role=\"main\":for=best\r\n" +
                   "# 选择码率在800Kbps至1Mbps之间的视频\r\n" +
-                  "-sv bwMin=800:bwMax=1000\r\n",
-            zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
-                  "id=REGEX:lang=REGEX:name=REGEX:codecs=REGEX:res=REGEX:frame=REGEX\r\n" +
-                  "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
-                  "plistDurMin=hms:plistDurMax=hms:bwMin=int:bwMax=int:role=string:for=FOR\r\n\r\n" +
+                  "-sv bwMin=800:bwMax=1000\r\n" +
+                  "# 去除分片数不超过2的字幕流 (如 trick-play/广告列表)\r\n" +
+                  "-ds segsMax=2:for=all --auto-select\r\n" +
+                  "# 仅保留主内容 Period (排除广告 Period)\r\n" +
+                  "-sv period=\"main\":for=best\r\n" +
+                  "# 去除广告 Period 的视频\r\n" +
+                  "-dv period=\"ad\":for=all\r\n",
+            zhTW: "通過正則表達式選擇符合要求的影片軌. 你能夠以:分隔形式指定如下參數.\r\n" +
+                  "同樣的參數也適用於 --select-audio/-sa, --select-subtitle/-ss 以及對應的 --drop-video/--drop-audio/--drop-subtitle 選項.\r\n\r\n" +
+                  "* id=REGEX: 按 GroupId 匹配\r\n" +
+                  "* lang=REGEX: 按語言代碼匹配\r\n" +
+                  "* name=REGEX: 按名稱匹配\r\n" +
+                  "* codecs=REGEX: 按編碼匹配 (如 hvc1, avc1, mp4a)\r\n" +
+                  "* res=REGEX: 按解析度匹配 (如 1920*, 3840*)\r\n" +
+                  "* frame=REGEX: 按影格率匹配\r\n" +
+                  "* channel=REGEX: 按音訊聲道數匹配 (如 6, 2)\r\n" +
+                  "* range=REGEX: 按影片動態範圍匹配 (如 SDR, HDR, PQ)\r\n" +
+                  "* url=REGEX: 按分片URL匹配\r\n" +
+                  "* period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如廣告/分段)\r\n" +
+                  "* segsMin=number: 僅保留分片數 >= number 的串流\r\n" +
+                  "* segsMax=number: 僅保留分片數 <= number 的串流\r\n" +
+                  "* plistDurMin=hms: 僅保留時長 >= hms 的串流 (如 1h20m30s, 90s)\r\n" +
+                  "* plistDurMax=hms: 僅保留時長 <= hms 的串流\r\n" +
+                  "* bwMin=int: 僅保留碼率 >= int Kbps 的串流\r\n" +
+                  "* bwMax=int: 僅保留碼率 <= int Kbps 的串流\r\n" +
+                  "* role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
                   "* for=FOR: 選擇方式. best[number], worst[number], all (默認: best)\r\n\r\n" +
                   "例如: \r\n" +
                   "# 選擇最佳影片\r\n" +
@@ -539,12 +575,33 @@ internal static class StaticText
                   "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
                   "-sv role=\"main\":for=best\r\n" +
                   "# 選擇碼率在800Kbps至1Mbps之間的影片\r\n" +
-                  "-sv bwMin=800:bwMax=1000\r\n",
-            enUS: "Select video streams by regular expressions. OPTIONS is a colon separated list of:\r\n\r\n" +
-                  "id=REGEX:lang=REGEX:name=REGEX:codecs=REGEX:res=REGEX:frame=REGEX\r\n" +
-                  "segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX\r\n" +
-                  "plistDurMin=hms:plistDurMax=hms:bwMin=int:bwMax=int:role=string:for=FOR\r\n\r\n" +
-                  "* for=FOR: Select type. best[number], worst[number], all (Default: best)\r\n\r\n" +
+                  "-sv bwMin=800:bwMax=1000\r\n" +
+                  "# 去除分片數不超過2的字幕串流 (如 trick-play/廣告列表)\r\n" +
+                  "-ds segsMax=2:for=all --auto-select\r\n" +
+                  "# 僅保留主內容 Period (排除廣告 Period)\r\n" +
+                  "-sv period=\"main\":for=best\r\n" +
+                  "# 去除廣告 Period 的影片\r\n" +
+                  "-dv period=\"ad\":for=all\r\n",
+            enUS: "Select video streams by regular expressions. OPTIONS is a colon (:) separated list of the following sub-keys.\r\n" +
+                  "The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and the matching --drop-video/--drop-audio/--drop-subtitle options.\r\n\r\n" +
+                  "* id=REGEX: match by group/stream id\r\n" +
+                  "* lang=REGEX: match by language code\r\n" +
+                  "* name=REGEX: match by stream name\r\n" +
+                  "* codecs=REGEX: match by codecs (e.g. hvc1, avc1, mp4a)\r\n" +
+                  "* res=REGEX: match by resolution (e.g. 1920*, 3840*)\r\n" +
+                  "* frame=REGEX: match by frame rate\r\n" +
+                  "* channel=REGEX: match by audio channel count (e.g. 6, 2)\r\n" +
+                  "* range=REGEX: match by video range (e.g. SDR, HDR, PQ)\r\n" +
+                  "* url=REGEX: match by segment url\r\n" +
+                  "* period=REGEX: match by DASH Period id (multi-Period MPD, e.g. ads/chapters)\r\n" +
+                  "* segsMin=number: keep streams with at least number segments\r\n" +
+                  "* segsMax=number: keep streams with at most number segments\r\n" +
+                  "* plistDurMin=hms: keep streams whose playlist duration >= hms (e.g. 1h20m30s, 90s)\r\n" +
+                  "* plistDurMax=hms: keep streams whose playlist duration <= hms\r\n" +
+                  "* bwMin=int: keep streams with bandwidth >= int Kbps\r\n" +
+                  "* bwMax=int: keep streams with bandwidth <= int Kbps\r\n" +
+                  "* role=string: match by DASH role (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
+                  "* for=FOR: how many of the matched streams to keep. best[number], worst[number], all (Default: best)\r\n\r\n" +
                   "Examples: \r\n" +
                   "# select best video\r\n" +
                   "-sv best\r\n" +
@@ -554,7 +611,13 @@ internal static class StaticText
                   "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
                   "-sv role=\"main\":for=best\r\n" +
                   "# Select video with bandwidth between 800Kbps and 1Mbps\r\n" +
-                  "-sv bwMin=800:bwMax=1000\r\n"
+                  "-sv bwMin=800:bwMax=1000\r\n" +
+                  "# Drop subtitle streams that have at most 2 segments (e.g. trick-play/ad playlists)\r\n" +
+                  "-ds segsMax=2:for=all --auto-select\r\n" +
+                  "# Keep only the main content Period (exclude ad Periods)\r\n" +
+                  "-sv period=\"main\":for=best\r\n" +
+                  "# Drop video from the ad Period\r\n" +
+                  "-dv period=\"ad\":for=all\r\n"
         ),
         ["cmd_selectAudio"] = new TextContainer
         (
@@ -564,9 +627,9 @@ internal static class StaticText
         ),
         ["cmd_dropAudio"] = new TextContainer
         (
-            zhCN: "通过正则表达式去除符合要求的音频流.",
-            zhTW: "通過正則表達式去除符合要求的音軌.",
-            enUS: "Drop audio streams by regular expressions."
+            zhCN: "通过正则表达式去除符合要求的音频流. 支持与 --select-video 相同的参数, 输入 \"--morehelp select-video\" 以查看详细信息",
+            zhTW: "通過正則表達式去除符合要求的音軌. 支援與 --select-video 相同的參數, 輸入 \"--morehelp select-video\" 以查看詳細訊息",
+            enUS: "Drop audio streams by regular expressions. Accepts the same options as --select-video, use \"--morehelp select-video\" for more details"
         ),
         ["cmd_selectAudio_more"] = new TextContainer
         (
@@ -606,9 +669,9 @@ internal static class StaticText
         ),
         ["cmd_dropSubtitle"] = new TextContainer
         (
-            zhCN: "通过正则表达式去除符合要求的字幕流.",
-            zhTW: "通過正則表達式去除符合要求的字幕流.",
-            enUS: "Drop subtitle streams by regular expressions."
+            zhCN: "通过正则表达式去除符合要求的字幕流. 支持与 --select-video 相同的参数, 输入 \"--morehelp select-video\" 以查看详细信息",
+            zhTW: "通過正則表達式去除符合要求的字幕流. 支援與 --select-video 相同的參數, 輸入 \"--morehelp select-video\" 以查看詳細訊息",
+            enUS: "Drop subtitle streams by regular expressions. Accepts the same options as --select-video, use \"--morehelp select-video\" for more details"
         ),
         ["cmd_custom_range"] = new TextContainer
         (
@@ -772,6 +835,12 @@ internal static class StaticText
             zhTW: "到達直播錄製上限，即將停止錄製",
             enUS: "Live recording limit reached, will stop recording soon"
         ),
+        ["liveStreamEnded"] = new TextContainer
+        (
+            zhCN: "直播已结束，即将停止录制",
+            zhTW: "直播已結束，即將停止錄製",
+            enUS: "Live stream ended, will stop recording soon"
+        ),
         ["saveName"] = new TextContainer
         (
             zhCN: "保存文件名: ",
@@ -789,6 +858,12 @@ internal static class StaticText
             zhCN: "调用ffmpeg合并中...",
             zhTW: "調用ffmpeg合併中...",
             enUS: "ffmpeg merging..."
+        ),
+        ["ffmpegMergeReachLimit"] = new TextContainer
+        (
+            zhCN: "合并失败：打开的文件过多(Too many open files)。已下载的分片仍保留在临时目录，可提高系统文件句柄上限(如 ulimit -n)后重试，或改用 --binary-merge / --use-ffmpeg-concat-demuxer 重新合并。",
+            zhTW: "合併失敗：開啟的檔案過多(Too many open files)。已下載的分片仍保留在臨時目錄，可提高系統檔案句柄上限(如 ulimit -n)後重試，或改用 --binary-merge / --use-ffmpeg-concat-demuxer 重新合併。",
+            enUS: "Merge failed: too many open files. The downloaded segments are kept in the temp directory; raise the open-file limit (e.g. ulimit -n) and retry, or re-merge with --binary-merge / --use-ffmpeg-concat-demuxer."
         ),
         ["ffmpegNotFound"] = new TextContainer
         (

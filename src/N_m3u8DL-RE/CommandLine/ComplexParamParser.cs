@@ -41,10 +41,15 @@ internal class ComplexParamParser
                 }
             }
 
-            var resultStr = result.ToString().Trim().Trim('\"').Trim('\'');
+            var resultStr = result.ToString().Trim();
 
-            // 不应该有引号出现
-            if (resultStr.Contains('\"') || resultStr.Contains('\'')) throw new Exception();
+            // 仅去除成对的首尾引号, 保留值内部的引号(例如文件名中的撇号: What's Next)
+            if (resultStr.Length >= 2
+                && (resultStr[0] == '\"' || resultStr[0] == '\'')
+                && resultStr[^1] == resultStr[0])
+            {
+                resultStr = resultStr[1..^1];
+            }
 
             return resultStr;
         }

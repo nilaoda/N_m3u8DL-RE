@@ -1,5 +1,6 @@
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
@@ -436,6 +437,20 @@ internal partial class DASHExtractor2 : IExtractor
                         }
                     }
 
+                    // 去除重复分片(重叠Period/SegmentTimeline/connectivity duplicates等会导致同一分片被引用多次)
+                    // 以 URL + 字节范围 作为唯一标识, 保持原始顺序, 避免同一分片被下载两次 (#684)
+                    var _segs = streamSpec.Playlist.MediaParts[0].MediaSegments;
+                    if (_segs.Count > 1)
+                    {
+                        var _seen = new HashSet<string>();
+                        var _deduped = _segs.Where(s => _seen.Add($"{s.Url}|{s.StartRange}|{s.ExpectLength}")).ToList();
+                        if (_deduped.Count != _segs.Count)
+                        {
+                            Logger.Debug($"[DASH] removed {_segs.Count - _deduped.Count} duplicate segment(s) in {streamSpec.GroupId}");
+                            streamSpec.Playlist.MediaParts[0].MediaSegments = _deduped;
+                        }
+                    }
+
                     // 如果依旧没被添加分片，直接把BaseUrl塞进去就好
                     if (streamSpec.Playlist.MediaParts[0].MediaSegments.Count == 0)
                     {
@@ -460,6 +475,17 @@ internal partial class DASHExtractor2 : IExtractor
                         foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
                         {
                             item.EncryptInfo.Method = DEFAULT_METHOD;
+                        }
+
+                        // 尝试从 cenc:default_KID 提取 KID
+                        XNamespace cencNs = "urn:mpeg:cenc:2013";
+                        var cpKid = adaptationSet.Elements().Concat(representation.Elements())
+                            .FirstOrDefault(e => e.Name.LocalName == "ContentProtection" && e.Attribute(cencNs + "default_KID") != null);
+                        if (cpKid != null && streamSpec.Playlist.MediaInit != null)
+                        {
+                            var kidRaw = cpKid.Attribute(cencNs + "default_KID")!.Value;
+                            // UUID格式 -> 十六进制小写无分隔符
+                            streamSpec.Playlist.MediaInit.EncryptInfo.KID = kidRaw.Replace("-", "").ToLower();
                         }
                     }
 

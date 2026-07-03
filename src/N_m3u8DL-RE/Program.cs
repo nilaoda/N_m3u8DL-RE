@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
@@ -14,6 +14,7 @@ using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
+using System.Runtime.InteropServices;
 using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE;
@@ -32,7 +33,8 @@ internal class Program
             }
         }
         
-        Console.CancelKeyPress += Console_CancelKeyPress;
+        Console.CancelKeyPress += (_, _) => RestoreTerminal();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
 
@@ -53,16 +55,18 @@ internal class Program
         await CommandInvoker.InvokeArgs(args, DoWorkAsync);
     }
 
-    private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
+    static void RestoreTerminal()
     {
-        Logger.WarnMarkUp("Force Exit...");
-        try 
-        { 
+        try
+        {
+            Logger.Extra("Program Exit...");
             Console.CursorVisible = true;
             if (!OperatingSystem.IsWindows())
+            {
                 System.Diagnostics.Process.Start("tput", "cnorm");
-        } catch { }
-        Environment.Exit(0);
+            }
+        }
+        catch { }
     }
 
     static int GetOrder(StreamSpec streamSpec)
@@ -155,13 +159,9 @@ internal class Program
             {
                 case DecryptEngine.SHAKA_PACKAGER:
                 {
-                    var file = GlobalUtil.FindExecutable("shaka-packager");
-                    var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
-                    var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
-                    var file4 = GlobalUtil.FindExecutable("packager-win-x64");
-                    if (file == null && file2 == null && file3 == null && file4 == null)
-                        throw new FileNotFoundException(ResString.shakaPackagerNotFound);
-                    option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
+                    var file = FindShakaPackager();
+                    if (file == null) throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                    option.DecryptionBinaryPath = file;
                     Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
                     break;
                 }
@@ -429,6 +429,53 @@ internal class Program
                 if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
             }
         }
+    }
+
+    private static string? FindShakaPackager()
+    {
+        var file = GlobalUtil.FindExecutable("shaka-packager");
+        if (file != null) return file;
+
+        // 按照架构优先搜索同架构二进制
+        var names = new List<string>();
+        if (OperatingSystem.IsLinux())
+        {
+            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
+            {
+                names.Add("packager-linux-arm64");
+                names.Add("packager-linux-x64");
+            }
+            else
+            {
+                names.Add("packager-linux-x64");
+                names.Add("packager-linux-arm64");
+            }
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
+            {
+                names.Add("packager-osx-arm64");
+                names.Add("packager-osx-x64");
+            }
+            else
+            {
+                names.Add("packager-osx-x64");
+                names.Add("packager-osx-arm64");
+            }
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            names.Add("packager-win-x64");
+        }
+
+        foreach (var name in names)
+        {
+            file = GlobalUtil.FindExecutable(name);
+            if (file != null) return file;
+        }
+
+        return null;
     }
 
     static async Task CheckUpdateAsync()
