@@ -220,9 +220,22 @@ internal static class MergeUtil
         }
 
         // MAP
+        // "-map {i}" pulls in every stream an input has, including ones the mux
+        // format can't hold. Some sites' segments carry a data stream alongside
+        // the real track (e.g. HLS timed_id3 metadata), and Matroska/MP4 reject
+        // the whole mux for it ("Only audio, video, and subtitles are supported"),
+        // even with -ignore_unknown set below.
+        //
+        // Map by stream type instead, not by whole input - and ask for all three
+        // types from every input rather than switching on each file's declared
+        // MediaType. A "video" input isn't always video-only: some sites hand
+        // out one combined file per rendition (audio muxed into the same
+        // stream), and restricting that input to just ":v?" would silently
+        // drop its audio. ":v?/:a?/:s?" are no-ops on a type a given input
+        // doesn't have, so this only ever adds streams, never mismatches one.
         for (int i = 0; i < files.Length; i++)
         {
-            command.Append($" -map {i} ");
+            command.Append($" -map {i}:v? -map {i}:a? -map {i}:s? ");
         }
 
         var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
