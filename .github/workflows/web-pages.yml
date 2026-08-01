@@ -1,0 +1,87 @@
+name: Deploy WebAssembly Browser to GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.200
+
+      - name: Install wasm-tools
+        run: dotnet workload install wasm-tools
+
+      - name: Publish Blazor WASM
+        run: |
+          dotnet publish src/N_m3u8DL-RE.Web/N_m3u8DL-RE.Web.csproj -c Release -o web-dist
+
+      - name: Assemble static HTML site
+        run: |
+          mkdir -p site
+          cp -R web-dist/wwwroot/* site/
+          cat > site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>N_m3u8DL-RE Web</title>
+            <base href="./" />
+            <link rel="stylesheet" href="./lib/bootstrap/dist/css/bootstrap.min.css" />
+            <link rel="stylesheet" href="./css/app.css" />
+            <link rel="icon" type="image/png" href="./favicon.png" />
+            <link href="./N_m3u8DL-RE.Web.styles.css" rel="stylesheet" />
+          </head>
+          <body>
+            <div id="app">
+              <svg class="loading-progress">
+                <circle r="40%" cx="50%" cy="50%"></circle>
+                <circle r="40%" cx="50%" cy="50%"></circle>
+              </svg>
+              <div class="loading-progress-text"></div>
+            </div>
+            <div id="blazor-error-ui" style="display:none">
+              An unhandled error has occurred.
+              <a href="." class="reload">Reload</a>
+              <span class="dismiss">🗙</span>
+            </div>
+            <script src="./js/ffmpeg-bridge.js"></script>
+            <script src="./_framework/blazor.webassembly.js"></script>
+          </body>
+          </html>
+          EOF
+          touch site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
