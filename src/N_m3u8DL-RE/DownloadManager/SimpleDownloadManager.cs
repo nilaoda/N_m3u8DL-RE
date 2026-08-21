@@ -587,8 +587,8 @@ internal class SimpleDownloadManager
                     Logger.WarnMarkUp($"{Path.GetFileName(ffOut)} => {Path.GetFileName(finalFfOut)}");
                     ffOut = finalFfOut;
                 }
-                // 大于1800分片，需要分步骤合并
-                if (files.Length >= 1800)
+                // 大于1800分片，需要分步骤合并(concat demuxer 除外)
+                if (MergeUtil.ShouldPartialMerge(files.Length, DownloaderConfig.MyOptions.UseFFmpegConcatDemuxer))
                 {
                     Logger.WarnMarkUp(ResString.partMerge);
                     files = MergeUtil.PartialCombineMultipleFiles(files);
@@ -600,6 +600,10 @@ internal class SimpleDownloadManager
                             ActualFilePath = item
                         };
                     }
+                }
+                else if (files.Length >= MergeUtil.PartialMergeThreshold)
+                {
+                    Logger.DebugMarkUp("Using concat demuxer, skip partial merge");
                 }
                 mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, useConcatDemuxer: DownloaderConfig.MyOptions.UseFFmpegConcatDemuxer);
                 if (mergeSuccess) output = ffOut;
