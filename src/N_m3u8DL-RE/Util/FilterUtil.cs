@@ -50,17 +50,45 @@ public static class FilterUtil
         if (filter.Role.HasValue)
             inputs = inputs.Where(i => i.Role == filter.Role);
 
-        var bestNumberStr = filter.For.Replace("best", "");
-        var worstNumberStr = filter.For.Replace("worst", "");
-
-        if (filter.For == "best" && inputs.Any())
-            inputs = inputs.Take(1).ToList();
-        else if (filter.For == "worst" && inputs.Any())
-            inputs = inputs.TakeLast(1).ToList();
-        else if (int.TryParse(bestNumberStr, out int bestNumber) && inputs.Any())
-            inputs = inputs.Take(bestNumber).ToList();
-        else if (int.TryParse(worstNumberStr, out int worstNumber) && inputs.Any())
-            inputs = inputs.TakeLast(worstNumber).ToList();
+        // Apply "for" selection.
+        if (filter.For == "best")
+        {
+            // Best stream for each language.
+            inputs = inputs
+                .GroupBy(i => GetBaseLanguage(i.Language))
+                .Select(g => g
+                    .OrderByDescending(i => i.Bandwidth)
+                    .First());
+        }
+        else if (filter.For == "worst")
+        {
+            // Worst stream for each language.
+            inputs = inputs
+                .GroupBy(i => GetBaseLanguage(i.Language))
+                .Select(g => g
+                    .OrderBy(i => i.Bandwidth)
+                    .First());
+        }
+        else if (filter.For.StartsWith("best") &&
+                 int.TryParse(filter.For["best".Length..], out int bestNumber))
+        {
+            // Select the N best streams for each language.
+            inputs = inputs
+                .GroupBy(i => GetBaseLanguage(i.Language))
+                .SelectMany(g => g
+                    .OrderByDescending(i => i.Bandwidth)
+                    .Take(bestNumber));
+        }
+        else if (filter.For.StartsWith("worst") &&
+                 int.TryParse(filter.For["worst".Length..], out int worstNumber))
+        {
+            // Select the N worst streams for each language.
+            inputs = inputs
+                .GroupBy(i => GetBaseLanguage(i.Language))
+                .SelectMany(g => g
+                    .OrderBy(i => i.Bandwidth)
+                    .Take(worstNumber));
+        }
 
         return inputs.ToList();
     }
@@ -311,5 +339,15 @@ public static class FilterUtil
     {
         if (regList.Count == 0) return segments;
         return segments.Where(x => !IsAd(x.Url, regList)).ToList();
+    }
+
+    private static string GetBaseLanguage(string? language)
+    {
+        if (string.IsNullOrWhiteSpace(language))
+            return string.Empty;
+
+        return language
+            .Split(new[] { '-', '_' }, StringSplitOptions.RemoveEmptyEntries)[0]
+            .ToLowerInvariant();
     }
 }
