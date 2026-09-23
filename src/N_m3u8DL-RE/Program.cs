@@ -212,8 +212,6 @@ internal class Program
         parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
         // demo2
         parserConfig.KeyProcessors.Insert(0, new DemoProcessor2());
-        // for www.nowehoryzonty.pl
-        parserConfig.UrlProcessors.Insert(0, new NowehoryzontyUrlProcessor());
 
         // 等待任务开始时间
         if (option.TaskStartAt != null && option.TaskStartAt > DateTime.Now)
