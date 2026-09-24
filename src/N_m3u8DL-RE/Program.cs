@@ -1,11 +1,11 @@
-﻿using N_m3u8DL_RE.Parser.Config;
+using System.Globalization;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser;
 using Spectre.Console;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
-using System.Globalization;
 using System.Text;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Processor;
@@ -14,428 +14,509 @@ using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
-using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
+using N_m3u8DL_RE.Enum;
 
-namespace N_m3u8DL_RE
+namespace N_m3u8DL_RE;
+
+internal class Program
 {
-    internal class Program
+    static async Task Main(string[] args)
     {
-        static async Task Main(string[] args)
+        // 处理NT6.0及以下System.CommandLine报错CultureNotFound问题
+        if (OperatingSystem.IsWindows()) 
         {
-            Console.CancelKeyPress += Console_CancelKeyPress;
-            ServicePointManager.DefaultConnectionLimit = 1024;
-            try { Console.CursorVisible = true; } catch { }
-            string loc = "en-US";
-            string currLoc = Thread.CurrentThread.CurrentUICulture.Name;
-            if (currLoc == "zh-CN" || currLoc == "zh-SG") loc = "zh-CN";
-            else if (currLoc.StartsWith("zh-")) loc = "zh-TW";
-
-            //处理用户-h等请求
-            var index = -1;
-            var list = new List<string>(args);
-            if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
+            var osVersion = Environment.OSVersion.Version;
+            if (osVersion.Major < 6 || osVersion is { Major: 6, Minor: 0 })
             {
-                loc = list[index + 1];
-            }
-
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo(loc);
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(loc);
-            Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(loc);
-
-
-            await CommandInvoker.InvokeArgs(args, DoWorkAsync);
-        }
-
-        private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e)
-        {
-            Logger.WarnMarkUp("Force Exit...");
-            try 
-            { 
-                Console.CursorVisible = true;
-                if (!OperatingSystem.IsWindows())
-                    System.Diagnostics.Process.Start("stty", "echo");
-            } catch { }
-            Environment.Exit(0);
-        }
-
-        static int GetOrder(StreamSpec streamSpec)
-        {
-            if (streamSpec.Channels == null) return 0;
-            else
-            {
-                var str = streamSpec.Channels.Split('/')[0];
-                return int.TryParse(str, out var order) ? order : 0;
+                Environment.SetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT", "1");
             }
         }
+        
+        Console.CancelKeyPress += (_, _) => RestoreTerminal();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
+        ServicePointManager.DefaultConnectionLimit = 1024;
+        try { Console.CursorVisible = true; } catch { }
 
-        static async Task DoWorkAsync(MyOption option)
+        string loc = CultureUtil.GetCurrentCultureName();
+
+        // 处理用户-h等请求
+        var index = -1;
+        var list = new List<string>(args);
+        if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
         {
-            //检测更新
-            CheckUpdateAsync();
+            loc = list[index + 1];
+        }
+        
+        ResString.CurrentLoc = loc;
 
-            Logger.IsWriteFile = !option.NoLog;
-            Logger.InitLogFile();
-            Logger.LogLevel = option.LogLevel;
-            Logger.Info(CommandInvoker.VERSION_INFO);
+        CultureUtil.ChangeCurrentCultureName(loc);
 
-            if (option.UseSystemProxy == false)
+        await CommandInvoker.InvokeArgs(args, DoWorkAsync);
+    }
+
+    static void RestoreTerminal()
+    {
+        try
+        {
+            Logger.Extra("Program Exit...");
+            Console.CursorVisible = true;
+            if (!OperatingSystem.IsWindows())
             {
-                HTTPUtil.HttpClientHandler.UseProxy = false;
+                System.Diagnostics.Process.Start("tput", "cnorm");
             }
+        }
+        catch { }
+    }
 
-            if (option.CustomProxy != null)
+    static int GetOrder(StreamSpec streamSpec)
+    {
+        if (streamSpec.Channels == null) return 0;
+            
+        var str = streamSpec.Channels.Split('/')[0];
+        return int.TryParse(str, out var order) ? order : 0;
+    }
+
+    static async Task DoWorkAsync(MyOption option)
+    {
+        HTTPUtil.AppHttpClient.Timeout = TimeSpan.FromSeconds(option.HttpRequestTimeout);
+        if (Console.IsOutputRedirected || Console.IsErrorRedirected)
+        {
+            option.ForceAnsiConsole = true;
+            option.NoAnsiColor = true;
+            Logger.Info(ResString.consoleRedirected);
+        }
+        CustomAnsiConsole.InitConsole(option.ForceAnsiConsole, option.NoAnsiColor);
+        
+        // 检测更新
+        if (!option.DisableUpdateCheck)
+            _ = CheckUpdateAsync();
+
+        Logger.IsWriteFile = !option.NoLog;
+        Logger.LogFilePath = option.LogFilePath;
+        Logger.InitLogFile();
+        Logger.LogLevel = option.LogLevel;
+        Logger.Info(CommandInvoker.VERSION_INFO);
+
+        if (option.UseSystemProxy == false)
+        {
+            HTTPUtil.HttpClientHandler.UseProxy = false;
+        }
+
+        if (option.CustomProxy != null)
+        {
+            HTTPUtil.HttpClientHandler.Proxy = option.CustomProxy;
+            HTTPUtil.HttpClientHandler.UseProxy = true;
+        }
+
+        // 检查互斥的选项
+        if (option is { MuxAfterDone: false, MuxImports.Count: > 0 })
+        {
+            throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
+        }
+
+        if (option.UseShakaPackager) 
+        {
+            option.DecryptionEngine = DecryptEngine.SHAKA_PACKAGER;
+        }
+
+        // LivePipeMux开启时 LiveRealTimeMerge必须开启
+        if (option is { LivePipeMux: true, LiveRealTimeMerge: false })
+        {
+            Logger.WarnMarkUp("LivePipeMux detected, forced enable LiveRealTimeMerge");
+            option.LiveRealTimeMerge = true;
+        }
+
+        // 预先检查ffmpeg
+        option.FFmpegBinaryPath ??= GlobalUtil.FindExecutable("ffmpeg");
+
+        if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
+        {
+            throw new FileNotFoundException(ResString.ffmpegNotFound);
+        }
+
+        Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
+
+        // 预先检查mkvmerge
+        if (option is { MuxOptions.UseMkvmerge: true, MuxAfterDone: true })
+        {
+            option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
+            if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
             {
-                HTTPUtil.HttpClientHandler.Proxy = option.CustomProxy;
-                HTTPUtil.HttpClientHandler.UseProxy = true;
+                throw new FileNotFoundException(ResString.mkvmergeNotFound);
             }
+            Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
+        }
 
-            //检查互斥的选项
-
-            if (!option.MuxAfterDone && option.MuxImports != null && option.MuxImports.Count > 0)
+        // 预先检查
+        if (option.Keys is { Length: > 0 } || option.KeyTextFile != null)
+        {
+            if (!string.IsNullOrEmpty(option.DecryptionBinaryPath) && !File.Exists(option.DecryptionBinaryPath))
             {
-                throw new ArgumentException("MuxAfterDone disabled, MuxImports not allowed!");
+                throw new FileNotFoundException(option.DecryptionBinaryPath);
             }
-
-            //LivePipeMux开启时 LiveRealTimeMerge必须开启
-            if (option.LivePipeMux && !option.LiveRealTimeMerge)
+            switch (option.DecryptionEngine)
             {
-                Logger.WarnMarkUp("LivePipeMux detected, forced enable LiveRealTimeMerge");
-                option.LiveRealTimeMerge = true;
-            }
-
-            //预先检查ffmpeg
-            if (option.FFmpegBinaryPath == null)
-                option.FFmpegBinaryPath = GlobalUtil.FindExecutable("ffmpeg");
-
-            if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
-            {
-                throw new FileNotFoundException(ResString.ffmpegNotFound);
-            }
-
-            Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
-
-            //预先检查mkvmerge
-            if (option.MuxOptions != null && option.MuxOptions.UseMkvmerge && option.MuxAfterDone)
-            {
-                if (option.MkvmergeBinaryPath == null)
-                    option.MkvmergeBinaryPath = GlobalUtil.FindExecutable("mkvmerge");
-                if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
+                case DecryptEngine.SHAKA_PACKAGER:
                 {
-                    throw new FileNotFoundException("mkvmerge not found");
+                    var file = FindShakaPackager();
+                    if (file == null) throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                    option.DecryptionBinaryPath = file;
+                    Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
+                    break;
                 }
-                Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
-            }
-
-            //预先检查
-            if ((option.Keys != null && option.Keys.Length > 0) || option.KeyTextFile != null)
-            {
-                if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
+                case DecryptEngine.MP4DECRYPT:
                 {
-                    if (option.UseShakaPackager)
-                    {
-                        var file = GlobalUtil.FindExecutable("shaka-packager");
-                        var file2 = GlobalUtil.FindExecutable("packager-linux-x64");
-                        var file3 = GlobalUtil.FindExecutable("packager-osx-x64");
-                        var file4 = GlobalUtil.FindExecutable("packager-win-x64");
-                        if (file == null && file2 == null && file3 == null && file4 == null) throw new FileNotFoundException("shaka-packager not found!");
-                        option.DecryptionBinaryPath = file ?? file2 ?? file3 ?? file4;
-                        Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
-                    }
-                    else
-                    {
-                        var file = GlobalUtil.FindExecutable("mp4decrypt");
-                        if (file == null) throw new FileNotFoundException("mp4decrypt not found!");
-                        option.DecryptionBinaryPath = file;
-                        Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
-                    }
+                    var file = GlobalUtil.FindExecutable("mp4decrypt");
+                    if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
+                    option.DecryptionBinaryPath = file;
+                    Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
+                    break;
                 }
-                else if (!File.Exists(option.DecryptionBinaryPath))
-                {
-                    throw new FileNotFoundException(option.DecryptionBinaryPath);
-                }
+                case DecryptEngine.FFMPEG:
+                default:
+                    option.DecryptionBinaryPath = option.FFmpegBinaryPath;
+                    break;
             }
+        }
 
-            //默认的headers
-            var headers = new Dictionary<string, string>()
+        // 默认的headers
+        var headers = new Dictionary<string, string>()
+        {
+            ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
+        };
+        // 添加或替换用户输入的headers
+        foreach (var item in option.Headers)
+        {
+            headers[item.Key] = item.Value;
+            Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
+        }
+
+        var parserConfig = new ParserConfig()
+        {
+            AppendUrlParams = option.AppendUrlParams,
+            UrlProcessorArgs = option.UrlProcessorArgs,
+            BaseUrl = option.BaseUrl!,
+            Headers = headers,
+            CustomMethod = option.CustomHLSMethod,
+            CustomeKey = option.CustomHLSKey,
+            CustomeIV = option.CustomHLSIv,
+        };
+
+        if (option.AllowHlsMultiExtMap)
+        {
+            parserConfig.CustomParserArgs.Add("AllowHlsMultiExtMap", "true");
+        }
+
+        // demo1
+        parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
+        // demo2
+        parserConfig.KeyProcessors.Insert(0, new DemoProcessor2());
+
+        // 等待任务开始时间
+        if (option.TaskStartAt != null && option.TaskStartAt > DateTime.Now)
+        {
+            Logger.InfoMarkUp(ResString.taskStartAt + option.TaskStartAt);
+            while (option.TaskStartAt > DateTime.Now)
             {
-                ["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36"
-            };
-            //添加或替换用户输入的headers
-            foreach (var item in option.Headers)
-            {
-                headers[item.Key] = item.Value;
-                Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
+                await Task.Delay(1000);
             }
+        }
 
-            var parserConfig = new ParserConfig()
-            {
-                AppendUrlParams = option.AppendUrlParams,
-                UrlProcessorArgs = option.UrlProcessorArgs,
-                BaseUrl = option.BaseUrl!,
-                Headers = headers,
-                CustomMethod = option.CustomHLSMethod,
-                CustomeKey = option.CustomHLSKey,
-                CustomeIV = option.CustomHLSIv,
-            };
+        var url = option.Input;
 
-            //demo1
-            parserConfig.ContentProcessors.Insert(0, new DemoProcessor());
-            //demo2
-            parserConfig.KeyProcessors.Insert(0, new DemoProcessor2());
-            //for www.nowehoryzonty.pl
-            parserConfig.UrlProcessors.Insert(0, new NowehoryzontyUrlProcessor());
-
-            //等待任务开始时间
-            if (option.TaskStartAt != null && option.TaskStartAt > DateTime.Now)
-            {
-                Logger.InfoMarkUp(ResString.taskStartAt + option.TaskStartAt);
-                while (option.TaskStartAt > DateTime.Now)
-                {
-                    await Task.Delay(1000);
-                }
-            }
-
-            var url = option.Input;
-
-            //流提取器配置
-            var extractor = new StreamExtractor(parserConfig);
-            extractor.LoadSourceFromUrl(url);
-
-            //解析流信息
-            var streams = await extractor.ExtractStreamsAsync();
+        // 流提取器配置
+        var extractor = new StreamExtractor(parserConfig);
+        // 从链接加载内容
+        await RetryUtil.WebRequestRetryAsync(async () =>
+        {
+            await extractor.LoadSourceFromUrlAsync(url);
+            return true;
+        });
+        // 解析流信息
+        var streams = await extractor.ExtractStreamsAsync();
 
 
-            //全部媒体
-            var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder);
-            //基本流
-            var basicStreams = lists.Where(x => x.MediaType == null || x.MediaType == MediaType.VIDEO);
-            //可选音频轨道
-            var audios = lists.Where(x => x.MediaType == MediaType.AUDIO);
-            //可选字幕轨道
-            var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES);
+        // 全部媒体
+        var lists = streams.OrderBy(p => p.MediaType).ThenByDescending(p => p.Bandwidth).ThenByDescending(GetOrder).ToList();
+        // 基本流
+        var basicStreams = lists.Where(x => x.MediaType is null or MediaType.VIDEO).ToList();
+        // 可选音频轨道
+        var audios = lists.Where(x => x.MediaType == MediaType.AUDIO).ToList();
+        // 可选字幕轨道
+        var subs = lists.Where(x => x.MediaType == MediaType.SUBTITLES).ToList();
 
-            //尝试从URL或文件读取文件名
-            if (string.IsNullOrEmpty(option.SaveName))
-            {
-                option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
-            }
+        // 尝试从URL或文件读取文件名
+        if (string.IsNullOrEmpty(option.SaveName))
+        {
+            option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
+        }
 
-            //生成文件夹
-            var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
-            //记录文件
+        // 生成文件夹
+        var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+        // 记录文件
+        if (option.WriteMetaJson)
+        {
             extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
-            //写出文件
-            await WriteRawFilesAsync(option, extractor, tmpDir);
+        }
+        // 写出文件
+        await WriteRawFilesAsync(option, extractor, tmpDir);
 
-            Logger.Info(ResString.streamsInfo, lists.Count(), basicStreams.Count(), audios.Count(), subs.Count());
+        Logger.Info(ResString.streamsInfo, lists.Count, basicStreams.Count, audios.Count, subs.Count);
 
-            foreach (var item in lists)
+        foreach (var item in lists)
+        {
+            Logger.InfoMarkUp(item.ToString());
+        }
+
+        var selectedStreams = new List<StreamSpec>();
+        if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
+        {
+            basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
+            audios = FilterUtil.DoFilterDrop(audios, option.DropAudioFilter);
+            subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
+            lists = basicStreams.Concat(audios).Concat(subs).ToList();
+        }
+
+        if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
+        if (option.DropAudioFilter != null) Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
+        if (option.DropSubtitleFilter != null) Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
+        if (option.VideoFilter != null) Logger.Extra($"VideoFilter => {option.VideoFilter}");
+        if (option.AudioFilter != null) Logger.Extra($"AudioFilter => {option.AudioFilter}");
+        if (option.SubtitleFilter != null) Logger.Extra($"SubtitleFilter => {option.SubtitleFilter}");
+
+        if (option.AutoSelect)
+        {
+            if (basicStreams.Count != 0)
+                selectedStreams.Add(basicStreams.First());
+            var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
+            foreach (var lang in langs)
             {
-                Logger.InfoMarkUp(item.ToString());
+                selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
             }
+            selectedStreams.AddRange(subs);
+        }
+        else if (option.SubOnly)
+        {
+            selectedStreams.AddRange(subs);
+        }
+        else if (option.VideoFilter != null || option.AudioFilter != null || option.SubtitleFilter != null)
+        {
+            basicStreams = FilterUtil.DoFilterKeep(basicStreams, option.VideoFilter);
+            audios = FilterUtil.DoFilterKeep(audios, option.AudioFilter);
+            subs = FilterUtil.DoFilterKeep(subs, option.SubtitleFilter);
+            selectedStreams = basicStreams.Concat(audios).Concat(subs).ToList();
+        }
+        else
+        {
+            // 展示交互式选择框
+            selectedStreams = FilterUtil.SelectStreams(lists);
+        }
 
-            var selectedStreams = new List<StreamSpec>();
-            if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
-            {
-                basicStreams = FilterUtil.DoFilterDrop(basicStreams, option.DropVideoFilter);
-                audios = FilterUtil.DoFilterDrop(audios, option.DropAudioFilter);
-                subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
-                lists = basicStreams.Concat(audios).Concat(subs).OrderBy(x => true);
-            }
+        if (selectedStreams.Count == 0)
+            throw new Exception(ResString.noStreamsToDownload);
 
-            if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
-            if (option.DropAudioFilter != null) Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
-            if (option.DropSubtitleFilter != null) Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
-            if (option.VideoFilter != null) Logger.Extra($"VideoFilter => {option.VideoFilter}");
-            if (option.AudioFilter != null) Logger.Extra($"AudioFilter => {option.AudioFilter}");
-            if (option.SubtitleFilter != null) Logger.Extra($"SubtitleFilter => {option.SubtitleFilter}");
+        // HLS: 选中流中若有没加载出playlist的，加载playlist
+        // DASH/MSS: 加载playlist (调用url预处理器)
+        if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH || extractor.ExtractorType == ExtractorType.MSS)
+            await extractor.FetchPlayListAsync(selectedStreams);
 
-            if (option.AutoSelect)
-            {
-                if (basicStreams.Any())
-                    selectedStreams.Add(basicStreams.First());
-                var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
-                foreach (var lang in langs)
-                {
-                    selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
-                }
-                selectedStreams.AddRange(subs);
-            }
-            else if (option.SubOnly)
-            {
-                selectedStreams.AddRange(subs);
-            }
-            else if (option.VideoFilter != null || option.AudioFilter != null || option.SubtitleFilter != null)
-            {
-                basicStreams = FilterUtil.DoFilterKeep(basicStreams, option.VideoFilter);
-                audios = FilterUtil.DoFilterKeep(audios, option.AudioFilter);
-                subs = FilterUtil.DoFilterKeep(subs, option.SubtitleFilter);
-                selectedStreams = basicStreams.Concat(audios).Concat(subs).ToList();
-            }
-            else
-            {
-                //展示交互式选择框
-                selectedStreams = FilterUtil.SelectStreams(lists);
-            }
+        // 直播检测
+        var livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
+        if (livingFlag)
+        {
+            Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
+        }
 
-            if (!selectedStreams.Any())
-                throw new Exception(ResString.noStreamsToDownload);
+        // 无法识别的加密方式，自动开启二进制合并
+        if (selectedStreams.Any(s => s.Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
+        {
+            Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge3}[/]");
+            option.BinaryMerge = true;
+        }
 
-            //HLS: 选中流中若有没加载出playlist的，加载playlist
-            //DASH/MSS: 加载playlist (调用url预处理器)
-            if (selectedStreams.Any(s => s.Playlist == null) || extractor.ExtractorType == ExtractorType.MPEG_DASH || extractor.ExtractorType == ExtractorType.MSS)
-                await extractor.FetchPlayListAsync(selectedStreams);
+        // 应用用户自定义的分片范围
+        if (!livingFlag)
+            FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
 
-            //直播检测
-            var livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
-            if (livingFlag)
-            {
-                Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
-            }
+        // 应用用户自定义的广告分片关键字
+        FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
 
-            //无法识别的加密方式，自动开启二进制合并
-            if (selectedStreams.Any(s => s.Playlist.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
-            {
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge3}[/]");
-                option.BinaryMerge = true;
-            }
-
-            //应用用户自定义的分片范围
-            if (!livingFlag)
-                FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
-
-            //应用用户自定义的广告分片关键字
-            FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
-
-            //记录文件
+        // 记录文件
+        if (option.WriteMetaJson)
+        {
             extractor.RawFiles["meta_selected.json"] = GlobalUtil.ConvertToJson(selectedStreams);
+        }
 
-            Logger.Info(ResString.selectedStream);
-            foreach (var item in selectedStreams)
-            {
-                Logger.InfoMarkUp(item.ToString());
-            }
+        Logger.Info(ResString.selectedStream);
+        foreach (var item in selectedStreams)
+        {
+            Logger.InfoMarkUp(item.ToString());
+        }
 
-            //写出文件
-            await WriteRawFilesAsync(option, extractor, tmpDir);
+        // 写出文件
+        await WriteRawFilesAsync(option, extractor, tmpDir);
 
-            if (option.SkipDownload)
-            {
-                return;
-            }
+        if (option.SkipDownload)
+        {
+            return;
+        }
 
 #if DEBUG
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
 #endif
 
-            Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
+        Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
 
-            //开始MuxAfterDone后自动使用二进制版
-            if (!option.BinaryMerge && option.MuxAfterDone)
+        // 开始MuxAfterDone后自动使用二进制版
+        if (option is { BinaryMerge: false, MuxAfterDone: true })
+        {
+            option.BinaryMerge = true;
+            Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge6}[/]");
+        }
+
+        // 下载配置
+        var downloadConfig = new DownloaderConfig()
+        {
+            MyOptions = option,
+            DirPrefix = tmpDir,
+            Headers = parserConfig.Headers, // 使用命令行解析得到的Headers
+        };
+
+        var result = false;
+
+        if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+        {
+            var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
+            result = await sldm.StartRecordAsync();
+        }
+        else if (!livingFlag)
+        {
+            // 开始下载
+            var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
+            result = await sdm.StartDownloadAsync();
+        }
+        else
+        {
+            var sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
+            result = await sldm.StartRecordAsync();
+        }
+
+        if (result)
+        {
+            Logger.InfoMarkUp("[white on green]Done[/]");
+        }
+        else
+        {
+            Logger.ErrorMarkUp("[white on red]Failed[/]");
+            Environment.ExitCode = 1;
+        }
+    }
+
+    private static async Task WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string tmpDir)
+    {
+        // 写出json文件
+        if (option.WriteMetaJson)
+        {
+            if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
+            Logger.Warn(ResString.writeJson);
+            foreach (var item in extractor.RawFiles)
             {
-                option.BinaryMerge = true;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge6}[/]");
+                var file = Path.Combine(tmpDir, item.Key);
+                if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
             }
+        }
+    }
 
-            //下载配置
-            var downloadConfig = new DownloaderConfig()
-            {
-                MyOptions = option,
-                DirPrefix = tmpDir,
-                Headers = parserConfig.Headers, //使用命令行解析得到的Headers
-            };
+    private static string? FindShakaPackager()
+    {
+        var file = GlobalUtil.FindExecutable("shaka-packager");
+        if (file != null) return file;
 
-            var result = false;
-
-            if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+        // 按照架构优先搜索同架构二进制
+        var names = new List<string>();
+        if (OperatingSystem.IsLinux())
+        {
+            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
             {
-                var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
-                result = await sldm.StartRecordAsync();
-            }
-            else if (!livingFlag)
-            {
-                //开始下载
-                var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
-                result = await sdm.StartDownloadAsync();
+                names.Add("packager-linux-arm64");
+                names.Add("packager-linux-x64");
             }
             else
             {
-                var sldm = new SimpleLiveRecordManager2(downloadConfig, selectedStreams, extractor);
-                result = await sldm.StartRecordAsync();
+                names.Add("packager-linux-x64");
+                names.Add("packager-linux-arm64");
             }
-
-            if (result)
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
             {
-                Logger.InfoMarkUp("[white on green]Done[/]");
+                names.Add("packager-osx-arm64");
+                names.Add("packager-osx-x64");
             }
             else
             {
-                Logger.ErrorMarkUp("[white on red]Failed[/]");
-                Environment.ExitCode = 1;
+                names.Add("packager-osx-x64");
+                names.Add("packager-osx-arm64");
             }
         }
-
-        private static async Task WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string tmpDir)
+        else if (OperatingSystem.IsWindows())
         {
-            //写出json文件
-            if (option.WriteMetaJson)
-            {
-                if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
-                Logger.Warn(ResString.writeJson);
-                foreach (var item in extractor.RawFiles)
-                {
-                    var file = Path.Combine(tmpDir, item.Key);
-                    if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
-                }
-            }
+            names.Add("packager-win-x64");
         }
 
-        static async Task CheckUpdateAsync()
+        foreach (var name in names)
         {
-            try
-            {
-                var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
-                string nowVer = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
-                string redirctUrl = await Get302Async("https://github.com/nilaoda/N_m3u8DL-RE/releases/latest");
-                string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
-                if (!latestVer.StartsWith(nowVer) && !latestVer.StartsWith("https"))
-                {
-                    Console.Title = $"{ResString.newVersionFound} {latestVer}";
-                    Logger.InfoMarkUp($"[cyan]{ResString.newVersionFound}[/] [red]{latestVer}[/]");
-                }
-            }
-            catch (Exception)
-            {
-                ;
-            }
+            file = GlobalUtil.FindExecutable(name);
+            if (file != null) return file;
         }
 
-        //重定向
-        static async Task<string> Get302Async(string url)
+        return null;
+    }
+
+    static async Task CheckUpdateAsync()
+    {
+        try
         {
-            //this allows you to set the settings so that we can get the redirect url
-            var handler = new HttpClientHandler()
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!;
+            string nowVer = $"v{ver.Major}.{ver.Minor}.{ver.Build}";
+            string redirctUrl = await Get302Async("https://github.com/nilaoda/N_m3u8DL-RE/releases/latest");
+            string latestVer = redirctUrl.Replace("https://github.com/nilaoda/N_m3u8DL-RE/releases/tag/", "");
+            if (!latestVer.StartsWith(nowVer) && !latestVer.StartsWith("https"))
             {
-                AllowAutoRedirect = false
-            };
-            string redirectedUrl = "";
-            using (HttpClient client = new(handler))
-            using (HttpResponseMessage response = await client.GetAsync(url))
-            using (HttpContent content = response.Content)
-            {
-                // ... Read the response to see if we have the redirected url
-                if (response.StatusCode == System.Net.HttpStatusCode.Found)
-                {
-                    HttpResponseHeaders headers = response.Headers;
-                    if (headers != null && headers.Location != null)
-                    {
-                        redirectedUrl = headers.Location.AbsoluteUri;
-                    }
-                }
+                Console.Title = $"{ResString.newVersionFound} {latestVer}";
+                Logger.InfoMarkUp($"[cyan]{ResString.newVersionFound}[/] [red]{latestVer}[/]");
             }
-
-            return redirectedUrl;
         }
+        catch (Exception)
+        {
+            ;
+        }
+    }
+
+    // 重定向
+    static async Task<string> Get302Async(string url)
+    {
+        // this allows you to set the settings so that we can get the redirect url
+        var handler = new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        };
+        var redirectedUrl = "";
+        using var client = new HttpClient(handler);
+        using var response = await client.GetAsync(url);
+        using var content = response.Content;
+        // ... Read the response to see if we have the redirected url
+        if (response.StatusCode != HttpStatusCode.Found) return redirectedUrl;
+        
+        var headers = response.Headers;
+        if (headers.Location != null)
+        {
+            redirectedUrl = headers.Location.AbsoluteUri;
+        }
+
+        return redirectedUrl;
     }
 }

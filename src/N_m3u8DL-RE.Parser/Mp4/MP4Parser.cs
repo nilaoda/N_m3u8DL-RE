@@ -9,12 +9,12 @@ namespace Mp4SubtitleParser
 {
     class ParsedBox
     {
-        public MP4Parser Parser { get; set; }
+        public required MP4Parser Parser { get; set; }
         public bool PartialOkay { get; set; }
         public long Start { get; set; }
         public uint Version { get; set; } = 1000;
         public uint Flags { get; set; } = 1000;
-        public BinaryReader2 Reader { get; set; }
+        public required BinaryReader2 Reader { get; set; }
         public bool Has64BitSize { get; set; }
     }
 
@@ -28,7 +28,7 @@ namespace Mp4SubtitleParser
     class TRUN
     {
         public uint SampleCount { get; set; }
-        public List<Sample> SampleData { get; set; } = new List<Sample>();
+        public List<Sample> SampleData { get; set; } = [];
     }
 
     class Sample
@@ -55,7 +55,7 @@ namespace Mp4SubtitleParser
 
         public static BoxHandler AllData(DataHandler handler)
         {
-            return (box) =>
+            return box =>
             {
                 var all = box.Reader.GetLength() - box.Reader.GetPosition();
                 handler(box.Reader.ReadBytes((int)all));
@@ -111,7 +111,7 @@ namespace Mp4SubtitleParser
             var name = TypeToString(type);
             var has64BitSize = false;
 
-            //Console.WriteLine($"Parsing MP4 box: {name}");
+            // Console.WriteLine($"Parsing MP4 box: {name}");
 
             switch (size)
             {
@@ -129,8 +129,7 @@ namespace Mp4SubtitleParser
                     break;
             }
 
-            BoxHandler boxDefinition = null;
-            this.BoxDefinitions.TryGetValue(type, out boxDefinition);
+            this.BoxDefinitions.TryGetValue(type, out BoxHandler? boxDefinition);
 
             if (boxDefinition != null)
             {
@@ -162,7 +161,7 @@ namespace Mp4SubtitleParser
                 }
 
                 int payloadSize = (int)(end - reader.GetPosition());
-                var payload = (payloadSize > 0) ? reader.ReadBytes(payloadSize) : new byte[0];
+                var payload = (payloadSize > 0) ? reader.ReadBytes(payloadSize) : [];
                 var box = new ParsedBox()
                 {
                     Parser = this,

@@ -1,129 +1,137 @@
 ﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
+using N_m3u8DL_RE.Enum;
 
-namespace N_m3u8DL_RE.Util
+namespace N_m3u8DL_RE.Util;
+
+internal static class MergeUtil
 {
-    internal class MergeUtil
+    /// <summary>
+    /// 输入一堆已存在的文件，合并到新文件
+    /// </summary>
+    /// <param name="files"></param>
+    /// <param name="outputFilePath"></param>
+    public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath)
     {
-        /// <summary>
-        /// 输入一堆已存在的文件，合并到新文件
-        /// </summary>
-        /// <param name="files"></param>
-        /// <param name="outputFilePath"></param>
-        public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath)
+        if (files.Length == 0) return;
+        if (files.Length == 1)
         {
-            if (files.Length == 0) return;
-            if (files.Length == 1)
-            {
-                FileInfo fi = new FileInfo(files[0]);
-                fi.CopyTo(outputFilePath, true);
-                return;
-            }
-
-            if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
-                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
-
-            string[] inputFilePaths = files;
-            using (var outputStream = File.Create(outputFilePath))
-            {
-                foreach (var inputFilePath in inputFilePaths)
-                {
-                    if (inputFilePath == "")
-                        continue;
-                    using (var inputStream = File.OpenRead(inputFilePath))
-                    {
-                        inputStream.CopyTo(outputStream);
-                    }
-                }
-            }
+            FileInfo fi = new FileInfo(files[0]);
+            fi.CopyTo(outputFilePath, true);
+            return;
         }
 
-        private static int InvokeFFmpeg(string binary, string command, string workingDirectory)
-        {
-            Logger.DebugMarkUp($"{binary}: {command}");
+        if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
+            Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
 
-            using var p = new Process();
-            p.StartInfo = new ProcessStartInfo()
-            {
-                WorkingDirectory = workingDirectory,
-                FileName = binary,
-                Arguments = command,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-            p.ErrorDataReceived += (sendProcess, output) =>
-            {
-                if (!string.IsNullOrEmpty(output.Data))
-                {
-                    Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
-                }
-            };
-            p.Start();
-            p.BeginErrorReadLine();
-            p.WaitForExit();
-            return p.ExitCode;
+        var inputFilePaths = files;
+        using var outputStream = File.Create(outputFilePath);
+        foreach (var inputFilePath in inputFilePaths)
+        {
+            if (inputFilePath == "")
+                continue;
+            using var inputStream = File.OpenRead(inputFilePath);
+            inputStream.CopyTo(outputStream);
         }
+    }
 
-        public static string[] PartialCombineMultipleFiles(string[] files)
+    private static int InvokeFFmpeg(string binary, string command, string workingDirectory)
+    {
+        return InvokeFFmpeg(binary, command, workingDirectory, out _);
+    }
+
+    private static int InvokeFFmpeg(string binary, string command, string workingDirectory, out string errorOutput)
+    {
+        Logger.DebugMarkUp($"{binary}: {command}");
+
+        // 收集 ffmpeg 的 stderr 输出，便于后续判断失败原因（如句柄耗尽）
+        var errorBuilder = new StringBuilder();
+        using var p = new Process();
+        p.StartInfo = new ProcessStartInfo()
         {
-            var newFiles = new List<string>();
-            int div = 0;
-            if (files.Length <= 90000)
-                div = 100;
-            else
-                div = 200;
-
-            string outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
-            int index = 0; //序号
-
-            //按照div的容量分割为小数组
-            string[][] li = Enumerable.Range(0, files.Count() / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
-            foreach (var items in li)
+            WorkingDirectory = workingDirectory,
+            FileName = binary,
+            Arguments = command,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        p.ErrorDataReceived += (sendProcess, output) =>
+        {
+            if (!string.IsNullOrEmpty(output.Data))
             {
-                if (items.Count() == 0)
-                    continue;
-                var output = outputName + index.ToString("0000") + ".ts";
-                CombineMultipleFilesIntoSingleFile(items, output);
-                newFiles.Add(output);
-                //合并后删除这些文件
-                foreach (var item in items)
-                {
-                    File.Delete(item);
-                }
-                index++;
+                errorBuilder.AppendLine(output.Data);
+                Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
             }
+        };
+        p.Start();
+        p.BeginErrorReadLine();
+        p.WaitForExit();
+        errorOutput = errorBuilder.ToString();
+        return p.ExitCode;
+    }
 
-            return newFiles.ToArray();
+    /// <summary>
+    /// 判断 ffmpeg 的输出是否为文件句柄耗尽（Too many open files）导致的错误。
+    /// concat 协议会一次性打开全部分片，分片过多 + 系统句柄上限过低时会触发该错误。
+    /// </summary>
+    internal static bool IsTooManyOpenFilesError(string ffmpegOutput)
+    {
+        return !string.IsNullOrEmpty(ffmpegOutput)
+            && ffmpegOutput.Contains("too many open files", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static string[] PartialCombineMultipleFiles(string[] files)
+    {
+        var newFiles = new List<string>();
+        var div = files.Length <= 90000 ? 100 : 200;
+
+        var outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
+        var index = 0; // 序号
+
+        // 按照div的容量分割为小数组
+        var li = Enumerable.Range(0, files.Length / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
+        foreach (var items in li)
+        {
+            if (items.Length == 0)
+                continue;
+            var output = outputName + index.ToString("0000") + ".ts";
+            CombineMultipleFilesIntoSingleFile(items, output);
+            newFiles.Add(output);
+            // 合并后删除这些文件
+            foreach (var item in items)
+            {
+                File.Delete(item);
+            }
+            index++;
         }
 
-        public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
-            bool fastStart = false,
-            bool writeDate = true, bool useConcatDemuxer = false, string poster = "", string audioName = "", string title = "",
-            string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
+        return newFiles.ToArray();
+    }
+
+    public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
+        bool fastStart = false,
+        bool writeDate = true, bool useConcatDemuxer = false, string poster = "", string audioName = "", string title = "",
+        string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
+    {
+        // 改为绝对路径
+        outputPath = Path.GetFullPath(outputPath);
+
+        string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
+
+        string ddpAudio = string.Empty;
+        string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
+        ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
+        if (!string.IsNullOrEmpty(ddpAudio)) useAACFilter = false;
+
+        // 根据是否使用 concat demuxer 构建 ffmpeg 命令
+        string BuildCommand()
         {
-            //改为绝对路径
-            outputPath = Path.GetFullPath(outputPath);
-
-            string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
-
             StringBuilder command = new StringBuilder("-loglevel warning -nostdin ");
-            string ddpAudio = string.Empty;
-            string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
-            ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
-            if (!string.IsNullOrEmpty(ddpAudio)) useAACFilter = false;
-
             if (useConcatDemuxer)
             {
                 // 使用 concat demuxer合并
@@ -181,118 +189,133 @@ namespace N_m3u8DL_RE.Util
                     break;
             }
 
-            var code = InvokeFFmpeg(binary, command.ToString(), Path.GetDirectoryName(files[0])!);
-
-            return code == 0;
+            return command.ToString();
         }
 
-        public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, bool mp4, bool dateinfo)
+        var workingDirectory = Path.GetDirectoryName(files[0])!;
+        var code = InvokeFFmpeg(binary, BuildCommand(), workingDirectory, out var errorOutput);
+
+        // concat 协议会一次性打开全部分片。当系统文件句柄上限过低（如 macOS 默认 256）
+        // 且分片数量过多时，ffmpeg 会报 "Too many open files" 导致合并失败。这里给出明确提示，
+        // 引导用户提高句柄上限或改用其它合并方式；已下载的分片仍保留在临时目录中，不会丢失。
+        // See: https://github.com/nilaoda/N_m3u8DL-RE/issues/338 and #89
+        if (code != 0 && IsTooManyOpenFilesError(errorOutput))
         {
-            var ext = mp4 ? "mp4" : "mkv";
-            string dateString = DateTime.Now.ToString("o");
-            StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
+            Logger.WarnMarkUp(ResString.ffmpegMergeReachLimit);
+        }
 
-            //INPUT
-            foreach (var item in files)
+        return code == 0;
+    }
+
+    public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, MuxFormat muxFormat, bool dateinfo)
+    {
+        var ext = OtherUtil.GetMuxExtension(muxFormat);
+        string dateString = DateTime.Now.ToString("o");
+        StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
+
+        // INPUT
+        foreach (var item in files)
+        {
+            command.Append($" -i \"{item.FilePath}\" ");
+        }
+
+        // MAP
+        for (int i = 0; i < files.Length; i++)
+        {
+            command.Append($" -map {i} ");
+        }
+
+        var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
+
+        if (muxFormat == MuxFormat.MP4)
+            command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
+        else if (muxFormat == MuxFormat.TS)
+            command.Append($" -strict unofficial -c:a copy -c:v copy ");
+        else if (muxFormat == MuxFormat.MKV)
+            command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
+        else throw new ArgumentException($"unknown format: {muxFormat}");
+
+        // CLEAN
+        command.Append(" -map_metadata -1 ");
+
+        // LANG and NAME
+        var streamIndex = 0;
+        for (int i = 0; i < files.Length; i++)
+        {
+            // 转换语言代码
+            LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
+            command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
+            if (!string.IsNullOrEmpty(files[i].Description))
             {
-                command.Append($" -i \"{item.FilePath}\" ");
+                command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
             }
-
-            //MAP
-            for (int i = 0; i < files.Length; i++)
-            {
-                command.Append($" -map {i} ");
-            }
-
-            var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
-
-            if (mp4)
-                command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); //mp4不支持vtt/srt字幕，必须转换格式
+            /**
+             * -metadata:s:xx标记的是 输出的第xx个流的metadata，
+             * 若输入文件存在不止一个流时，这里单纯使用files的index
+             * 就有可能出现metadata错位的情况，所以加了如下逻辑
+             */
+            if (files[i].Mediainfos.Count > 0)
+                streamIndex += files[i].Mediainfos.Count;
             else
-                command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
-
-            //CLEAN
-            command.Append(" -map_metadata -1 ");
-
-            //LANG and NAME
-            var streamIndex = 0;
-            for (int i = 0; i < files.Length; i++)
-            {
-                //转换语言代码
-                LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-                command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
-                if (!string.IsNullOrEmpty(files[i].Description))
-                {
-                    command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
-                }
-                /**
-                 * -metadata:s:xx标记的是 输出的第xx个流的metadata，
-                 * 若输入文件存在不止一个流时，这里单纯使用files的index
-                 * 就有可能出现metadata错位的情况，所以加了如下逻辑
-                 */
-                if (files[i].Mediainfos.Count > 0)
-                    streamIndex += files[i].Mediainfos.Count;
-                else
-                    streamIndex++;
-            }
-
-            var videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
-            var audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-            var subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-            if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
-            //字幕都不设置默认
-            if (subTracks.Any()) command.Append(" -disposition:s 0 ");
-            if (audioTracks.Any())
-            {
-                //音频除了第一个音轨 都不设置默认
-                command.Append(" -disposition:a:0 default ");
-                for (int i = 1; i < audioTracks.Count(); i++)
-                {
-                    command.Append($" -disposition:a:{i} 0 ");
-                }
-            }
-
-            if (dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
-            command.Append($" -ignore_unknown -copy_unknown ");
-            command.Append($" \"{outputPath}.{ext}\"");
-
-            var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
-
-            return code == 0;
+                streamIndex++;
         }
 
-        public static bool MuxInputsByMkvmerge(string binary, OutputFile[] files, string outputPath)
+        var videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
+        var audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+        var subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
+        if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
+        // 字幕都不设置默认
+        if (subTracks.Any()) command.Append(" -disposition:s 0 ");
+        if (audioTracks.Any())
         {
-            StringBuilder command = new StringBuilder($"-q --output \"{outputPath}.mkv\" ");
-
-            command.Append(" --no-chapters ");
-
-            var dFlag = false;
-
-            //LANG and NAME
-            for (int i = 0; i < files.Length; i++)
+            // 音频除了第一个音轨 都不设置默认
+            command.Append(" -disposition:a:0 default ");
+            for (int i = 1; i < audioTracks.Count(); i++)
             {
-                //转换语言代码
-                LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-                command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
-                //字幕都不设置默认
-                if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
-                    command.Append($" --default-track 0:no ");
-                //音频除了第一个音轨 都不设置默认
-                if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
-                {
-                    if (dFlag)
-                        command.Append($" --default-track 0:no ");
-                    dFlag = true;
-                }
-                if (!string.IsNullOrEmpty(files[i].Description))
-                    command.Append($" --track-name 0:\"{files[i].Description}\" ");
-                command.Append($" \"{files[i].FilePath}\" ");
+                command.Append($" -disposition:a:{i} 0 ");
             }
-
-            var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
-
-            return code == 0;
         }
+
+        if (dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
+        command.Append($" -ignore_unknown -copy_unknown ");
+        command.Append($" \"{outputPath}{ext}\"");
+
+        var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+
+        return code == 0;
+    }
+
+    public static bool MuxInputsByMkvmerge(string binary, OutputFile[] files, string outputPath)
+    {
+        StringBuilder command = new StringBuilder($"-q --output \"{outputPath}.mkv\" ");
+
+        command.Append(" --no-chapters ");
+
+        var dFlag = false;
+
+        // LANG and NAME
+        for (int i = 0; i < files.Length; i++)
+        {
+            // 转换语言代码
+            LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
+            command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
+            // 字幕都不设置默认
+            if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
+                command.Append($" --default-track 0:no ");
+            // 音频除了第一个音轨 都不设置默认
+            if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
+            {
+                if (dFlag)
+                    command.Append($" --default-track 0:no ");
+                dFlag = true;
+            }
+            if (!string.IsNullOrEmpty(files[i].Description))
+                command.Append($" --track-name 0:\"{files[i].Description}\" ");
+            command.Append($" \"{files[i].FilePath}\" ");
+        }
+
+        var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
+
+        return code == 0;
     }
 }
