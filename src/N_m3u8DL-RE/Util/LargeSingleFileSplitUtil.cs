@@ -105,7 +105,7 @@ internal static class LargeSingleFileSplitUtil
             // 已到最后
             else
             {
-                c.To = originalFileSize;
+                c.To = originalFileSize - 1;
                 clips.Add(c);
                 break;
             }
