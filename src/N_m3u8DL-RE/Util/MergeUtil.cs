@@ -85,6 +85,24 @@ internal static class MergeUtil
             && ffmpegOutput.Contains("too many open files", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// 分块合并的分片数量阈值。
+    /// </summary>
+    internal const int PartialMergeThreshold = 1800;
+
+    /// <summary>
+    /// 判断合并前是否需要先做分块合并(<see cref="PartialCombineMultipleFiles"/>)。
+    /// 分块合并只为 concat 协议服务: 该模式会一次性打开全部分片(见 #338、#89), 且所有文件名都要放在命令行上。
+    /// concat demuxer 通过临时清单文件逐个读取分片, 上述两个限制都不存在;
+    /// 而分块合并会把上百个分片按字节直接拼进单个 TS 中间文件, ffmpeg 只能把它当作一条连续流读取,
+    /// 无法处理文件内部的时间戳重置, 导致时间轴错乱、时长严重偏短(见 #946)。
+    /// 因此使用 concat demuxer 时不再做分块合并。
+    /// </summary>
+    internal static bool ShouldPartialMerge(int fileCount, bool useConcatDemuxer)
+    {
+        return fileCount >= PartialMergeThreshold && !useConcatDemuxer;
+    }
+
     public static string[] PartialCombineMultipleFiles(string[] files)
     {
         var newFiles = new List<string>();
