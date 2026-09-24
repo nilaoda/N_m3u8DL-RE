@@ -5,6 +5,7 @@ using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Util;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
@@ -21,11 +22,13 @@ internal partial class DASHExtractor2 : IExtractor
     private string MpdUrl = string.Empty;
     private string BaseUrl = string.Empty;
     private string MpdContent = string.Empty;
+    private readonly TimeProvider timeProvider;
     public ParserConfig ParserConfig { get; set; }
 
-    public DASHExtractor2(ParserConfig parserConfig)
+    public DASHExtractor2(ParserConfig parserConfig, TimeProvider? timeProvider = null)
     {
         this.ParserConfig = parserConfig;
+        this.timeProvider = timeProvider ?? TimeProvider.System;
         SetInitUrl();
     }
 
@@ -409,8 +412,8 @@ internal partial class DASHExtractor2 : IExtractor
                             // 直播的情况，需要自己计算totalNumber
                             if (totalNumber == 0 && isLive)
                             {
-                                var now = DateTime.Now;
-                                var availableTime = DateTime.Parse(availabilityStartTime!);
+                                var now = timeProvider.GetUtcNow();
+                                var availableTime = DateTimeOffset.Parse(availabilityStartTime!, CultureInfo.InvariantCulture);
                                 // 可用时间+偏移量
                                 var offsetMs = TimeSpan.FromMilliseconds(Convert.ToInt64(presentationTimeOffsetStr) / 1000);
                                 availableTime = availableTime.Add(offsetMs);
