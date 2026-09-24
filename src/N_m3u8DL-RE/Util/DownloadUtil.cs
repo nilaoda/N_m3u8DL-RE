@@ -63,16 +63,10 @@ internal static class DownloadUtil
                 ActualFilePath = path,
             };
         }
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
+        using var request = HTTPUtil.CreateRequest(HttpMethod.Get, url);
         if (fromPosition != null || toPosition != null)
             request.Headers.Range = new(fromPosition, toPosition);
-        if (headers != null)
-        {
-            foreach (var item in headers)
-            {
-                request.Headers.TryAddWithoutValidation(item.Key, item.Value);
-            }
-        }
+        HTTPUtil.ApplyHeaders(request, headers);
         Logger.Debug(request.Headers.ToString());
         try
         {

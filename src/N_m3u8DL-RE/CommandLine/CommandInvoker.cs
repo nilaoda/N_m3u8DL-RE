@@ -58,6 +58,8 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> CheckSegmentsCount = new Option<bool>("--check-segments-count") { Description = ResString.cmd_checkSegmentsCount }.WithDefault(true);
     private static readonly Option<bool> WriteMetaJson = new Option<bool>("--write-meta-json") { Description = ResString.cmd_writeMetaJson }.WithDefault(true);
     private static readonly Option<bool> AppendUrlParams = new Option<bool>("--append-url-params") { Description = ResString.cmd_appendUrlParams }.WithDefault(false);
+    private static readonly Option<bool> ChangeMpd = new Option<bool>("--change-mpd") { Description = "Write downloaded MPD to raw.mpd, wait for replacement, then continue." }.WithDefault(false);
+    private static readonly Option<Dictionary<string, string>?> ChangeHost = new("--change-host") { HelpName = "OLD|NEW", Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = "Rewrite request host from OLD to NEW while keeping Host header as OLD.", CustomParser = ParseChangeHosts };
     private static readonly Option<bool> MP4RealTimeDecryption = new Option<bool>("--mp4-real-time-decryption") { Description = ResString.cmd_MP4RealTimeDecryption }.WithDefault(false);
     private static readonly Option<bool> UseShakaPackager = new Option<bool>("--use-shaka-packager") { Hidden = true, Description = ResString.cmd_useShakaPackager }.WithDefault(false);
     private static readonly Option<DecryptEngine> DecryptionEngine = new ("--decryption-engine") { Description = ResString.cmd_decryptionEngine, DefaultValueFactory = _ => DecryptEngine.MP4DECRYPT };
@@ -498,6 +500,24 @@ internal static partial class CommandInvoker
         return OtherUtil.SplitHeaderArrayToDic(array);
     }
 
+    private static Dictionary<string, string>? ParseChangeHosts(ArgumentResult result)
+    {
+        var dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var token in result.Tokens.Select(t => t.Value))
+        {
+            var parts = token.Split('|', 2, StringSplitOptions.TrimEntries);
+            if (parts.Length != 2 || string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1]))
+            {
+                result.AddError($"Invalid change-host: {token}. Expected format: OLD|NEW");
+                return null;
+            }
+
+            dic[parts[0]] = parts[1];
+        }
+
+        return dic;
+    }
+
     /// <summary>
     /// 解析混流引入的外部文件
     /// </summary>
@@ -639,6 +659,8 @@ internal static partial class CommandInvoker
             SkipDownload = result.GetValue(SkipDownload),
             WriteMetaJson = result.GetValue(WriteMetaJson),
             AppendUrlParams = result.GetValue(AppendUrlParams),
+            ChangeMpd = result.GetValue(ChangeMpd),
+            ChangeHosts = result.GetValue(ChangeHost),
             SavePattern = result.GetValue(SavePattern),
             Keys = result.GetValue(Keys),
             UrlProcessorArgs = result.GetValue(UrlProcessorArgs),
@@ -730,7 +752,7 @@ internal static partial class CommandInvoker
         var rootCommand = new RootCommand(VERSION_INFO)
         {
             Input, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
+            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ChangeMpd, ChangeHost, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
             MaxSpeed,

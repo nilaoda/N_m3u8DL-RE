@@ -133,6 +133,14 @@ internal class MyOption
     /// </summary>
     public bool AppendUrlParams { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.ChangeMpd"/>.
+    /// </summary>
+    public bool ChangeMpd { get; set; }
+    /// <summary>
+    /// See: <see cref="CommandInvoker.ChangeHost"/>.
+    /// </summary>
+    public Dictionary<string, string>? ChangeHosts { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.MP4RealTimeDecryption"/>.
     /// </summary>
     public bool MP4RealTimeDecryption { get; set; }

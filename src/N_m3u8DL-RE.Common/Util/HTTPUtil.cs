@@ -8,6 +8,8 @@ namespace N_m3u8DL_RE.Common.Util;
 
 public static class HTTPUtil
 {
+    public static Dictionary<string, string> ChangeHosts { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     public static readonly HttpClientHandler HttpClientHandler = new()
     {
         AllowAutoRedirect = false,
@@ -23,20 +25,59 @@ public static class HTTPUtil
         DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
 
+    public static HttpRequestMessage CreateRequest(HttpMethod method, string url)
+    {
+        var requestUri = new Uri(url);
+        var (actualUri, hostHeader) = ChangeHost(requestUri);
+        var request = new HttpRequestMessage(method, actualUri);
+        if (hostHeader != null)
+        {
+            request.Headers.Host = hostHeader;
+            Logger.Debug($"ChangeHost => {requestUri} -> {actualUri}, Host: {hostHeader}");
+        }
+
+        return request;
+    }
+
+    public static void ApplyHeaders(HttpRequestMessage request, Dictionary<string, string>? headers)
+    {
+        if (headers == null) return;
+
+        foreach (var item in headers)
+        {
+            if (item.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
+            {
+                request.Headers.Host ??= item.Value;
+                continue;
+            }
+
+            request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+        }
+    }
+
+    private static (Uri actualUri, string? hostHeader) ChangeHost(Uri requestUri)
+    {
+        if (!requestUri.IsAbsoluteUri || ChangeHosts.Count == 0 || !ChangeHosts.TryGetValue(requestUri.Host, out var newHost) || string.IsNullOrWhiteSpace(newHost))
+        {
+            return (requestUri, null);
+        }
+
+        var builder = new UriBuilder(requestUri);
+        var replacementUri = new Uri($"{requestUri.Scheme}://{newHost}");
+        builder.Host = replacementUri.Host;
+        builder.Port = replacementUri.IsDefaultPort ? -1 : replacementUri.Port;
+        var hostHeader = requestUri.IsDefaultPort ? requestUri.Host : requestUri.Authority;
+        return (builder.Uri, hostHeader);
+    }
+
     private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
     {
         Logger.Debug(ResString.fetch + url);
-        using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
+        using var webRequest = CreateRequest(HttpMethod.Get, url);
         webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
         webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
         webRequest.Headers.Connection.Clear();
-        if (headers != null)
-        {
-            foreach (var item in headers)
-            {
-                webRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
-            }
-        }
+        ApplyHeaders(webRequest, headers);
 
         Logger.Debug(webRequest.Headers.ToString());
         // 手动处理跳转，以免自定义Headers丢失
@@ -117,7 +158,7 @@ public static class HTTPUtil
         {
             Logger.Debug($"Detected compression: {string.Join(",", encodings)}");
             htmlCode = await webResponse.Content.ReadAsStringAsync();
-            return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+            return (htmlCode, webResponse.Headers.Location?.AbsoluteUri ?? url);
         }
 
         // 打开流，读取少量样本检测类型
@@ -150,7 +191,7 @@ public static class HTTPUtil
         var encoding = GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
         htmlCode = encoding.GetString(allBytes);
 
-        return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+        return (htmlCode, webResponse.Headers.Location?.AbsoluteUri ?? url);
     }
 
     private static Encoding? GetEncodingFromResponse(HttpResponseMessage response)
@@ -173,7 +214,7 @@ public static class HTTPUtil
     public static async Task<string> GetPostResponseAsync(string Url, byte[] postData)
     {
         string htmlCode;
-        using HttpRequestMessage request = new(HttpMethod.Post, Url);
+        using var request = CreateRequest(HttpMethod.Post, Url);
         request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
         request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());
         request.Content = new ByteArrayContent(postData);

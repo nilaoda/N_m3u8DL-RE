@@ -17,6 +17,7 @@ internal class HLSExtractor : IExtractor
     private string BaseUrl = string.Empty;
     private string M3u8Content = string.Empty;
     private bool MasterM3u8Flag = false;
+    private readonly Dictionary<string, string> RefreshUrlMap = new(StringComparer.OrdinalIgnoreCase);
 
     public ParserConfig ParserConfig { get; set; }
 
@@ -24,6 +25,10 @@ internal class HLSExtractor : IExtractor
     {
         this.ParserConfig = parserConfig;
         this.M3u8Url = parserConfig.Url ?? string.Empty;
+        if (parserConfig.OriginalUrl.StartsWith("http") && !string.IsNullOrEmpty(parserConfig.Url) && parserConfig.Url != parserConfig.OriginalUrl)
+        {
+            RefreshUrlMap[parserConfig.Url] = parserConfig.OriginalUrl;
+        }
         this.SetBaseUrl();
     }
 
@@ -482,30 +487,124 @@ internal class HLSExtractor : IExtractor
         ];
     }
 
-    private async Task LoadM3u8FromUrlAsync(string url)
+    private async Task<string> LoadM3u8FromUrlAsync(string url, bool forceRefreshFromSource = false)
     {
         // Logger.Info(ResString.loadingUrl + url);
         if (url.StartsWith("file:"))
         {
             var uri = new Uri(url);
             this.M3u8Content = File.ReadAllText(uri.LocalPath);
+            this.M3u8Url = url;
+            this.SetBaseUrl();
+            this.PreProcessContent();
+            return this.M3u8Url;
         }
         else if (url.StartsWith("http"))
         {
+            var requestUrl = forceRefreshFromSource ? GetRefreshUrl(url) : url;
             try
             {
-                (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers);
+                return await LoadHttpM3u8FromUrlAsync(requestUrl, url);
             }
-            catch (HttpRequestException) when (ParserConfig.OriginalUrl.StartsWith("http") && url != ParserConfig.OriginalUrl)
+            catch (Exception ex) when (CanRetryFromRefreshUrl(url, requestUrl, ex))
             {
-                // 当URL无法访问时，再请求原始URL
-                (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+                Logger.WarnMarkUp("Can not load m3u8. Try refreshing url from previous url...");
+                return await LoadHttpM3u8FromUrlAsync(GetRefreshUrl(url), url);
+            }
+            catch (Exception ex) when (CanRetryFromOriginalUrl(url, requestUrl, ex))
+            {
+                Logger.WarnMarkUp("Can not load m3u8 from redirected url. Try refreshing url from original url...");
+                return await LoadHttpM3u8FromUrlAsync(ParserConfig.OriginalUrl, url);
             }
         }
 
-        this.M3u8Url = url;
-        this.SetBaseUrl();
-        this.PreProcessContent();
+        return this.M3u8Url;
+    }
+
+    private string GetRefreshUrl(string url)
+    {
+        if (RefreshUrlMap.TryGetValue(url, out var refreshUrl))
+        {
+            Logger.DebugMarkUp($"{url} => {refreshUrl}");
+            return refreshUrl;
+        }
+
+        return url;
+    }
+
+    private bool CanRetryFromRefreshUrl(string url, string requestUrl, Exception ex)
+    {
+        return IsRetryableM3u8Exception(ex) && RefreshUrlMap.TryGetValue(url, out var refreshUrl) && requestUrl != refreshUrl;
+    }
+
+    private bool CanRetryFromOriginalUrl(string url, string requestUrl, Exception ex)
+    {
+        if (!ParserConfig.OriginalUrl.StartsWith("http") || requestUrl == ParserConfig.OriginalUrl)
+            return false;
+
+        if (!IsRootM3u8Url(url))
+            return false;
+
+        return IsRetryableM3u8Exception(ex);
+    }
+
+    private static bool IsRetryableM3u8Exception(Exception ex)
+    {
+        return ex is HttpRequestException || ex.Message == ResString.badM3u8;
+    }
+
+    private bool IsRootM3u8Url(string url)
+    {
+        return url == ParserConfig.Url || url == ParserConfig.OriginalUrl || (RefreshUrlMap.TryGetValue(url, out var refreshUrl) && refreshUrl == ParserConfig.OriginalUrl);
+    }
+
+    private async Task<string> LoadHttpM3u8FromUrlAsync(string requestUrl, string sourceUrl)
+    {
+        var oldContent = this.M3u8Content;
+        var oldM3u8Url = this.M3u8Url;
+        var oldBaseUrl = this.BaseUrl;
+
+        try
+        {
+            (this.M3u8Content, var url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(requestUrl, ParserConfig.Headers);
+            this.M3u8Url = url;
+            RegisterRefreshUrl(requestUrl, url);
+            if (sourceUrl != requestUrl)
+            {
+                RefreshUrlMap[sourceUrl] = requestUrl;
+            }
+            if (IsRootM3u8Url(sourceUrl) || requestUrl == ParserConfig.OriginalUrl)
+            {
+                ParserConfig.Url = url;
+            }
+
+            this.SetBaseUrl();
+            this.PreProcessContent();
+            return this.M3u8Url;
+        }
+        catch
+        {
+            this.M3u8Content = oldContent;
+            this.M3u8Url = oldM3u8Url;
+            this.BaseUrl = oldBaseUrl;
+            throw;
+        }
+    }
+
+    private void RegisterRefreshUrl(string requestUrl, string loadedUrl)
+    {
+        if (requestUrl.StartsWith("http") && loadedUrl.StartsWith("http") && loadedUrl != requestUrl)
+        {
+            RefreshUrlMap[loadedUrl] = requestUrl;
+        }
+    }
+
+    private void UpdateStreamUrl(StreamSpec streamSpec)
+    {
+        if (string.IsNullOrEmpty(M3u8Url))
+            return;
+
+        streamSpec.Url = M3u8Url;
     }
 
     /// <summary>
@@ -538,7 +637,7 @@ internal class HLSExtractor : IExtractor
                 // 直接重新加载m3u8
                 await LoadM3u8FromUrlAsync(lists[i].Url!);
             }
-            catch (HttpRequestException) when (MasterM3u8Flag)
+            catch (Exception ex) when (MasterM3u8Flag && (ex is HttpRequestException || ex.Message == ResString.badM3u8))
             {
                 Logger.WarnMarkUp("Can not load m3u8. Try refreshing url from master url...");
                 // 当前URL无法加载 尝试从Master链接中刷新URL
@@ -547,6 +646,7 @@ internal class HLSExtractor : IExtractor
             }
 
             var newPlaylist = await ParseListAsync();
+            UpdateStreamUrl(lists[i]);
             if (lists[i].Playlist?.MediaInit != null)
                 lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
             else
@@ -569,5 +669,19 @@ internal class HLSExtractor : IExtractor
     public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
     {
         await FetchPlayListAsync(streamSpecs);
+    }
+
+    public async Task RefreshPlayListFromRefreshUrlAsync(List<StreamSpec> streamSpecs)
+    {
+        for (int i = 0; i < streamSpecs.Count; i++)
+        {
+            await LoadM3u8FromUrlAsync(streamSpecs[i].Url!, forceRefreshFromSource: true);
+            var newPlaylist = await ParseListAsync();
+            UpdateStreamUrl(streamSpecs[i]);
+            if (streamSpecs[i].Playlist?.MediaInit != null)
+                streamSpecs[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
+            else
+                streamSpecs[i].Playlist = newPlaylist;
+        }
     }
 }

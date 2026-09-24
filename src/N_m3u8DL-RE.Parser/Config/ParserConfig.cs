@@ -58,6 +58,16 @@ public class ParserConfig
     public bool AppendUrlParams { get; set; } = false;
 
     /// <summary>
+    /// 保存下载到的MPD并等待用户替换后继续解析
+    /// </summary>
+    public bool ChangeMpd { get; set; } = false;
+
+    /// <summary>
+    /// ChangeMpd启用时写出并重新读取的MPD文件路径
+    /// </summary>
+    public string? ChangeMpdFilePath { get; set; }
+
+    /// <summary>
     /// 此参数将会传递给URL Processor中
     /// </summary>
     public string? UrlProcessorArgs { get; set; }

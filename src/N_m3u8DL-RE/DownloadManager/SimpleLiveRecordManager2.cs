@@ -753,7 +753,25 @@ internal class SimpleLiveRecordManager2
                 // Logger.WarnMarkUp($"wait {waitSec}s");
                 if (!STOP_FLAG) await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
                 // 刷新列表
-                if (!STOP_FLAG) await StreamExtractor.RefreshPlayListAsync(dic.Keys.ToList());
+                if (!STOP_FLAG)
+                {
+                    var streamSpecs = dic.Keys.ToList();
+                    await StreamExtractor.RefreshPlayListAsync(streamSpecs);
+                    var noNewSegments = StreamExtractor.ExtractorType == ExtractorType.HLS
+                        ? streamSpecs.Where(streamSpec =>
+                        {
+                            var task = dic[streamSpec];
+                            var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
+                            var allSamePath = SamePathDic.TryGetValue(task.Id, out var samePath) && samePath;
+                            return !HasNewMediaSegments(streamSpec, task, allHasDatetime, allSamePath);
+                        }).ToList()
+                        : [];
+                    if (noNewSegments.Count > 0)
+                    {
+                        Logger.WarnMarkUp("No new segments found. Try refreshing url from previous url...");
+                        await StreamExtractor.RefreshPlayListFromRefreshUrlAsync(noNewSegments);
+                    }
+                }
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
             {
@@ -777,6 +795,27 @@ internal class SimpleLiveRecordManager2
         {
             target.Complete();
         }
+    }
+
+    private bool HasNewMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)
+    {
+        if (string.IsNullOrEmpty(LastFileNameDic[task.Id]) && DateTimeDic[task.Id] == 0) return true;
+
+        var dateTime = DateTimeDic[task.Id];
+        var lastName = LastFileNameDic[task.Id];
+        var segments = streamSpec.Playlist!.MediaParts[0].MediaSegments;
+        int index;
+
+        if (dateTime != 0 && segments.All(s => s.DateTime != null))
+        {
+            index = segments.FindIndex(s => GetUnixTimestamp(s.DateTime!.Value) == dateTime);
+        }
+        else
+        {
+            index = segments.FindIndex(s => GetSegmentName(s, allHasDatetime, allSamePath) == lastName);
+        }
+
+        return index == -1 || index + 1 < segments.Count;
     }
 
     private void FilterMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)
