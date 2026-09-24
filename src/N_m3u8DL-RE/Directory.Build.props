@@ -9,7 +9,7 @@
 	<IlcTrimMetadata>true</IlcTrimMetadata>
 	<IlcGenerateStackTraceData>true</IlcGenerateStackTraceData>
 	<SatelliteResourceLanguages>zh-CN;zh-TW;en-US</SatelliteResourceLanguages>
-	  <PublishAot>true</PublishAot>
+	  <PublishAot>false</PublishAot>
 	  <StripSymbols>true</StripSymbols>
 	  <ObjCopyName Condition="'$(RuntimeIdentifier)' == 'linux-arm64'">aarch64-linux-gnu-objcopy</ObjCopyName>
   </PropertyGroup>
