@@ -132,6 +132,8 @@ public static class ResString
     public static string promptInfo => GetText("promptInfo");
     public static string promptTitle => GetText("promptTitle");
     public static string readingInfo => GetText("readingInfo");
+    public static string resolutionFilterNotMatch => GetText("resolutionFilterNotMatch");
+    public static string resolutionFilterExpectedActual => GetText("resolutionFilterExpectedActual");
     public static string searchKey => GetText("searchKey");
     public static string decryptionFailed => GetText("decryptionFailed");
     public static string segmentCountCheckNotPass => GetText("segmentCountCheckNotPass");

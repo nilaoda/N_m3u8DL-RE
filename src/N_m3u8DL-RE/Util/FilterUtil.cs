@@ -24,7 +24,19 @@ public static class FilterUtil
         if (filter.CodecsReg != null)
             inputs = inputs.Where(i => i.Codecs != null && filter.CodecsReg.IsMatch(i.Codecs));
         if (filter.ResolutionReg != null)
-            inputs = inputs.Where(i => i.Resolution != null && filter.ResolutionReg.IsMatch(i.Resolution));
+        {
+            var currentInputs = inputs.ToList();
+            var matched = currentInputs.Where(i => i.Resolution != null && filter.ResolutionReg.IsMatch(i.Resolution)).ToList();
+
+            if (matched.Count > 0)
+            {
+                inputs = matched;
+            }
+            else if (!(currentInputs.Count == 1 && string.IsNullOrEmpty(currentInputs[0].Resolution)))
+            {
+                inputs = [];
+            }
+        }
         if (filter.FrameRateReg != null)
             inputs = inputs.Where(i => i.FrameRate != null && filter.FrameRateReg.IsMatch($"{i.FrameRate}"));
         if (filter.ChannelsReg != null)
