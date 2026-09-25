@@ -145,11 +145,12 @@ public static class HTTPUtil
         using var ms = new MemoryStream();
         ms.Write(buffer, 0, bytesRead);
         await responseStream.CopyToAsync(ms);
-
-        var allBytes = ms.ToArray();
-        var encoding = GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
-        htmlCode = encoding.GetString(allBytes);
-
+        ms.Position = 0;
+        
+        var charsetEncoding = GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
+        using var reader = new StreamReader(ms, charsetEncoding, detectEncodingFromByteOrderMarks: true);
+        htmlCode = await reader.ReadToEndAsync();
+        
         return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
     }
 
