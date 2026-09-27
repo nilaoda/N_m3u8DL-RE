@@ -11,6 +11,9 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS;
 
 public class DefaultHLSKeyProcessor : KeyProcessor
 {
+    private static readonly Dictionary<string, byte[]> KeyCache = new();
+    private static readonly object KeyCacheLock = new();
+
     public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
 
@@ -60,12 +63,25 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             }
             else if (!string.IsNullOrEmpty(uri))
             {
-                var retryCount = parserConfig.KeyRetryCount;
                 var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
+                lock (KeyCacheLock)
+                {
+                    if (KeyCache.TryGetValue(segUrl, out var cachedKey))
+                    {
+                        encryptInfo.Key = cachedKey;
+                        goto keyDone;
+                    }
+                }
+
+                var retryCount = parserConfig.KeyRetryCount;
                 getHttpKey:
                 try
                 {
                     var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
+                    lock (KeyCacheLock)
+                    {
+                        KeyCache[segUrl] = bytes;
+                    }
                     encryptInfo.Key = bytes;
                 }
                 catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
@@ -76,6 +92,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
                     throw;
                 }
             }
+            keyDone:;
         }
         catch (Exception ex)
         {
