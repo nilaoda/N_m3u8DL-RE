@@ -232,6 +232,18 @@ internal static class StaticText
             zhTW: "完成後刪除臨時文件",
             enUS: "Delete temporary files when done"
         ),
+        ["cmd_changeMpd"] = new TextContainer
+        (
+            zhCN: "将下载的MPD写入raw.mpd，等待用户替换后继续",
+            zhTW: "將下載的MPD寫入raw.mpd，等待使用者替換後繼續",
+            enUS: "Write downloaded MPD to raw.mpd, wait for replacement, then continue"
+        ),
+        ["cmd_changeHost"] = new TextContainer
+        (
+            zhCN: "将请求URL中的主机名从OLD替换为NEW，但Host请求头仍保持为OLD",
+            zhTW: "將請求URL中的主機名稱從OLD替換為NEW，但Host請求頭仍保持為OLD",
+            enUS: "Rewrite request host from OLD to NEW while keeping Host header as OLD"
+        ),
         ["cmd_ffmpegBinaryPath"] = new TextContainer
         (
             zhCN: @"ffmpeg可执行程序全路径, 例如 C:\Tools\ffmpeg.exe",
