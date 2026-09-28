@@ -412,8 +412,9 @@ internal partial class DASHExtractor2 : IExtractor
                                 var now = DateTime.Now;
                                 var availableTime = DateTime.Parse(availabilityStartTime!);
                                 // 可用时间+偏移量
-                                var offsetMs = TimeSpan.FromMilliseconds(Convert.ToInt64(presentationTimeOffsetStr) / 1000);
-                                availableTime = availableTime.Add(offsetMs);
+                                // presentationTimeOffset 的单位是 timescale, 不是毫秒
+                                var offset = TimeSpan.FromSeconds(Convert.ToDouble(presentationTimeOffsetStr) / timescale);
+                                availableTime = availableTime.Add(offset);
                                 var ts = now - availableTime;
                                 var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth!);
                                 // (当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
