@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Common.Entity;
+﻿using System.Collections.Concurrent;
+using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -11,8 +12,7 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS;
 
 public class DefaultHLSKeyProcessor : KeyProcessor
 {
-    private static readonly Dictionary<string, byte[]> KeyCache = new();
-    private static readonly object KeyCacheLock = new();
+    private readonly ConcurrentDictionary<(string Url, EncryptMethod Method), byte[]> KeyCache = new();
 
     public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
@@ -64,13 +64,11 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             else if (!string.IsNullOrEmpty(uri))
             {
                 var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
-                lock (KeyCacheLock)
+                var cacheKey = (Url: segUrl, Method: parserConfig.CustomMethod ?? encryptInfo.Method);
+                if (KeyCache.TryGetValue(cacheKey, out var cachedKey))
                 {
-                    if (KeyCache.TryGetValue(segUrl, out var cachedKey))
-                    {
-                        encryptInfo.Key = cachedKey;
-                        goto keyDone;
-                    }
+                    encryptInfo.Key = cachedKey;
+                    goto keyDone;
                 }
 
                 var retryCount = parserConfig.KeyRetryCount;
@@ -78,10 +76,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
                 try
                 {
                     var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
-                    lock (KeyCacheLock)
-                    {
-                        KeyCache[segUrl] = bytes;
-                    }
+                    KeyCache[cacheKey] = bytes;
                     encryptInfo.Key = bytes;
                 }
                 catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
