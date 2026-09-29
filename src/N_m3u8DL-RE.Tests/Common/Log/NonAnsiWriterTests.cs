@@ -52,9 +52,19 @@ public class NonAnsiWriterTests
     }
 
     [Fact]
-    public void Write_BlankOnly_IsDropped()
+    public void Write_MidLinePadding_IsPreserved()
     {
-        Assert.Equal("sample.ts", Capture("sample.ts", "    "));
+        // Spectre 的 RightJustified() 会把单元格补齐到列宽，填充是纯空格写入。
+        // 丢弃它会让重定向后各列挤在一起（如 82.68MB236.92KBps00:00:00），
+        // 按列解析速度的调用方就会取错字段。
+        Assert.Equal("82.68MB   236.92KBps", Capture("82.68MB", "   ", "236.92KBps"));
+    }
+
+    [Fact]
+    public void Write_LeadingBlankAtLineStart_IsDropped()
+    {
+        // 行首的空白仍然丢弃，避免输出被缩进或产生整行空白
+        Assert.Equal("sample.ts", Capture("\n", "    ", "sample.ts"));
     }
 
     [Fact]
