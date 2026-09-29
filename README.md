@@ -97,6 +97,7 @@ Options:
   --live-fix-vtt-by-audio                                 通过读取音频文件的起始时间修正VTT字幕 [default: False]
   --live-record-limit <HH:mm:ss>                          录制直播时的录制时长限制
   --live-wait-time <SEC>                                  手动设置直播列表刷新间隔
+  --live-idle-timeout <SEC>                               直播列表连续指定秒数无新分片时停止录制（默认关闭）
   --live-take-count <NUM>                                 手动设置录制直播时首次获取分片的数量 [default: 16]
   --mux-import <OPTIONS>                                  混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
   -sv, --select-video <OPTIONS>                           通过正则表达式选择符合要求的视频流. 输入 "--morehelp select-video" 以查看详细信息

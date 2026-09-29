@@ -106,6 +106,7 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> LivePipeMux = new Option<bool>("--live-pipe-mux") { Description = ResString.cmd_livePipeMux }.WithDefault(false);
     private static readonly Option<TimeSpan?> LiveRecordLimit = new("--live-record-limit") { HelpName = "HH:mm:ss", Description = ResString.cmd_liveRecordLimit, CustomParser = ParseLiveLimit };
     private static readonly Option<int?> LiveWaitTime = new("--live-wait-time") { HelpName = "SEC", Description = ResString.cmd_liveWaitTime };
+    private static readonly Option<int?> LiveIdleTimeout = new("--live-idle-timeout") { HelpName = "SEC", Description = ResString.cmd_liveIdleTimeout, CustomParser = ParseLiveIdleTimeout };
     private static readonly Option<int> LiveTakeCount = new("--live-take-count") { HelpName = "NUM", Description = ResString.cmd_liveTakeCount, DefaultValueFactory = _ => 16 };
     private static readonly Option<bool> LiveFixVttByAudio = new Option<bool>("--live-fix-vtt-by-audio") { Description = ResString.cmd_liveFixVttByAudio }.WithDefault(false);
 
@@ -334,6 +335,18 @@ internal static partial class CommandInvoker
             result.AddError("error in parse LiveRecordLimit: " + input);
             return null;
         }
+    }
+
+    private static int? ParseLiveIdleTimeout(ArgumentResult result)
+    {
+        var input = result.Tokens[0].Value;
+        if (int.TryParse(input, out var seconds) && seconds > 0)
+        {
+            return seconds;
+        }
+
+        result.AddError("live-idle-timeout must be a positive number of seconds: " + input);
+        return null;
     }
 
     /// <summary>
@@ -675,6 +688,7 @@ internal static partial class CommandInvoker
             CustomProxy = result.GetValue(CustomProxy),
             CustomRange = result.GetValue(CustomRange),
             LiveWaitTime = result.GetValue(LiveWaitTime),
+            LiveIdleTimeout = result.GetValue(LiveIdleTimeout),
             LiveTakeCount = result.GetValue(LiveTakeCount),
             NoDateInfo = result.GetValue(NoDateInfo),
             NoLog = result.GetValue(NoLog),
@@ -742,7 +756,7 @@ internal static partial class CommandInvoker
             MaxSpeed,
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
-            LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
+            LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount,
             MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
         };
 

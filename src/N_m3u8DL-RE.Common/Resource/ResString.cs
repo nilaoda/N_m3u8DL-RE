@@ -90,6 +90,7 @@ public static class ResString
     public static string cmd_liveRecordLimit => GetText("cmd_liveRecordLimit");
     public static string cmd_taskStartAt => GetText("cmd_taskStartAt");
     public static string cmd_liveWaitTime => GetText("cmd_liveWaitTime");
+    public static string cmd_liveIdleTimeout => GetText("cmd_liveIdleTimeout");
     public static string cmd_liveTakeCount => GetText("cmd_liveTakeCount");
     public static string cmd_liveFixVttByAudio => GetText("cmd_liveFixVttByAudio");
     public static string cmd_liveRealTimeMerge => GetText("cmd_liveRealTimeMerge");
@@ -101,6 +102,7 @@ public static class ResString
     public static string realTimeDecMessage => GetText("realTimeDecMessage");
     public static string liveLimitReached => GetText("liveLimitReached");
     public static string liveStreamEnded => GetText("liveStreamEnded");
+    public static string liveIdleTimeoutReached => GetText("liveIdleTimeoutReached");
     public static string saveName => GetText("saveName");
     public static string taskStartAt => GetText("taskStartAt");
     public static string namedPipeCreated => GetText("namedPipeCreated");

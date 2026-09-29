@@ -266,6 +266,10 @@ internal class MyOption
     /// </summary>
     public int? LiveWaitTime { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.LiveIdleTimeout"/>.
+    /// </summary>
+    public int? LiveIdleTimeout { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.LiveTakeCount"/>.
     /// </summary>
     public int LiveTakeCount { get; set; }

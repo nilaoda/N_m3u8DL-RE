@@ -424,6 +424,12 @@ internal static class StaticText
             zhTW: "手動設置直播列表刷新間隔",
             enUS: "Manually set the live playlist refresh interval"
         ),
+        ["cmd_liveIdleTimeout"] = new TextContainer
+        (
+            zhCN: "直播列表连续指定秒数无新分片时停止录制（默认关闭）",
+            zhTW: "直播列表連續指定秒數無新分片時停止錄製（預設關閉）",
+            enUS: "Stop recording when a live playlist has no new segments for this many seconds (disabled by default)"
+        ),
         ["cmd_adKeyword"] = new TextContainer
         (
             zhCN: "设置广告分片的URL关键字(正则表达式)",
@@ -846,6 +852,12 @@ internal static class StaticText
             zhCN: "直播已结束，即将停止录制",
             zhTW: "直播已結束，即將停止錄製",
             enUS: "Live stream ended, will stop recording soon"
+        ),
+        ["liveIdleTimeoutReached"] = new TextContainer
+        (
+            zhCN: "连续 {0} 秒没有新分片，即将停止录制",
+            zhTW: "連續 {0} 秒沒有新分片，即將停止錄製",
+            enUS: "No new segments for {0} seconds, stopping live recording"
         ),
         ["saveName"] = new TextContainer
         (
