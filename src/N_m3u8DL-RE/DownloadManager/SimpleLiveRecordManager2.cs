@@ -13,6 +13,7 @@ using N_m3u8DL_RE.Parser.Mp4;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -679,6 +680,10 @@ internal class SimpleLiveRecordManager2
 
     private async Task PlayListProduceAsync(Dictionary<StreamSpec, ProgressTask> dic)
     {
+        var idleTimeoutSeconds = DownloaderConfig.MyOptions.LiveIdleTimeout;
+        var refreshDelaySeconds = idleTimeoutSeconds is { } timeout ? Math.Min(WAIT_SEC, timeout) : WAIT_SEC;
+        long lastNewSegmentTimestamp = Stopwatch.GetTimestamp();
+
         while (!STOP_FLAG)
         {
             if (WAIT_SEC == 0) continue;
@@ -693,6 +698,14 @@ internal class SimpleLiveRecordManager2
                 // 达到上限 或 该流直播已结束时 不需要刷新了
                 if (RecordLimitReachedDic[task.Id] || LiveEndDic[task.Id])
                     return;
+
+                // 最终列表可能只有 #EXT-X-ENDLIST，没有剩余分片。
+                if (streamSpec.Playlist!.MediaParts.Count == 0)
+                {
+                    if (!streamSpec.Playlist.IsLive)
+                        LiveEndDic[task.Id] = true;
+                    return;
+                }
 
                 var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
                 if (!SamePathDic.ContainsKey(task.Id))
@@ -712,6 +725,7 @@ internal class SimpleLiveRecordManager2
                 }
                 if (newList.Count > 0)
                 {
+                    Interlocked.Exchange(ref lastNewSegmentTimestamp, Stopwatch.GetTimestamp());
                     task.MaxValue += newList.Count;
                     // 保留源序号，单独分配录制顺序用于文件名和合并排序。
                     SegmentTrackers[task.Id].Record(newList);
@@ -732,28 +746,37 @@ internal class SimpleLiveRecordManager2
                 {
                     LiveEndDic[task.Id] = true;
                 }
-
-                // 检测时长限制
-                if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
-                {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
-                    STOP_FLAG = true;
-                    CancellationTokenSource.Cancel();
-                }
-
-                // 检测直播结束 所有流都已结束(或达到上限)时优雅停止 让消费者收尾混流
-                if (!STOP_FLAG && RecordLimitReachedDic.Keys.All(id => RecordLimitReachedDic[id] || LiveEndDic[id]))
-                {
-                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveStreamEnded}[/]");
-                    STOP_FLAG = true;
-                    CancellationTokenSource.Cancel();
-                }
             });
+
+            // 所有轨道都已推送本轮分片后再判断停止，保证消费者能收尾混流。
+            // 检测时长限制
+            if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
+            {
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                STOP_FLAG = true;
+                CancellationTokenSource.Cancel();
+            }
+
+            // 检测直播结束 所有流都已结束(或达到上限)时优雅停止 让消费者收尾混流
+            if (!STOP_FLAG && RecordLimitReachedDic.Keys.All(id => RecordLimitReachedDic[id] || LiveEndDic[id]))
+            {
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveStreamEnded}[/]");
+                STOP_FLAG = true;
+                CancellationTokenSource.Cancel();
+            }
+
+            if (!STOP_FLAG && idleTimeoutSeconds is { } idleSeconds &&
+                Stopwatch.GetElapsedTime(Interlocked.Read(ref lastNewSegmentTimestamp)) >= TimeSpan.FromSeconds(idleSeconds))
+            {
+                Logger.WarnMarkUp($"[darkorange3_1]{string.Format(ResString.liveIdleTimeoutReached, idleSeconds)}[/]");
+                STOP_FLAG = true;
+                CancellationTokenSource.Cancel();
+            }
 
             try
             {
                 // Logger.WarnMarkUp($"wait {waitSec}s");
-                if (!STOP_FLAG) await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
+                if (!STOP_FLAG) await Task.Delay(refreshDelaySeconds * 1000, CancellationTokenSource.Token);
                 // 刷新列表
                 if (!STOP_FLAG) await StreamExtractor.RefreshPlayListAsync(dic.Keys.ToList());
             }

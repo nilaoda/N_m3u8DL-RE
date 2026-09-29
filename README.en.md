@@ -105,6 +105,8 @@ Options:
                                                           [default: False]
   --live-record-limit <HH:mm:ss>                          Recording time limit when recording live
   --live-wait-time <SEC>                                  Manually set the live playlist refresh interval
+  --live-idle-timeout <SEC>                               Stop recording when a live playlist has no new segments for
+                                                          this many seconds (disabled by default)
   --live-take-count <NUM>                                 Manually set the number of segments downloaded for the first
                                                           time when recording live [default: 16]
   --mux-import <OPTIONS>                                  When MuxAfterDone enabled, allow to import local media files.
