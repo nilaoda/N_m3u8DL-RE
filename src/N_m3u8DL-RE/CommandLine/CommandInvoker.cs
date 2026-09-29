@@ -9,13 +9,17 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using System.Net;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.CommandLine;
 
 internal static partial class CommandInvoker
 {
-    public const string VERSION_INFO = "N_m3u8DL-RE (Beta version) 20260628";
+    private static readonly Assembly AppAssembly = typeof(CommandInvoker).Assembly;
+    private static readonly string AppVersion = AppAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+        .InformationalVersion.Split('+', 2)[0] ?? AppAssembly.GetName().Version?.ToString(3) ?? "unknown";
+    public static readonly string VERSION_INFO = $"N_m3u8DL-RE {AppVersion} 20260628";
 
     [GeneratedRegex("((best|worst)\\d*|all)")]
     private static partial Regex ForStrRegex();
