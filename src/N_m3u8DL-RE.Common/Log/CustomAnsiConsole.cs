@@ -9,10 +9,12 @@ public partial class NonAnsiWriter : TextWriter
     public override Encoding Encoding => Console.OutputEncoding;
 
     private string? _lastOut = "";
+    private bool _atLineStart = true;
 
     public override void Write(char value)
     {
         Console.Write(value);
+        _atLineStart = value == '\n';
     }
 
     public override void Write(string? value)
@@ -33,12 +35,18 @@ public partial class NonAnsiWriter : TextWriter
         output = MyRegex2().Replace(output, "");
         if (string.IsNullOrWhiteSpace(output))
         {
-            // 只有空白时通常是被剥离的控制序列残渣；含换行则是真实的行分隔，
-            // 丢弃它会让重定向后的 stdout 全程没有换行（Spectre.Console 0.57 起换行独立写出）
-            if (output.Contains('\n')) Console.Write('\n');
+            // 只剩空白通常是被剥离的控制序列残渣；含换行则是行分隔（Spectre.Console 0.57 起
+            // 换行独立写出），丢弃它会让重定向后的 stdout 全程没有换行。渲染帧上下各有留白，
+            // 连续换行只落一次，避免把成片的空白行写进按行读取的输出。
+            if (output.Contains('\n') && !_atLineStart)
+            {
+                Console.Write('\n');
+                _atLineStart = true;
+            }
             return;
         }
         Console.Write(output);
+        _atLineStart = output.EndsWith('\n');
     }
 
     [GeneratedRegex(@"\x1B\[(\d+;?)+m")]
