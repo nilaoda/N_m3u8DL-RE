@@ -92,6 +92,7 @@ internal static partial class CommandInvoker
     private static readonly Option<EncryptMethod?> CustomHLSMethod = new("--custom-hls-method") { HelpName = "METHOD", Description = ResString.cmd_customHLSMethod };
     private static readonly Option<byte[]?> CustomHLSKey = new("--custom-hls-key") { HelpName = "FILE|HEX|BASE64", Description = ResString.cmd_customHLSKey, CustomParser = ParseHLSCustomKey };
     private static readonly Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv") { HelpName = "FILE|HEX|BASE64", Description = ResString.cmd_customHLSIv, CustomParser = ParseHLSCustomKey };
+    private static readonly Option<CustomHlsScope> CustomHLSScope = new("--custom-hls-scope") { HelpName = "SCOPE", Description = ResString.cmd_customHLSScope, DefaultValueFactory = _ => CustomHlsScope.ALL };
     private static readonly Option<string[]?> Keys = new("--key") { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = ResString.cmd_keys, CustomParser = ParseCustomKeys};
 
     // 任务开始时间
@@ -685,6 +686,7 @@ internal static partial class CommandInvoker
         if (result.HasOption(CustomHLSMethod)) option.CustomHLSMethod = result.GetValue(CustomHLSMethod);
         if (result.HasOption(CustomHLSKey)) option.CustomHLSKey = result.GetValue(CustomHLSKey);
         if (result.HasOption(CustomHLSIv)) option.CustomHLSIv = result.GetValue(CustomHLSIv);
+        option.CustomHLSScope = result.GetValue(CustomHLSScope);
 
         var parsedHeaders = result.GetValue(Headers);
         if (parsedHeaders != null)
@@ -739,7 +741,7 @@ internal static partial class CommandInvoker
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
             MaxSpeed,
             MuxAfterDone,
-            CustomHLSMethod, CustomHLSKey, CustomHLSIv, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
+            CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveTakeCount,
             MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
         };

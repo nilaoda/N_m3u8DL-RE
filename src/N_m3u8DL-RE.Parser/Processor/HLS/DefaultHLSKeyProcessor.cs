@@ -27,6 +27,9 @@ public class DefaultHLSKeyProcessor : KeyProcessor
 
         var encryptInfo = new EncryptInfo(method);
 
+        if (encryptInfo.Method == EncryptMethod.NONE && parserConfig.CustomMethod == null)
+            return encryptInfo;
+
         // IV
         if (!string.IsNullOrEmpty(iv))
         {

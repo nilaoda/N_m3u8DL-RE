@@ -250,6 +250,10 @@ internal class MyOption
     /// </summary>
     public byte[]? CustomHLSIv { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.CustomHLSScope"/>.
+    /// </summary>
+    public CustomHlsScope CustomHLSScope { get; set; } = CustomHlsScope.ALL;
+    /// <summary>
     /// See: <see cref="CommandInvoker.CustomProxy"/>.
     /// </summary>
     public WebProxy? CustomProxy { get; set; }
