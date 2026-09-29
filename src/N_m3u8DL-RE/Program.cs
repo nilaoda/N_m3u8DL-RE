@@ -192,6 +192,7 @@ internal class Program
             Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
         }
 
+        HTTPUtil.ConfigureRemoteHeaders(option.AcceptRemoteHeaders);
         HTTPUtil.ChangeHosts = option.ChangeHosts ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in HTTPUtil.ChangeHosts)
         {

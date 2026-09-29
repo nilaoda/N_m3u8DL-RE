@@ -238,6 +238,12 @@ internal static class StaticText
             zhTW: "將下載的MPD寫入raw.mpd，等待使用者替換後繼續",
             enUS: "Write downloaded MPD to raw.mpd, wait for replacement, then continue"
         ),
+        ["cmd_acceptRemoteHeaders"] = new TextContainer
+        (
+            zhCN: "将入口及播放列表响应中可用的请求头合并到后续请求，同名新值覆盖已有值(包括-H)",
+            zhTW: "將入口及播放清單回應中可用的請求標頭合併至後續請求，同名新值覆蓋既有值(包括-H)",
+            enUS: "Merge reusable entry/playlist response headers into subsequent requests; new values override existing headers (including -H)"
+        ),
         ["cmd_changeHost"] = new TextContainer
         (
             zhCN: "将请求URL中的主机名从OLD替换为NEW，但Host请求头仍保持为OLD",

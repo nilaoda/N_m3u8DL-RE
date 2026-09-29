@@ -63,6 +63,8 @@ Options:
                                                           press y to continue [default: False]
   --change-host <OLD|NEW>                                 Rewrite request host from OLD to NEW while keeping Host
                                                           header as OLD
+  --accept-remote-headers                                 Merge reusable entry/playlist response headers into subsequent requests;
+                                                          new values override existing headers (including -H) [default: False]
   -mt, --concurrent-download                              Concurrently download the selected audio, video and subtitles
                                                           [default: False]
   -H, --header <header>                                   Pass custom header(s) to server, Example:

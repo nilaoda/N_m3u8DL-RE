@@ -137,6 +137,10 @@ internal class MyOption
     /// </summary>
     public bool ChangeMpd { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.AcceptRemoteHeaders"/>.
+    /// </summary>
+    public bool AcceptRemoteHeaders { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.ChangeHost"/>.
     /// </summary>
     public Dictionary<string, string>? ChangeHosts { get; set; }

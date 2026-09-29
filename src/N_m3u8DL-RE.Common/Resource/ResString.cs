@@ -26,6 +26,7 @@ public static class ResString
     public static string cmd_autoSelect => GetText("cmd_autoSelect");
     public static string cmd_changeMpd => GetText("cmd_changeMpd");
     public static string cmd_changeHost => GetText("cmd_changeHost");
+    public static string cmd_acceptRemoteHeaders => GetText("cmd_acceptRemoteHeaders");
     public static string cmd_disableUpdateCheck => GetText("cmd_disableUpdateCheck");
     public static string cmd_binaryMerge => GetText("cmd_binaryMerge");
     public static string cmd_useFFmpegConcatDemuxer => GetText("cmd_useFFmpegConcatDemuxer");
