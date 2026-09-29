@@ -34,6 +34,7 @@ internal class SimpleLiveRecordManager2
     int WAIT_SEC = 0; // 刷新间隔
     ConcurrentDictionary<int, int> RecordedDurDic = new(); // 已录制时长
     ConcurrentDictionary<int, int> RefreshedDurDic = new(); // 已刷新出的时长
+    ConcurrentDictionary<int, long> RecordingSizeDic = new(); // 已写入文件的大小
     ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
     ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
@@ -104,6 +105,13 @@ internal class SimpleLiveRecordManager2
 
     private static long GetRecordOrder(MediaSegment segment) => segment.RecordingIndex ?? segment.Index;
 
+    private void AddRecordedFileSize(int taskId, DownloadResult? result)
+    {
+        if (DownloaderConfig.MyOptions.LiveRealTimeMerge || result is not { Success: true }) return;
+        var fileSize = new FileInfo(result.ActualFilePath).Length;
+        RecordingSizeDic.AddOrUpdate(taskId, fileSize, (_, current) => current + fileSize);
+    }
+
     private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
     {
         if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
@@ -148,6 +156,7 @@ internal class SimpleLiveRecordManager2
         ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
         List<Mediainfo> mediaInfos = [];
         Stream? fileOutputStream = null;
+        long mergedBytesWritten = 0;
         WebVttSub currentVtt = new(); // 字幕流始终维护一个实例
         bool firstSub = true;
         task.StartTask();
@@ -247,6 +256,7 @@ internal class SimpleLiveRecordManager2
                     }
                     initDownloaded = true;
                 }
+                AddRecordedFileSize(task.Id, result);
             }
 
             var allHasDatetime = segments.All(s => s.DateTime != null);
@@ -334,6 +344,7 @@ internal class SimpleLiveRecordManager2
                         readInfo = true;
                     }
                 }
+                AddRecordedFileSize(task.Id, result);
             }
 
             // 开始下载
@@ -362,6 +373,7 @@ internal class SimpleLiveRecordManager2
                         result.ActualFilePath = dec;
                     }
                 }
+                AddRecordedFileSize(task.Id, result);
             });
 
             // 自动修复VTT raw字幕
@@ -581,7 +593,10 @@ internal class SimpleLiveRecordManager2
                     {
                         using (var inputStream = File.OpenRead(inputFilePath))
                         {
+                            var startPosition = inputStream.Position;
                             inputStream.CopyTo(fileOutputStream);
+                            // CopyTo 成功后，用输入流的位置差累计实际写出的字节数。
+                            mergedBytesWritten += inputStream.Position - startPosition;
                         }
                     }
                     if (!DownloaderConfig.MyOptions.LiveKeepSegments)
@@ -620,6 +635,8 @@ internal class SimpleLiveRecordManager2
                     var subBytes = Encoding.UTF8.GetBytes(subText);
                     fileOutputStream.Position = 0;
                     fileOutputStream.Write(subBytes);
+                    fileOutputStream.SetLength(subBytes.Length);
+                    mergedBytesWritten = subBytes.Length;
                     FileDic.Clear();
                     if (initResult != null)
                     {
@@ -631,6 +648,7 @@ internal class SimpleLiveRecordManager2
                 if (fileOutputStream != null)
                 {
                     fileOutputStream.Flush();
+                    RecordingSizeDic[task.Id] = mergedBytesWritten;
                 }
             }
 
@@ -811,12 +829,19 @@ internal class SimpleLiveRecordManager2
 
         var progress = CustomAnsiConsole.Console.Progress().AutoClear(true);
         progress.AutoRefresh = DownloaderConfig.MyOptions.LogLevel != LogLevel.OFF;
+        ConcurrentDictionary<int, StreamSpec> taskStreams = new();
             
         // 进度条的列定义
         var progressColumns = new ProgressColumn[]
         {
             new TaskDescriptionColumn() { Alignment = Justify.Left },
             new RecordingDurationColumn(RecordedDurDic, RefreshedDurDic), // 时长显示
+            new RecordingSizeColumn(
+                RecordingSizeDic,
+                () => DownloaderConfig.MyOptions.LiveRealTimeMerge && DownloaderConfig.MyOptions.LiveKeepSegments,
+                taskId => DownloaderConfig.MyOptions.LiveRealTimeMerge &&
+                    (DownloaderConfig.MyOptions.LivePipeMux ||
+                     taskStreams.TryGetValue(taskId, out var stream) && stream.MediaType == MediaType.SUBTITLES)),
             new RecordingStatusColumn(),
             new PercentageColumn(),
             new DownloadSpeedColumn(SpeedContainerDic), // 速度计算
@@ -834,6 +859,7 @@ internal class SimpleLiveRecordManager2
             var dic = SelectedSteams.Select(item =>
             {
                 var task = ctx.AddTask(item.ToShortShortString(), autoStart: false, maxValue: 0);
+                taskStreams[task.Id] = item;
                 SpeedContainerDic[task.Id] = new SpeedContainer(); // 速度计算
                 // 限速设置
                 if (DownloaderConfig.MyOptions.MaxSpeed != null)
@@ -844,6 +870,7 @@ internal class SimpleLiveRecordManager2
                 LiveEndDic[task.Id] = false;
                 RecordedDurDic[task.Id] = 0;
                 RefreshedDurDic[task.Id] = 0;
+                RecordingSizeDic[task.Id] = 0;
                 SegmentTrackers[task.Id] = new LiveSegmentTracker();
                 BlockDic[task.Id] = new BufferBlock<List<MediaSegment>>();
                 return (item, task);
