@@ -16,8 +16,6 @@ namespace N_m3u8DL_RE.DownloadManager;
 
 internal class HTTPLiveRecordManager
 {
-    private static HttpClient HttpClient = new();
-    
     IDownloader Downloader;
     DownloaderConfig DownloaderConfig;
     StreamExtractor StreamExtractor;
@@ -42,20 +40,24 @@ internal class HTTPLiveRecordManager
         SelectedSteams = selectedSteams;
     }
 
-    private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer)
+    private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, int taskId, SpeedContainer speedContainer,
+        ProgressTask? task = null)
     {
-        task.MaxValue = 1;
-        task.StartTask();
+        if (task != null)
+        {
+            task.MaxValue = 1;
+            task.StartTask();
+        }
 
         var name = streamSpec.ToShortString();
-        var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
+        var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{taskId}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
 
         // Use SavePattern if provided, otherwise use SaveName or dirName
         var saveName = dirName;
         if (!string.IsNullOrWhiteSpace(DownloaderConfig.MyOptions.SavePattern))
         {
-            saveName = OtherUtil.FormatSavePattern(DownloaderConfig.MyOptions.SavePattern, streamSpec, DownloaderConfig.MyOptions.SaveName, task.Id);
+            saveName = OtherUtil.FormatSavePattern(DownloaderConfig.MyOptions.SavePattern, streamSpec, DownloaderConfig.MyOptions.SaveName, taskId);
         }
         else if (DownloaderConfig.MyOptions.SaveName != null)
         {
@@ -64,82 +66,63 @@ internal class HTTPLiveRecordManager
 
         Logger.Debug($"dirName: {dirName}; saveDir: {saveDir}; saveName: {saveName}");
 
-        // 创建文件夹
-        if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(streamSpec.Url));
-        request.Headers.ConnectionClose = false;
-        foreach (var item in DownloaderConfig.Headers)
+        Directory.CreateDirectory(saveDir);
+        var source = StreamExtractor.DirectSource ??
+                     throw new InvalidDataException("HTTP live TS requires the original response stream.");
+        var responseStream = source.Stream ??
+                             throw new InvalidDataException("HTTP live TS response has no stream.");
+        var output = Path.Combine(saveDir, saveName + ".ts");
+        if (File.Exists(output))
         {
-            request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+            Logger.Warn($"File already exists, skipping recording: {output}");
+            return true;
         }
-        Logger.Debug(request.Headers.ToString());
+        Logger.Info(ResString.saveName + output);
+        await using var stream = new FileStream(output, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+        var buffer = new byte[16 * 1024];
 
-        HttpResponseMessage? response = null;
+        var counterTask = TimeCounterAsync(task == null);
+        var infoTask = ReadInfoAsync();
         try
         {
-            response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
-
-            // 手动处理重定向（例如 HTTPS -> HTTP 的跳转）
-            var redirectCount = 0;
-            while (((int)response.StatusCode).ToString().StartsWith("30") && redirectCount < 10)
+            async Task WriteChunkAsync(ReadOnlyMemory<byte> data)
             {
-                var redirectUrl = response.Headers.Location;
-                if (redirectUrl == null) break;
-                if (!redirectUrl.IsAbsoluteUri) redirectUrl = new Uri(request.RequestUri!, redirectUrl);
-
-                Logger.Debug($"Following redirect to: {redirectUrl}");
-                response.Dispose();
-
-                var redirectRequest = new HttpRequestMessage(HttpMethod.Get, redirectUrl);
-                redirectRequest.Headers.ConnectionClose = false;
-                foreach (var item in DownloaderConfig.Headers)
+                if (!READ_IFO && InfoBuffer.Count < 188 * 5000)
                 {
-                    redirectRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
+                    InfoBuffer.AddRange(data.ToArray());
                 }
-
-                response = await HttpClient.SendAsync(redirectRequest, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
-                redirectCount++;
+                await stream.WriteAsync(data, CancellationTokenSource.Token);
+                speedContainer.Add(data.Length);
+                RecordingSizeDic[taskId] += data.Length;
             }
-            response.EnsureSuccessStatusCode();
 
-            var output = Path.Combine(saveDir, saveName + ".ts");
-            using var stream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
-            using var responseStream = await response.Content.ReadAsStreamAsync(CancellationTokenSource.Token);
-            var buffer = new byte[16 * 1024];
-            var size = 0;
-
-            // 计时器
-            _ = TimeCounterAsync();
-            // 读取INFO
-            _ = ReadInfoAsync();
-
-            try
+            await WriteChunkAsync(source.Prefix);
+            int size;
+            while ((size = await responseStream.ReadAsync(buffer, CancellationTokenSource.Token)) > 0)
             {
-                while ((size = await responseStream.ReadAsync(buffer, CancellationTokenSource.Token)) > 0)
-                {
-                    if (!READ_IFO && InfoBuffer.Count < 188 * 5000)
-                    {
-                        InfoBuffer.AddRange(buffer);
-                    }
-                    speedContainer.Add(size);
-                    await stream.WriteAsync(buffer, 0, size);
-                    RecordingSizeDic[task.Id] += size;
-                }
+                await WriteChunkAsync(buffer.AsMemory(0, size));
             }
-            catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
-            {
-                ;
-            }
-
-            Logger.InfoMarkUp("File Size: " + GlobalUtil.FormatFileSize(RecordingSizeDic[task.Id]));
-
-            return true;
+        }
+        catch (OperationCanceledException) when (CancellationTokenSource.IsCancellationRequested)
+        {
+            // 到达直播录制时长限制。
         }
         finally
         {
-            response?.Dispose();
+            STOP_FLAG = true;
+            await counterTask;
+            try
+            {
+                await infoTask;
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug($"Could not read TS service information: {ex.Message}");
+            }
         }
+
+        Logger.InfoMarkUp("File Size: " + GlobalUtil.FormatFileSize(RecordingSizeDic[taskId]));
+        return true;
     }
 
     public async Task ReadInfoAsync()
@@ -206,12 +189,25 @@ internal class HTTPLiveRecordManager
         }
     }
 
-    public async Task TimeCounterAsync()
+    public async Task TimeCounterAsync(bool logProgress = false)
     {
+        long previousSize = 0;
         while (!STOP_FLAG)
         {
             await Task.Delay(1000);
+            if (STOP_FLAG)
+            {
+                break;
+            }
             RecordingDurDic[0]++;
+            if (logProgress)
+            {
+                var currentSize = RecordingSizeDic[0];
+                Logger.Info($"{GlobalUtil.FormatTime(RecordingDurDic[0])} " +
+                            $"{GlobalUtil.FormatFileSize(currentSize)} " +
+                            $"{GlobalUtil.FormatFileSize(currentSize - previousSize)}ps");
+                previousSize = currentSize;
+            }
 
             // 检测时长限制
             if (RecordingDurDic.All(d => d.Value >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds))
@@ -225,6 +221,15 @@ internal class HTTPLiveRecordManager
 
     public async Task<bool> StartRecordAsync()
     {
+        DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
+        if (Console.IsOutputRedirected || Console.IsErrorRedirected)
+        {
+            var stream = SelectedSteams.Single();
+            RecordingDurDic[0] = 0;
+            RecordingSizeDic[0] = 0;
+            return await RecordStreamAsync(stream, 0, new SpeedContainer());
+        }
+
         ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); // 速度计算
         ConcurrentDictionary<StreamSpec, bool?> Results = new();
 
@@ -259,7 +264,6 @@ internal class HTTPLiveRecordManager
                 return (item, task);
             }).ToDictionary(item => item.item, item => item.task);
 
-            DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
             var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
             if (limit != TimeSpan.MaxValue)
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
@@ -272,7 +276,7 @@ internal class HTTPLiveRecordManager
             await Parallel.ForEachAsync(dic, options, async (kp, _) =>
             {
                 var task = kp.Value;
-                var consumerTask = RecordStreamAsync(kp.Key, task, SpeedContainerDic[task.Id]);
+                var consumerTask = RecordStreamAsync(kp.Key, task.Id, SpeedContainerDic[task.Id], task);
                 Results[kp.Key] = await consumerTask;
             });
         });

@@ -20,7 +20,7 @@ public class ParserConfig
     /// <summary>
     /// 内容前置处理器. 调用顺序与列表顺序相同
     /// </summary>
-    public IList<ContentProcessor> ContentProcessors { get; } = new List<ContentProcessor>() { new DefaultBOMContentProcessor(), new DefaultHLSContentProcessor(), new DefaultDASHContentProcessor() };
+    public IList<ContentProcessor> ContentProcessors { get; } = new List<ContentProcessor>() { new DefaultHLSContentProcessor(), new DefaultDASHContentProcessor() };
 
     /// <summary>
     /// 添加分片URL前置处理器. 调用顺序与列表顺序相同
