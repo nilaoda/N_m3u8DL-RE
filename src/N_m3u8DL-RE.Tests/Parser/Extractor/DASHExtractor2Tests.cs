@@ -76,7 +76,8 @@ public class DASHExtractor2Tests
         var extractor = new DASHExtractor2(config, clock);
         var content = $$"""
             <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="dynamic"
-                 availabilityStartTime="{{availabilityStartTime}}" timeShiftBufferDepth="PT30S">
+                 availabilityStartTime="{{availabilityStartTime}}" timeShiftBufferDepth="PT30S"
+                 minimumUpdatePeriod="PT2.5S">
               <Period>
                 <AdaptationSet mimeType="video/mp4">
                   <Representation id="video" bandwidth="1000000">
@@ -92,6 +93,7 @@ public class DASHExtractor2Tests
 
         var playlist = results.ShouldHaveSingleItem().Playlist!;
         playlist.IsLive.ShouldBeTrue();
+        playlist.MinimumUpdatePeriod.ShouldBe(TimeSpan.FromSeconds(2.5));
         var segments = playlist.MediaParts.ShouldHaveSingleItem().MediaSegments;
         // Every case has 120 seconds of elapsed time: the last 30 seconds start at segment 16.
         segments.Count.ShouldBe(5);

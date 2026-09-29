@@ -8,6 +8,8 @@ public class Playlist
     public bool IsLive { get; set; } = false;
     // 直播刷新间隔毫秒（默认15秒）
     public double RefreshIntervalMs { get; set; } = 15000;
+    // DASH MPD 声明的最小更新周期
+    public TimeSpan? MinimumUpdatePeriod { get; set; }
     // 所有分片时长总和
     public double TotalDuration => MediaParts.Sum(x => x.MediaSegments.Sum(m => m.Duration));
 

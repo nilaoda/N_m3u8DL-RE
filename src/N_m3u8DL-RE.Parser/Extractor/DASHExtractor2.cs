@@ -76,6 +76,20 @@ internal partial class DASHExtractor2 : IExtractor
         // 类型 static点播, dynamic直播
         var type = mpdElement.Attribute("type")?.Value;
         bool isLive = type == "dynamic";
+        TimeSpan? minimumUpdatePeriod = null;
+        var minimumUpdatePeriodValue = mpdElement.Attribute("minimumUpdatePeriod")?.Value;
+        if (isLive && !string.IsNullOrWhiteSpace(minimumUpdatePeriodValue))
+        {
+            try
+            {
+                var value = XmlConvert.ToTimeSpan(minimumUpdatePeriodValue);
+                if (value > TimeSpan.Zero) minimumUpdatePeriod = value;
+            }
+            catch (Exception ex) when (ex is FormatException or OverflowException)
+            {
+                // 无效的更新周期按未提供处理，仍可根据分片时长刷新。
+            }
+        }
 
         // 分片最大时长
         var maxSegmentDuration = mpdElement.Attribute("maxSegmentDuration")?.Value;
@@ -211,6 +225,7 @@ internal partial class DASHExtractor2 : IExtractor
                         }
                     }
                     streamSpec.Playlist.IsLive = isLive;
+                    streamSpec.Playlist.MinimumUpdatePeriod = minimumUpdatePeriod;
                     // 设置刷新间隔 timeShiftBufferDepth / 2
                     if (timeShiftBufferDepth != null)
                     {

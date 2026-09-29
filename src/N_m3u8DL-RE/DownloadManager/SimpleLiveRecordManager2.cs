@@ -806,11 +806,8 @@ internal class SimpleLiveRecordManager2
         // 设置等待时间
         if (WAIT_SEC == 0)
         {
-            WAIT_SEC = (int)(SelectedSteams.Min(s => s.Playlist!.MediaParts[0].MediaSegments.Sum(s => s.Duration)) / 2);
-            WAIT_SEC -= 2; // 再提前两秒吧 留出冗余
-            if (DownloaderConfig.MyOptions.LiveWaitTime != null)
-                WAIT_SEC = DownloaderConfig.MyOptions.LiveWaitTime.Value;
-            if (WAIT_SEC <= 0) WAIT_SEC = 1;
+            WAIT_SEC = LiveRefreshInterval.GetSeconds(SelectedSteams, StreamExtractor.ExtractorType,
+                DownloaderConfig.MyOptions.LiveWaitTime);
             Logger.WarnMarkUp($"set refresh interval to {WAIT_SEC} seconds");
         }
         // 如果没有选中音频 取消通过音频修复vtt时间轴
