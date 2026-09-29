@@ -201,6 +201,7 @@ internal class Program
             CustomMethod = option.CustomHLSMethod,
             CustomeKey = option.CustomHLSKey,
             CustomeIV = option.CustomHLSIv,
+            CustomHLSScope = option.CustomHLSScope,
         };
 
         if (option.AllowHlsMultiExtMap)

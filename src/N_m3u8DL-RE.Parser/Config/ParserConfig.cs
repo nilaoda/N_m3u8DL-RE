@@ -48,6 +48,18 @@ public class ParserConfig
     /// </summary>
     public byte[]? CustomeIV { get; set; }
 
+    public CustomHlsScope CustomHLSScope { get; set; } = CustomHlsScope.All;
+
+    internal ParserConfig WithoutCustomHLSOverrides()
+    {
+        // 保留同一次解析的处理器和请求设置，只移除当前媒体流不适用的覆盖值。
+        var config = (ParserConfig)MemberwiseClone();
+        config.CustomMethod = null;
+        config.CustomeKey = null;
+        config.CustomeIV = null;
+        return config;
+    }
+
     /// <summary>
     /// 组装视频分段的URL时，是否要把原本URL后的参数也加上去
     /// 如 Base URL = "http://xxx.com/playlist.m3u8?hmac=xxx&token=xxx"

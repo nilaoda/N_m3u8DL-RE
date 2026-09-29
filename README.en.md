@@ -89,6 +89,7 @@ Options:
                                                           CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>                      Set the HLS decryption key. Can be file, HEX or Base64
   --custom-hls-iv <FILE|HEX|BASE64>                       Set the HLS decryption iv. Can be file, HEX or Base64
+  --custom-hls-scope <SCOPE>                              Apply custom HLS method, key and IV to selected media type (all|video|audio) [default: All]
   --use-system-proxy                                      Use system default proxy [default: True]
   --custom-proxy <URL>                                    Set web request proxy, like http://127.0.0.1:8888
   --custom-range <RANGE>                                  Download only part of the segments. Use "--morehelp
@@ -125,6 +126,8 @@ Options:
   --version                                               Show version information
   -?, -h, --help                                          Show help and usage information
 ```
+
+`--custom-hls-scope video` applies `--custom-hls-method`, `--custom-hls-key`, and `--custom-hls-iv` only to video renditions in a master playlist; `audio` selects audio renditions. Audio-only variants can be identified through `CODECS`; variants without enough type information still use the video scope. The default `all` preserves the existing behavior. A standalone media playlist has no rendition type, so the custom settings apply to that playlist.
 
 <details>
 <summary>Click to view "More Help" section</summary>
