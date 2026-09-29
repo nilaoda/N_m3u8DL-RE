@@ -10,7 +10,7 @@ on:
         required: false
       tag:
         type: string
-        description: 'Release version tag (e.g. v0.2.1-beta)'
+        description: 'Release version tag (e.g. v0.2.1)'
         required: true
       ref:
         type: string

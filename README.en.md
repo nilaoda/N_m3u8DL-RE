@@ -26,7 +26,7 @@ yay -Syu n-m3u8dl-re-git
 
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20241203
+  N_m3u8DL-RE 0.6.0 20260628
 
 Usage:
   N_m3u8DL-RE <input> [options]
