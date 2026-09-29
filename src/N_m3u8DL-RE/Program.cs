@@ -127,59 +127,6 @@ internal class Program
             option.LiveRealTimeMerge = true;
         }
 
-        // 预先检查ffmpeg
-        option.FFmpegBinaryPath ??= GlobalUtil.FindExecutable("ffmpeg");
-
-        if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
-        {
-            throw new FileNotFoundException(ResString.ffmpegNotFound);
-        }
-
-        Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
-
-        // 预先检查mkvmerge
-        if (option is { MuxOptions.UseMkvmerge: true, MuxAfterDone: true })
-        {
-            option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
-            if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
-            {
-                throw new FileNotFoundException(ResString.mkvmergeNotFound);
-            }
-            Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
-        }
-
-        // 预先检查
-        if (option.Keys is { Length: > 0 } || option.KeyTextFile != null)
-        {
-            if (!string.IsNullOrEmpty(option.DecryptionBinaryPath) && !File.Exists(option.DecryptionBinaryPath))
-            {
-                throw new FileNotFoundException(option.DecryptionBinaryPath);
-            }
-            switch (option.DecryptionEngine)
-            {
-                case DecryptEngine.SHAKA_PACKAGER:
-                {
-                    var file = FindShakaPackager();
-                    if (file == null) throw new FileNotFoundException(ResString.shakaPackagerNotFound);
-                    option.DecryptionBinaryPath = file;
-                    Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
-                    break;
-                }
-                case DecryptEngine.MP4DECRYPT:
-                {
-                    var file = GlobalUtil.FindExecutable("mp4decrypt");
-                    if (file == null) throw new FileNotFoundException(ResString.mp4decryptNotFound);
-                    option.DecryptionBinaryPath = file;
-                    Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
-                    break;
-                }
-                case DecryptEngine.FFMPEG:
-                default:
-                    option.DecryptionBinaryPath = option.FFmpegBinaryPath;
-                    break;
-            }
-        }
-
         // 默认的headers
         var headers = new Dictionary<string, string>()
         {
@@ -227,13 +174,48 @@ internal class Program
         var url = option.Input;
 
         // 流提取器配置
-        var extractor = new StreamExtractor(parserConfig);
+        using var extractor = new StreamExtractor(parserConfig);
         // 从链接加载内容
         await RetryUtil.WebRequestRetryAsync(async () =>
         {
             await extractor.LoadSourceFromUrlAsync(url);
             return true;
         });
+        if (extractor.ExtractorType == ExtractorType.BINARY)
+        {
+            var binarySource = extractor.DirectSource ??
+                               throw new InvalidDataException("Binary input requires an HTTP response.");
+            await BinaryDownloadRunner.RunAsync(option, binarySource, headers);
+            return;
+        }
+        if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+        {
+            if (option.SkipDownload)
+            {
+                return;
+            }
+            option.SaveName ??= OtherUtil.GetFileNameFromInput(option.Input);
+            var liveStreams = await extractor.ExtractStreamsAsync();
+            var liveConfig = new DownloaderConfig
+            {
+                MyOptions = option,
+                DirPrefix = string.Empty,
+                Headers = parserConfig.Headers
+            };
+            var liveRecorder = new HTTPLiveRecordManager(liveConfig, liveStreams, extractor);
+            if (await liveRecorder.StartRecordAsync())
+            {
+                Logger.InfoMarkUp("[white on green]Done[/]");
+            }
+            else
+            {
+                Logger.ErrorMarkUp("[white on red]Failed[/]");
+                Environment.ExitCode = 1;
+            }
+            return;
+        }
+
+        CheckMediaTools(option);
         // 解析流信息
         var streams = await extractor.ExtractStreamsAsync();
 
@@ -387,12 +369,7 @@ internal class Program
 
         var result = false;
 
-        if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
-        {
-            var sldm = new HTTPLiveRecordManager(downloadConfig, selectedStreams, extractor);
-            result = await sldm.StartRecordAsync();
-        }
-        else if (!livingFlag)
+        if (!livingFlag)
         {
             // 开始下载
             var sdm = new SimpleDownloadManager(downloadConfig, selectedStreams, extractor);
@@ -412,6 +389,63 @@ internal class Program
         {
             Logger.ErrorMarkUp("[white on red]Failed[/]");
             Environment.ExitCode = 1;
+        }
+    }
+
+    private static void CheckMediaTools(MyOption option)
+    {
+        option.FFmpegBinaryPath ??= GlobalUtil.FindExecutable("ffmpeg");
+        if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
+        {
+            throw new FileNotFoundException(ResString.ffmpegNotFound);
+        }
+        Logger.Extra($"ffmpeg => {option.FFmpegBinaryPath}");
+
+        if (option is { MuxOptions.UseMkvmerge: true, MuxAfterDone: true })
+        {
+            option.MkvmergeBinaryPath ??= GlobalUtil.FindExecutable("mkvmerge");
+            if (string.IsNullOrEmpty(option.MkvmergeBinaryPath) || !File.Exists(option.MkvmergeBinaryPath))
+            {
+                throw new FileNotFoundException(ResString.mkvmergeNotFound);
+            }
+            Logger.Extra($"mkvmerge => {option.MkvmergeBinaryPath}");
+        }
+
+        if (option.Keys is { Length: > 0 } || option.KeyTextFile != null)
+        {
+            if (!string.IsNullOrEmpty(option.DecryptionBinaryPath) && !File.Exists(option.DecryptionBinaryPath))
+            {
+                throw new FileNotFoundException(option.DecryptionBinaryPath);
+            }
+            switch (option.DecryptionEngine)
+            {
+                case DecryptEngine.SHAKA_PACKAGER:
+                {
+                    var file = FindShakaPackager();
+                    if (file == null)
+                    {
+                        throw new FileNotFoundException(ResString.shakaPackagerNotFound);
+                    }
+                    option.DecryptionBinaryPath = file;
+                    Logger.Extra($"shaka-packager => {option.DecryptionBinaryPath}");
+                    break;
+                }
+                case DecryptEngine.MP4DECRYPT:
+                {
+                    var file = GlobalUtil.FindExecutable("mp4decrypt");
+                    if (file == null)
+                    {
+                        throw new FileNotFoundException(ResString.mp4decryptNotFound);
+                    }
+                    option.DecryptionBinaryPath = file;
+                    Logger.Extra($"mp4decrypt => {option.DecryptionBinaryPath}");
+                    break;
+                }
+                case DecryptEngine.FFMPEG:
+                default:
+                    option.DecryptionBinaryPath = option.FFmpegBinaryPath;
+                    break;
+            }
         }
     }
 

@@ -5,5 +5,6 @@ public enum ExtractorType
     MPEG_DASH,
     HLS,
     HTTP_LIVE,
-    MSS
+    MSS,
+    BINARY
 }

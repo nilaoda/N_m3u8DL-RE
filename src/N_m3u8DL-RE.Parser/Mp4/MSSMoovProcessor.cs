@@ -79,7 +79,7 @@ public partial class MSSMoovProcessor
         this.BitsPerSample = data.BitsPerSample;
         this.IsProtection = data.IsProtection;
         this.ProtectionData = data.ProtectionData;
-        this.ProtectionSystemId = Guid.Parse(data.ProtectionSystemID);
+        this.ProtectionSystemId = IsProtection ? Guid.Parse(data.ProtectionSystemID) : Guid.Empty;
 
         // 需要手动生成CodecPrivateData
         if (string.IsNullOrEmpty(CodecPrivateData))

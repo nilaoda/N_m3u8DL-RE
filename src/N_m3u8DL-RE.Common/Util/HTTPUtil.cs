@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Entity;
 
 namespace N_m3u8DL_RE.Common.Util;
 
@@ -23,11 +24,16 @@ public static class HTTPUtil
         DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
 
-    private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
+    private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null,
+        bool identityEncoding = false, int redirectCount = 0)
     {
+        if (redirectCount > 10)
+        {
+            throw new HttpRequestException("Too many redirects while loading URL.");
+        }
         Logger.Debug(ResString.fetch + url);
         using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
-        webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
+        webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", identityEncoding ? "identity" : "gzip, deflate");
         webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
         webRequest.Headers.Connection.Clear();
         if (headers != null)
@@ -62,14 +68,23 @@ public static class HTTPUtil
                 if (redirectedUrl != url)
                 {
                     Logger.Extra($"Redirected => {redirectedUrl}");
-                    return await DoGetAsync(redirectedUrl, headers);
+                    webResponse.Dispose();
+                    return await DoGetAsync(redirectedUrl, headers, identityEncoding, redirectCount + 1);
                 }
             }
         }
 
         // 手动将跳转后的URL设置进去, 用于后续取用
         webResponse.Headers.Location = new Uri(url);
-        webResponse.EnsureSuccessStatusCode();
+        try
+        {
+            webResponse.EnsureSuccessStatusCode();
+        }
+        catch
+        {
+            webResponse.Dispose();
+            throw;
+        }
         return webResponse;
     }
 
@@ -108,49 +123,93 @@ public static class HTTPUtil
     /// <returns>(Source Code, RedirectedUrl)</returns>
     public static async Task<(string, string)> GetWebSourceAndNewUrlAsync(string url, Dictionary<string, string>? headers = null)
     {
-        var webResponse = await DoGetAsync(url, headers);
-        var htmlCode = "";
+        using var result = await GetWebSourceResultAsync(url, headers);
+        return (result.Source, result.Url);
+    }
 
-        // 如果响应是压缩的（gzip/deflate/br），直接按文本处理
-        var encodings = webResponse.Content.Headers.ContentEncoding;
-        if (encodings.Count != 0)
+    /// <summary>
+    /// 读取少量响应内容判断格式。二进制响应由调用者负责释放，避免直录时再次请求 URL。
+    /// </summary>
+    public static async Task<WebSourceResult> GetWebSourceResultAsync(string url, Dictionary<string, string>? headers = null)
+    {
+        var webResponse = await DoGetAsync(url, headers, identityEncoding: true);
+        try
         {
-            Logger.Debug($"Detected compression: {string.Join(",", encodings)}");
-            htmlCode = await webResponse.Content.ReadAsStringAsync();
-            return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+            // 打开流，读取少量样本检测类型
+            const int sampleSize = 4096;
+            const int minimumSampleSize = 188 * 3;
+            var responseStream = await webResponse.Content.ReadAsStreamAsync();
+            var buffer = new byte[sampleSize];
+            using var readTimeout = new CancellationTokenSource();
+            if (AppHttpClient.Timeout != Timeout.InfiniteTimeSpan)
+            {
+                readTimeout.CancelAfter(AppHttpClient.Timeout);
+            }
+            var bytesRead = await responseStream.ReadAtLeastAsync(buffer.AsMemory(0, sampleSize),
+                minimumSampleSize, throwOnEndOfStream: false, cancellationToken: readTimeout.Token);
+            var sample = buffer.AsSpan(0, bytesRead);
+            var resolvedUrl = webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url;
+
+            if (BinaryContentCheckUtil.IsMpeg2TsBuffer(sample))
+            {
+                Logger.Debug("Detected MPEG-TS stream");
+                return new WebSourceResult(ResString.ReLiveTs, resolvedUrl, webResponse, responseStream, buffer[..bytesRead]);
+            }
+
+            var encoding = GetEncodingFromBom(sample) ?? GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
+            var prefix = encoding.GetString(sample).TrimStart('\uFEFF', ' ', '\r', '\n', '\t');
+            var isManifest = prefix.StartsWith("#EXTM3U", StringComparison.Ordinal) ||
+                             prefix.Contains("<MPD", StringComparison.Ordinal) ||
+                             prefix.Contains("<SmoothStreamingMedia", StringComparison.Ordinal);
+            var mediaType = webResponse.Content.Headers.ContentType?.MediaType?.ToLowerInvariant();
+            var binaryMediaType = mediaType is not null &&
+                                  (mediaType.StartsWith("video/") || mediaType.StartsWith("audio/") ||
+                                   mediaType.StartsWith("image/") || mediaType is "application/octet-stream" or
+                                   "application/pdf" or "application/zip");
+            if (!isManifest && (bytesRead == 0 || BinaryContentCheckUtil.LooksLikeBinary(sample) || binaryMediaType))
+            {
+                Logger.Debug("Detected binary data");
+                return new WebSourceResult(ResString.ReBinaryData, resolvedUrl, webResponse, responseStream, buffer[..bytesRead]);
+            }
+
+            // 文本播放列表完整读取
+            using var ms = new MemoryStream();
+            ms.Write(buffer, 0, bytesRead);
+            await responseStream.CopyToAsync(ms, readTimeout.Token);
+            var htmlCode = encoding.GetString(ms.ToArray()).TrimStart('\uFEFF');
+            webResponse.Dispose();
+            return new WebSourceResult(htmlCode, resolvedUrl);
         }
-
-        // 打开流，读取少量样本检测类型
-        const int sampleSize = 4096;
-        await using var responseStream = await webResponse.Content.ReadAsStreamAsync();
-
-        var buffer = new byte[sampleSize];
-        var bytesRead = await responseStream.ReadAsync(buffer.AsMemory(0, sampleSize));
-
-        // MPEG-TS 检测
-        if (BinaryContentCheckUtil.IsMpeg2TsBuffer(buffer.AsSpan(0, bytesRead)))
+        catch
         {
-            Logger.Debug("Detected MPEG-TS stream");
-            return (ResString.ReLiveTs, url);
+            webResponse.Dispose();
+            throw;
         }
+    }
 
-        // 启发式判断二进制
-        if (BinaryContentCheckUtil.LooksLikeBinary(buffer.AsSpan(0, bytesRead)))
+    private static Encoding? GetEncodingFromBom(ReadOnlySpan<byte> data)
+    {
+        if (data.Length >= 4 && data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00)
         {
-            Logger.Debug("Heuristic detection: binary data");
-            return (ResString.ReBinaryData, url);
+            return Encoding.UTF32;
         }
-
-        // 否则是文本，完整读取
-        using var ms = new MemoryStream();
-        ms.Write(buffer, 0, bytesRead);
-        await responseStream.CopyToAsync(ms);
-
-        var allBytes = ms.ToArray();
-        var encoding = GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
-        htmlCode = encoding.GetString(allBytes);
-
-        return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+        if (data.Length >= 4 && data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xFE && data[3] == 0xFF)
+        {
+            return new UTF32Encoding(bigEndian: true, byteOrderMark: true);
+        }
+        if (data.Length >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+        {
+            return Encoding.UTF8;
+        }
+        if (data.Length >= 2 && data[0] == 0xFF && data[1] == 0xFE)
+        {
+            return Encoding.Unicode;
+        }
+        if (data.Length >= 2 && data[0] == 0xFE && data[1] == 0xFF)
+        {
+            return Encoding.BigEndianUnicode;
+        }
+        return null;
     }
 
     private static Encoding? GetEncodingFromResponse(HttpResponseMessage response)

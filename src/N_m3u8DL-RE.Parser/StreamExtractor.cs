@@ -10,9 +10,10 @@ using N_m3u8DL_RE.Common.Enum;
 
 namespace N_m3u8DL_RE.Parser;
 
-public class StreamExtractor
+public class StreamExtractor : IDisposable
 {
     public ExtractorType ExtractorType => extractor.ExtractorType;
+    public WebSourceResult? DirectSource { get; private set; }
     private IExtractor extractor;
     private ParserConfig parserConfig = new();
     private string rawText;
@@ -27,6 +28,8 @@ public class StreamExtractor
 
     public async Task LoadSourceFromUrlAsync(string url)
     {
+        DirectSource?.Dispose();
+        DirectSource = null;
         Logger.Info(ResString.loadingUrl + url);
         if (url.StartsWith("file:"))
         {
@@ -37,7 +40,22 @@ public class StreamExtractor
         else if (url.StartsWith("http"))
         {
             parserConfig.OriginalUrl = url;
-            (this.rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, parserConfig.Headers);
+            var result = await HTTPUtil.GetWebSourceResultAsync(url, parserConfig.Headers);
+            this.rawText = result.Source;
+            if (this.rawText == ResString.ReLiveTs && result.Response?.Content.Headers.ContentLength is not null)
+            {
+                this.rawText = ResString.ReBinaryData;
+            }
+            url = result.Url;
+            if ((this.rawText == ResString.ReBinaryData || this.rawText == ResString.ReLiveTs) &&
+                result.Response != null)
+            {
+                DirectSource = result;
+            }
+            else
+            {
+                result.Dispose();
+            }
             parserConfig.Url = url;
         }
         else if (File.Exists(url))
@@ -90,7 +108,7 @@ public class StreamExtractor
         else if (rawText == ResString.ReBinaryData)
         {
             Logger.InfoMarkUp(ResString.matchBinaryData);
-            throw new NotSupportedException(ResString.notSupported);
+            extractor = new BinaryExtractor(parserConfig);
         }
         else
         {
@@ -99,6 +117,8 @@ public class StreamExtractor
 
         RawFiles[$"raw.{rawType}"] = rawText;
     }
+
+    public void Dispose() => DirectSource?.Dispose();
 
     /// <summary>
     /// 开始解析流媒体信息
