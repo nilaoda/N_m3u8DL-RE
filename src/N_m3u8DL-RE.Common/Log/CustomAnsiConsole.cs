@@ -87,6 +87,11 @@ public static class CustomAnsiConsole
             ansiConsoleSettings.Ansi = AnsiSupport.Yes;
             Console = AnsiConsole.Create(ansiConsoleSettings);
             Console.Profile.Width = int.MaxValue;
+            // 重定向输出没有屏幕高度；某些平台会返回 -1，导致进度渲染裁剪行时越界。
+            if (System.Console.IsOutputRedirected || System.Console.IsErrorRedirected || Console.Profile.Height < 1)
+            {
+                Console.Profile.Height = int.MaxValue;
+            }
         }
         else
         {
