@@ -33,6 +33,9 @@ public partial class NonAnsiWriter : TextWriter
         output = MyRegex2().Replace(output, "");
         if (string.IsNullOrWhiteSpace(output))
         {
+            // 只有空白时通常是被剥离的控制序列残渣；含换行则是真实的行分隔，
+            // 丢弃它会让重定向后的 stdout 全程没有换行（Spectre.Console 0.57 起换行独立写出）
+            if (output.Contains('\n')) Console.Write('\n');
             return;
         }
         Console.Write(output);
