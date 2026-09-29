@@ -1,4 +1,4 @@
-﻿using N_m3u8DL_RE.Column;
+using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -67,12 +67,10 @@ internal class HTTPLiveRecordManager
         // 创建文件夹
         if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(streamSpec.Url));
+        var currentUrl = streamSpec.Url;
+        using var request = HTTPUtil.CreateRequest(HttpMethod.Get, currentUrl);
         request.Headers.ConnectionClose = false;
-        foreach (var item in DownloaderConfig.Headers)
-        {
-            request.Headers.TryAddWithoutValidation(item.Key, item.Value);
-        }
+        HTTPUtil.ApplyHeaders(request, DownloaderConfig.Headers);
         Logger.Debug(request.Headers.ToString());
 
         HttpResponseMessage? response = null;
@@ -86,17 +84,14 @@ internal class HTTPLiveRecordManager
             {
                 var redirectUrl = response.Headers.Location;
                 if (redirectUrl == null) break;
-                if (!redirectUrl.IsAbsoluteUri) redirectUrl = new Uri(request.RequestUri!, redirectUrl);
+                currentUrl = redirectUrl.IsAbsoluteUri ? redirectUrl.AbsoluteUri : new Uri(new Uri(currentUrl), redirectUrl).AbsoluteUri;
 
-                Logger.Debug($"Following redirect to: {redirectUrl}");
+                Logger.Debug($"Following redirect to: {currentUrl}");
                 response.Dispose();
 
-                var redirectRequest = new HttpRequestMessage(HttpMethod.Get, redirectUrl);
+                using var redirectRequest = HTTPUtil.CreateRequest(HttpMethod.Get, currentUrl);
                 redirectRequest.Headers.ConnectionClose = false;
-                foreach (var item in DownloaderConfig.Headers)
-                {
-                    redirectRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
-                }
+                HTTPUtil.ApplyHeaders(redirectRequest, DownloaderConfig.Headers);
 
                 response = await HttpClient.SendAsync(redirectRequest, HttpCompletionOption.ResponseHeadersRead, CancellationTokenSource.Token);
                 redirectCount++;

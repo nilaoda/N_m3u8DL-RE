@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Log;
@@ -7,6 +7,7 @@ using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Parser.Extractor;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Common.Enum;
+using System.Text;
 
 namespace N_m3u8DL_RE.Parser;
 
@@ -53,9 +54,46 @@ public class StreamExtractor
         }
         
         this.rawText = rawText.Trim();
+        if (parserConfig.ChangeMpd && IsDashContent(this.rawText))
+        {
+            this.rawText = await WaitForMpdReplacementAsync(this.rawText);
+        }
         LoadSourceFromText(this.rawText);
     }
 
+
+    private static bool IsDashContent(string rawText)
+    {
+        return rawText.Contains("</MPD>") && rawText.Contains("<MPD");
+    }
+
+    private async Task<string> WaitForMpdReplacementAsync(string mpdContent)
+    {
+        var mpdPath = parserConfig.ChangeMpdFilePath;
+        if (string.IsNullOrWhiteSpace(mpdPath))
+        {
+            mpdPath = Path.Combine(Environment.CurrentDirectory, "raw.mpd");
+        }
+
+        var dir = Path.GetDirectoryName(mpdPath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+
+        await File.WriteAllTextAsync(mpdPath, mpdContent, Encoding.UTF8);
+        Logger.Warn($"MPD saved to: {mpdPath}");
+        Logger.Warn("Please replace this MPD file, then press y to continue.");
+
+        ConsoleKeyInfo key;
+        do
+        {
+            key = Console.ReadKey(intercept: true);
+        } while (char.ToLowerInvariant(key.KeyChar) != 'y');
+
+        Console.WriteLine();
+        return (await File.ReadAllTextAsync(mpdPath)).Trim();
+    }
     [MemberNotNull(nameof(rawText), nameof(extractor))]
     private void LoadSourceFromText(string rawText)
     {
@@ -68,7 +106,7 @@ public class StreamExtractor
             extractor = new HLSExtractor(parserConfig);
             rawType = "m3u8";
         }
-        else if (rawText.Contains("</MPD>") && rawText.Contains("<MPD"))
+        else if (IsDashContent(rawText))
         {
             Logger.InfoMarkUp(ResString.matchDASH);
             // extractor = new DASHExtractor(parserConfig);
@@ -144,6 +182,27 @@ public class StreamExtractor
             await RetryUtil.WebRequestRetryAsync(async () =>
             {
                 await extractor.RefreshPlayListAsync(streamSpecs);
+                return true;
+            }, retryDelayMilliseconds: 1000, maxRetries: 5);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    public async Task RefreshPlayListFromRefreshUrlAsync(List<StreamSpec> streamSpecs)
+    {
+        try
+        {
+            await semaphore.WaitAsync();
+            await RetryUtil.WebRequestRetryAsync(async () =>
+            {
+                if (extractor is HLSExtractor hlsExtractor)
+                    await hlsExtractor.RefreshPlayListFromRefreshUrlAsync(streamSpecs);
+                else
+                    await extractor.RefreshPlayListAsync(streamSpecs);
+
                 return true;
             }, retryDelayMilliseconds: 1000, maxRetries: 5);
         }

@@ -50,7 +50,8 @@ internal static class LargeSingleFileSplitUtil
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Head, url);
+            using var request = HTTPUtil.CreateRequest(HttpMethod.Head, url);
+            HTTPUtil.ApplyHeaders(request, headers);
             var response = (await HTTPUtil.AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
             bool supportsRangeRequests = response.Headers.Contains("Accept-Ranges");
 
@@ -65,13 +66,8 @@ internal static class LargeSingleFileSplitUtil
 
     private static async Task<long> GetFileSizeAsync(string url, Dictionary<string, string> headers)
     {
-        using var httpRequestMessage = new HttpRequestMessage();
-        httpRequestMessage.Method = HttpMethod.Head;
-        httpRequestMessage.RequestUri = new(url);
-        foreach (var header in headers)
-        {
-            httpRequestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        }
+        using var httpRequestMessage = HTTPUtil.CreateRequest(HttpMethod.Head, url);
+        HTTPUtil.ApplyHeaders(httpRequestMessage, headers);
         var response = (await HTTPUtil.AppHttpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead)).EnsureSuccessStatusCode();
         long totalSizeBytes = response.Content.Headers.ContentLength ?? 0;
 

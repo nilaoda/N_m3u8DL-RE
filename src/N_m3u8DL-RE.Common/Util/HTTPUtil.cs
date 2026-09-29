@@ -8,6 +8,45 @@ namespace N_m3u8DL_RE.Common.Util;
 
 public static class HTTPUtil
 {
+    public static Dictionary<string, string> ChangeHosts { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly object RemoteHeadersLock = new();
+    private static readonly Dictionary<string, string[]> RemoteHeaders = new(StringComparer.OrdinalIgnoreCase);
+    private static bool acceptRemoteHeaders;
+
+    public static void ConfigureRemoteHeaders(bool enabled)
+    {
+        lock (RemoteHeadersLock)
+        {
+            RemoteHeaders.Clear();
+            acceptRemoteHeaders = enabled;
+        }
+    }
+
+    private static void CaptureRemoteHeaders(HttpResponseMessage response)
+    {
+        lock (RemoteHeadersLock)
+        {
+            if (!acceptRemoteHeaders) return;
+
+            // Only reusable request headers: never forward connection state or override --change-host.
+            var excluded = new HashSet<string>(response.Headers.Connection, StringComparer.OrdinalIgnoreCase)
+            {
+                "Host", "Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization",
+                "TE", "Trailer", "Transfer-Encoding", "Upgrade",
+                "Server", "Date", "Location", "Set-Cookie", "Set-Cookie2", "Accept-Ranges", "Age",
+                "Allow", "ETag", "Cache-Control", "Vary", "Retry-After", "WWW-Authenticate",
+                "Authentication-Info", "Proxy-Authentication-Info", "Strict-Transport-Security", "Alt-Svc"
+            };
+            using var request = new HttpRequestMessage();
+            foreach (var header in response.Headers)
+            {
+                if (!excluded.Contains(header.Key) && request.Headers.TryAddWithoutValidation(header.Key, header.Value))
+                    RemoteHeaders[header.Key] = header.Value.ToArray();
+            }
+        }
+    }
+
     public static readonly HttpClientHandler HttpClientHandler = new()
     {
         AllowAutoRedirect = false,
@@ -23,24 +62,74 @@ public static class HTTPUtil
         DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
 
-    private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null)
+    public static HttpRequestMessage CreateRequest(HttpMethod method, string url)
+    {
+        var requestUri = new Uri(url);
+        var (actualUri, hostHeader) = ChangeHost(requestUri);
+        var request = new HttpRequestMessage(method, actualUri);
+        if (hostHeader != null)
+        {
+            request.Headers.Host = hostHeader;
+            Logger.Debug($"ChangeHost => {requestUri} -> {actualUri}, Host: {hostHeader}");
+        }
+
+        return request;
+    }
+
+    public static void ApplyHeaders(HttpRequestMessage request, Dictionary<string, string>? headers)
+    {
+        foreach (var item in headers ?? [])
+        {
+            if (item.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
+            {
+                request.Headers.Host ??= item.Value;
+                continue;
+            }
+
+            request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+        }
+
+        lock (RemoteHeadersLock)
+        {
+            if (!acceptRemoteHeaders) return;
+            foreach (var item in RemoteHeaders)
+            {
+                request.Headers.Remove(item.Key);
+                request.Headers.TryAddWithoutValidation(item.Key, item.Value);
+            }
+        }
+    }
+
+    private static (Uri actualUri, string? hostHeader) ChangeHost(Uri requestUri)
+    {
+        if (!requestUri.IsAbsoluteUri || ChangeHosts.Count == 0 || !ChangeHosts.TryGetValue(requestUri.Host, out var newHost) || string.IsNullOrWhiteSpace(newHost))
+        {
+            return (requestUri, null);
+        }
+
+        var builder = new UriBuilder(requestUri);
+        var replacementUri = new Uri($"{requestUri.Scheme}://{newHost}");
+        builder.Host = replacementUri.Host;
+        builder.Port = replacementUri.IsDefaultPort ? -1 : replacementUri.Port;
+        var hostHeader = requestUri.IsDefaultPort ? requestUri.Host : requestUri.Authority;
+        return (builder.Uri, hostHeader);
+    }
+
+    private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null, bool captureRemoteHeaders = false)
     {
         Logger.Debug(ResString.fetch + url);
-        using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
+        using var webRequest = CreateRequest(HttpMethod.Get, url);
         webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
         webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
         webRequest.Headers.Connection.Clear();
-        if (headers != null)
-        {
-            foreach (var item in headers)
-            {
-                webRequest.Headers.TryAddWithoutValidation(item.Key, item.Value);
-            }
-        }
+        ApplyHeaders(webRequest, headers);
 
         Logger.Debug(webRequest.Headers.ToString());
         // 手动处理跳转，以免自定义Headers丢失
         var webResponse = await AppHttpClient.SendAsync(webRequest, HttpCompletionOption.ResponseHeadersRead);
+        if (captureRemoteHeaders && (webResponse.IsSuccessStatusCode ||
+            ((int)webResponse.StatusCode is >= 300 and < 400 && webResponse.Headers.Location != null)))
+            CaptureRemoteHeaders(webResponse);
         if (((int)webResponse.StatusCode).ToString().StartsWith("30"))
         {
             HttpResponseHeaders respHeaders = webResponse.Headers;
@@ -62,7 +151,8 @@ public static class HTTPUtil
                 if (redirectedUrl != url)
                 {
                     Logger.Extra($"Redirected => {redirectedUrl}");
-                    return await DoGetAsync(redirectedUrl, headers);
+                    webResponse.Dispose();
+                    return await DoGetAsync(redirectedUrl, headers, captureRemoteHeaders);
                 }
             }
         }
@@ -94,7 +184,7 @@ public static class HTTPUtil
     /// <returns></returns>
     public static async Task<string> GetWebSourceAsync(string url, Dictionary<string, string>? headers = null)
     {
-        var webResponse = await DoGetAsync(url, headers);
+        using var webResponse = await DoGetAsync(url, headers, captureRemoteHeaders: true);
         string htmlCode = await webResponse.Content.ReadAsStringAsync();
         Logger.Debug(htmlCode);
         return htmlCode;
@@ -108,7 +198,7 @@ public static class HTTPUtil
     /// <returns>(Source Code, RedirectedUrl)</returns>
     public static async Task<(string, string)> GetWebSourceAndNewUrlAsync(string url, Dictionary<string, string>? headers = null)
     {
-        var webResponse = await DoGetAsync(url, headers);
+        using var webResponse = await DoGetAsync(url, headers, captureRemoteHeaders: true);
         var htmlCode = "";
 
         // 如果响应是压缩的（gzip/deflate/br），直接按文本处理
@@ -117,7 +207,7 @@ public static class HTTPUtil
         {
             Logger.Debug($"Detected compression: {string.Join(",", encodings)}");
             htmlCode = await webResponse.Content.ReadAsStringAsync();
-            return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+            return (htmlCode, webResponse.Headers.Location?.AbsoluteUri ?? url);
         }
 
         // 打开流，读取少量样本检测类型
@@ -150,7 +240,7 @@ public static class HTTPUtil
         var encoding = GetEncodingFromResponse(webResponse) ?? Encoding.UTF8;
         htmlCode = encoding.GetString(allBytes);
 
-        return (htmlCode, webResponse.RequestMessage?.RequestUri?.AbsoluteUri ?? url);
+        return (htmlCode, webResponse.Headers.Location?.AbsoluteUri ?? url);
     }
 
     private static Encoding? GetEncodingFromResponse(HttpResponseMessage response)
@@ -173,7 +263,8 @@ public static class HTTPUtil
     public static async Task<string> GetPostResponseAsync(string Url, byte[] postData)
     {
         string htmlCode;
-        using HttpRequestMessage request = new(HttpMethod.Post, Url);
+        using var request = CreateRequest(HttpMethod.Post, Url);
+        ApplyHeaders(request, null);
         request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
         request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());
         request.Content = new ByteArrayContent(postData);

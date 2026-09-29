@@ -139,6 +139,24 @@ public class LiveSegmentTrackerTests
         json.ToLowerInvariant().ShouldNotContain("recordingindex");
     }
 
+    [Fact]
+    public void CheckingForNewSegments_DoesNotAdvanceRecordingBoundary()
+    {
+        var tracker = new LiveSegmentTracker();
+        tracker.Record([Segment(20, "https://example.com/20.ts?token=old")]);
+        var unchanged = new List<MediaSegment> { Segment(20, "https://example.com/20.ts?token=new") };
+        tracker.Filter(unchanged, true, s => s.Index.ToString()).ShouldBeEmpty();
+        tracker.Filter([], true, s => s.Index.ToString()).ShouldBeEmpty();
+
+        var refreshed = new List<MediaSegment> { unchanged[0], Segment(21, "https://example.com/21.ts") };
+        tracker.Filter(refreshed, true, s => s.Index.ToString()).Count.ShouldBe(1);
+        var pending = tracker.Filter(refreshed, true, s => s.Index.ToString());
+        pending.Select(s => s.Index).ShouldBe(new long[] { 21 });
+        pending[0].RecordingIndex.ShouldBeNull();
+        tracker.Record(pending);
+        tracker.Filter(refreshed, true, s => s.Index.ToString()).ShouldBeEmpty();
+    }
+
     private static MediaSegment Segment(long index, string url, DateTime? dateTime = null) => new()
     {
         Index = index,

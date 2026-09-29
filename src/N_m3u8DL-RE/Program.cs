@@ -192,9 +192,17 @@ internal class Program
             Logger.Extra($"User-Defined Header => {item.Key}: {item.Value}");
         }
 
+        HTTPUtil.ConfigureRemoteHeaders(option.AcceptRemoteHeaders);
+        HTTPUtil.ChangeHosts = option.ChangeHosts ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in HTTPUtil.ChangeHosts)
+        {
+            Logger.Extra($"ChangeHost => {item.Key}|{item.Value}");
+        }
+
         var parserConfig = new ParserConfig()
         {
             AppendUrlParams = option.AppendUrlParams,
+            ChangeMpd = option.ChangeMpd,
             UrlProcessorArgs = option.UrlProcessorArgs,
             BaseUrl = option.BaseUrl!,
             Headers = headers,
@@ -222,6 +230,20 @@ internal class Program
             {
                 await Task.Delay(1000);
             }
+        }
+
+        string? tmpDir = null;
+        if (option.ChangeMpd)
+        {
+            // 尝试从URL或文件读取文件名
+            if (string.IsNullOrEmpty(option.SaveName))
+            {
+                option.SaveName = OtherUtil.GetFileNameFromInput(option.Input);
+            }
+
+            // 生成文件夹
+            tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+            parserConfig.ChangeMpdFilePath = Path.Combine(tmpDir, "raw.mpd");
         }
 
         var url = option.Input;
@@ -254,7 +276,7 @@ internal class Program
         }
 
         // 生成文件夹
-        var tmpDir = Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
+        tmpDir ??= Path.Combine(option.TmpDir ?? Environment.CurrentDirectory, $"{option.SaveName ?? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}");
         // 记录文件
         if (option.WriteMetaJson)
         {

@@ -755,7 +755,25 @@ internal class SimpleLiveRecordManager2
                 // Logger.WarnMarkUp($"wait {waitSec}s");
                 if (!STOP_FLAG) await Task.Delay(WAIT_SEC * 1000, CancellationTokenSource.Token);
                 // 刷新列表
-                if (!STOP_FLAG) await StreamExtractor.RefreshPlayListAsync(dic.Keys.ToList());
+                if (!STOP_FLAG)
+                {
+                    var streamSpecs = dic.Keys.ToList();
+                    await StreamExtractor.RefreshPlayListAsync(streamSpecs);
+                    var noNewSegments = StreamExtractor.ExtractorType == ExtractorType.HLS
+                        ? streamSpecs.Where(streamSpec =>
+                        {
+                            var task = dic[streamSpec];
+                            var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
+                            var allSamePath = SamePathDic.TryGetValue(task.Id, out var samePath) && samePath;
+                            return !HasNewMediaSegments(streamSpec, task, allHasDatetime, allSamePath);
+                        }).ToList()
+                        : [];
+                    if (noNewSegments.Count > 0)
+                    {
+                        Logger.WarnMarkUp("No new segments found. Try refreshing url from previous url...");
+                        await StreamExtractor.RefreshPlayListFromRefreshUrlAsync(noNewSegments);
+                    }
+                }
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
             {
@@ -779,6 +797,15 @@ internal class SimpleLiveRecordManager2
         {
             target.Complete();
         }
+    }
+
+    private bool HasNewMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)
+    {
+        var segments = streamSpec.Playlist!.MediaParts[0].MediaSegments;
+        return SegmentTrackers[task.Id].Filter(
+            segments,
+            StreamExtractor.ExtractorType == ExtractorType.HLS,
+            segment => GetSegmentName(segment, allHasDatetime, allSamePath)).Count > 0;
     }
 
     private void FilterMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)

@@ -54,6 +54,11 @@ public class HLSCustomScopeTests
             // 直播刷新再次解析相同的流时，范围不能受前一条流的状态影响。
             await extractor.RefreshPlayListAsync(streams);
             AssertSegment(streams.Single(s => s.MediaType == MediaType.AUDIO), audioMethod);
+
+            await extractor.RefreshPlayListFromRefreshUrlAsync(streams);
+            AssertSegment(streams.Single(s => s.MediaType is null), videoMethod);
+            AssertSegment(streams.Single(s => s.MediaType == MediaType.AUDIO), audioMethod);
+            AssertSegment(streams.Single(s => s.MediaType == MediaType.SUBTITLES), subtitleMethod);
         }
         finally
         {

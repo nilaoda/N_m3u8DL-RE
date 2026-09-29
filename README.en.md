@@ -59,6 +59,12 @@ Options:
   --write-meta-json                                       Write meta json after parsed [default: True]
   --append-url-params                                     Add Params of input Url to segments, useful for some
                                                           websites, such as kakao.com [default: False]
+  --change-mpd                                            Write downloaded MPD to raw.mpd, wait for replacement and
+                                                          press y to continue [default: False]
+  --change-host <OLD|NEW>                                 Rewrite request host from OLD to NEW while keeping Host
+                                                          header as OLD
+  --accept-remote-headers                                 Merge reusable entry/playlist response headers into subsequent requests;
+                                                          new values override existing headers (including -H) [default: False]
   -mt, --concurrent-download                              Concurrently download the selected audio, video and subtitles
                                                           [default: False]
   -H, --header <header>                                   Pass custom header(s) to server, Example:
