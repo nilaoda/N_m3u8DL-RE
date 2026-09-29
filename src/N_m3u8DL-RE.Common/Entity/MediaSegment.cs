@@ -1,10 +1,14 @@
 ﻿using N_m3u8DL_RE.Common.Enum;
+using System.Text.Json.Serialization;
 
 namespace N_m3u8DL_RE.Common.Entity;
 
 public class MediaSegment
 {
     public long Index { get; set; }
+    // 直播录制中的顺序；Index 始终保留源播放列表里的序号。
+    [JsonIgnore]
+    public long? RecordingIndex { get; set; }
     public double Duration { get; set; }
     public string? Title { get; set; }
     public DateTime? DateTime { get; set; }
@@ -25,6 +29,7 @@ public class MediaSegment
     {
         return obj is MediaSegment segment &&
                Index == segment.Index &&
+               RecordingIndex == segment.RecordingIndex &&
                Math.Abs(Duration - segment.Duration) < 0.001 &&
                Title == segment.Title &&
                StartRange == segment.StartRange &&
@@ -35,6 +40,6 @@ public class MediaSegment
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Index, Duration, Title, StartRange, StopRange, ExpectLength, Url);
+        return HashCode.Combine(Index, RecordingIndex, Duration, Title, StartRange, StopRange, ExpectLength, Url);
     }
 }
