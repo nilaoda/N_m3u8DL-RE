@@ -28,7 +28,7 @@ internal class HTTPLiveRecordManager
     bool STOP_FLAG = false;
     bool READ_IFO = false;
     ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长
-    ConcurrentDictionary<int, double> RecordingSizeDic = new(); // 已录制大小
+    ConcurrentDictionary<int, long> RecordingSizeDic = new(); // 已写入文件的大小
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
     List<byte> InfoBuffer = new List<byte>(188 * 5000); // 5000个分包中解析信息，没有就算了
 
@@ -123,8 +123,8 @@ internal class HTTPLiveRecordManager
                         InfoBuffer.AddRange(buffer);
                     }
                     speedContainer.Add(size);
-                    RecordingSizeDic[task.Id] += size;
                     await stream.WriteAsync(buffer, 0, size);
+                    RecordingSizeDic[task.Id] += size;
                 }
             }
             catch (OperationCanceledException oce) when (oce.CancellationToken == CancellationTokenSource.Token)
