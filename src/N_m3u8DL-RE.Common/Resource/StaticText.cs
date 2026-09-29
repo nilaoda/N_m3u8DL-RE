@@ -456,9 +456,9 @@ internal static class StaticText
         ),
         ["cmd_customHLSScope"] = new TextContainer
         (
-            zhCN: "指定自定义HLS加密方式、KEY和IV的适用范围 (all|video|audio)",
-            zhTW: "指定自訂HLS加密方式、KEY和IV的適用範圍 (all|video|audio)",
-            enUS: "Apply custom HLS method, key and IV to selected media type (all|video|audio)"
+            zhCN: "指定自定义HLS加密方式、KEY和IV的适用范围 (ALL|VIDEO|AUDIO)",
+            zhTW: "指定自訂HLS加密方式、KEY和IV的適用範圍 (ALL|VIDEO|AUDIO)",
+            enUS: "Apply custom HLS method, key and IV to selected media type (ALL|VIDEO|AUDIO)"
         ),
         ["cmd_livePipeMux"] = new TextContainer
         (

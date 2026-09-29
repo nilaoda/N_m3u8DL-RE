@@ -13,9 +13,9 @@ public class HLSCustomScopeTests
     private static readonly byte[] PlaylistKey = Enumerable.Repeat((byte)0x33, 16).ToArray();
 
     [Theory]
-    [InlineData(CustomHlsScope.All, EncryptMethod.AES_128, EncryptMethod.AES_128, EncryptMethod.AES_128)]
-    [InlineData(CustomHlsScope.Video, EncryptMethod.AES_128, EncryptMethod.NONE, EncryptMethod.NONE)]
-    [InlineData(CustomHlsScope.Audio, EncryptMethod.NONE, EncryptMethod.AES_128, EncryptMethod.NONE)]
+    [InlineData(CustomHlsScope.ALL, EncryptMethod.AES_128, EncryptMethod.AES_128, EncryptMethod.AES_128)]
+    [InlineData(CustomHlsScope.VIDEO, EncryptMethod.AES_128, EncryptMethod.NONE, EncryptMethod.NONE)]
+    [InlineData(CustomHlsScope.AUDIO, EncryptMethod.NONE, EncryptMethod.AES_128, EncryptMethod.NONE)]
     public async Task ScopeAppliesToSelectedMasterRendition(
         CustomHlsScope scope, EncryptMethod videoMethod, EncryptMethod audioMethod, EncryptMethod subtitleMethod)
     {
@@ -87,7 +87,7 @@ public class HLSCustomScopeTests
             {
                 Url = masterUrl,
                 OriginalUrl = masterUrl,
-                CustomHLSScope = CustomHlsScope.Video,
+                CustomHLSScope = CustomHlsScope.VIDEO,
                 CustomMethod = EncryptMethod.AES_128_ECB,
                 CustomeKey = CustomKey,
                 CustomeIV = CustomIV
@@ -118,8 +118,8 @@ public class HLSCustomScopeTests
     }
 
     [Theory]
-    [InlineData(CustomHlsScope.Video, EncryptMethod.NONE, EncryptMethod.AES_128, EncryptMethod.AES_128)]
-    [InlineData(CustomHlsScope.Audio, EncryptMethod.AES_128, EncryptMethod.NONE, EncryptMethod.NONE)]
+    [InlineData(CustomHlsScope.VIDEO, EncryptMethod.NONE, EncryptMethod.AES_128, EncryptMethod.AES_128)]
+    [InlineData(CustomHlsScope.AUDIO, EncryptMethod.AES_128, EncryptMethod.NONE, EncryptMethod.NONE)]
     public async Task AudioOnlyVariantUsesAudioScope(
         CustomHlsScope scope, EncryptMethod audioMethod, EncryptMethod videoMethod, EncryptMethod unknownMethod)
     {
@@ -172,7 +172,7 @@ public class HLSCustomScopeTests
         var config = new ParserConfig
         {
             Url = "https://example.com/audio.m3u8",
-            CustomHLSScope = CustomHlsScope.Audio,
+            CustomHLSScope = CustomHlsScope.AUDIO,
             CustomMethod = EncryptMethod.AES_128,
             CustomeKey = CustomKey,
             CustomeIV = CustomIV

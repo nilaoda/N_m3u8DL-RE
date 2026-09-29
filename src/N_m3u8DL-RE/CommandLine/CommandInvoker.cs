@@ -92,7 +92,7 @@ internal static partial class CommandInvoker
     private static readonly Option<EncryptMethod?> CustomHLSMethod = new("--custom-hls-method") { HelpName = "METHOD", Description = ResString.cmd_customHLSMethod };
     private static readonly Option<byte[]?> CustomHLSKey = new("--custom-hls-key") { HelpName = "FILE|HEX|BASE64", Description = ResString.cmd_customHLSKey, CustomParser = ParseHLSCustomKey };
     private static readonly Option<byte[]?> CustomHLSIv = new(name: "--custom-hls-iv") { HelpName = "FILE|HEX|BASE64", Description = ResString.cmd_customHLSIv, CustomParser = ParseHLSCustomKey };
-    private static readonly Option<CustomHlsScope> CustomHLSScope = new("--custom-hls-scope") { HelpName = "SCOPE", Description = ResString.cmd_customHLSScope, DefaultValueFactory = _ => CustomHlsScope.All };
+    private static readonly Option<CustomHlsScope> CustomHLSScope = new("--custom-hls-scope") { HelpName = "SCOPE", Description = ResString.cmd_customHLSScope, DefaultValueFactory = _ => CustomHlsScope.ALL };
     private static readonly Option<string[]?> Keys = new("--key") { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = ResString.cmd_keys, CustomParser = ParseCustomKeys};
 
     // 任务开始时间

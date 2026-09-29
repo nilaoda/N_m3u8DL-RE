@@ -223,10 +223,10 @@ internal class HLSExtractor : IExtractor
         // 独立媒体播放列表没有轨道类型；无法识别的主变体沿用视频范围。
         var applyCustomHLS = stream == null || (ParserConfig.CustomHLSScope switch
         {
-            CustomHlsScope.All => true,
-            CustomHlsScope.Video => stream.MediaType == MediaType.VIDEO ||
+            CustomHlsScope.ALL => true,
+            CustomHlsScope.VIDEO => stream.MediaType == MediaType.VIDEO ||
                                     (stream.MediaType == null && !IsAudioOnlyVariant(stream)),
-            CustomHlsScope.Audio => stream.MediaType == MediaType.AUDIO || IsAudioOnlyVariant(stream),
+            CustomHlsScope.AUDIO => stream.MediaType == MediaType.AUDIO || IsAudioOnlyVariant(stream),
             _ => false
         });
         var keyConfig = applyCustomHLS ? ParserConfig : ParserConfig.WithoutCustomHLSOverrides();

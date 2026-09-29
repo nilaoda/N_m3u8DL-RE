@@ -48,7 +48,7 @@ public class ParserConfig
     /// </summary>
     public byte[]? CustomeIV { get; set; }
 
-    public CustomHlsScope CustomHLSScope { get; set; } = CustomHlsScope.All;
+    public CustomHlsScope CustomHLSScope { get; set; } = CustomHlsScope.ALL;
 
     internal ParserConfig WithoutCustomHLSOverrides()
     {

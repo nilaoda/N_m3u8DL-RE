@@ -252,7 +252,7 @@ internal class MyOption
     /// <summary>
     /// See: <see cref="CommandInvoker.CustomHLSScope"/>.
     /// </summary>
-    public CustomHlsScope CustomHLSScope { get; set; } = CustomHlsScope.All;
+    public CustomHlsScope CustomHLSScope { get; set; } = CustomHlsScope.ALL;
     /// <summary>
     /// See: <see cref="CommandInvoker.CustomProxy"/>.
     /// </summary>
