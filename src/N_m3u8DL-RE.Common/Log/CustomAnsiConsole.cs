@@ -9,10 +9,12 @@ public partial class NonAnsiWriter : TextWriter
     public override Encoding Encoding => Console.OutputEncoding;
 
     private string? _lastOut = "";
+    private bool _atLineStart = true;
 
     public override void Write(char value)
     {
         Console.Write(value);
+        _atLineStart = value == '\n';
     }
 
     public override void Write(string? value)
@@ -33,9 +35,27 @@ public partial class NonAnsiWriter : TextWriter
         output = MyRegex2().Replace(output, "");
         if (string.IsNullOrWhiteSpace(output))
         {
+            // 只剩空白通常是被剥离的控制序列残渣，但有两类必须保留：
+            //  1) 含换行的行分隔（Spectre.Console 0.57 起换行独立写出），
+            //     丢弃会让重定向后的 stdout 全程没有换行。渲染帧上下各有留白，
+            //     连续换行只落一次，避免把成片的空白行写进按行读取的输出。
+            //  2) 行中的空格填充：Spectre 的 RightJustified() 会把单元格补齐到列宽，
+            //     填充是纯空格写入；丢弃会让重定向后各列挤在一起
+            //     （如 82.68MB236.92KBps00:00:00），按列解析速度的调用方会取错字段。
+            // 行首的空白仍然丢弃，避免输出被缩进或产生整行空白。
+            if (output.Contains('\n') && !_atLineStart)
+            {
+                Console.Write('\n');
+                _atLineStart = true;
+            }
+            else if (!_atLineStart && output.Contains(' '))
+            {
+                Console.Write(output);
+            }
             return;
         }
         Console.Write(output);
+        _atLineStart = output.EndsWith('\n');
     }
 
     [GeneratedRegex(@"\x1B\[(\d+;?)+m")]
