@@ -85,6 +85,24 @@ internal static class MergeUtil
             && ffmpegOutput.Contains("too many open files", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// 分块合并的分片数量阈值。
+    /// </summary>
+    internal const int PartialMergeThreshold = 1800;
+
+    /// <summary>
+    /// 判断合并前是否需要先做分块合并(<see cref="PartialCombineMultipleFiles"/>)。
+    /// 分块合并只为 concat 协议服务: 该模式会一次性打开全部分片(见 #338、#89), 且所有文件名都要放在命令行上。
+    /// concat demuxer 通过临时清单文件逐个读取分片, 上述两个限制都不存在;
+    /// 而分块合并会把上百个分片按字节直接拼进单个 TS 中间文件, ffmpeg 只能把它当作一条连续流读取,
+    /// 无法处理文件内部的时间戳重置, 导致时间轴错乱、时长严重偏短(见 #946)。
+    /// 因此使用 concat demuxer 时不再做分块合并。
+    /// </summary>
+    internal static bool ShouldPartialMerge(int fileCount, bool useConcatDemuxer)
+    {
+        return fileCount >= PartialMergeThreshold && !useConcatDemuxer;
+    }
+
     public static string[] PartialCombineMultipleFiles(string[] files)
     {
         var newFiles = new List<string>();
@@ -220,9 +238,22 @@ internal static class MergeUtil
         }
 
         // MAP
+        // "-map {i}" pulls in every stream an input has, including ones the mux
+        // format can't hold. Some sites' segments carry a data stream alongside
+        // the real track (e.g. HLS timed_id3 metadata), and Matroska/MP4 reject
+        // the whole mux for it ("Only audio, video, and subtitles are supported"),
+        // even with -ignore_unknown set below.
+        //
+        // Map by stream type instead, not by whole input - and ask for all three
+        // types from every input rather than switching on each file's declared
+        // MediaType. A "video" input isn't always video-only: some sites hand
+        // out one combined file per rendition (audio muxed into the same
+        // stream), and restricting that input to just ":v?" would silently
+        // drop its audio. ":v?/:a?/:s?" are no-ops on a type a given input
+        // doesn't have, so this only ever adds streams, never mismatches one.
         for (int i = 0; i < files.Length; i++)
         {
-            command.Append($" -map {i} ");
+            command.Append($" -map {i}:v? -map {i}:a? -map {i}:s? ");
         }
 
         var srt = files.Any(x => x.FilePath.EndsWith(".srt"));

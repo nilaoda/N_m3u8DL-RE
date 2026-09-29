@@ -43,8 +43,7 @@ internal static partial class OtherUtil
 
     /// <summary>
     /// 将文件名截断到指定的最大 UTF-8 字节数, 避免超出文件系统单个路径组件 255 字节的限制。
-    /// 截断时附加一段基于完整名称的稳定短哈希, 以保证截断后的名称仍然唯一且可复现
-    /// (直播录制依赖分片名称去重, 见 SimpleLiveRecordManager2.FilterMediaSegments)。
+    /// 截断时附加一段基于完整名称的稳定短哈希, 降低不同名称截断后相同的概率。
     /// </summary>
     public static string TruncateFileName(string name, int maxBytes)
     {

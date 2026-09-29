@@ -28,7 +28,7 @@ yay -Syu n-m3u8dl-re-git
 
 ```
 Description:
-  N_m3u8DL-RE (Beta version) 20251027
+  N_m3u8DL-RE 0.6.0 20260628
 
 Usage:
   N_m3u8DL-RE <input> [options]
@@ -88,6 +88,7 @@ Options:
   --custom-hls-method <METHOD>                            指定HLS加密方式 (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>                      指定HLS解密KEY. 可以是文件, HEX或Base64
   --custom-hls-iv <FILE|HEX|BASE64>                       指定HLS解密IV. 可以是文件, HEX或Base64
+  --custom-hls-scope <SCOPE>                              指定自定义HLS加密方式、KEY和IV的适用范围 (ALL|VIDEO|AUDIO) [default: ALL]
   --use-system-proxy                                      使用系统默认代理 [default: True]
   --custom-proxy <URL>                                    设置请求代理, 如 http://127.0.0.1:8888
   --custom-range <RANGE>                                  仅下载部分分片. 输入 "--morehelp custom-range" 以查看详细信息
@@ -114,6 +115,8 @@ Options:
   -?, -h, --help                                          Show help and usage information
   --version                                               Show version information
 ```
+
+`--custom-hls-scope VIDEO` 仅对主播放列表中的视频流应用 `--custom-hls-method`、`--custom-hls-key` 和 `--custom-hls-iv`；`AUDIO` 仅对音频流应用。纯音频变体可通过 `CODECS` 识别；缺少足够类型信息的主变体仍按视频处理。默认 `ALL` 保持原有行为。直接输入单条媒体播放列表时无法识别轨道类型，自定义参数会应用于该播放列表。
 
 <details>
 <summary>点击查看More Help</summary>

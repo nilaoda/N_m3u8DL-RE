@@ -1,11 +1,12 @@
 ﻿using N_m3u8DL_RE.Parser.Constants;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace N_m3u8DL_RE.Parser.Util;
 
 public static partial class ParserUtil
 {
-    [GeneratedRegex(@"\$Number%([^$]+)d\$")]
+    [GeneratedRegex(@"\$Number%([^$]+)([dxX])\$")]
     private static partial Regex VarsNumberRegex();
 
     /// <summary>
@@ -81,13 +82,16 @@ public static partial class ParserUtil
             if (text.Contains(item.Key))
                 text = text.Replace(item.Key, item.Value!.ToString());
 
-        // 处理特殊形式数字 如 $Number%05d$
+        // 处理带格式的数字 如 $Number%05d$、$Number%08x$、$Number%08X$
         var regex = VarsNumberRegex();
         if (regex.IsMatch(text) && keyValuePairs.TryGetValue(DASHTags.TemplateNumber, out var keyValuePair)) 
         {
             foreach (Match m in regex.Matches(text))
             {
-                text = text.Replace(m.Value, keyValuePair?.ToString()?.PadLeft(Convert.ToInt32(m.Groups[1].Value), '0'));
+                var value = keyValuePair?.ToString();
+                if (keyValuePair != null && m.Groups[2].Value != "d")
+                    value = Convert.ToInt64(keyValuePair).ToString(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                text = text.Replace(m.Value, value?.PadLeft(Convert.ToInt32(m.Groups[1].Value), '0'));
             }
         }
 

@@ -55,6 +55,7 @@ public static class ResString
     public static string cmd_customHLSMethod => GetText("cmd_customHLSMethod");
     public static string cmd_customHLSKey => GetText("cmd_customHLSKey");
     public static string cmd_customHLSIv => GetText("cmd_customHLSIv");
+    public static string cmd_customHLSScope => GetText("cmd_customHLSScope");
     public static string cmd_Input => GetText("cmd_Input");
     public static string cmd_forceAnsiConsole => GetText("cmd_forceAnsiConsole");
     public static string cmd_noAnsiColor => GetText("cmd_noAnsiColor");

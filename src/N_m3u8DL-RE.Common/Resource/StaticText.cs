@@ -472,6 +472,12 @@ internal static class StaticText
             zhTW: "指定HLS解密IV. 可以是文件, HEX或Base64",
             enUS: "Set the HLS decryption iv. Can be file, HEX or Base64"
         ),
+        ["cmd_customHLSScope"] = new TextContainer
+        (
+            zhCN: "指定自定义HLS加密方式、KEY和IV的适用范围 (ALL|VIDEO|AUDIO)",
+            zhTW: "指定自訂HLS加密方式、KEY和IV的適用範圍 (ALL|VIDEO|AUDIO)",
+            enUS: "Apply custom HLS method, key and IV to selected media type (ALL|VIDEO|AUDIO)"
+        ),
         ["cmd_livePipeMux"] = new TextContainer
         (
             zhCN: "录制直播并开启实时合并时通过管道+ffmpeg实时混流到TS文件",

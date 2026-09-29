@@ -11,6 +11,12 @@ namespace N_m3u8DL_RE.Parser.Extractor;
 
 internal class HLSExtractor : IExtractor
 {
+    private static readonly HashSet<string> AudioCodecIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "mp4a", "ac-3", "ec-3", "ec+3", "alac", "flac", "opus", "mp3",
+        "dtsc", "dtse", "dtsh", "dtsl", "mha1", "mha2", "mhm1", "mhm2"
+    };
+
     public ExtractorType ExtractorType => ExtractorType.HLS;
 
     private string M3u8Url = string.Empty;
@@ -207,8 +213,29 @@ internal class HLSExtractor : IExtractor
         return Task.FromResult(streams);
     }
 
-    private Task<Playlist> ParseListAsync()
+    private static bool IsAudioOnlyVariant(StreamSpec stream)
     {
+        if (stream.MediaType != null || string.IsNullOrWhiteSpace(stream.Codecs) ||
+            stream.Resolution != null || stream.FrameRate != null ||
+            stream.VideoRange != null || stream.VideoId != null || stream.AudioId != null)
+            return false;
+
+        return stream.Codecs.Split(',').All(codec => AudioCodecIds.Contains(codec.Trim().Split('.')[0]));
+    }
+
+    private Task<Playlist> ParseListAsync(StreamSpec? stream = null)
+    {
+        // 独立媒体播放列表没有轨道类型；无法识别的主变体沿用视频范围。
+        var applyCustomHLS = stream == null || (ParserConfig.CustomHLSScope switch
+        {
+            CustomHlsScope.ALL => true,
+            CustomHlsScope.VIDEO => stream.MediaType == MediaType.VIDEO ||
+                                    (stream.MediaType == null && !IsAudioOnlyVariant(stream)),
+            CustomHlsScope.AUDIO => stream.MediaType == MediaType.AUDIO || IsAudioOnlyVariant(stream),
+            _ => false
+        });
+        var keyConfig = applyCustomHLS ? ParserConfig : ParserConfig.WithoutCustomHLSOverrides();
+
         // 标记是否已清除广告分片
         bool hasAd = false;
         ;
@@ -231,12 +258,12 @@ internal class HLSExtractor : IExtractor
 
         // 当前的加密信息
         EncryptInfo currentEncryptInfo = new();
-        if (ParserConfig.CustomMethod != null)
-            currentEncryptInfo.Method = ParserConfig.CustomMethod.Value;
-        if (ParserConfig.CustomeKey is { Length: > 0 }) 
-            currentEncryptInfo.Key = ParserConfig.CustomeKey;
-        if (ParserConfig.CustomeIV is { Length: > 0 })
-            currentEncryptInfo.IV = ParserConfig.CustomeIV;
+        if (keyConfig.CustomMethod != null)
+            currentEncryptInfo.Method = keyConfig.CustomMethod.Value;
+        if (keyConfig.CustomeKey is { Length: > 0 })
+            currentEncryptInfo.Key = keyConfig.CustomeKey;
+        if (keyConfig.CustomeIV is { Length: > 0 })
+            currentEncryptInfo.IV = keyConfig.CustomeIV;
         // 上次读取到的加密行，#EXT-X-KEY:……
         string lastKeyLine = "";
 
@@ -319,7 +346,7 @@ internal class HLSExtractor : IExtractor
                 if (line != lastKeyLine)
                 {
                     // 调用处理器进行解析
-                    var parsedInfo = ParseKey(line);
+                    var parsedInfo = ParseKey(line, keyConfig);
                     currentEncryptInfo.Method = parsedInfo.Method;
                     currentEncryptInfo.Key = parsedInfo.Key;
                     currentEncryptInfo.IV = parsedInfo.IV;
@@ -449,14 +476,14 @@ internal class HLSExtractor : IExtractor
         return Task.FromResult(playlist);
     }
 
-    private EncryptInfo ParseKey(string keyLine)
+    private EncryptInfo ParseKey(string keyLine, ParserConfig keyConfig)
     {
-        foreach (var p in ParserConfig.KeyProcessors)
+        foreach (var p in keyConfig.KeyProcessors)
         {
-            if (p.CanProcess(ExtractorType, keyLine, M3u8Url, M3u8Content, ParserConfig))
+            if (p.CanProcess(ExtractorType, keyLine, M3u8Url, M3u8Content, keyConfig))
             {
                 // 匹配到对应处理器后不再继续
-                return p.Process(keyLine, M3u8Url, M3u8Content, ParserConfig);
+                return p.Process(keyLine, M3u8Url, M3u8Content, keyConfig);
             }
         }
 
@@ -645,7 +672,7 @@ internal class HLSExtractor : IExtractor
                 await LoadM3u8FromUrlAsync(lists[i].Url!);
             }
 
-            var newPlaylist = await ParseListAsync();
+            var newPlaylist = await ParseListAsync(MasterM3u8Flag ? lists[i] : null);
             UpdateStreamUrl(lists[i]);
             if (lists[i].Playlist?.MediaInit != null)
                 lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
@@ -676,7 +703,7 @@ internal class HLSExtractor : IExtractor
         for (int i = 0; i < streamSpecs.Count; i++)
         {
             await LoadM3u8FromUrlAsync(streamSpecs[i].Url!, forceRefreshFromSource: true);
-            var newPlaylist = await ParseListAsync();
+            var newPlaylist = await ParseListAsync(MasterM3u8Flag ? streamSpecs[i] : null);
             UpdateStreamUrl(streamSpecs[i]);
             if (streamSpecs[i].Playlist?.MediaInit != null)
                 streamSpecs[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init

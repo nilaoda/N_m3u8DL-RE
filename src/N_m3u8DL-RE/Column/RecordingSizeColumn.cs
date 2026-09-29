@@ -8,25 +8,21 @@ namespace N_m3u8DL_RE.Column;
 internal class RecordingSizeColumn : ProgressColumn
 {
     protected override bool NoWrap => true;
-    private ConcurrentDictionary<int, double> RecodingSizeDic = new(); // 临时的大小 每秒刷新用
-    private ConcurrentDictionary<int, double> _recodingSizeDic;
-    private ConcurrentDictionary<int, string> DateTimeStringDic = new();
+    private readonly ConcurrentDictionary<int, long> _recordingSizeDic;
+    private readonly Func<bool>? _showRealTimeMergeMultiplier;
+    private readonly Func<int, bool>? _showApproximate;
     public Style MyStyle { get; set; } = new Style(foreground: Color.DarkCyan);
-    public RecordingSizeColumn(ConcurrentDictionary<int, double> recodingSizeDic)
+    public RecordingSizeColumn(ConcurrentDictionary<int, long> recordingSizeDic, Func<bool>? showRealTimeMergeMultiplier = null, Func<int, bool>? showApproximate = null)
     {
-        _recodingSizeDic = recodingSizeDic;
+        _recordingSizeDic = recordingSizeDic;
+        _showRealTimeMergeMultiplier = showRealTimeMergeMultiplier;
+        _showApproximate = showApproximate;
     }
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
-        var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        var taskId = task.Id;
-        // 一秒汇报一次即可
-        if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now)
-        {
-            RecodingSizeDic[task.Id] = _recodingSizeDic[task.Id];
-        }
-        DateTimeStringDic[taskId] = now;
-        var flag = RecodingSizeDic.TryGetValue(taskId, out var size);
-        return new Text(GlobalUtil.FormatFileSize(flag ? size : 0), MyStyle).LeftJustified();
+        _recordingSizeDic.TryGetValue(task.Id, out var size);
+        var approximate = _showApproximate?.Invoke(task.Id) == true ? "≈" : "";
+        var multiplier = _showRealTimeMergeMultiplier?.Invoke() == true ? "(*2)" : "";
+        return new Text(approximate + GlobalUtil.FormatFileSize(size) + multiplier, MyStyle).LeftJustified();
     }
 }

@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Common.Entity;
+﻿using System.Collections.Concurrent;
+using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -11,6 +12,8 @@ namespace N_m3u8DL_RE.Parser.Processor.HLS;
 
 public class DefaultHLSKeyProcessor : KeyProcessor
 {
+    private readonly ConcurrentDictionary<(string Url, EncryptMethod Method), byte[]> KeyCache = new();
+
     public override bool CanProcess(ExtractorType extractorType, string m3u8Url, string keyLine, string m3u8Content, ParserConfig paserConfig) => extractorType == ExtractorType.HLS;
 
 
@@ -23,6 +26,9 @@ public class DefaultHLSKeyProcessor : KeyProcessor
         Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
         var encryptInfo = new EncryptInfo(method);
+
+        if (encryptInfo.Method == EncryptMethod.NONE && parserConfig.CustomMethod == null)
+            return encryptInfo;
 
         // IV
         if (!string.IsNullOrEmpty(iv))
@@ -60,12 +66,20 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             }
             else if (!string.IsNullOrEmpty(uri))
             {
-                var retryCount = parserConfig.KeyRetryCount;
                 var segUrl = PreProcessUrl(ParserUtil.CombineURL(m3u8Url, uri), parserConfig);
+                var cacheKey = (Url: segUrl, Method: parserConfig.CustomMethod ?? encryptInfo.Method);
+                if (KeyCache.TryGetValue(cacheKey, out var cachedKey))
+                {
+                    encryptInfo.Key = cachedKey;
+                    goto keyDone;
+                }
+
+                var retryCount = parserConfig.KeyRetryCount;
                 getHttpKey:
                 try
                 {
                     var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers).Result;
+                    KeyCache[cacheKey] = bytes;
                     encryptInfo.Key = bytes;
                 }
                 catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
@@ -76,6 +90,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
                     throw;
                 }
             }
+            keyDone:;
         }
         catch (Exception ex)
         {
