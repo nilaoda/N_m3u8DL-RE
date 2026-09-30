@@ -126,8 +126,18 @@ internal partial class SimpleDownloadManager
         if (segments == null || !segments.Any()) return false;
         var mediaInit = streamSpec.Playlist!.MediaParts[0].MediaInit;
         var originalCount = segments.Count() + (mediaInit != null ? 1 : 0);
+        var singleSegment = false;
+        // MPD 整文件必须先下载完整字节再交给现有探测/解密/合并流程，
+        // 字节范围已由清单明确指定的分片继续沿用原来的范围语义。
+        var singleFile = StreamExtractor.ExtractorType == ExtractorType.MPEG_DASH && segments.Count() == 1 &&
+            segments.First().StartRange == null && segments.First().StopRange == null &&
+            Uri.TryCreate(segments.First().Url, UriKind.Absolute, out var singleUri) && singleUri.Scheme is "http" or "https";
         // 单分段尝试切片并行下载
-        if (segments.Count() == 1)
+        if (singleFile)
+        {
+            singleSegment = true;
+        }
+        else if (segments.Count() == 1)
         {
             var splitSegments = await LargeSingleFileSplitUtil.SplitUrlAsync(segments.First(), DownloaderConfig.Headers);
             if (splitSegments != null)
@@ -140,7 +150,10 @@ internal partial class SimpleDownloadManager
                     Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileRealtimeDecryptWarn}[/]");
                 }
             }
-            else speedContainer.SingleSegment = true;
+            else
+            {
+                singleSegment = true;
+            }
         }
 
         var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
@@ -193,6 +206,20 @@ internal partial class SimpleDownloadManager
         // 开始下载
         LogPartOnce("start", () => Logger.InfoMarkUp(ResString.startDownloading + streamSpec.ToShortString()));
 
+        void CompleteSegment()
+        {
+            // 只有文件下载及校验成功后才能置满；init 下载期间仍按分片数量推进。
+            if (speedContainer.SingleSegment && speedContainer.ResponseLength != null)
+            {
+                task.MaxValue = Math.Max(1, speedContainer.ResponseLength.Value);
+                task.Value = task.MaxValue;
+            }
+            else
+            {
+                task.Increment(1);
+            }
+        }
+
         // 对于CENC，全部自动开启二进制合并
         if (!DownloaderConfig.MyOptions.BinaryMerge && totalCount >= 1 && streamSpec.Playlist!.MediaParts.First().MediaSegments.First().EncryptInfo.Method == Common.Enum.EncryptMethod.CENC)
         {
@@ -221,7 +248,7 @@ internal partial class SimpleDownloadManager
                 throw new Exception("Download init file failed!");
             }
             mp4InitFile = result.ActualFilePath;
-            task.Increment(1);
+            CompleteSegment();
 
             // 读取mp4信息
             if (result is { Success: true }) 
@@ -279,13 +306,15 @@ internal partial class SimpleDownloadManager
 
             var index = seg.Index;
             var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
-            var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
+            // 多 part 共用按段计数的父进度条，不能让其中一个整文件改写父任务的单位。
+            speedContainer.SingleSegment = singleSegment && !isPart;
+            var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers, singleFile);
             FileDic[seg] = result;
             if (result is not { Success: true })
             {
                 throw new Exception("Download first segment failed!");
             }
-            task.Increment(1);
+            CompleteSegment();
             if (result is { Success: true })
             {
                 // 修复MSS init
@@ -360,14 +389,15 @@ internal partial class SimpleDownloadManager
         {
             MaxDegreeOfParallelism = DownloaderConfig.MyOptions.ThreadCount
         };
+        speedContainer.SingleSegment = singleSegment && !isPart;
         await Parallel.ForEachAsync(segments, options, async (seg, _) =>
         {
             var index = seg.Index;
             var path = Path.Combine(tmpDir, index.ToString(pad) + $".{streamSpec.Extension ?? "clip"}.tmp");
-            var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers);
+            var result = await Downloader.DownloadSegmentAsync(seg, path, speedContainer, headers, singleFile);
             FileDic[seg] = result;
             if (result is { Success: true })
-                task.Increment(1);
+                CompleteSegment();
             // 实时解密
             if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && result is { Success: true } && !string.IsNullOrEmpty(currentKID)) 
             {

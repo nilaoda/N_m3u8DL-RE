@@ -29,8 +29,9 @@ internal sealed class DownloadSpeedColumn : ProgressColumn
         // 单文件下载汇报进度
         if (!flag && speedContainer is { SingleSegment: true, ResponseLength: not null })
         {
-            task.MaxValue = (double)speedContainer.ResponseLength;
-            task.Value = speedContainer.RDownloaded;
+            task.MaxValue = Math.Max(1, speedContainer.ResponseLength.Value);
+            // 字节读满后还需校验响应并提交文件；先限制在 99.99%，避免显示完成且阻止重试回退。
+            task.Value = Math.Min(speedContainer.RDownloaded, Math.Floor(task.MaxValue * 0.9999));
         }
         // 一秒汇报一次即可
         if (DateTimeStringDic.TryGetValue(taskId, out var oldTime) && oldTime != now && !flag)

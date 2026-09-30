@@ -4,6 +4,7 @@ using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Crypto;
+using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
@@ -22,10 +23,10 @@ internal class SimpleDownloader : IDownloader
         DownloaderConfig = config;
     }
 
-    public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null)
+    public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, bool singleFile = false)
     {
         var url = segment.Url;
-        var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount);
+        var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount, singleFile);
         if (dResult is { Success: true } && dResult.ActualFilePath != des)
         {
             switch (segment.EncryptInfo.Method)
@@ -77,10 +78,11 @@ internal class SimpleDownloader : IDownloader
         return dResult;
     }
 
-    private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
+    private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3, bool singleFile = false)
     {
         CancellationTokenSource? cancellationTokenSource = null;
         Task? watcher = null;
+        var binaryStarted = false;
         retry:
         try
         {
@@ -100,6 +102,41 @@ internal class SimpleDownloader : IDownloader
             {
                 speedContainer.Add(new FileInfo(dec).Length);
                 return (dec, new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec });
+            }
+
+            if (singleFile)
+            {
+                // .tmp 可能来自旧流程的失败下载；新下载器只从有身份校验的 .downloading 续传。
+                File.Delete(path);
+                var timeout = DownloaderConfig.MyOptions.HttpRequestTimeout;
+                var downloader = new BinaryDownloadManager(readTimeout: timeout > 0 ? TimeSpan.FromSeconds(timeout) : null);
+                var baseDownloaded = speedContainer.RDownloaded;
+                long credited = 0;
+                long? length = null;
+                await downloader.DownloadAsync(url, path, headers ?? [], DownloaderConfig.MyOptions.ThreadCount, retryCount,
+                    onLength: value =>
+                    {
+                        binaryStarted = true;
+                        length = value;
+                        speedContainer.ResponseLength = value == null ? null : baseDownloaded + value;
+                    },
+                    onReceived: bytes => speedContainer.AddReceived(bytes),
+                    onDownloaded: bytes =>
+                    {
+                        // Range 块失败及顺序下载重启都会回退有效字节，不把重传累计为进度。
+                        speedContainer.AddDownloaded(bytes - credited);
+                        credited = bytes;
+                    },
+                    cancellationToken: cancellationTokenSource.Token, maxSpeed: DownloaderConfig.MyOptions.MaxSpeed);
+                using var input = File.OpenRead(path);
+                var prefix = new byte[Math.Min(16 * 1024, input.Length)];
+                await input.ReadExactlyAsync(prefix);
+                return (des, new DownloadResult
+                {
+                    ActualFilePath = path, ActualContentLength = input.Length, RespContentLength = length,
+                    ImageHeader = ImageHeaderUtil.IsImageHeader(prefix),
+                    GzipHeader = prefix.Length > 2 && prefix[0] == 0x1f && prefix[1] == 0x8b,
+                });
             }
 
             // 另起线程进行监控
@@ -133,7 +170,8 @@ internal class SimpleDownloader : IDownloader
             Logger.DebugMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
             Logger.Debug(url + " " + ex);
             Logger.Extra($"Ah oh!{Environment.NewLine}RetryCount => {retryCount}{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
-            if (retryCount-- > 0)
+            // 整文件的正文重试由 BinaryDownloadManager 负责，不能在外层再次重下。
+            if (!binaryStarted && retryCount-- > 0)
             {
                 await Task.Delay(1000);
                 goto retry;

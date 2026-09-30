@@ -29,9 +29,14 @@ internal class SpeedContainer
 
     public long Add(long size)
     {
-        Interlocked.Add(ref _Rdownloaded, size);
-        return Interlocked.Add(ref _downloaded, size);
+        AddDownloaded(size);
+        return AddReceived(size);
     }
+
+    // 速度统计包含重传流量；下载进度只计入本次仍然有效的文件字节。
+    public long AddReceived(long size) => Interlocked.Add(ref _downloaded, size);
+
+    public long AddDownloaded(long size) => Interlocked.Add(ref _Rdownloaded, size);
 
     public void Reset()
     {

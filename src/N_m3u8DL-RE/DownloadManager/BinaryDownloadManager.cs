@@ -32,6 +32,21 @@ internal sealed class BinaryDownloadManager
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(_readTimeout, TimeSpan.Zero, nameof(readTimeout));
     }
 
+    // MPD 中的整文件也复用同一下载器；直接 GET 并验证 Range，避免依赖 HEAD。
+    public async Task DownloadAsync(string url, string outputPath, Dictionary<string, string> headers,
+        int threadCount, int retryCount, Action<long?> onLength, Action<int> onReceived,
+        Action<long> onDownloaded, CancellationToken cancellationToken = default, long? maxSpeed = null)
+    {
+        using var response = await SendAsync(url, headers, null, null, null, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        onLength(response.Content.Headers.ContentLength);
+        using var source = new WebSourceResult("", response.RequestMessage?.RequestUri?.AbsoluteUri ?? url,
+            response, stream);
+        await DownloadAsync(source, outputPath, headers, threadCount, retryCount,
+            cancellationToken: cancellationToken, maxSpeed: maxSpeed, onReceived: onReceived, onDownloaded: onDownloaded);
+    }
+
     public async Task DownloadAsync(WebSourceResult source, string outputPath, Dictionary<string, string> headers,
         int threadCount, int retryCount, Action<long>? onWritten = null, CancellationToken cancellationToken = default,
         long? maxSpeed = null, Action<int>? onReceived = null, Action<long>? onDownloaded = null)
@@ -58,8 +73,8 @@ internal sealed class BinaryDownloadManager
         var expectedLength = source.Response.Content.Headers.ContentLength;
         var validator = GetValidator(source.Response);
         var limiter = maxSpeed is > 0 ? new BandwidthLimiter(maxSpeed.Value) : null;
-        var shouldProbeRanges = threadCount > 1 || (validator != null && File.Exists(temporaryPath));
-        var supportsRanges = expectedLength > 0 && shouldProbeRanges &&
+        // 单线程也使用 Range 块重试，不能因并发数为 1 而在断流后重下整个文件。
+        var supportsRanges = expectedLength > 0 &&
                              await SupportsRangesAsync(source.Url, expectedLength.Value, validator, headers, cancellationToken);
         if (supportsRanges)
         {
@@ -140,10 +155,10 @@ internal sealed class BinaryDownloadManager
             }
         }
 
+        await using var output = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read,
+            bufferSize: 128 * 1024, options: FileOptions.SequentialScan | FileOptions.Asynchronous);
         try
         {
-            await using var output = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read,
-                bufferSize: 128 * 1024, options: FileOptions.SequentialScan | FileOptions.Asynchronous);
             output.SetLength(resumeOffset);
             output.Position = resumeOffset;
             onWritten?.Invoke(resumeOffset);
@@ -176,6 +191,16 @@ internal sealed class BinaryDownloadManager
             catch
             {
                 // 保留首先发生的错误。
+            }
+            try
+            {
+                // 重试耗尽时也提交已顺序写入的完整块；不足定期 flush 阈值的前缀仍可续传。
+                output.Flush(flushToDisk: true);
+                WriteMetadata(metadataPath, metadataKey, written);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // 无法提交时沿用上一次安全偏移，保留原始下载错误。
             }
             throw;
         }

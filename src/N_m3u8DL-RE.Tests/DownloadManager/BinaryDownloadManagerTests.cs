@@ -7,8 +7,58 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 
 public class BinaryDownloadManagerTests
 {
-    [Fact]
-    public async Task RangeBlocksMayFinishOutOfOrderButFileIsWrittenInOrder()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UrlDownloadKeepsHeadersAndRetriesWithoutOvercountingProgress(bool supportsRanges)
+    {
+        var data = MakeData(12_000);
+        var fullRequests = 0;
+        var failedBlock = 0;
+        var progress = new List<long>();
+        using var client = new HttpClient(new DelegateHandler(request =>
+        {
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Equal("Bearer fixture", request.Headers.Authorization?.ToString());
+            HttpResponseMessage response;
+            if (request.Headers.Range != null && supportsRanges)
+            {
+                var (from, to) = GetRange(request);
+                var shortBody = from == 1024 && Interlocked.Increment(ref failedBlock) == 1;
+                response = RangeResponse(data, from, to, shortBody ? 100 : null);
+                response.Content.Headers.ContentLength = to - from + 1;
+            }
+            else
+            {
+                var shortBody = request.Headers.Range == null && Interlocked.Increment(ref fullRequests) == 1;
+                response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(shortBody ? data[..6000] : data)
+                };
+                response.Content.Headers.ContentLength = data.Length;
+            }
+            response.Headers.ETag = new EntityTagHeaderValue("\"fixture-v1\"");
+            return Task.FromResult(response);
+        }));
+        await WithFileAsync(async path =>
+        {
+            var manager = new BinaryDownloadManager(client, blockSize: 1024);
+            await manager.DownloadAsync("https://example.test/file.mp4", path,
+                new Dictionary<string, string> { ["Authorization"] = "Bearer fixture" },
+                threadCount: 1, retryCount: 1, onLength: length => Assert.Equal(data.Length, length),
+                onReceived: _ => { }, onDownloaded: progress.Add);
+            Assert.Equal(data, await File.ReadAllBytesAsync(path));
+            Assert.Equal(supportsRanges ? 1 : 2, fullRequests);
+            Assert.All(progress, value => Assert.InRange(value, 0, data.Length));
+            Assert.Equal(data.Length, progress[^1]);
+            Assert.Contains(Enumerable.Range(1, progress.Count - 1), i => progress[i] < progress[i - 1]);
+        });
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(4)]
+    public async Task RangeBlocksMayFinishOutOfOrderButFileIsWrittenInOrder(int threads)
     {
         var data = MakeData(80_000);
         var active = 0;
@@ -35,11 +85,11 @@ public class BinaryDownloadManagerTests
         {
             using var source = await CreateSourceAsync(data);
             var manager = new BinaryDownloadManager(client, blockSize: 4096);
-            await manager.DownloadAsync(source, path, [], threadCount: 4, retryCount: 1,
+            await manager.DownloadAsync(source, path, [], threadCount: threads, retryCount: 1,
                 onReceived: bytes => Interlocked.Add(ref received, bytes),
                 onDownloaded: bytes => Interlocked.Exchange(ref downloaded, bytes));
             Assert.Equal(data, await File.ReadAllBytesAsync(path));
-            Assert.True(maxActive > 1);
+            Assert.Equal(threads > 1, maxActive > 1);
             Assert.Equal(data.Length, received);
             Assert.Equal(data.Length, downloaded);
         });
@@ -90,6 +140,7 @@ public class BinaryDownloadManagerTests
     {
         var data = MakeData(12_000);
         var requests = 0;
+        var progress = new List<long>();
         using var client = new HttpClient(new DelegateHandler(_ =>
         {
             Interlocked.Increment(ref requests);
@@ -110,9 +161,14 @@ public class BinaryDownloadManagerTests
             using var source = new WebSourceResult("<RE_BINARY_DATA>", "https://example.test/file.bin",
                 response, failingStream, data[..128]);
             var manager = new BinaryDownloadManager(client, blockSize: 1024);
-            await manager.DownloadAsync(source, path, [], threadCount: 1, retryCount: 1);
+            await manager.DownloadAsync(source, path, [], threadCount: 1, retryCount: 1,
+                onDownloaded: progress.Add);
             Assert.Equal(data, await File.ReadAllBytesAsync(path));
-            Assert.Equal(1, requests);
+            Assert.Equal(2, requests); // Range 探测被忽略后，顺序下载失败再 GET 一次。
+            Assert.Contains(384, progress);
+            Assert.Equal(0, progress[progress.IndexOf(384) + 1]);
+            Assert.All(progress, value => Assert.InRange(value, 0, data.Length));
+            Assert.Equal(data.Length, progress[^1]);
         });
     }
 
@@ -196,7 +252,8 @@ public class BinaryDownloadManagerTests
 
         await WithFileAsync(async path =>
         {
-            var manager = new BinaryDownloadManager(client, blockSize: 1024, flushThreshold: 1024);
+            // 文件远小于默认的定期 flush 阈值，失败时仍应提交已写完的连续前缀。
+            var manager = new BinaryDownloadManager(client, blockSize: 1024);
             using (var firstSource = await CreateSourceAsync(data))
             {
                 firstSource.Response!.Headers.ETag = new EntityTagHeaderValue("\"fixture-v1\"");
