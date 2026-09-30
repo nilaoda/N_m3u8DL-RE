@@ -107,14 +107,21 @@ Options:
   -da, --drop-audio <OPTIONS>                             通过正则表达式去除符合要求的音频流.
   -ds, --drop-subtitle <OPTIONS>                          通过正则表达式去除符合要求的字幕流.
   --ad-keyword <REG>                                      设置广告分片的URL关键字(正则表达式)
+  --vod-select-parts                                      点播选段交互：不传自动判断，true 强制显示，false 关闭
+  --vod-list-parts                                        按媒体配置归组列出点播段编号及总时长后退出
+  --vod-drop-parts <IDS>                                  删除整个点播段及对应音频/字幕，例如 0,2-4
   --disable-update-check                                  禁用版本更新检测 [default: False]
-  --allow-hls-multi-ext-map                               允许HLS中的多个#EXT-X-MAP(实验性) [default: False]
+  --allow-hls-multi-ext-map                               允许直播HLS中的多个#EXT-X-MAP(实验性；点播默认支持) [default: False]
   --morehelp <OPTION>                                     查看某个选项的详细帮助信息
   -?, -h, --help                                          Show help and usage information
   --version                                               Show version information
 ```
 
 `--custom-hls-scope VIDEO` 仅对主播放列表中的视频流应用 `--custom-hls-method`、`--custom-hls-key` 和 `--custom-hls-iv`；`AUDIO` 仅对音频流应用。纯音频变体可通过 `CODECS` 识别；缺少足够类型信息的主变体仍按视频处理。默认 `ALL` 保持原有行为。直接输入单条媒体播放列表时无法识别轨道类型，自定义参数会应用于该播放列表。
+
+交互下载多段点播时，会按实际媒体配置归组，用空格勾选要保留的组、回车确认；默认全部保留。相同配置的重复段只显示一次，时长存在明显间隔时再按段时长分组，不自动判定广告。HLS 会读取各类 init 的实际编码、分辨率及音频配置，界面不显示 init URL。不传 `--vod-select-parts` 时自动判断是否显示；使用 `--auto-select` 或选流过滤器时不自动弹出。`--vod-select-parts`（或 `--vod-select-parts true`）强制显示，`--vod-select-parts false` 明确关闭选段交互；相同配置且时长接近的广告仍需用 URL 规则或编号排除。
+
+脚本可用 `--vod-list-parts` 查看归组后的原始编号，再用 `--vod-drop-parts 0,2-4` 删除指定段。DASH 编号为原 Period 顺序（从 0 开始），HLS 为原不连续序号（起点可能不同）；同一不连续段的 MAP 一并处理，音视频和字幕同步删除。没有独立不连续标记的 HLS MAP 可用 `--ad-keyword` 匹配 init/媒体 URL。`--custom-range` 仍使用源分片编号，选择后不重排。
 
 <details>
 <summary>点击查看More Help</summary>

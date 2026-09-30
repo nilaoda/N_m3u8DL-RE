@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Entity;
+﻿using System.Globalization;
+using N_m3u8DL_RE.Entity;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
@@ -24,7 +25,7 @@ internal static partial class MediainfoUtil
     private static partial Regex FpsRegex();
     [GeneratedRegex(@"DOVI configuration record.*profile: (\d).*compatibility id: (\d)")]
     private static partial Regex DoViRegex();
-    [GeneratedRegex(@"Duration.*?start: (\d+\.?\d{0,3})")]
+    [GeneratedRegex(@"Duration.*?start: (-?\d+(?:\.\d+)?)")]
     private static partial Regex StartRegex();
 
     public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
@@ -33,8 +34,9 @@ internal static partial class MediainfoUtil
 
         if (string.IsNullOrEmpty(file) || !File.Exists(file)) return result;
 
-        string cmd = "-hide_banner -i \"" + file + "\"";
-        var p = Process.Start(new ProcessStartInfo()
+        // 探测进程不能抢占终端输入或切换终端模式，空格/回车留给程序的选择界面。
+        string cmd = "-nostdin -hide_banner -i \"" + file + "\"";
+        using var p = Process.Start(new ProcessStartInfo()
         {
             FileName = binary,
             Arguments = cmd,
@@ -72,7 +74,7 @@ internal static partial class MediainfoUtil
             if (StartRegex().IsMatch(output))
             {
                 var f = StartRegex().Match(output).Groups[1].Value;
-                if (double.TryParse(f, out var d))
+                if (double.TryParse(f, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
                     info.StartTime = TimeSpan.FromSeconds(d);
             }
 

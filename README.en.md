@@ -121,8 +121,11 @@ Options:
   -da, --drop-audio <OPTIONS>                             Drop audio streams by regular expressions.
   -ds, --drop-subtitle <OPTIONS>                          Drop subtitle streams by regular expressions.
   --ad-keyword <REG>                                      Set URL keywords (regular expressions) for AD segments
+  --vod-select-parts                                      VOD section selection: omitted = automatic, true = always prompt, false = disable
+  --vod-list-parts                                        List grouped VOD section IDs and total durations, then exit
+  --vod-drop-parts <IDS>                                  Drop VOD sections and matching audio/subtitles, e.g. 0,2-4
   --disable-update-check                                  Disable version update check [default: False]
-  --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in HLS (experimental) [default:
+  --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in live HLS (experimental; enabled for VOD) [default:
                                                           False]
   --morehelp <OPTION>                                     Set more help info about one option
   --version                                               Show version information
@@ -130,6 +133,10 @@ Options:
 ```
 
 `--custom-hls-scope VIDEO` applies `--custom-hls-method`, `--custom-hls-key`, and `--custom-hls-iv` only to video renditions in a master playlist; `AUDIO` selects audio renditions. Audio-only variants can be identified through `CODECS`; variants without enough type information still use the video scope. The default `ALL` preserves the existing behavior. A standalone media playlist has no rendition type, so the custom settings apply to that playlist.
+
+Interactive VOD downloads group repeated sections by actual media configuration. Use Space to toggle groups and Enter to confirm; all groups are kept by default. A clear gap in section durations further separates groups without classifying ads automatically. HLS inspects each distinct init for codecs, resolution and audio configuration; init URLs are omitted from the UI. Omitting `--vod-select-parts` keeps automatic detection; `--auto-select` and stream filters do not trigger this prompt automatically. Use `--vod-select-parts` (or `--vod-select-parts true`) to force the prompt, or `--vod-select-parts false` to disable section selection. Ads with the same configuration and similar durations still require URL rules or explicit section IDs.
+
+For scripts, `--vod-list-parts` lists grouped original section IDs and `--vod-drop-parts 0,2-4` removes specified sections across video, audio and subtitles. DASH IDs are original Period positions starting at 0; HLS uses original discontinuity sequence numbers. All MAPs within a discontinuity section stay together. For MAP changes without discontinuities, use `--ad-keyword` to match init/media URLs. `--custom-range` retains source segment indices after selection.
 
 <details>
 <summary>Click to view "More Help" section</summary>

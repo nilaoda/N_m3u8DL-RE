@@ -2,6 +2,7 @@ using N_m3u8DL_RE.Common.Log;
 
 namespace N_m3u8DL_RE.Tests.Common.Log;
 
+[Collection("Download console")]
 public class NonAnsiWriterTests
 {
     private static string Capture(params string[] values)

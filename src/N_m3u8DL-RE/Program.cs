@@ -245,13 +245,35 @@ internal class Program
         // 写出文件
         await WriteRawFilesAsync(option, extractor, tmpDir);
 
+        // 在 drop 筛选前记录多 Period 身份；只留下一个 Period 时仍需按 PTO 裁剪。
+        var multiPeriodVod = extractor.ExtractorType == ExtractorType.MPEG_DASH &&
+            lists.Where(s => s.Playlist?.IsLive == false).SelectMany(s => s.Playlist!.MediaParts)
+                .Select(p => p.PeriodIndex).Distinct().Count() > 1;
         Logger.Info(ResString.streamsInfo, lists.Count, basicStreams.Count, audios.Count, subs.Count);
-
-        foreach (var item in lists)
+        foreach (var item in multiPeriodVod ? VodPartSelector.QualityChoices(lists) : lists)
         {
             Logger.InfoMarkUp(item.ToString());
         }
 
+        // 保存源分片列表，配置预览可以排除广告，但范围下载不能使用过滤后的编号/时间。
+        var dashSourceStreams = extractor.ExtractorType == ExtractorType.MPEG_DASH && lists.All(s => s.Playlist?.IsLive == false)
+            ? VodPartSelector.SnapshotStreams(lists) : null;
+        if (extractor.ExtractorType == ExtractorType.MPEG_DASH && lists.All(s => s.Playlist?.IsLive == false))
+        {
+            if (option.VodListParts)
+            {
+                await VodPartSelector.ListAsync(lists, option);
+                return;
+            }
+            // 必须先删除广告 Period，再匹配兼容编码；否则广告的 HEVC/AAC 配置会阻止正文规划。
+            VodPartSelector.Apply(lists, option.VodDropParts);
+            if (option.AdKeywords is { Length: > 0 })
+                FilterUtil.CleanAd(lists, option.AdKeywords);
+            lists.RemoveAll(s => s.SegmentsCount == 0);
+            basicStreams = lists.Where(s => s.MediaType is null or MediaType.VIDEO).ToList();
+            audios = lists.Where(s => s.MediaType == MediaType.AUDIO).ToList();
+            subs = lists.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
+        }
         var selectedStreams = new List<StreamSpec>();
         if (option.DropVideoFilter != null || option.DropAudioFilter != null || option.DropSubtitleFilter != null)
         {
@@ -259,6 +281,17 @@ internal class Program
             audios = FilterUtil.DoFilterDrop(audios, option.DropAudioFilter);
             subs = FilterUtil.DoFilterDrop(subs, option.DropSubtitleFilter);
             lists = basicStreams.Concat(audios).Concat(subs).ToList();
+        }
+
+        if (extractor.ExtractorType == ExtractorType.MPEG_DASH && lists.All(s => s.Playlist?.IsLive == false) &&
+            VodPartSelector.ShouldPrompt(option))
+        {
+            // 先选保留的配置，再选画质/匹配 Period，允许用户直接排除不兼容广告。
+            await VodPartSelector.SelectAsync(lists, option);
+            lists.RemoveAll(s => s.SegmentsCount == 0);
+            basicStreams = lists.Where(s => s.MediaType is null or MediaType.VIDEO).ToList();
+            audios = lists.Where(s => s.MediaType == MediaType.AUDIO).ToList();
+            subs = lists.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
         }
 
         if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
@@ -293,11 +326,18 @@ internal class Program
         else
         {
             // 展示交互式选择框
-            selectedStreams = FilterUtil.SelectStreams(lists);
+            // 点播各 Period 中重复的画质只展示一次，种子优先采用时长最长的正文轨道。
+            selectedStreams = FilterUtil.SelectStreams(multiPeriodVod ? VodPartSelector.QualityChoices(lists, dashSourceStreams) : lists);
         }
 
         if (selectedStreams.Count == 0)
             throw new Exception(ResString.noStreamsToDownload);
+
+        if (extractor.ExtractorType == ExtractorType.MPEG_DASH && selectedStreams.All(s => s.Playlist?.IsLive == false))
+            selectedStreams = VodStreamPlanner.Build(lists, selectedStreams,
+                option.AutoSelect ? null : option.VideoFilter,
+                option.AutoSelect ? null : option.AudioFilter,
+                option.AutoSelect ? null : option.SubtitleFilter, dashSourceStreams);
 
         // HLS: 选中流中若有没加载出playlist的，加载playlist
         // DASH/MSS: 加载playlist (调用url预处理器)
@@ -306,10 +346,23 @@ internal class Program
 
         // 直播检测
         var livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
+        if (option.VodSelectParts == true && selectedStreams.Any(s => s.Playlist?.IsLive == true))
+            throw new NotSupportedException(ResString.vodPartsRequireVod);
         if (livingFlag)
         {
             Logger.WarnMarkUp($"[white on darkorange3_1]{ResString.liveFound}[/]");
+            if (option.VodDropParts != null || option.VodSelectParts == true)
+                throw new NotSupportedException(ResString.vodPartsRequireVod);
         }
+        if (option.VodListParts)
+        {
+            await VodPartSelector.ListAsync(selectedStreams, option, inspectInit: extractor.ExtractorType == ExtractorType.HLS);
+            return;
+        }
+        if (!livingFlag && extractor.ExtractorType == ExtractorType.HLS)
+            VodStreamPlanner.CaptureHlsTimeline(selectedStreams);
+        if (extractor.ExtractorType != ExtractorType.MPEG_DASH)
+            VodPartSelector.Apply(selectedStreams, option.VodDropParts);
 
         // 无法识别的加密方式，自动开启二进制合并
         if (selectedStreams.Any(s => s.Playlist!.MediaParts.Any(p => p.MediaSegments.Any(m => m.EncryptInfo.Method == EncryptMethod.UNKNOWN))))
@@ -318,12 +371,32 @@ internal class Program
             option.BinaryMerge = true;
         }
 
-        // 应用用户自定义的分片范围
+        // 按完整段时长选择，不能先截取几秒正文再把它归入短段；预览会忽略 URL 广告。
+        if (extractor.ExtractorType != ExtractorType.MPEG_DASH && !livingFlag &&
+            selectedStreams.All(s => s.Playlist?.IsLive == false) && VodPartSelector.ShouldPrompt(option))
+            await VodPartSelector.SelectAsync(selectedStreams, option, inspectInit: extractor.ExtractorType == ExtractorType.HLS);
+
+        // 保持原有顺序：先应用范围，再按 URL 去广告，时间范围仍以过滤广告前的轨道为准。
         if (!livingFlag)
             FilterUtil.ApplyCustomRange(selectedStreams, option.CustomRange);
-
-        // 应用用户自定义的广告分片关键字
         FilterUtil.CleanAd(selectedStreams, option.AdKeywords);
+        // 直播可能暂时没有媒体，保留轨道等待刷新。
+        if (!livingFlag)
+            selectedStreams.RemoveAll(stream => stream.SegmentsCount == 0);
+        if (selectedStreams.Count == 0)
+            throw new Exception(ResString.noStreamsToDownload);
+
+        if (!livingFlag && extractor.ExtractorType == ExtractorType.MPEG_DASH &&
+            (multiPeriodVod || selectedStreams.Any(s => s.Playlist!.MediaParts.Count > 1)))
+            VodStreamPlanner.AlignPeriods(selectedStreams);
+        if (!livingFlag && extractor.ExtractorType == ExtractorType.HLS &&
+            selectedStreams.Any(s => s.Playlist!.MediaParts.Count > 1 || s.MediaType == MediaType.SUBTITLES))
+            VodStreamPlanner.AlignHlsDiscontinuities(selectedStreams);
+
+        if (!livingFlag)
+            selectedStreams.RemoveAll(s => s.SegmentsCount == 0);
+        if (selectedStreams.Count == 0)
+            throw new Exception(ResString.noStreamsToDownload);
 
         // 记录文件
         if (option.WriteMetaJson)

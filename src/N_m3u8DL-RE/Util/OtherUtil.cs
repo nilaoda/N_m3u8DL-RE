@@ -142,22 +142,29 @@ internal static partial class OtherUtil
         return hours * 3600 + minutes * 60 + seconds;
     }
 
-    // 若该文件夹为空，删除，同时判断其父文件夹，直到遇到根目录或不为空的目录
-    public static void SafeDeleteDir(string dirPath)
+    // 默认只删除空目录并向父目录递归，直到遇到根目录或非空目录。
+    // cleanMetadata 用于任务结束清理：移除本目录树内的 Finder 元数据和空子目录，
+    // 此模式不向父目录递归；两种模式都不跟随目录符号链接，保留 PNG 等实际文件。
+    public static void SafeDeleteDir(string dirPath, bool cleanMetadata = false)
     {
-        if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath))
+        if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath) ||
+            (File.GetAttributes(dirPath) & FileAttributes.ReparsePoint) != 0)
             return;
 
-        var parent = Path.GetDirectoryName(dirPath)!;
-        if (!Directory.EnumerateFileSystemEntries(dirPath).Any())
+        if (cleanMetadata)
         {
-            Directory.Delete(dirPath);
+            foreach (var child in Directory.EnumerateDirectories(dirPath))
+                SafeDeleteDir(child, cleanMetadata: true);
+            var metadata = Path.Combine(dirPath, ".DS_Store");
+            if (File.Exists(metadata))
+                File.Delete(metadata);
         }
-        else
-        {
+
+        if (Directory.EnumerateFileSystemEntries(dirPath).Any())
             return;
-        }
-        SafeDeleteDir(parent);
+        Directory.Delete(dirPath);
+        if (!cleanMetadata)
+            SafeDeleteDir(Path.GetDirectoryName(dirPath)!);
     }
 
     /// <summary>

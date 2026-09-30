@@ -147,6 +147,40 @@ public static class ResString
     public static string newVersionFound => GetText("newVersionFound");
     public static string processImageSub => GetText("processImageSub");
 
+    public static string vodPartsConcat => GetText("vodPartsConcat");
+    public static string vodPeriodsPlanned => GetText("vodPeriodsPlanned");
+    public static string vodPeriodNoMatch => GetText("vodPeriodNoMatch");
+    public static string vodPeriodIncompatible => GetText("vodPeriodIncompatible");
+    public static string vodPartsIncompatible => GetText("vodPartsIncompatible");
+    public static string vodPartStillEncrypted => GetText("vodPartStillEncrypted");
+    public static string webmInvalid => GetText("webmInvalid");
+    public static string vodMediaOutsidePeriod => GetText("vodMediaOutsidePeriod");
+    public static string vodDropPartsInvalid => GetText("vodDropPartsInvalid");
+    public static string vodDropPartsRangeInvalid => GetText("vodDropPartsRangeInvalid");
+    public static string vodPartIdsUnknown => GetText("vodPartIdsUnknown");
+    public static string vodSelectAtLeastOne => GetText("vodSelectAtLeastOne");
+    public static string vodPartsRequireVod => GetText("vodPartsRequireVod");
+    public static string vodPartsRequireInteractive => GetText("vodPartsRequireInteractive");
+    public static string hlsMediaOriginReadFailed => GetText("hlsMediaOriginReadFailed");
+    public static string hlsSubtitleOriginMissing => GetText("hlsSubtitleOriginMissing");
+    public static string hlsTimestampMapInvalid => GetText("hlsTimestampMapInvalid");
+    public static string hlsByteRangeMissingPrevious => GetText("hlsByteRangeMissingPrevious");
+    public static string mediaPartInputMismatch => GetText("mediaPartInputMismatch");
+    public static string concatInputPathInvalid => GetText("concatInputPathInvalid");
+    public static string tfdtVersionUnsupported => GetText("tfdtVersionUnsupported");
+    public static string vodPartIdsLabel => GetText("vodPartIdsLabel");
+    public static string downloadCancelled => GetText("downloadCancelled");
+    public static string cmd_vodSelectParts => GetText("cmd_vodSelectParts");
+    public static string vodReadingConfigs => GetText("vodReadingConfigs");
+    public static string vodPromptTitle => GetText("vodPromptTitle");
+    public static string vodPromptInfo => GetText("vodPromptInfo");
+    public static string vodSectionDuration => GetText("vodSectionDuration");
+    public static string vodPartCount => GetText("vodPartCount");
+    public static string vodAvailableConfigs => GetText("vodAvailableConfigs");
+    public static string vodConfigUnknown => GetText("vodConfigUnknown");
+    public static string cmd_vodListParts => GetText("cmd_vodListParts");
+    public static string cmd_vodDropParts => GetText("cmd_vodDropParts");
+
     private static string GetText(string key)
     {
         if (!StaticText.LANG_DIC.TryGetValue(key, out var textObj))

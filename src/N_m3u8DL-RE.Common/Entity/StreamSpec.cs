@@ -55,6 +55,14 @@ public class StreamSpec
 
     public Playlist? Playlist { get; set; }
 
+    // 分段下载保留流的选择信息，独立设置 playlist 和输出属性。
+    public StreamSpec WithPlaylist(Playlist playlist)
+    {
+        var copy = (StreamSpec)MemberwiseClone();
+        copy.Playlist = playlist;
+        return copy;
+    }
+
     public int SegmentsCount
     {
         get

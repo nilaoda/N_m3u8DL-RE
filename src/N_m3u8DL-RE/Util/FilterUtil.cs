@@ -147,7 +147,9 @@ public static class FilterUtil
             // 默认音轨
             if (first.AudioId != null)
             {
-                prompt.Select(audios.First(a => a.GroupId == first.AudioId));
+                var audio = DefaultTrack(audios, first.AudioId);
+                if (audio != null)
+                    prompt.Select(audio);
             }
         }
         if (subs.Count != 0)
@@ -156,7 +158,9 @@ public static class FilterUtil
             // 默认字幕轨
             if (first.SubtitleId != null)
             {
-                prompt.Select(subs.First(s => s.GroupId == first.SubtitleId));
+                var subtitle = DefaultTrack(subs, first.SubtitleId);
+                if (subtitle != null)
+                    prompt.Select(subtitle);
             }
         }
 
@@ -243,35 +247,45 @@ public static class FilterUtil
 
         foreach (var stream in selectedSteams)
         {
-            var skippedDur = 0d;
             if (stream.Playlist == null) continue;
+            // 先冻结原始时间轴；边过滤边求和会让删除前一个 part 后的后续起点归零。
+            var starts = new Dictionary<MediaSegment, double>(ReferenceEqualityComparer.Instance);
+            double elapsed = 0;
+            foreach (var segment in stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments))
+            {
+                starts[segment] = segment.SourceTime ?? elapsed;
+                elapsed += segment.Duration;
+            }
             foreach (var part in stream.Playlist.MediaParts)
             {
                 List<MediaSegment> newSegments;
                 if (filterByIndex)
                     newSegments = part.MediaSegments.Where(seg => seg.Index >= customRange.StartSegIndex && seg.Index <= customRange.EndSegIndex).ToList();
                 else
-                    newSegments = part.MediaSegments.Where(seg => stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) >= customRange.StartSec
-                                                                  && stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).Where(x => x.Index < seg.Index).Sum(x => x.Duration) <= customRange.EndSec).ToList();
+                    newSegments = part.MediaSegments.Where(seg => starts[seg] >= customRange.StartSec
+                                                                  && starts[seg] <= customRange.EndSec).ToList();
 
-                if (newSegments.Count > 0)
-                    skippedDur += part.MediaSegments.Where(seg => seg.Index < newSegments.First().Index).Sum(x => x.Duration);
                 part.MediaSegments = newSegments;
             }
-            stream.SkippedDuration = skippedDur;
+            var first = stream.Playlist.MediaParts.SelectMany(p => p.MediaSegments).FirstOrDefault();
+            stream.SkippedDuration = first == null ? 0 : starts[first];
+            stream.Playlist.RemoveEmptyParts();
         }
     }
+
+    // 去重/删段后默认 ID 可能不再存在，回退到可用选项，不能使交互界面崩溃。
+    internal static StreamSpec? DefaultTrack(List<StreamSpec> tracks, string id) =>
+        tracks.FirstOrDefault(s => s.GroupId == id) ?? tracks.FirstOrDefault();
 
     /// <summary>
     /// 根据用户输入，清除广告分片
     /// </summary>
     /// <param name="selectedSteams"></param>
     /// <param name="keywords"></param>
-    public static void CleanAd(List<StreamSpec> selectedSteams, string[]? keywords)
+    public static void CleanAd(List<StreamSpec> selectedSteams, string[]? keywords, bool log = true)
     {
-        if (keywords == null) return;
         var regList = ParseAdKeywords(keywords);
-        foreach (var reg in regList)
+        foreach (var reg in log ? regList : [])
         {
             Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
         }
@@ -280,31 +294,61 @@ public static class FilterUtil
         {
             if (stream.Playlist == null) continue;
 
+            // 未启用广告过滤的直播可能只有 init，保留它等待首个媒体分片。
+            if (stream.Playlist.IsLive && regList.Count == 0)
+                continue;
+
             var countBefore = stream.SegmentsCount;
+            var keptParts = new List<MediaPart>();
 
             foreach (var part in stream.Playlist.MediaParts)
             {
+                // init 命中广告时，依赖它的媒体也必须整体移除，不能借用正文 init。
+                var init = part.MediaInit;
+                if (init != null && IsAd(init.Url, regList))
+                {
+                    part.MediaSegments = [];
+                    part.MediaInit = null;
+                    continue;
+                }
                 // 没有找到广告分片
                 if (part.MediaSegments.All(x => !IsAd(x.Url, regList)))
                 {
+                    keptParts.Add(part);
                     continue;
                 }
                 // 找到广告分片 清理
-                part.MediaSegments = CleanAdSegments(part.MediaSegments, regList);
+                if (stream.Playlist.IsLive)
+                {
+                    part.MediaSegments = CleanAdSegments(part.MediaSegments, regList);
+                    keptParts.Add(part);
+                    continue;
+                }
+                // 点播中删除段内广告会留下 tfdt 空洞，按原始相邻关系拆段。
+                // 每段继续使用原 init，但独立 remux/concat 后才能移除空洞而不丢正文。
+                var run = new List<MediaSegment>();
+                foreach (var segment in part.MediaSegments)
+                {
+                    if (!IsAd(segment.Url, regList))
+                        run.Add(segment);
+                    else if (run.Count > 0)
+                    {
+                        keptParts.Add(part.WithSegments(run));
+                        run = [];
+                    }
+                }
+                if (run.Count > 0)
+                    keptParts.Add(part.WithSegments(run));
             }
+            stream.Playlist.MediaParts = keptParts;
 
-            // 清理已经为空的 part
-            stream.Playlist.MediaParts = stream.Playlist.MediaParts.Where(x => x.MediaSegments.Count > 0).ToList();
-
-            // 如果 #EXT-X-MAP 初始化分片本身命中广告关键字，也一并清除
-            if (stream.Playlist.MediaInit != null && IsAd(stream.Playlist.MediaInit.Url, regList))
-            {
-                stream.Playlist.MediaInit = null;
-            }
+            // 如果 #EXT-X-MAP 初始化分片本身命中广告关键字，也一并清除。
+            // 同时移除所有没有媒体依赖的 init，即使其 URL 未命中广告。
+            stream.Playlist.RemoveEmptyParts();
 
             var countAfter = stream.SegmentsCount;
 
-            if (countBefore != countAfter)
+            if (log && countBefore != countAfter)
             {
                 Logger.WarnMarkUp("[grey]{} segments => {} segments[/]", countBefore, countAfter);
             }

@@ -8,6 +8,9 @@ namespace N_m3u8DL_RE.CommandLine;
 
 internal class MyOption
 {
+    // 分段下载会自动调整合并/解密选项，使用副本避免污染其它段和并发轨道。
+    internal MyOption Clone() => (MyOption)MemberwiseClone();
+
     /// <summary>
     /// See: <see cref="CommandInvoker.Input"/>.
     /// </summary>
@@ -20,6 +23,10 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.AdKeywords"/>.
     /// </summary>
     public string[]? AdKeywords { get; set; }
+    // null 自动判断；true 强制显示；false 关闭点播选段交互。
+    public bool? VodSelectParts { get; set; }
+    public bool VodListParts { get; set; }
+    public string? VodDropParts { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.MaxSpeed"/>.
     /// </summary>

@@ -27,7 +27,7 @@ public class HLSLiveEndTests
             await extractor.FetchPlayListAsync(streams);
 
             var stream = Assert.Single(streams);
-            var originalInit = stream.Playlist!.MediaInit;
+            var originalInit = stream.Playlist!.MediaParts[0].MediaInit;
             Assert.True(stream.Playlist.IsLive);
             Assert.Equal(hasMediaInit, originalInit != null);
 
@@ -38,7 +38,7 @@ public class HLSLiveEndTests
             Assert.Equal(2, stream.Playlist.MediaParts.Sum(part => part.MediaSegments.Count));
             if (hasMediaInit)
             {
-                Assert.Same(originalInit, stream.Playlist.MediaInit);
+                Assert.Same(originalInit, stream.Playlist.MediaParts[0].MediaInit);
             }
         }
         finally
