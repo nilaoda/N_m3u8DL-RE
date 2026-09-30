@@ -1,11 +1,7 @@
 using N_m3u8DL_RE.Common.Enum;
-using System.Globalization;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
-using System.Text.Json;
-using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Common.Entity;
-using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.Entity;
@@ -13,10 +9,12 @@ using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
 
-public partial class VodMultiInitTests
+[Collection("Download console")]
+public class VodLegacyInitTests
 {
     [Theory]
     [InlineData("hls-ts", "all", false)]
@@ -109,7 +107,7 @@ public partial class VodMultiInitTests
                 else
                     VodStreamPlanner.AlignHlsDiscontinuities(streams);
             }
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.BinaryMerge = mode == "binary";
             options.SkipMerge = mode == "skip";
             var manager = new SimpleDownloadManager(new DownloaderConfig
@@ -188,7 +186,7 @@ public partial class VodMultiInitTests
             var streams = await extractor.ExtractStreamsAsync();
             FilterUtil.CleanAd(streams, null);
             Assert.Single(streams[0].Playlist!.MediaParts);
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.DecryptionEngine = engine;
             options.DecryptionBinaryPath = engine switch { DecryptEngine.FFMPEG => "ffmpeg", DecryptEngine.SHAKA_PACKAGER => packager, _ => "mp4decrypt" };
             options.Keys = [$"{kid}:{key}"]; options.MP4RealTimeDecryption = realtime;
@@ -237,7 +235,7 @@ public partial class VodMultiInitTests
                 FilterUtil.ApplyCustomRange(streams, new CustomRange { StartSegIndex = 1, EndSegIndex = 2, InputStr = "1-2" });
             FilterUtil.CleanAd(streams, null);
             VodStreamPlanner.AlignHlsDiscontinuities(streams);
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.SubtitleFormat = SubtitleFormat.VTT;
             var manager = new SimpleDownloadManager(new DownloaderConfig
                 { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options }, streams, extractor);
@@ -252,25 +250,5 @@ public partial class VodMultiInitTests
             }
         }
         finally { Directory.Delete(root, true); }
-    }
-
-    private static MyOption LegacyOptions(string root) => new()
-    {
-        SaveDir = Path.Combine(root, "out"), SaveName = "result", FFmpegBinaryPath = "ffmpeg",
-        ThreadCount = 2, CheckSegmentsCount = true, DelAfterDone = true, NoAnsiColor = true,
-        LogLevel = LogLevel.OFF, AutoSubtitleFix = true,
-    };
-
-    private static async Task AssertVideo(string output, double duration, int frames)
-    {
-        // 验证真实媒体，不能仅以下载/合并退出码判断是否回归。
-        using var probe = JsonDocument.Parse(await Run("ffprobe", "-v", "error", "-count_frames",
-            "-show_entries", "format=duration:stream=codec_type,nb_read_frames", "-of", "json", output));
-        Assert.InRange(double.Parse(probe.RootElement.GetProperty("format").GetProperty("duration").GetString()!,
-            CultureInfo.InvariantCulture), duration - 0.05, duration + 0.05);
-        var video = Assert.Single(probe.RootElement.GetProperty("streams").EnumerateArray(),
-            s => s.GetProperty("codec_type").GetString() == "video");
-        Assert.Equal(frames.ToString(), video.GetProperty("nb_read_frames").GetString());
-        await Run("ffmpeg", "-v", "error", "-xerror", "-i", output, "-f", "null", "-");
     }
 }

@@ -2,7 +2,6 @@ using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using System.Globalization;
 using System.Text;
-using System.Diagnostics;
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -14,11 +13,12 @@ using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.Enum;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
 
 [Collection("Download console")]
-public partial class VodMultiInitTests
+public class VodMultiInitTests
 {
     [Theory]
     [InlineData(false, false)]
@@ -373,17 +373,6 @@ public partial class VodMultiInitTests
         finally { Directory.Delete(root, true); }
     }
 
-    private static bool OnPath(string binary)
-    {
-        if (File.Exists(binary))
-            return true;
-        // Windows 的工具通常带 .exe，不能只检查不带扩展名的文件。
-        string[] extensions = OperatingSystem.IsWindows()
-            ? ["", ".exe"] : [""];
-        return (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator)
-            .Any(dir => extensions.Any(extension => File.Exists(Path.Combine(dir, binary + extension))));
-    }
-
     [Fact]
     public async Task DashSubtitlesPreserveSilentTailsAndUseEachPeriodsPto()
     {
@@ -428,32 +417,4 @@ public partial class VodMultiInitTests
         }
         finally { Directory.Delete(root, true); }
     }
-
-    private static bool HasTool(string name)
-    {
-        try
-        {
-            using var p = Process.Start(new ProcessStartInfo(name, "-version")
-            { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false })!;
-            p.WaitForExit();
-            return p.ExitCode == 0;
-        }
-        catch { return false; }
-    }
-
-    private static async Task<string> Run(string binary, params string[] args)
-    {
-        var info = new ProcessStartInfo(binary) { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
-        foreach (var arg in args) info.ArgumentList.Add(arg);
-        using var process = Process.Start(info)!;
-        var stdout = process.StandardOutput.ReadToEndAsync();
-        var stderr = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        Assert.True(process.ExitCode == 0, await stderr);
-        return await stdout;
-    }
 }
-
-// 下载进度及日志共享全局 Console，集成测试不能与替换 Console.Out 的测试并行。
-[CollectionDefinition("Download console", DisableParallelization = true)]
-public class DownloadConsoleCollection;

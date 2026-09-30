@@ -11,10 +11,12 @@ using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
 
-public partial class VodMultiInitTests
+[Collection("Download console")]
+public class VodReviewRegressionTests
 {
     [Theory]
     [InlineData(false)]

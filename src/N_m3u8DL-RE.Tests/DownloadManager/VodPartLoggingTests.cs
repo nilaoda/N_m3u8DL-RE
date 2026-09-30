@@ -10,10 +10,13 @@ using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
 using System.Buffers.Binary;
 using System.Globalization;
+using N_m3u8DL_RE.Tests.TestSupport;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
 
-public partial class VodMultiInitTests
+[Collection("Download console")]
+public class VodPartLoggingTests
 {
     [Theory]
     [InlineData(false, false)]
@@ -61,7 +64,7 @@ public partial class VodMultiInitTests
                 source.m3u8
                 """);
             var subtitleRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            await using var server = new LiveFixtureServer(root,
+            await using var server = new MediaFixtureServer(root,
                 (path, _) => failedMedia && path.EndsWith(".m4s") ? "invalid media" : null,
                 async path =>
                 {
@@ -77,7 +80,7 @@ public partial class VodMultiInitTests
             await extractor.FetchPlayListAsync(streams);
             VodStreamPlanner.CaptureHlsTimeline(streams);
             VodStreamPlanner.AlignHlsDiscontinuities(streams);
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.ConcurrentDownload = true;
             options.SubtitleFormat = SubtitleFormat.VTT;
             options.DelAfterDone = deleteAfterDone;
@@ -162,13 +165,13 @@ public partial class VodMultiInitTests
                 manifest += $"#EXT-X-MAP:URI=\"{init}\"\n#EXTINF:2,\n{media}\n";
             }
             await File.WriteAllTextAsync(Path.Combine(root, "vod.m3u8"), manifest + "#EXT-X-ENDLIST\n");
-            await using var server = new LiveFixtureServer(root, (_, _) => null);
+            await using var server = new MediaFixtureServer(root, (_, _) => null);
             using var extractor = new StreamExtractor(new ParserConfig());
             await extractor.LoadSourceFromUrlAsync(server.Url + "vod.m3u8");
             var streams = await extractor.ExtractStreamsAsync();
             VodStreamPlanner.CaptureHlsTimeline(streams);
             VodStreamPlanner.AlignHlsDiscontinuities(streams);
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.DelAfterDone = deleteAfterDone;
             var log = Path.Combine(root, "run.log");
             await File.WriteAllTextAsync(log, "");

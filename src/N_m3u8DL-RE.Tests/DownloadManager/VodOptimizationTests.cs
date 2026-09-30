@@ -11,10 +11,13 @@ using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
+using N_m3u8DL_RE.Tests.TestSupport;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
 
-public partial class VodMultiInitTests
+[Collection("Download console")]
+public class VodOptimizationTests
 {
     [Theory]
     [InlineData(1)]
@@ -37,7 +40,7 @@ public partial class VodMultiInitTests
             var gate = new object();
             var active = 0;
             var peak = 0;
-            await using var server = new LiveFixtureServer(root, (_, _) => null, async _ =>
+            await using var server = new MediaFixtureServer(root, (_, _) => null, async _ =>
             {
                 lock (gate) { active++; peak = Math.Max(peak, active); }
                 try { await Task.Delay(100); }
@@ -74,7 +77,7 @@ public partial class VodMultiInitTests
         try
         {
             await GenerateCutMedia(root);
-            await using var server = new LiveFixtureServer(root, (_, _) => null);
+            await using var server = new MediaFixtureServer(root, (_, _) => null);
             var stream = new StreamSpec { Codecs = "avc1.64001e", Resolution = "999x999", Playlist = new Playlist {
                 MediaParts = Enumerable.Range(0, 51).Select(i => new MediaPart {
                     DiscontinuitySequence = i + 1, MediaInit = new MediaSegment { Url = server.Url + "init.mp4" },
@@ -190,7 +193,7 @@ public partial class VodMultiInitTests
                 #EXT-X-STREAM-INF:BANDWIDTH=100000,CODECS="avc1.64001e",RESOLUTION=160x90,SUBTITLES="s"
                 video.m3u8
                 """);
-            await using var server = new LiveFixtureServer(root, (_, _) => null);
+            await using var server = new MediaFixtureServer(root, (_, _) => null);
             using var extractor = new StreamExtractor(new ParserConfig());
             await extractor.LoadSourceFromUrlAsync(server.Url + "master.m3u8");
             var streams = await extractor.ExtractStreamsAsync();
@@ -225,8 +228,8 @@ public partial class VodMultiInitTests
                 Assert.Equal(0, server.RequestCount("ad-media-1.m4s"));
             if (scenario == "cenc-drop")
             {
-                var expected = await LiveFrameHashes(Path.Combine(root, "full.mp4"));
-                Assert.Equal(expected.Take(50).Concat(expected.Skip(100)), await LiveFrameHashes(output));
+                var expected = await FrameHashes(Path.Combine(root, "full.mp4"));
+                Assert.Equal(expected.Take(50).Concat(expected.Skip(100)), await FrameHashes(output));
             }
         }
         finally { Directory.Delete(root, true); }
@@ -262,7 +265,7 @@ public partial class VodMultiInitTests
             }
             await File.WriteAllTextAsync(Path.Combine(root, "vod.mpd"),
                 $"<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" type=\"static\" mediaPresentationDuration=\"PT6S\">{string.Join('\n', periods)}</MPD>");
-            await using var server = new LiveFixtureServer(root, (_, _) => null);
+            await using var server = new MediaFixtureServer(root, (_, _) => null);
             using var extractor = new StreamExtractor(new ParserConfig());
             await extractor.LoadSourceFromUrlAsync(server.Url + "vod.mpd");
             var sources = await extractor.ExtractStreamsAsync();
@@ -286,11 +289,6 @@ public partial class VodMultiInitTests
         }
         finally { Directory.Delete(root, true); }
     }
-
-    private static Task GenerateCutMedia(string root) => Run("ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
-        "testsrc2=s=160x90:r=25", "-t", "6", "-c:v", "libx264", "-g", "50", "-bf", "0", "-f", "hls",
-        "-hls_time", "2", "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", "init.mp4",
-        "-hls_segment_filename", Path.Combine(root, "media-%d.m4s"), Path.Combine(root, "source.m3u8"));
 
     [Fact]
     public async Task DashCoarseSubtitleSpanningDeletedMediaIsSplitAndClipped()
@@ -316,7 +314,7 @@ public partial class VodMultiInitTests
                   </Period>
                 </MPD>
                 """);
-            await using var server = new LiveFixtureServer(root, (_, _) => null);
+            await using var server = new MediaFixtureServer(root, (_, _) => null);
             using var extractor = new StreamExtractor(new ParserConfig());
             await extractor.LoadSourceFromUrlAsync(server.Url + "vod.mpd");
             var streams = await extractor.ExtractStreamsAsync();
@@ -335,7 +333,7 @@ public partial class VodMultiInitTests
 
     private static async Task DownloadCutStreams(string root, List<StreamSpec> streams, StreamExtractor extractor, bool binaryMerge = false, bool cenc = false)
     {
-        var options = LegacyOptions(root);
+        var options = CreateOptions(root);
         options.SubtitleFormat = SubtitleFormat.VTT;
         options.ConcurrentDownload = true;
         options.BinaryMerge = binaryMerge;

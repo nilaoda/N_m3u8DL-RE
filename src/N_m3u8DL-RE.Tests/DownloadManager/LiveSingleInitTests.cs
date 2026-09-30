@@ -1,12 +1,8 @@
 using N_m3u8DL_RE.Common.Enum;
 using System.Buffers.Binary;
-using System.Collections.Concurrent;
-using System.Net;
-using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.DownloadManager;
@@ -14,10 +10,13 @@ using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
+using N_m3u8DL_RE.Tests.TestSupport;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
 
-public partial class VodMultiInitTests
+[Collection("Download console")]
+public class LiveSingleInitTests
 {
     [Theory]
     [InlineData("hls-ts", "clear", true, "normal")]
@@ -88,7 +87,7 @@ public partial class VodMultiInitTests
             }
             if (encryption == "cenc")
                 await File.WriteAllBytesAsync(Path.Combine(root, "key.bin"), Convert.FromHexString(key));
-            await using var server = new LiveFixtureServer(root, (path, version) =>
+            await using var server = new MediaFixtureServer(root, (path, version) =>
             {
                 if (path != (dash ? "live.mpd" : "live.m3u8"))
                     return null;
@@ -129,7 +128,7 @@ public partial class VodMultiInitTests
             var init = streams[0].Playlist!.MediaParts[0].MediaInit;
             Assert.Equal(!ts, init != null);
             FilterUtil.CleanAd(streams, null); // 与 Program 的直播初始化流程一致。
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.LiveRealTimeMerge = realtimeMerge;
             options.LiveWaitTime = 1;
             options.LiveTakeCount = 16;
@@ -159,7 +158,7 @@ public partial class VodMultiInitTests
                 var output = Assert.Single(Directory.GetFiles(Path.Combine(root, "out")));
                 await AssertVideo(output, mediaCount * 2, mediaCount * 50);
                 if (encryption == "cenc")
-                    Assert.Equal(await LiveFrameHashes(Path.Combine(root, "full.mp4")), await LiveFrameHashes(output));
+                    Assert.Equal(await FrameHashes(Path.Combine(root, "full.mp4")), await FrameHashes(output));
                 if (encryption != "cenc")
                 {
                     using var probe = JsonDocument.Parse(await Run("ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "json", output));
@@ -180,7 +179,7 @@ public partial class VodMultiInitTests
                 MergeUtil.CombineMultipleFilesIntoSingleFile(initPath == null ? media : [initPath, ..media], check);
                 await AssertVideo(check, 6, 150);
                 if (encryption == "cenc")
-                    Assert.Equal(await LiveFrameHashes(Path.Combine(root, "full.mp4")), await LiveFrameHashes(check));
+                    Assert.Equal(await FrameHashes(Path.Combine(root, "full.mp4")), await FrameHashes(check));
             }
         }
         finally { Directory.Delete(root, true); }
@@ -229,7 +228,7 @@ public partial class VodMultiInitTests
             ReadNals(bytes[avcc + 5] & 0x1f);
             var ppsCount = bytes[nalOffset++];
             ReadNals(ppsCount);
-            await using var server = new LiveFixtureServer(root, (path, version) => path != "live.ism" ? null : $$"""
+            await using var server = new MediaFixtureServer(root, (path, version) => path != "live.ism" ? null : $$"""
                 <SmoothStreamingMedia MajorVersion="2" MinorVersion="1" IsLive="TRUE" Duration="6000" TimeScale="1000">
                   <StreamIndex Type="video" Name="video" TimeScale="1000" Url="media-{start time}.m4s">
                     <QualityLevel Index="0" Bitrate="10000" FourCC="H264" MaxWidth="160" MaxHeight="90" CodecPrivateData="{{codecData}}"/>
@@ -243,7 +242,7 @@ public partial class VodMultiInitTests
             Assert.True(streams[0].Playlist!.IsLive);
             Assert.StartsWith("base64://", streams[0].Playlist!.MediaParts[0].MediaInit!.Url);
             FilterUtil.CleanAd(streams, null);
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.LiveRealTimeMerge = true; options.LiveWaitTime = 1; options.LiveTakeCount = 16;
             options.LiveRecordLimit = TimeSpan.FromSeconds(6); options.LiveIdleTimeout = 6;
             var manager = new SimpleLiveRecordManager2(new DownloaderConfig
@@ -267,7 +266,7 @@ public partial class VodMultiInitTests
             for (var i = 0; i < 3; i++)
                 await File.WriteAllTextAsync(Path.Combine(root, $"sub-{i}.vtt"),
                     $"WEBVTT\n\n00:00:0{i * 2}.250 --> 00:00:0{i * 2 + 1}.000\ncue-{i}\n\n");
-            await using var server = new LiveFixtureServer(root, (path, version) => path != "live.m3u8" ? null :
+            await using var server = new MediaFixtureServer(root, (path, version) => path != "live.m3u8" ? null :
                 "#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:0\n" +
                 string.Join('\n', Enumerable.Range(0, Math.Min(version + 1, 3)).Select(i => $"#EXTINF:2,\nsub-{i}.vtt")) +
                 (version >= 2 ? "\n#EXT-X-ENDLIST\n" : "\n"));
@@ -278,7 +277,7 @@ public partial class VodMultiInitTests
             streams[0].Extension = "vtt";
             Assert.Null(streams[0].Playlist!.MediaParts[0].MediaInit);
             FilterUtil.CleanAd(streams, null);
-            var options = LegacyOptions(root);
+            var options = CreateOptions(root);
             options.SubtitleFormat = SubtitleFormat.VTT;
             options.LiveRealTimeMerge = true; options.LiveWaitTime = 1; options.LiveTakeCount = 16;
             options.LiveRecordLimit = TimeSpan.FromSeconds(6); options.LiveIdleTimeout = 6;
@@ -296,71 +295,5 @@ public partial class VodMultiInitTests
             }
         }
         finally { Directory.Delete(root, true); }
-    }
-
-    private static async Task<string[]> LiveFrameHashes(string path)
-    {
-        // 加密用例还比较解码后的逐帧像素，避免简单画面使漏解密的问题未被发现。
-        var output = await Run("ffmpeg", "-v", "error", "-xerror", "-i", path, "-map", "0:v:0", "-f", "framemd5", "-");
-        return output.Split('\n').Where(line => !line.StartsWith('#') && line.Contains(','))
-            .Select(line => line.Split(',')[^1].Trim()).ToArray();
-    }
-
-    private sealed class LiveFixtureServer : IAsyncDisposable
-    {
-        private readonly TcpListener listener = new(IPAddress.Loopback, 0);
-        private readonly CancellationTokenSource stop = new();
-        private readonly ConcurrentDictionary<string, int> requests = new();
-        private readonly List<Task> handlers = [];
-        private readonly Task loop;
-        public string Url { get; }
-        public int RequestCount(string path) => requests.GetValueOrDefault(path);
-
-        public LiveFixtureServer(string root, Func<string, int, string?> manifest, Func<string, Task>? beforeResponse = null)
-        {
-            listener.Start();
-            Url = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}/";
-            loop = Task.Run(async () =>
-            {
-                try
-                {
-                    while (!stop.IsCancellationRequested)
-                    {
-                        var client = await listener.AcceptTcpClientAsync(stop.Token);
-                        handlers.Add(Serve(client));
-                    }
-                }
-                catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
-            });
-            async Task Serve(TcpClient client)
-            {
-                using (client)
-                {
-                    await using var stream = client.GetStream();
-                    using var reader = new StreamReader(stream, Encoding.ASCII, leaveOpen: true);
-                    var request = await reader.ReadLineAsync(stop.Token);
-                    if (request == null)
-                        return;
-                    while (!string.IsNullOrEmpty(await reader.ReadLineAsync(stop.Token))) { }
-                    var path = new Uri(Url + request.Split(' ')[1].TrimStart('/')).AbsolutePath.TrimStart('/');
-                    var count = requests.AddOrUpdate(path, 1, (_, old) => old + 1);
-                    if (beforeResponse != null)
-                        await beforeResponse(path);
-                    var text = manifest(path, count - 1);
-                    var bytes = text != null ? Encoding.UTF8.GetBytes(text) : await File.ReadAllBytesAsync(Path.Combine(root, path), stop.Token);
-                    var headers = Encoding.ASCII.GetBytes($"HTTP/1.1 200 OK\r\nContent-Length: {bytes.Length}\r\nConnection: close\r\n\r\n");
-                    await stream.WriteAsync(headers, stop.Token);
-                    await stream.WriteAsync(bytes, stop.Token);
-                }
-            }
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            stop.Cancel(); listener.Stop();
-            await loop;
-            await Task.WhenAll(handlers);
-            stop.Dispose();
-        }
     }
 }
