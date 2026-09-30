@@ -121,6 +121,7 @@ internal partial class MSSExtractor : IExtractor
                 streamSpec.Playlist = new Playlist();
                 streamSpec.Playlist.IsLive = isLive;
                 streamSpec.Playlist.MediaParts.Add(new MediaPart());
+                var mediaPart = streamSpec.Playlist.MediaParts[0];
                 streamSpec.GroupId = name ?? indexStr;
                 streamSpec.Bandwidth = bitrate;
                 streamSpec.Codecs = ParseCodecs(fourCC, codecPrivateData);
@@ -135,11 +136,11 @@ internal partial class MSSExtractor : IExtractor
                     _ => null
                 };
 
-                streamSpec.Playlist.MediaInit = new MediaSegment();
+                mediaPart.MediaInit = new MediaSegment();
                 if (!string.IsNullOrEmpty(codecPrivateData))
                 {
-                    streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                    streamSpec.Playlist.MediaInit.Url = $"hex://{codecPrivateData}";
+                    mediaPart.MediaInit.Index = -1; // 便于排序
+                    mediaPart.MediaInit.Url = $"hex://{codecPrivateData}";
                 }
 
                 var currentTime = 0L;
@@ -172,7 +173,7 @@ internal partial class MSSExtractor : IExtractor
                         mediaSegment.NameFromVar = currentTime.ToString();
                     mediaSegment.Duration = _duration / (double)timescale;
                     mediaSegment.Index = segIndex++;
-                    streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
+                    mediaPart.MediaSegments.Add(mediaSegment);
                     if (_repeatCount < 0)
                     {
                         // 负数表示一直重复 直到period结束 注意减掉已经加入的1个片段
@@ -190,7 +191,7 @@ internal partial class MSSExtractor : IExtractor
                         _mediaSegment.Duration = _duration / (double)timescale;
                         if (_oriUrl.Contains(MSSTags.StartTime))
                             _mediaSegment.NameFromVar = currentTime.ToString();
-                        streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
+                        mediaPart.MediaSegments.Add(_mediaSegment);
                     }
                     currentTime += _duration;
                 }
@@ -215,15 +216,18 @@ internal partial class MSSExtractor : IExtractor
                     };
                     var processor = new MSSMoovProcessor(streamSpec);
                     var header = processor.GenHeader(); // trackId可能不正确
-                    streamSpec.Playlist!.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";
+                    mediaPart.MediaInit!.Url = $"base64://{Convert.ToBase64String(header)}";
+                    // Smooth Streaming 每个 QualityLevel 固定一份 CodecPrivateData，
+                    // 没有 Period/MAP 切换；仍把生成的 init 绑定到本段，供过滤时一起清理。
+                    mediaPart.Codecs = streamSpec.Codecs;
                     // 为音视频写入加密信息
                     if (isProtection && type != "text") 
                     {
-                        if (streamSpec.Playlist.MediaInit != null)
+                        if (mediaPart.MediaInit != null)
                         {
-                            streamSpec.Playlist.MediaInit.EncryptInfo.Method = DEFAULT_METHOD;
+                            mediaPart.MediaInit.EncryptInfo.Method = DEFAULT_METHOD;
                         }
-                        foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
+                        foreach (var item in mediaPart.MediaSegments)
                         {
                             item.EncryptInfo.Method = DEFAULT_METHOD;
                         }
@@ -310,9 +314,9 @@ internal partial class MSSExtractor : IExtractor
             var playlist = streamSpec.Playlist;
             if (playlist == null) continue;
             
-            if (playlist.MediaInit != null)
+            foreach (var init in playlist.MediaParts.Select(part => part.MediaInit).OfType<MediaSegment>())
             {
-                playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
+                init.Url = PreProcessUrl(init.Url);
             }
             for (var ii = 0; ii < playlist!.MediaParts.Count; ii++)
             {
@@ -376,7 +380,7 @@ internal partial class MSSExtractor : IExtractor
             // 故增加通过init url来匹配 (如果有的话)
             var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
             if (!match.Any())
-                match = newStreams.Where(n => n.Playlist?.MediaInit?.Url == streamSpec.Playlist?.MediaInit?.Url);
+                match = newStreams.Where(n => n.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url == streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url);
 
             if (match.Any())
                 streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; // 不更新init

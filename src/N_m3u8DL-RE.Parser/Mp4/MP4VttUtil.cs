@@ -1,10 +1,29 @@
-﻿using N_m3u8DL_RE.Common.Entity;
+﻿using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Entity;
 using System.Text;
 
 namespace Mp4SubtitleParser;
 
 public static class MP4VttUtil
 {
+    public static double? ReadStartTime(byte[] media, uint timescale)
+    {
+        if (timescale == 0)
+            return null;
+        ulong? start = null;
+        new MP4Parser()
+            .Box("moof", MP4Parser.Children)
+            .Box("traf", MP4Parser.Children)
+            .FullBox("tfdt", box =>
+            {
+                if (box.Version is not (0 or 1))
+                    throw new Exception(ResString.tfdtVersionUnsupported);
+                start ??= MP4Parser.ParseTFDT(box.Reader, box.Version);
+            })
+            .Parse(media);
+        return start / (double)timescale;
+    }
+
     public static (bool, uint) CheckInit(byte[] data)
     {
         uint timescale = 0;
@@ -61,7 +80,7 @@ public static class MP4VttUtil
                 {
                     sawTFDT = true;
                     if (box.Version is not (0 or 1))
-                        throw new Exception("TFDT version can only be 0 or 1");
+                        throw new Exception(ResString.tfdtVersionUnsupported);
                     baseTime = MP4Parser.ParseTFDT(box.Reader, box.Version);
                 })
                 .FullBox("tfhd", box =>

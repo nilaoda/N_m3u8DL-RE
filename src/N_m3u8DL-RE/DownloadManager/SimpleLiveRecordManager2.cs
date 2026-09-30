@@ -149,6 +149,7 @@ internal class SimpleLiveRecordManager2
     {
         var baseTimestamp = PublishDateTime == null ? 0L : (long)(PublishDateTime.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalMilliseconds;
         var decryptionBinaryPath = DownloaderConfig.MyOptions.DecryptionBinaryPath!;
+        var mediaInit = streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit;
         var mp4InitFile = "";
         var currentKID = "";
         var readInfo = false; // 是否读取过
@@ -199,7 +200,10 @@ internal class SimpleLiveRecordManager2
             Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
             // 下载init
-            if (!initDownloaded && streamSpec.Playlist?.MediaInit != null) 
+            // 初始清单可能尚未发布 MAP，首片到来时重新取得 init；下载后保留原对象作字典键。
+            if (!initDownloaded)
+                mediaInit = streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit ?? mediaInit;
+            if (!initDownloaded && mediaInit != null)
             {
                 task.MaxValue += 1;
                 // 对于fMP4，自动开启二进制合并
@@ -210,8 +214,8 @@ internal class SimpleLiveRecordManager2
                 }
 
                 var path = Path.Combine(tmpDir, "_init.mp4.tmp");
-                var result = await Downloader.DownloadSegmentAsync(streamSpec.Playlist.MediaInit, path, speedContainer, headers);
-                FileDic[streamSpec.Playlist.MediaInit] = result;
+                var result = await Downloader.DownloadSegmentAsync(mediaInit, path, speedContainer, headers);
+                FileDic[mediaInit] = result;
                 if (result is not { Success: true })
                 {
                     throw new Exception("Download init file failed!");
@@ -224,22 +228,22 @@ internal class SimpleLiveRecordManager2
                 {
                     currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
                     // MPD的cenc:default_KID优先
-                    if (streamSpec.Playlist?.MediaInit?.EncryptInfo.KID != null)
+                    if (mediaInit?.EncryptInfo.KID != null)
                     {
-                        currentKID = streamSpec.Playlist.MediaInit.EncryptInfo.KID;
+                        currentKID = mediaInit.EncryptInfo.KID;
                         Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
                     }
                     // 从文件读取KEY
                     await SearchKeyAsync(currentKID);
                     // 实时解密
-                    if ((streamSpec.Playlist.MediaInit.IsEncrypted || !string.IsNullOrEmpty(currentKID)) && DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID) && StreamExtractor.ExtractorType != ExtractorType.MSS)
+                    if ((mediaInit.IsEncrypted || !string.IsNullOrEmpty(currentKID)) && DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID) && StreamExtractor.ExtractorType != ExtractorType.MSS)
                     {
                         var enc = result.ActualFilePath;
                         var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                         var dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
                         if (dResult)
                         {
-                            FileDic[streamSpec.Playlist.MediaInit]!.ActualFilePath = dec;
+                            FileDic[mediaInit]!.ActualFilePath = dec;
                         }
                     }
                     // ffmpeg读取信息
@@ -290,16 +294,16 @@ internal class SimpleLiveRecordManager2
                     {
                         var processor = new MSSMoovProcessor(streamSpec);
                         var header = processor.GenHeader(File.ReadAllBytes(result.ActualFilePath));
-                        await File.WriteAllBytesAsync(FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath, header);
+                        await File.WriteAllBytesAsync(FileDic[mediaInit!]!.ActualFilePath, header);
                         if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
                         {
                             // 需要重新解密init
-                            var enc = FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath;
+                            var enc = FileDic[mediaInit!]!.ActualFilePath;
                             var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
                             var dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
                             if (dResult)
                             {
-                                FileDic[streamSpec.Playlist!.MediaInit!]!.ActualFilePath = dec;
+                                FileDic[mediaInit!]!.ActualFilePath = dec;
                             }
                         }
                     }
@@ -307,9 +311,9 @@ internal class SimpleLiveRecordManager2
                     if (string.IsNullOrEmpty(currentKID))
                     {
                         // MPD的cenc:default_KID优先
-                        if (streamSpec.Playlist?.MediaInit?.EncryptInfo.KID != null)
+                        if (mediaInit?.EncryptInfo.KID != null)
                         {
-                            currentKID = streamSpec.Playlist.MediaInit.EncryptInfo.KID;
+                            currentKID = mediaInit.EncryptInfo.KID;
                             Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
                         }
                         else
@@ -580,7 +584,7 @@ internal class SimpleLiveRecordManager2
 
                 if (streamSpec.MediaType != MediaType.SUBTITLES)
                 {
-                    var initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
+                    var initResult = mediaInit != null ? FileDic[mediaInit!]! : null;
                     var files = FileDic.Where(f => f.Key.RecordingIndex != null).OrderBy(s => GetRecordOrder(s.Key)).Select(f => f.Value).Select(v => v!.ActualFilePath).ToArray();
                     if (initResult != null && mp4InitFile != "")
                     {
@@ -610,12 +614,12 @@ internal class SimpleLiveRecordManager2
                     FileDic.Clear();
                     if (initResult != null)
                     {
-                        FileDic[streamSpec.Playlist!.MediaInit!] = initResult;
+                        FileDic[mediaInit!] = initResult;
                     }
                 }
                 else
                 {
-                    var initResult = streamSpec.Playlist!.MediaInit != null ? FileDic[streamSpec.Playlist!.MediaInit!]! : null;
+                    var initResult = mediaInit != null ? FileDic[mediaInit!]! : null;
                     var files = FileDic.OrderBy(s => GetRecordOrder(s.Key)).Select(f => f.Value).Select(v => v!.ActualFilePath).ToArray();
                     foreach (var inputFilePath in files)
                     {
@@ -641,7 +645,7 @@ internal class SimpleLiveRecordManager2
                     FileDic.Clear();
                     if (initResult != null)
                     {
-                        FileDic[streamSpec.Playlist!.MediaInit!] = initResult;
+                        FileDic[mediaInit!] = initResult;
                     }
                 }
 

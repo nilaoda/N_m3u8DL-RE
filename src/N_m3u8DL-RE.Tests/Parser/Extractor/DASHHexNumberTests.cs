@@ -35,7 +35,7 @@ public class DASHHexNumberTests
         });
         var streams = await extractor.ExtractStreamsAsync(content);
         var playlist = streams.Single().Playlist!;
-        playlist.MediaInit!.Url.ShouldBe("https://example.com/audio/a1/init.mp4");
+        playlist.MediaParts[0].MediaInit!.Url.ShouldBe("https://example.com/audio/a1/init.mp4");
         playlist.MediaParts.Single().MediaSegments.Select(s => s.Url).ShouldBe(new[]
         {
             $"https://example.com/audio/a1/{first}.m4s",

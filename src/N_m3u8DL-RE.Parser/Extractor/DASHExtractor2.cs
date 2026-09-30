@@ -117,11 +117,15 @@ internal partial class DASHExtractor2 : IExtractor
         }
 
         // 全部Period
-        var periods = mpdElement.Elements().Where(e => e.Name.LocalName == "Period");
-        foreach (var period in periods)
+        var periods = mpdElement.Elements().Where(e => e.Name.LocalName == "Period").ToList();
+        var periodTimings = ResolvePeriodTimings(periods, mediaPresentationDuration);
+        for (var periodIndex = 0; periodIndex < periods.Count; periodIndex++)
         {
+            var period = periods[periodIndex];
             // 本Period时长
-            var periodDuration = period.Attribute("duration")?.Value;
+            var (periodStartSeconds, periodDurationSeconds) = periodTimings[periodIndex];
+            var periodDuration = periodDurationSeconds is { } seconds
+                ? XmlConvert.ToString(TimeSpan.FromSeconds(seconds)) : period.Attribute("duration")?.Value;
 
             // 本Period ID
             var periodId = period.Attribute("id")?.Value;
@@ -161,7 +165,15 @@ internal partial class DASHExtractor2 : IExtractor
                     streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
                     streamSpec.PeriodId = periodId;
                     streamSpec.Playlist = new Playlist();
-                    streamSpec.Playlist.MediaParts.Add(new MediaPart());
+                    streamSpec.Playlist.MediaParts.Add(new MediaPart
+                    {
+                        PeriodIndex = periodIndex,
+                        PeriodId = periodId,
+                        PeriodStart = periodStartSeconds,
+                        PeriodDuration = periodDurationSeconds,
+                        RepresentationId = representation.Attribute("id")?.Value,
+                    });
+                    var mediaPart = streamSpec.Playlist.MediaParts[0];
                     streamSpec.GroupId = representation.Attribute("id")?.Value;
                     streamSpec.Bandwidth = Convert.ToInt32(bandwidth?.Value ?? "0");
                     streamSpec.Codecs = representation.Attribute("codecs")?.Value ?? adaptationSet.Attribute("codecs")?.Value;
@@ -250,6 +262,9 @@ internal partial class DASHExtractor2 : IExtractor
                     var segmentBaseElement = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "SegmentBase");
                     if (segmentBaseElement != null)
                     {
+                        mediaPart.PresentationTimeOffset =
+                            Convert.ToDouble(segmentBaseElement.Attribute("presentationTimeOffset")?.Value ?? "0", CultureInfo.InvariantCulture) /
+                            Convert.ToDouble(segmentBaseElement.Attribute("timescale")?.Value ?? "1", CultureInfo.InvariantCulture);
                         // 处理init url
                         var initialization = segmentBaseElement.Elements().FirstOrDefault(e => e.Name.LocalName == "Initialization");
                         if (initialization != null)
@@ -257,7 +272,7 @@ internal partial class DASHExtractor2 : IExtractor
                             var sourceURL = initialization.Attribute("sourceURL")?.Value;
                             if (sourceURL == null)
                             {
-                                streamSpec.Playlist.MediaParts[0].MediaSegments.Add
+                                mediaPart.MediaSegments.Add
                                 (
                                     new MediaSegment()
                                     {
@@ -271,14 +286,14 @@ internal partial class DASHExtractor2 : IExtractor
                             {
                                 var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                                 var initRange = initialization.Attribute("range")?.Value;
-                                streamSpec.Playlist.MediaInit = new MediaSegment();
-                                streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                                streamSpec.Playlist.MediaInit.Url = initUrl;
+                                mediaPart.MediaInit = new MediaSegment();
+                                mediaPart.MediaInit.Index = -1; // 便于排序
+                                mediaPart.MediaInit.Url = initUrl;
                                 if (initRange != null)
                                 {
                                     var (start, expect) = ParserUtil.ParseRange(initRange);
-                                    streamSpec.Playlist.MediaInit.StartRange = start;
-                                    streamSpec.Playlist.MediaInit.ExpectLength = expect;
+                                    mediaPart.MediaInit.StartRange = start;
+                                    mediaPart.MediaInit.ExpectLength = expect;
                                 }
                             }
                         }
@@ -288,6 +303,9 @@ internal partial class DASHExtractor2 : IExtractor
                     var segmentList = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "SegmentList");
                     if (segmentList != null)
                     {
+                        mediaPart.PresentationTimeOffset =
+                            Convert.ToDouble(segmentList.Attribute("presentationTimeOffset")?.Value ?? "0", CultureInfo.InvariantCulture) /
+                            Convert.ToDouble(segmentList.Attribute("timescale")?.Value ?? "1", CultureInfo.InvariantCulture);
                         var durationStr = segmentList.Attribute("duration")?.Value;
                         // 处理init url
                         var initialization = segmentList.Elements().FirstOrDefault(e => e.Name.LocalName == "Initialization");
@@ -295,14 +313,14 @@ internal partial class DASHExtractor2 : IExtractor
                         {
                             var initUrl = ParserUtil.CombineURL(segBaseUrl, initialization.Attribute("sourceURL")?.Value!);
                             var initRange = initialization.Attribute("range")?.Value;
-                            streamSpec.Playlist.MediaInit = new MediaSegment();
-                            streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                            streamSpec.Playlist.MediaInit.Url = initUrl;
+                            mediaPart.MediaInit = new MediaSegment();
+                            mediaPart.MediaInit.Index = -1; // 便于排序
+                            mediaPart.MediaInit.Url = initUrl;
                             if (initRange != null)
                             {
                                 var (start, expect) = ParserUtil.ParseRange(initRange);
-                                streamSpec.Playlist.MediaInit.StartRange = start;
-                                streamSpec.Playlist.MediaInit.ExpectLength = expect;
+                                mediaPart.MediaInit.StartRange = start;
+                                mediaPart.MediaInit.ExpectLength = expect;
                             }
                         }
                         // 处理分片
@@ -317,6 +335,7 @@ internal partial class DASHExtractor2 : IExtractor
                             var duration = Convert.ToInt64(durationStr);
                             MediaSegment mediaSegment = new();
                             mediaSegment.Duration = duration / (double)timesacle;
+                            mediaSegment.PresentationTime = (mediaPart.PresentationTimeOffset ?? 0) + segmentIndex * duration / (double)timesacle;
                             mediaSegment.Url = mediaUrl;
                             mediaSegment.Index = segmentIndex;
                             if (mediaRange != null)
@@ -325,7 +344,7 @@ internal partial class DASHExtractor2 : IExtractor
                                 mediaSegment.StartRange = start;
                                 mediaSegment.ExpectLength = expect;
                             }
-                            streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
+                            mediaPart.MediaSegments.Add(mediaSegment);
                         }
                     }
 
@@ -348,6 +367,9 @@ internal partial class DASHExtractor2 : IExtractor
                         var presentationTimeOffsetStr = segmentTemplate.Attribute("presentationTimeOffset")?.Value ?? segmentTemplateOuter.Attribute("presentationTimeOffset")?.Value ?? "0";
                         // timesacle
                         var timescaleStr = segmentTemplate.Attribute("timescale")?.Value ?? segmentTemplateOuter.Attribute("timescale")?.Value ?? "1";
+                        mediaPart.PresentationTimeOffset =
+                            Convert.ToDouble(presentationTimeOffsetStr, CultureInfo.InvariantCulture) /
+                            Convert.ToDouble(timescaleStr, CultureInfo.InvariantCulture);
                         var durationStr = segmentTemplate.Attribute("duration")?.Value ?? segmentTemplateOuter.Attribute("duration")?.Value;
                         var startNumberStr = segmentTemplate.Attribute("startNumber")?.Value ?? segmentTemplateOuter.Attribute("startNumber")?.Value ?? "1";
                         // 处理init url
@@ -356,9 +378,9 @@ internal partial class DASHExtractor2 : IExtractor
                         {
                             var _init = ParserUtil.ReplaceVars(initialization, varDic);
                             var initUrl = ParserUtil.CombineURL(segBaseUrl, _init);
-                            streamSpec.Playlist.MediaInit = new MediaSegment();
-                            streamSpec.Playlist.MediaInit.Index = -1; // 便于排序
-                            streamSpec.Playlist.MediaInit.Url = initUrl;
+                            mediaPart.MediaInit = new MediaSegment();
+                            mediaPart.MediaInit.Index = -1; // 便于排序
+                            mediaPart.MediaInit.Url = initUrl;
                         }
                         // 处理分片
                         var mediaTemplate = segmentTemplate.Attribute("media")?.Value ?? segmentTemplateOuter.Attribute("media")?.Value;
@@ -391,12 +413,18 @@ internal partial class DASHExtractor2 : IExtractor
                                 if (hasTime)
                                     mediaSegment.NameFromVar = currentTime.ToString();
                                 mediaSegment.Duration = _duration / (double)timescale;
+                                mediaSegment.PresentationTime = currentTime / (double)timescale;
                                 mediaSegment.Index = segIndex++;
-                                streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
+                                mediaPart.MediaSegments.Add(mediaSegment);
                                 if (_repeatCount < 0)
                                 {
-                                    // 负数表示一直重复 直到period结束 注意减掉已经加入的1个片段
-                                    _repeatCount = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / _duration) - 1;
+                                    // r=-1 重复到下一个显式 t 或本 Period 结束；结束时间在源时间轴上，
+                                    // 需要加 PTO 并扣掉当前 t，不能重复整个 Period 的时长。
+                                    var nextTime = S.ElementsAfterSelf().FirstOrDefault(e => e.Name.LocalName == "S")?.Attribute("t")?.Value;
+                                    var endTime = nextTime != null ? Convert.ToDouble(nextTime, CultureInfo.InvariantCulture)
+                                        : XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale
+                                            + Convert.ToDouble(presentationTimeOffsetStr, CultureInfo.InvariantCulture);
+                                    _repeatCount = Math.Max(0, (long)Math.Ceiling((endTime - currentTime) / _duration) - 1);
                                 }
                                 for (long i = 0; i < _repeatCount; i++)
                                 {
@@ -410,9 +438,10 @@ internal partial class DASHExtractor2 : IExtractor
                                     _mediaSegment.Url = _mediaUrl;
                                     _mediaSegment.Index = segIndex++;
                                     _mediaSegment.Duration = _duration / (double)timescale;
+                                    _mediaSegment.PresentationTime = currentTime / (double)timescale;
                                     if (_hashTime)
                                         _mediaSegment.NameFromVar = currentTime.ToString();
-                                    streamSpec.Playlist.MediaParts[0].MediaSegments.Add(_mediaSegment);
+                                    mediaPart.MediaSegments.Add(_mediaSegment);
                                 }
                                 currentTime += _duration;
                             }
@@ -451,14 +480,15 @@ internal partial class DASHExtractor2 : IExtractor
                                     mediaSegment.NameFromVar = index.ToString();
                                 mediaSegment.Index = isLive ? index : segIndex; // 直播直接用startNumber
                                 mediaSegment.Duration = duration / (double)timescale;
-                                streamSpec.Playlist.MediaParts[0].MediaSegments.Add(mediaSegment);
+                                mediaSegment.PresentationTime = (mediaPart.PresentationTimeOffset ?? 0) + (index - startNumber) * duration / (double)timescale;
+                                mediaPart.MediaSegments.Add(mediaSegment);
                             }
                         }
                     }
 
                     // 去除重复分片(重叠Period/SegmentTimeline/connectivity duplicates等会导致同一分片被引用多次)
                     // 以 URL + 字节范围 作为唯一标识, 保持原始顺序, 避免同一分片被下载两次 (#684)
-                    var _segs = streamSpec.Playlist.MediaParts[0].MediaSegments;
+                    var _segs = mediaPart.MediaSegments;
                     if (_segs.Count > 1)
                     {
                         var _seen = new HashSet<string>();
@@ -466,14 +496,14 @@ internal partial class DASHExtractor2 : IExtractor
                         if (_deduped.Count != _segs.Count)
                         {
                             Logger.Debug($"[DASH] removed {_segs.Count - _deduped.Count} duplicate segment(s) in {streamSpec.GroupId}");
-                            streamSpec.Playlist.MediaParts[0].MediaSegments = _deduped;
+                            mediaPart.MediaSegments = _deduped;
                         }
                     }
 
                     // 如果依旧没被添加分片，直接把BaseUrl塞进去就好
-                    if (streamSpec.Playlist.MediaParts[0].MediaSegments.Count == 0)
+                    if (mediaPart.MediaSegments.Count == 0)
                     {
-                        streamSpec.Playlist.MediaParts[0].MediaSegments.Add
+                        mediaPart.MediaSegments.Add
                         (
                             new MediaSegment()
                             {
@@ -487,11 +517,11 @@ internal partial class DASHExtractor2 : IExtractor
                     // 判断加密情况
                     if (adaptationSet.Elements().Concat(representation.Elements()).Any(e => e.Name.LocalName == "ContentProtection"))
                     {
-                        if (streamSpec.Playlist.MediaInit != null)
+                        if (mediaPart.MediaInit != null)
                         {
-                            streamSpec.Playlist.MediaInit.EncryptInfo.Method = DEFAULT_METHOD;
+                            mediaPart.MediaInit.EncryptInfo.Method = DEFAULT_METHOD;
                         }
-                        foreach (var item in streamSpec.Playlist.MediaParts[0].MediaSegments)
+                        foreach (var item in mediaPart.MediaSegments)
                         {
                             item.EncryptInfo.Method = DEFAULT_METHOD;
                         }
@@ -500,45 +530,20 @@ internal partial class DASHExtractor2 : IExtractor
                         XNamespace cencNs = "urn:mpeg:cenc:2013";
                         var cpKid = adaptationSet.Elements().Concat(representation.Elements())
                             .FirstOrDefault(e => e.Name.LocalName == "ContentProtection" && e.Attribute(cencNs + "default_KID") != null);
-                        if (cpKid != null && streamSpec.Playlist.MediaInit != null)
+                        if (cpKid != null && mediaPart.MediaInit != null)
                         {
                             var kidRaw = cpKid.Attribute(cencNs + "default_KID")!.Value;
                             // UUID格式 -> 十六进制小写无分隔符
-                            streamSpec.Playlist.MediaInit.EncryptInfo.KID = kidRaw.Replace("-", "").ToLower();
+                            mediaPart.MediaInit.EncryptInfo.KID = kidRaw.Replace("-", "").ToLower();
                         }
                     }
 
-                    // 处理同一ID分散在不同Period的情况
-                    var _index = streamList.FindIndex(_f => _f.PeriodId != streamSpec.PeriodId && _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType);
+                    mediaPart.Codecs = streamSpec.Codecs;
+                    // 处理同一ID分散在不同Period的情况；点播先保留 Period，选流后再编排。
+                    var _index = isLive ? streamList.FindIndex(_f => _f.PeriodId != streamSpec.PeriodId && _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType) : -1;
                     if (_index > -1)
                     {
-                        if (isLive)
-                        {
-                            // 直播，这种情况直接略过新的
-                        }
-                        else
-                        {
-                            // 点播，这种情况如果URL不同则作为新的part出现，否则仅把时间加起来
-                            var url1 = streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Url;
-                            var url2 = streamSpec.Playlist.MediaParts[0].MediaSegments.LastOrDefault()?.Url;
-                            if (url1 != url2)
-                            {
-                                var startIndex = streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Index + 1;
-                                var enumerator = streamSpec.Playlist.MediaParts[0].MediaSegments.GetEnumerator();
-                                while (enumerator.MoveNext())
-                                {
-                                    enumerator.Current.Index += startIndex;
-                                }
-                                streamList[_index].Playlist!.MediaParts.Add(new MediaPart()
-                                {
-                                    MediaSegments = streamSpec.Playlist.MediaParts[0].MediaSegments
-                                });
-                            }
-                            else
-                            {
-                                streamList[_index].Playlist!.MediaParts.Last().MediaSegments.Last().Duration += streamSpec.Playlist.MediaParts[0].MediaSegments.Sum(x => x.Duration);
-                            }
-                        }
+                        // 直播，这种情况直接略过新的；直播多 Period 单独改造。
                     }
                     else
                     {
@@ -591,6 +596,30 @@ internal partial class DASHExtractor2 : IExtractor
         return LangCodeRegex().IsMatch(v) ? v : "und";
     }
 
+    private static (double? Start, double? Duration)[] ResolvePeriodTimings(List<XElement> periods, string? presentationDuration)
+    {
+        static double? Read(string? value) => value == null ? null : XmlConvert.ToTimeSpan(value).TotalSeconds;
+        var starts = periods.Select(p => Read(p.Attribute("start")?.Value)).ToArray();
+        var durations = periods.Select(p => Read(p.Attribute("duration")?.Value)).ToArray();
+        if (starts.Length == 0)
+            return [];
+        starts[0] ??= 0;
+        var end = Read(presentationDuration);
+        // start/duration 可以相互推导，不能把整个 MPD 时长当作每个 Period 时长。
+        for (var pass = 0; pass < periods.Count; pass++)
+        {
+            for (var i = 0; i < periods.Count; i++)
+            {
+                if (i > 0 && starts[i - 1] is { } previousStart && durations[i - 1] is { } previousDuration)
+                    starts[i] ??= previousStart + previousDuration;
+                var nextStart = i + 1 < periods.Count ? starts[i + 1] : end;
+                if (starts[i] is { } start && nextStart is { } stop && stop >= start)
+                    durations[i] ??= stop - start;
+            }
+        }
+        return starts.Select((start, i) => (start, durations[i])).ToArray();
+    }
+
     public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
     {
         if (streamSpecs.Count == 0) return;
@@ -616,7 +645,7 @@ internal partial class DASHExtractor2 : IExtractor
             // 故增加通过init url来匹配 (如果有的话)
             var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
             if (!match.Any())
-                match = newStreams.Where(n => n.Playlist?.MediaInit?.Url == streamSpec.Playlist?.MediaInit?.Url);
+                match = newStreams.Where(n => n.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url == streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url);
 
             if (match.Any())
                 streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; // 不更新init
@@ -632,9 +661,11 @@ internal partial class DASHExtractor2 : IExtractor
             var playlist = streamSpec.Playlist;
             if (playlist == null) continue;
             
-            if (playlist.MediaInit != null)
+            var inits = playlist.MediaParts.Select(part => part.MediaInit)
+                .OfType<MediaSegment>().Distinct<MediaSegment>(ReferenceEqualityComparer.Instance);
+            foreach (MediaSegment init in inits)
             {
-                playlist.MediaInit!.Url = PreProcessUrl(playlist.MediaInit!.Url);
+                init.Url = PreProcessUrl(init.Url);
             }
             for (var ii = 0; ii < playlist!.MediaParts.Count; ii++)
             {

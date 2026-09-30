@@ -74,6 +74,9 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> NoLog = new Option<bool>("--no-log") { Description = ResString.cmd_noLog }.WithDefault(false);
     private static readonly Option<bool> AllowHlsMultiExtMap = new Option<bool>("--allow-hls-multi-ext-map") { Description = ResString.cmd_allowHlsMultiExtMap }.WithDefault(false);
     private static readonly Option<string[]?> AdKeywords = new("--ad-keyword") { HelpName = "REG", Description = ResString.cmd_adKeyword };
+    private static readonly Option<bool> VodSelectParts = new("--vod-select-parts") { Description = ResString.cmd_vodSelectParts };
+    private static readonly Option<bool> VodListParts = new Option<bool>("--vod-list-parts") { Description = ResString.cmd_vodListParts }.WithDefault(false);
+    private static readonly Option<string?> VodDropParts = new("--vod-drop-parts") { HelpName = "IDS", Description = ResString.cmd_vodDropParts };
     private static readonly Option<long?> MaxSpeed = new("-R", "--max-speed") { HelpName = "SPEED", Description = ResString.cmd_maxSpeed, CustomParser = ParseSpeedLimit };
 
 
@@ -694,6 +697,10 @@ internal static partial class CommandInvoker
             NoLog = result.GetValue(NoLog),
             AllowHlsMultiExtMap = result.GetValue(AllowHlsMultiExtMap),
             AdKeywords = result.GetValue(AdKeywords),
+            // 未传参数保留自动判断，显式 false 则关闭选段交互。
+            VodSelectParts = result.HasOption(VodSelectParts) ? result.GetValue(VodSelectParts) : null,
+            VodListParts = result.GetValue(VodListParts),
+            VodDropParts = result.GetValue(VodDropParts),
             MaxSpeed = result.GetValue(MaxSpeed),
         };
 
@@ -757,7 +764,7 @@ internal static partial class CommandInvoker
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount,
-            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
+            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
         };
 
         rootCommand.TreatUnmatchedTokensAsErrors = true;

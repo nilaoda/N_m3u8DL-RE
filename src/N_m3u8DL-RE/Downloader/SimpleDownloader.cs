@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
@@ -79,6 +80,7 @@ internal class SimpleDownloader : IDownloader
     private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3)
     {
         CancellationTokenSource? cancellationTokenSource = null;
+        Task? watcher = null;
         retry:
         try
         {
@@ -102,19 +104,22 @@ internal class SimpleDownloader : IDownloader
 
             // 另起线程进行监控
             var cts = cancellationTokenSource;
-            using var watcher = Task.Factory.StartNew(async () =>
+            watcher = Task.Run(async () =>
             {
-                while (true)
+                try
                 {
-                    if (cts.IsCancellationRequested) break;
-                    if (speedContainer.ShouldStop)
+                    while (!cts.IsCancellationRequested)
                     {
-                        cts.Cancel();
-                        Logger.DebugMarkUp("Cancel...");
-                        break;
+                        if (speedContainer.ShouldStop)
+                        {
+                            cts.Cancel();
+                            Logger.DebugMarkUp(ResString.downloadCancelled);
+                            break;
+                        }
+                        await Task.Delay(500, cts.Token);
                     }
-                    await Task.Delay(500);
                 }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
             });
 
             // 调用下载
@@ -145,7 +150,12 @@ internal class SimpleDownloader : IDownloader
         {
             if (cancellationTokenSource != null)
             {
-                // 调用后销毁
+                // 快速下载可能在监控任务启动前完成，不能 Dispose 尚未完成的 Task。
+                // 先取消并等待监控退出，再销毁 CTS，避免竞态导致成功下载被误判失败。
+                cancellationTokenSource.Cancel();
+                if (watcher != null)
+                    await watcher;
+                watcher = null;
                 cancellationTokenSource.Dispose();
                 cancellationTokenSource = null;
             }

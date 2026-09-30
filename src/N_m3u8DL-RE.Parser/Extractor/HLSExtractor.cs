@@ -233,7 +233,6 @@ internal class HLSExtractor : IExtractor
 
         // 标记是否已清除广告分片
         bool hasAd = false;
-        ;
         bool allowHlsMultiExtMap = ParserConfig.CustomParserArgs.TryGetValue("AllowHlsMultiExtMap", out var allMultiExtMap) && allMultiExtMap == "true";
         if (allowHlsMultiExtMap)
         {
@@ -249,6 +248,11 @@ internal class HLSExtractor : IExtractor
         long startIndex;
 
         Playlist playlist = new();
+        MediaSegment? currentInit = null;
+        long discontinuitySequence = 0;
+        // 点播保留全部 MAP；实验选项仍控制尚未支持切 init 的直播路径。
+        var isVod = M3u8Content.Split('\n').Any(line => line.Trim() == HLSTags.ext_x_endlist ||
+            line.Trim().StartsWith(HLSTags.ext_x_playlist_type) && line.Trim().EndsWith("VOD"));
         List<MediaPart> mediaParts = [];
 
         // 当前的加密信息
@@ -278,7 +282,10 @@ internal class HLSExtractor : IExtractor
                 var p = ParserUtil.GetAttribute(line);
                 var (n, o) = ParserUtil.GetRange(p);
                 segment.ExpectLength = n;
-                segment.StartRange = o ?? segments.Last().StartRange + segments.Last().ExpectLength;
+                // MAP 切换会关闭当前 part，隐式偏移仍应接续播放列表的上一媒体范围。
+                var previous = segments.LastOrDefault() ?? mediaParts.LastOrDefault()?.MediaSegments.LastOrDefault();
+                segment.StartRange = o ?? previous?.StartRange + previous?.ExpectLength
+                    ?? throw new FormatException(ResString.hlsByteRangeMissingPrevious);
                 expectSegment = true;
             }
             else if (line.StartsWith(HLSTags.ext_x_playlist_type))
@@ -314,25 +321,38 @@ internal class HLSExtractor : IExtractor
             {
                 segment.DateTime = DateTime.Parse(ParserUtil.GetAttribute(line));
             }
+            else if (line.StartsWith(HLSTags.ext_x_discontinuity_sequence))
+            {
+                discontinuitySequence = Convert.ToInt64(ParserUtil.GetAttribute(line));
+            }
             // 解析不连续标记，需要单独合并（timestamp不同）
             else if (line.StartsWith(HLSTags.ext_x_discontinuity))
             {
-                // 修复YK去除广告后的遗留问题
+                // 修复去除广告后的遗留问题 去除discontinuity标记
                 if (hasAd && mediaParts.Count > 0)
                 {
                     segments = mediaParts[^1].MediaSegments;
+                    currentInit = mediaParts[^1].MediaInit;
+                    discontinuitySequence = mediaParts[^1].DiscontinuitySequence ?? discontinuitySequence;
                     mediaParts.RemoveAt(mediaParts.Count - 1);
                     hasAd = false;
                     continue;
                 }
                 // 常规情况的#EXT-X-DISCONTINUITY标记，新建part
-                if (hasAd || segments.Count < 1) continue;
+                if (hasAd || segments.Count < 1)
+                {
+                    discontinuitySequence++;
+                    continue;
+                }
                 
                 mediaParts.Add(new MediaPart
                 {
+                    MediaInit = currentInit,
+                    DiscontinuitySequence = discontinuitySequence,
                     MediaSegments = segments,
                 });
                 segments = new();
+                discontinuitySequence++;
             }
             // 解析KEY
             else if (line.StartsWith(HLSTags.ext_x_key))
@@ -371,6 +391,8 @@ internal class HLSExtractor : IExtractor
                 {
                     mediaParts.Add(new MediaPart()
                     {
+                        MediaInit = currentInit,
+                        DiscontinuitySequence = discontinuitySequence,
                         MediaSegments = segments
                     });
                 }
@@ -380,43 +402,48 @@ internal class HLSExtractor : IExtractor
             // #EXT-X-MAP
             else if (line.StartsWith(HLSTags.ext_x_map))
             {
-                if (playlist.MediaInit == null || hasAd) 
+                var nextInit = new MediaSegment()
                 {
-                    playlist.MediaInit = new MediaSegment()
-                    {
-                        Url = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, ParserUtil.GetAttribute(line, "URI"))),
-                        Index = -1, // 便于排序
-                    };
-                    if (line.Contains("BYTERANGE"))
-                    {
-                        var p = ParserUtil.GetAttribute(line, "BYTERANGE");
-                        var (n, o) = ParserUtil.GetRange(p);
-                        playlist.MediaInit.ExpectLength = n;
-                        playlist.MediaInit.StartRange = o ?? 0L;
-                    }
-                    if (currentEncryptInfo.Method == EncryptMethod.NONE) continue;
-                    // 有加密的话写入KEY和IV
-                    playlist.MediaInit.EncryptInfo.Method = currentEncryptInfo.Method;
-                    playlist.MediaInit.EncryptInfo.Key = currentEncryptInfo.Key;
-                    playlist.MediaInit.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
+                    Url = PreProcessUrl(ParserUtil.CombineURL(BaseUrl, ParserUtil.GetAttribute(line, "URI"))),
+                    Index = -1, // 便于排序
+                };
+                if (line.Contains("BYTERANGE"))
+                {
+                    var p = ParserUtil.GetAttribute(line, "BYTERANGE");
+                    var (n, o) = ParserUtil.GetRange(p);
+                    nextInit.ExpectLength = n;
+                    nextInit.StartRange = o ?? 0L;
                 }
-                // 遇到了其他的map，说明已经不是一个视频了，全部丢弃即可
-                else
+                // 有加密的话写入KEY和IV，MAP 的加密状态在声明时固定。
+                if (currentEncryptInfo.Method != EncryptMethod.NONE)
+                {
+                    nextInit.EncryptInfo.Method = currentEncryptInfo.Method;
+                    nextInit.EncryptInfo.Key = currentEncryptInfo.Key;
+                    nextInit.EncryptInfo.IV = currentEncryptInfo.IV ?? HexUtil.HexToBytes(Convert.ToString(segIndex, 16).PadLeft(32, '0'));
+                }
+                var sameInit = currentInit != null && SameInit(currentInit, nextInit);
+                if (sameInit)
+                    continue;
+                // 遇到其它 MAP 时点播按段处理；直播仍保留原先的截断保护。
+                if (!hasAd)
                 {
                     if (segments.Count > 0)
                     {
                         mediaParts.Add(new MediaPart()
                         {
+                            MediaInit = currentInit,
+                            DiscontinuitySequence = discontinuitySequence,
                             MediaSegments = segments
                         });
                     }
                     segments = new();
-                    if (!allowHlsMultiExtMap)
+                    if (currentInit != null && !isVod && !allowHlsMultiExtMap)
                     {
                         isEndlist = true;
                         break;
                     }
                 }
+                currentInit = nextInit;
             }
             // 评论行不解析
             else if (line.StartsWith('#')) continue;
@@ -429,7 +456,7 @@ internal class HLSExtractor : IExtractor
                 segment.Url = segUrl;
                 segments.Add(segment);
                 segment = new();
-                // YK的广告分段则清除此分片
+                // 广告分段则清除此分片
                 // 需要注意，遇到广告说明程序对上文的#EXT-X-DISCONTINUITY做出的动作是不必要的，
                 // 其实上下文是同一种编码，需要恢复到原先的part上
                 if (segUrl.Contains("ccode=") && segUrl.Contains("/ad/") && segUrl.Contains("duration="))
@@ -438,7 +465,7 @@ internal class HLSExtractor : IExtractor
                     segIndex--;
                     hasAd = true;
                 }
-                // YK广告(4K分辨率测试)
+                // 广告(4K分辨率测试)
                 if (segUrl.Contains("ccode=0902") && segUrl.Contains("duration="))
                 {
                     segments.RemoveAt(segments.Count - 1);
@@ -449,17 +476,23 @@ internal class HLSExtractor : IExtractor
             }
         }
 
-        // 直播的情况，无法遇到m3u8结束标记，需要手动将segments加入parts
-        if (!isEndlist)
+        // 直播的情况，无法遇到m3u8结束标记，需要手动将segments加入parts。
+        // PLAYLIST-TYPE:VOD 即使未带 ENDLIST，也必须收进最后一组媒体。
+        if (segments.Count > 0 || !isEndlist)
         {
             mediaParts.Add(new MediaPart()
             {
+                MediaInit = currentInit,
+                DiscontinuitySequence = discontinuitySequence,
                 MediaSegments = segments
             });
         }
 
         playlist.MediaParts = mediaParts;
         playlist.IsLive = !isEndlist;
+        // 直播尚未发布首片时仍需要保留 init，供原有录制流程初始化；点播去掉孤立 MAP。
+        if (!playlist.IsLive)
+            playlist.RemoveEmptyParts();
 
         // 直播刷新间隔
         if (playlist.IsLive)
@@ -504,7 +537,7 @@ internal class HLSExtractor : IExtractor
             {
                 Url = ParserConfig.Url,
                 Playlist = playlist,
-                Extension = playlist.MediaInit != null ? "mp4" : "ts"
+                Extension = playlist.MediaParts.Any(part => part.MediaInit != null) ? "mp4" : "ts"
             }
         ];
     }
@@ -574,13 +607,16 @@ internal class HLSExtractor : IExtractor
             }
 
             var newPlaylist = await ParseListAsync(MasterM3u8Flag ? lists[i] : null);
-            if (lists[i].Playlist?.MediaInit != null)
+            var previousInits = lists[i].Playlist?.MediaParts.Select(part => part.MediaInit).OfType<MediaSegment>().ToList() ?? [];
+            foreach (var part in newPlaylist.MediaParts)
             {
-                lists[i].Playlist!.MediaParts = newPlaylist.MediaParts; // 不更新init
-                lists[i].Playlist!.IsLive = newPlaylist.IsLive;
+                // 刷新时相同的 init 复用原对象；新的 MAP 仍属于它实际覆盖的媒体段。
+                // 直播消费者也可继续持有已下载对象，不会因为刷新而丢失文件字典键。
+                var previous = part.MediaInit == null ? null : previousInits.FirstOrDefault(init => SameInit(init, part.MediaInit));
+                if (previous != null)
+                    part.MediaInit = previous;
             }
-            else
-                lists[i].Playlist = newPlaylist;
+            lists[i].Playlist = newPlaylist;
 
             if (lists[i].MediaType == MediaType.SUBTITLES)
             {
@@ -591,7 +627,7 @@ internal class HLSExtractor : IExtractor
             }
             else
             {
-                lists[i].Extension = lists[i].Playlist!.MediaInit != null ? "m4s" : "ts";
+                lists[i].Extension = lists[i].Playlist!.MediaParts.Any(part => part.MediaInit != null) ? "m4s" : "ts";
             }
         }
     }
@@ -600,4 +636,10 @@ internal class HLSExtractor : IExtractor
     {
         await FetchPlayListAsync(streamSpecs);
     }
+
+    private static bool SameInit(MediaSegment a, MediaSegment b) =>
+        a.Url == b.Url && a.StartRange == b.StartRange && a.ExpectLength == b.ExpectLength &&
+        a.EncryptInfo.Method == b.EncryptInfo.Method &&
+        (a.EncryptInfo.Key ?? []).SequenceEqual(b.EncryptInfo.Key ?? []) &&
+        (a.EncryptInfo.IV ?? []).SequenceEqual(b.EncryptInfo.IV ?? []);
 }

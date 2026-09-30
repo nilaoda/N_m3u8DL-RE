@@ -33,8 +33,8 @@ public class DASHExtractor2Tests
         first.Playlist.ShouldNotBeNull();
         first.Playlist.IsLive.ShouldBe(false);
         first.Playlist.TotalDuration.ShouldBe(736);
-        first.Playlist.MediaInit.ShouldNotBeNull();
-        first.Playlist.MediaInit.Url.ShouldBe("1/init.mp4");
+        first.Playlist.MediaParts[0].MediaInit.ShouldNotBeNull();
+        first.Playlist.MediaParts[0].MediaInit.Url.ShouldBe("1/init.mp4");
     }
 
     [Fact]

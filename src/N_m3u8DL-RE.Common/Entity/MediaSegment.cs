@@ -10,6 +10,12 @@ public class MediaSegment
     [JsonIgnore]
     public long? RecordingIndex { get; set; }
     public double Duration { get; set; }
+    // DASH 源媒体时间（秒），独立于全局下载序号，供范围下载和 PTO 裁剪使用。
+    public double? PresentationTime { get; set; }
+    // HLS 点播在过滤前记录的不连续段内时间，删除广告后仍能定位字幕的源时间。
+    public double? HlsTime { get; set; }
+    // 点播过滤前的源播放时间；与媒体 PTS、删除后的输出时间分开保存。
+    public double? SourceTime { get; set; }
     public string? Title { get; set; }
     public DateTime? DateTime { get; set; }
 
@@ -24,6 +30,13 @@ public class MediaSegment
     public string Url { get; set; } = string.Empty;
 
     public string? NameFromVar { get; set; } // MPD分段文件名
+
+    public MediaSegment WithIndex(long index)
+    {
+        var copy = (MediaSegment)MemberwiseClone();
+        copy.Index = index;
+        return copy;
+    }
 
     public override bool Equals(object? obj)
     {

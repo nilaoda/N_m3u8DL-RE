@@ -16,3 +16,7 @@
 * https://cdn01.vdocipher.com/media/6YI1GS6X5lAr7/b4550743/stream.mpd (单mp4链接 无法使用Bytes: 0-)
 * https://api-proxad.dc2.oqee.net/playlist/v1/live/1776/1/live.mpd （需要从MPD中提取KID）
 * https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd (`9eb4050de44b4802932e27d75083e266:166634c675823c235a4a9446fad52e4d`)
+* https://storage.googleapis.com/shaka-demo-assets/heliocentrism/heliocentrism.mpd (DASH 多 Period、PTO、分辨率变化)
+* https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd (DASH 多 Period，无 Period ID、MP4 WVTT 字幕)
+* https://storage.googleapis.com/shaka-demo-assets/sintel-mixed-encryption/clear-enc-clear.mpd (DASH 明文/加密/明文 Period)
+* https://downloads.a2d.tv/synctest/multivariant.m3u8 (HLS 多 MAP、discontinuity、广告、原始 VTT 字幕)

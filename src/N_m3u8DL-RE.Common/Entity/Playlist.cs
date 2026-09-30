@@ -15,8 +15,11 @@ public class Playlist
 
     // 所有分片中最长时长
     public double? TargetDuration { get; set; }
-    // INIT信息
-    public MediaSegment? MediaInit { get; set; }
     // 分片信息
     public List<MediaPart> MediaParts { get; set; } = [];
+
+    public void RemoveEmptyParts()
+    {
+        MediaParts.RemoveAll(part => part.MediaSegments.Count == 0);
+    }
 }
