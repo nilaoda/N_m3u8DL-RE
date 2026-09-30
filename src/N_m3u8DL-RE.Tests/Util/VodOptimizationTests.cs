@@ -67,10 +67,10 @@ public class VodOptimizationTests
             await File.WriteAllBytesAsync(result!.ActualFilePath, [99]); // 模拟 MSS 原地重建 init。
             File.Delete(result.ActualFilePath); // 模拟解密后清理源文件。
             var reused = await cache.DownloadAsync(first, Path.Combine(root, "reused.mp4.tmp"), new SpeedContainer(), Download);
-            Assert.Equal(new byte[] { 1 }, await File.ReadAllBytesAsync(reused!.ActualFilePath));
+            Assert.Equal([1], await File.ReadAllBytesAsync(reused!.ActualFilePath));
             var distinct = await cache.DownloadAsync(second, Path.Combine(root, "distinct.mp4.tmp"), new SpeedContainer(), Download);
             Assert.Equal(2, downloads);
-            Assert.Equal(new byte[] { 2 }, await File.ReadAllBytesAsync(distinct!.ActualFilePath));
+            Assert.Equal([2], await File.ReadAllBytesAsync(distinct!.ActualFilePath));
         }
         finally { Directory.Delete(root, true); }
     }

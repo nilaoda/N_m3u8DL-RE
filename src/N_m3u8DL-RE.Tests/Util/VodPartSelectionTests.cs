@@ -26,7 +26,7 @@ public class VodPartSelectionTests
         var audio = Track(MediaType.AUDIO, "mp4a.40.2", (1, 2.98), (2, 19.99), (3, 14.98));
         var subs = Track(MediaType.SUBTITLES, "vtt", (1, 3), (3, 15));
         var group = Assert.Single(VodPartSelector.BuildGroups([first, second, audio, subs]));
-        Assert.Equal(new long[] { 1, 2, 3 }, group.Ids);
+        Assert.Equal([1, 2, 3], group.Ids);
         Assert.Equal(38, group.Duration); // 音视频不重复累加，字幕缺失不产生新组。
         Assert.DoesNotContain("https://", group.Display);
         Assert.DoesNotContain("init", group.Display);
@@ -54,12 +54,12 @@ public class VodPartSelectionTests
         var streams = new List<StreamSpec> { video, audio };
         var groups = VodPartSelector.BuildGroups(streams);
         Assert.Equal(2, groups.Count);
-        Assert.Equal(new long[] { 1, 2, 4 }, groups[0].Ids);
-        Assert.Equal(new long[] { 3, 5 }, groups[1].Ids);
+        Assert.Equal([1, 2, 4], groups[0].Ids);
+        Assert.Equal([3, 5], groups[1].Ids);
         Assert.Equal(48, groups[0].Duration);
         Assert.Equal(1259, groups[1].Duration);
         VodPartSelector.KeepGroups(streams, groups, [groups[1]]);
-        Assert.All(streams, s => Assert.Equal(new long[] { 3, 5 }, s.Playlist!.MediaParts.Select(VodPartSelector.Id)));
+        Assert.All(streams, s => Assert.Equal([3, 5], s.Playlist!.MediaParts.Select(VodPartSelector.Id)));
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class VodPartSelectionTests
         var video = Track(null, "avc1", (1, 2), (1, 3));
         foreach (var part in video.Playlist!.MediaParts) { part.PeriodIndex = 7; part.PeriodDuration = 100; }
         var group = Assert.Single(VodPartSelector.BuildGroups([video]));
-        Assert.Equal(new long[] { 7 }, group.Ids);
+        Assert.Equal([7], group.Ids);
         Assert.Equal(5, group.Duration);
     }
 
@@ -151,7 +151,7 @@ public class VodPartSelectionTests
         var first = Track(null, "avc1", (0, 3)); first.Bandwidth = 100000;
         var repeated = Track(null, "avc1", (1, 100)); repeated.Bandwidth = 100000;
         var higher = Track(null, "avc1", (1, 100)); higher.Bandwidth = 200000;
-        Assert.Equal(new[] { repeated, higher }, VodPartSelector.QualityChoices([first, repeated, higher]));
+        Assert.Equal([repeated, higher], VodPartSelector.QualityChoices([first, repeated, higher]));
     }
 
     [Fact]

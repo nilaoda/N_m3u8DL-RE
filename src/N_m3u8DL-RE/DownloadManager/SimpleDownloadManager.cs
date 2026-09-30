@@ -856,10 +856,10 @@ internal partial class SimpleDownloadManager
             }).ToDictionary(item => item.item, item => item.task);
 
             // 字幕映射依赖媒体的源 PTS。先完成音视频，再处理字幕；同类轨道仍可并发。
-            var batches = alignedHlsSubtitles
-                ? new[] { dic.Where(kp => kp.Key.MediaType != MediaType.SUBTITLES).ToList(),
-                    dic.Where(kp => kp.Key.MediaType == MediaType.SUBTITLES).ToList() }
-                : new[] { dic.ToList() };
+            List<KeyValuePair<StreamSpec, ProgressTask>>[] batches = alignedHlsSubtitles
+                ? [dic.Where(kp => kp.Key.MediaType != MediaType.SUBTITLES).ToList(),
+                    dic.Where(kp => kp.Key.MediaType == MediaType.SUBTITLES).ToList()]
+                : [dic.ToList()];
             foreach (var batch in batches)
             {
                 if (!DownloaderConfig.MyOptions.ConcurrentDownload)

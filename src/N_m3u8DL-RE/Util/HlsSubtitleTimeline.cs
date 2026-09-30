@@ -27,7 +27,8 @@ internal static partial class HlsSubtitleTimeline
         // 纯字幕没有媒体 PTS 可供探测。以分片区间的重叠量区分连续/重启时钟，
         // 以及 VTT 使用播放时间、MPEGTS 带独立起始偏移的情况；不以首句对白归零。
         // 相同得分优先采用 timestamp-map，避免在有效映射上无故切换时钟模式。
-        var adjustment = new[] { 0d, sourceBase, -timestamp, sourceBase - timestamp }.Distinct()
+        double[] adjustments = [0d, sourceBase, -timestamp, sourceBase - timestamp];
+        var adjustment = adjustments.Distinct()
             .OrderByDescending(Overlap).First();
         if (adjustment != 0)
         {

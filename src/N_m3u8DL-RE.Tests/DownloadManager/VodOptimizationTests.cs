@@ -266,7 +266,7 @@ public partial class VodMultiInitTests
             using var extractor = new StreamExtractor(new ParserConfig());
             await extractor.LoadSourceFromUrlAsync(server.Url + "vod.mpd");
             var sources = await extractor.ExtractStreamsAsync();
-            var seeds = new[] { sources.First(s => s.MediaType is null or MediaType.VIDEO), sources.First(s => s.MediaType == MediaType.SUBTITLES) };
+            StreamSpec[] seeds = [sources.First(s => s.MediaType is null or MediaType.VIDEO), sources.First(s => s.MediaType == MediaType.SUBTITLES)];
             Assert.Throws<NotSupportedException>(() => VodStreamPlanner.Build(sources, [seeds[0]]));
             if (byUrl)
                 FilterUtil.CleanAd(sources, ["ad-init"]);
@@ -278,8 +278,8 @@ public partial class VodMultiInitTests
             await DownloadCutStreams(root, streams, extractor);
             await AssertVideo(Path.Combine(root, "out", "result.mp4"), 4, 100);
             var sub = WebVttSub.Parse(await File.ReadAllTextAsync(Path.Combine(root, "out", "result.en.vtt")));
-            Assert.Equal(new[] { "cue-0", "cue-2" }, sub.Cues.Select(c => c.Payload));
-            Assert.Equal(new[] { 0.25, 2.25 }, sub.Cues.Select(c => c.StartTime.TotalSeconds));
+            Assert.Equal(["cue-0", "cue-2"], sub.Cues.Select(c => c.Payload));
+            Assert.Equal([0.25, 2.25], sub.Cues.Select(c => c.StartTime.TotalSeconds));
             Assert.Equal(1, server.RequestCount("init.mp4"));
             Assert.Equal(0, server.RequestCount("ad-init.mp4"));
             Assert.Equal(0, server.RequestCount("sub-1.vtt"));
@@ -325,8 +325,8 @@ public partial class VodMultiInitTests
             await DownloadCutStreams(root, streams, extractor);
             await AssertVideo(Path.Combine(root, "out", "result.mp4"), 4, 100);
             var sub = WebVttSub.Parse(await File.ReadAllTextAsync(Path.Combine(root, "out", "result.en.vtt")));
-            Assert.Equal(new[] { 1d, 2d }, sub.Cues.Select(c => c.StartTime.TotalSeconds));
-            Assert.Equal(new[] { 2d, 3d }, sub.Cues.Select(c => c.EndTime.TotalSeconds));
+            Assert.Equal([1d, 2d], sub.Cues.Select(c => c.StartTime.TotalSeconds));
+            Assert.Equal([2d, 3d], sub.Cues.Select(c => c.EndTime.TotalSeconds));
             Assert.All(sub.Cues, c => Assert.Equal("crossing", c.Payload));
             Assert.Equal(1, server.RequestCount("init.mp4"));
         }

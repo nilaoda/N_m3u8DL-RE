@@ -76,7 +76,7 @@ public partial class VodMultiInitTests
                     "-hls_segment_filename", Path.Combine(root, $"media-%d.{extension}"), Path.Combine(root, "source.m3u8"));
             Assert.Equal(3, Directory.GetFiles(root, $"media-*.{extension}").Length);
             var plaintext = Directory.GetFiles(root, $"media-*.{extension}")
-                .Concat(ts ? [] : new[] { Path.Combine(root, "init.mp4") })
+                .Concat(ts ? [] : [Path.Combine(root, "init.mp4")])
                 .ToDictionary(f => Path.GetFileName(f)!, File.ReadAllBytes);
             if (encryption == "aes")
             {

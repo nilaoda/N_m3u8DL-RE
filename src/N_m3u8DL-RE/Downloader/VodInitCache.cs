@@ -19,8 +19,8 @@ internal sealed class VodInitCache(string directory)
     internal static string Identity(MediaSegment init)
     {
         var key = Key(init);
-        var values = new[] { key.Url, key.Start?.ToString(CultureInfo.InvariantCulture),
-            key.Length?.ToString(CultureInfo.InvariantCulture), key.Method, key.Key, key.IV, key.Kid };
+        string?[] values = [key.Url, key.Start?.ToString(CultureInfo.InvariantCulture),
+            key.Length?.ToString(CultureInfo.InvariantCulture), key.Method, key.Key, key.IV, key.Kid];
         var identity = string.Concat(values.Select(value => value == null ? "-1:" : $"{value.Length}:{value}"));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity)));
     }

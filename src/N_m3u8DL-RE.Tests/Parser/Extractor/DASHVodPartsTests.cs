@@ -29,7 +29,7 @@ public class DASHVodPartsTests
         Assert.EndsWith("second-init.mp4", parts[1].MediaInit!.Url);
         Assert.Equal(new string('1', 32), parts[0].MediaInit!.EncryptInfo.KID);
         Assert.Equal(new string('2', 32), parts[1].MediaInit!.EncryptInfo.KID);
-        Assert.Equal(new long[] { 0, 1, 2, 3 }, parts.SelectMany(p => p.MediaSegments).Select(s => s.Index));
+        Assert.Equal([0, 1, 2, 3], parts.SelectMany(p => p.MediaSegments).Select(s => s.Index));
         // 编排不能改变原始流，其它画质的选择还会用到这些对象。
         Assert.Equal(0, streams[1].Playlist!.MediaParts[0].MediaSegments[0].Index);
     }
@@ -123,8 +123,8 @@ public class DASHVodPartsTests
         low1.Resolution = "1280x720"; low1.GroupId = "low1";
         var plans = VodStreamPlanner.Build([streams[0], low0, streams[1], low1], [streams[0], low0, streams[1], low1]);
         Assert.Equal(2, plans.Count);
-        Assert.Equal(new[] { "high0", "high1" }, plans[0].Playlist!.MediaParts.Select(p => p.RepresentationId));
-        Assert.Equal(new[] { "low0", "low1" }, plans[1].Playlist!.MediaParts.Select(p => p.RepresentationId));
+        Assert.Equal(["high0", "high1"], plans[0].Playlist!.MediaParts.Select(p => p.RepresentationId));
+        Assert.Equal(["low0", "low1"], plans[1].Playlist!.MediaParts.Select(p => p.RepresentationId));
     }
 
     [Fact]

@@ -17,7 +17,7 @@ public class DownloadDirectoryCleanupTests
             File.WriteAllText(parentMetadata, "parent");
             File.WriteAllText(Path.Combine(task, ".DS_Store"), "task");
             File.WriteAllText(Path.Combine(nested, ".DS_Store"), "nested");
-            var preserved = new[] { Path.Combine(nested, "0001.png"), Path.Combine(task, "notes.txt"), Path.Combine(task, "0001.m4s") };
+            string[] preserved = [Path.Combine(nested, "0001.png"), Path.Combine(task, "notes.txt"), Path.Combine(task, "0001.m4s")];
             foreach (var file in preserved) File.WriteAllText(file, "keep");
 
             OtherUtil.SafeDeleteDir(task, cleanMetadata: true);

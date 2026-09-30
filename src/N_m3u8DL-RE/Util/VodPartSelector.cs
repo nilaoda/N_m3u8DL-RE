@@ -148,11 +148,12 @@ internal static partial class VodPartSelector
         var resolutions = video.Select(x => x.Stream.Resolution).OfType<string>()
             .Where(r => !string.IsNullOrWhiteSpace(r)).Distinct().OrderBy(ResolutionArea)
             .ThenBy(r => r, StringComparer.Ordinal).ToList();
-        var range = resolutions.Count == 0 ? "" : string.Join("–", new[] { resolutions[0], resolutions[^1] }.Distinct());
+        string[] limits = resolutions.Count == 0 ? [] : [resolutions[0], resolutions[^1]];
+        var range = string.Join("–", limits.Distinct());
         var summary = $"Vid {string.Join(" / ", codecs)} | " +
             $"{range} ({string.Format(ResString.vodAvailableConfigs, choices.Count)})".TrimStart();
         var videoLabels = choices.Select(c => c.Label).ToHashSet(StringComparer.Ordinal);
-        return string.Join(" + ", new[] { summary }.Concat(labels.Where(l => !videoLabels.Contains(l))));
+        return string.Join(" + ", labels.Where(l => !videoLabels.Contains(l)).Prepend(summary));
     }
 
     private static long ResolutionArea(string resolution)
@@ -173,7 +174,8 @@ internal static partial class VodPartSelector
         if (gap == 0)
             return [group];
         var boundary = durations[gap];
-        return new[] { false, true }.Select(isLong =>
+        bool[] lengths = [false, true];
+        return lengths.Select(isLong =>
         {
             var indices = Enumerable.Range(0, group.Ids.Count)
                 .Where(i => (group.SectionDurations[i] >= boundary) == isLong).ToList();
@@ -223,11 +225,11 @@ internal static partial class VodPartSelector
     private static Configuration ManifestConfiguration(StreamSpec stream, MediaPart part)
     {
         var type = stream.MediaType ?? MediaType.VIDEO;
-        var label = string.Join(" ", new[] { type == MediaType.AUDIO ? "Aud" : type == MediaType.SUBTITLES ? "Sub" : "Vid",
+        string?[] values = [type == MediaType.AUDIO ? "Aud" : type == MediaType.SUBTITLES ? "Sub" : "Vid",
             part.Codecs ?? stream.Codecs, stream.Resolution,
             stream.Channels == null ? null : $"{stream.Channels}CH", stream.VideoRange,
-            type is MediaType.AUDIO or MediaType.SUBTITLES ? stream.Language : null }
-            .Where(s => !string.IsNullOrWhiteSpace(s)));
+            type is MediaType.AUDIO or MediaType.SUBTITLES ? stream.Language : null];
+        var label = string.Join(" ", values.Where(s => !string.IsNullOrWhiteSpace(s)));
         return new Configuration($"{label}|{stream.FrameRate}|{stream.Language}|{stream.Role}", label);
     }
 
@@ -242,11 +244,13 @@ internal static partial class VodPartSelector
         if (infos.Any(i => i.Type == "Video" && string.IsNullOrEmpty(i.Resolution) ||
                            i.Type == "Audio" && AudioConfigurationRegex().Matches(i.Text ?? "").Count < 2))
             return null;
-        var labels = infos.Select(i => string.Join(" ", new[] {
-            i.Type == "Audio" ? "Aud" : "Vid", i.BaseInfo, i.Resolution,
-            i.Type == "Audio" ? string.Join(" ", AudioConfigurationRegex().Matches(i.Text ?? "").Select(m => m.Value)) : null,
-            i.Fps, i.DolbyVison ? "DOVI" : i.HDR ? "HDR" : null
-        }.Where(s => !string.IsNullOrWhiteSpace(s)))).Order(StringComparer.Ordinal).ToList();
+        var labels = infos.Select(i =>
+        {
+            string?[] values = [i.Type == "Audio" ? "Aud" : "Vid", i.BaseInfo, i.Resolution,
+                i.Type == "Audio" ? string.Join(" ", AudioConfigurationRegex().Matches(i.Text ?? "").Select(m => m.Value)) : null,
+                i.Fps, i.DolbyVison ? "DOVI" : i.HDR ? "HDR" : null];
+            return string.Join(" ", values.Where(s => !string.IsNullOrWhiteSpace(s)));
+        }).Order(StringComparer.Ordinal).ToList();
         var label = string.Join(" + ", labels.OrderBy(DisplayOrder).ThenBy(label => label, StringComparer.Ordinal));
         return new Configuration(string.Join(" + ", labels), label);
     }

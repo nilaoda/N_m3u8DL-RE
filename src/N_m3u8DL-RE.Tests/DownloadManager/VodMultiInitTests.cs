@@ -45,7 +45,8 @@ public partial class VodMultiInitTests
                     await File.WriteAllBytesAsync(Path.Combine(root, $"key-{i}"), key);
                     using var aes = Aes.Create();
                     aes.Key = key;
-                    foreach (var file in new[] { $"init-{i}.mp4", $"segment-{i}-0.m4s" })
+                    string[] files = [$"init-{i}.mp4", $"segment-{i}-0.m4s"];
+                    foreach (var file in files)
                     {
                         var path = Path.Combine(root, file);
                         var data = await File.ReadAllBytesAsync(path);
@@ -377,8 +378,8 @@ public partial class VodMultiInitTests
         if (File.Exists(binary))
             return true;
         // Windows 的工具通常带 .exe，不能只检查不带扩展名的文件。
-        var extensions = OperatingSystem.IsWindows()
-            ? new[] { "", ".exe" } : new[] { "" };
+        string[] extensions = OperatingSystem.IsWindows()
+            ? ["", ".exe"] : [""];
         return (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator)
             .Any(dir => extensions.Any(extension => File.Exists(Path.Combine(dir, binary + extension))));
     }

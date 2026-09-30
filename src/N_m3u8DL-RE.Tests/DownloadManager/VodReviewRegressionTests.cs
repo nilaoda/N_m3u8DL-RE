@@ -40,7 +40,7 @@ public partial class VodMultiInitTests
             Assert.True(MP4DecryptUtil.HasEncryptedTracks(encrypted));
             Assert.False(MP4DecryptUtil.HasEncryptedTracks(plain));
             var bytes = await File.ReadAllBytesAsync(encrypted);
-            var cluster = bytes.AsSpan().IndexOf(new byte[] { 0x1f, 0x43, 0xb6, 0x75 });
+            var cluster = bytes.AsSpan().IndexOf<byte>([0x1f, 0x43, 0xb6, 0x75]);
             Assert.True(cluster > 0);
             await File.WriteAllBytesAsync(Path.Combine(root, "init.webm"), bytes[..cluster]);
             await File.WriteAllBytesAsync(Path.Combine(root, "media.webm"), bytes[cluster..]);
@@ -115,8 +115,8 @@ public partial class VodMultiInitTests
             var manifest = Path.Combine(root, "vod.mpd");
             await File.WriteAllTextAsync(manifest,
                 $"<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" type=\"static\" mediaPresentationDuration=\"PT12S\">{string.Join('\n', periods)}</MPD>");
-            var removalArgs = removal == "url" ? new[] { "--ad-keyword", "ad-" }
-                : new[] { "--vod-drop-parts", removal == "keep-one" ? "0,2" : "0" };
+            string[] removalArgs = removal == "url" ? ["--ad-keyword", "ad-"]
+                : ["--vod-drop-parts", removal == "keep-one" ? "0,2" : "0"];
             var result = await RunVodCli([manifest, "--auto-select", "--skip-download", "--custom-range",
                 timeRange ? "00:00:04-00:00:07" : "2-3", "--tmp-dir", Path.Combine(root, "tmp"),
                 "--save-name", "result", ..removalArgs]);
@@ -125,8 +125,8 @@ public partial class VodMultiInitTests
             var part = Assert.Single(meta.RootElement[0].GetProperty("Playlist").GetProperty("MediaParts").EnumerateArray());
             Assert.Equal(multiPeriod ? 1 : 0, part.GetProperty("PeriodIndex").GetInt32());
             var segments = part.GetProperty("MediaSegments").EnumerateArray().ToList();
-            Assert.Equal(new long[] { 2, 3 }, segments.Select(s => s.GetProperty("Index").GetInt64()));
-            Assert.Equal(new double[] { 4, 6 }, segments.Select(s => s.GetProperty("SourceTime").GetDouble()));
+            Assert.Equal([2, 3], segments.Select(s => s.GetProperty("Index").GetInt64()));
+            Assert.Equal([4, 6], segments.Select(s => s.GetProperty("SourceTime").GetDouble()));
             Assert.All(segments, s => Assert.Contains(multiPeriod ? "p1-" : "p0-", s.GetProperty("Url").GetString()));
         }
         finally { Directory.Delete(root, true); }
@@ -226,9 +226,9 @@ public partial class VodMultiInitTests
                 #EXT-X-STREAM-INF:BANDWIDTH=100000,CODECS="avc1.64001e",SUBTITLES="s"
                 unused.m3u8
                 """);
-            var cutArgs = cut switch
+            string[] cutArgs = cut switch
             {
-                "drop" => new[] { "--vod-drop-parts", "1" },
+                "drop" => ["--vod-drop-parts", "1"],
                 "drop-first" => ["--vod-drop-parts", "0"],
                 "drop-last" => ["--vod-drop-parts", "2"],
                 "range" => ["--custom-range", "1-2"],
@@ -240,15 +240,15 @@ public partial class VodMultiInitTests
             Assert.True(result.ExitCode == 0, result.Log);
             var text = await File.ReadAllTextAsync(Path.Combine(root, "out", "result.en." + format.ToLowerInvariant()));
             var sub = WebVttSub.Parse(format == "SRT" ? "WEBVTT\n\n" + text : text);
-            var cues = cut switch
+            string[] cues = cut switch
             {
-                "range" or "drop-first" => new[] { "cue-1", "cue-2" },
+                "range" or "drop-first" => ["cue-1", "cue-2"],
                 "drop-last" => ["cue-0", "cue-1"],
                 _ => ["cue-0", "cue-2"],
             };
             Assert.Equal(cues, sub.Cues.Select(c => c.Payload));
-            Assert.Equal(new[] { 0.25, 2.25 }, sub.Cues.Select(c => c.StartTime.TotalSeconds));
-            Assert.Equal(new[] { 1d, cut == "drop-last" ? 4d : 3d }, sub.Cues.Select(c => c.EndTime.TotalSeconds));
+            Assert.Equal([0.25, 2.25], sub.Cues.Select(c => c.StartTime.TotalSeconds));
+            Assert.Equal([1d, cut == "drop-last" ? 4d : 3d], sub.Cues.Select(c => c.EndTime.TotalSeconds));
         }
         finally { Directory.Delete(root, true); }
     }
@@ -260,7 +260,7 @@ public partial class VodMultiInitTests
             RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false,
         };
         info.ArgumentList.Add(typeof(Program).Assembly.Location);
-        foreach (var arg in args.Concat(new[] { "--no-log", "--disable-update-check", "--ui-language", "zh-CN" }))
+        foreach (var arg in args.Concat(["--no-log", "--disable-update-check", "--ui-language", "zh-CN"]))
             info.ArgumentList.Add(arg);
         using var process = Process.Start(info)!;
         var stdout = process.StandardOutput.ReadToEndAsync();

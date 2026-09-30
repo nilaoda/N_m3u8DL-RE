@@ -218,7 +218,7 @@ internal static partial class MP4DecryptUtil
         if (stream.Read(signature) != 4)
             return false;
         // WebM 使用 EBML 的 ContentEncryption，不能用 MP4 的 schm 判断解密结果。
-        if (!signature.SequenceEqual(new byte[] { 0x1a, 0x45, 0xdf, 0xa3 }))
+        if (!signature.SequenceEqual<byte>([0x1a, 0x45, 0xdf, 0xa3]))
             return GetMP4Info(file, log: false).Scheme != null;
         stream.Position = 0;
         return ReadWebmElements(stream, stream.Length);
