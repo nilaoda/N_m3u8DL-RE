@@ -63,6 +63,7 @@ internal partial class SimpleDownloadManager
             manager.initCache = cache;
             manager.partLogMessages = logMessages;
             manager.hlsMediaOrigins = hlsMediaOrigins;
+            manager.hlsMediaReady = hlsMediaReady;
             manager.hlsSubtitleOnlyCuts = hlsSubtitleOnlyCuts;
             if (!await manager.DownloadStreamAsync(partStream, task, speed, isPart: true))
                 return false;
@@ -99,14 +100,26 @@ internal partial class SimpleDownloadManager
             DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory, saveName + ext), stream);
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
+        // 单段且没有裁剪/输出偏移时，子下载器的合并结果就是最终文件。
+        // 若其它媒体轨道需要保留公共时间轴，则本轨道也必须完成时间轴归一化。
+        var copySingle = outputs.Count == 1 && SelectedSteams.Where(s => s.MediaType != MediaType.SUBTITLES)
+            .All(CanUseSinglePartOutput);
         bool success;
         if (subtitle)
         {
             success = await MergeSubtitlesAsync(parts, outputs, outputPath);
         }
+        else if (copySingle)
+        {
+            if (DownloaderConfig.MyOptions.DelAfterDone)
+                File.Move(first.FilePath, outputPath);
+            else
+                File.Copy(first.FilePath, outputPath);
+            success = true;
+        }
         else
         {
-            Logger.InfoMarkUp($"[grey]{string.Format(ResString.vodPartsConcat, parts.Count)}[/]");
+            Logger.InfoMarkUp($"[grey]{(parts.Count > 1 ? string.Format(ResString.vodPartsConcat, parts.Count) : ResString.ffmpegMerge)}[/]");
             success = MergeUtil.ConcatMediaParts(DownloaderConfig.MyOptions.FFmpegBinaryPath!,
                 outputs.Select(o => o.FilePath).ToArray(), parts, outputPath);
         }
@@ -118,7 +131,7 @@ internal partial class SimpleDownloadManager
             return false;
         }
         first.FilePath = outputPath;
-        first.PreserveTimestamp = parts.Any(p => p.OutputStart != null);
+        first.PreserveTimestamp = !subtitle && !copySingle && parts.Any(p => p.OutputStart != null);
         lock (OutputFiles)
             OutputFiles.Add(first);
         if (DownloaderConfig.MyOptions.DelAfterDone)
@@ -130,6 +143,20 @@ internal partial class SimpleDownloadManager
             OtherUtil.SafeDeleteDir(partsDir);
         }
         return true;
+    }
+
+    private static bool CanUseSinglePartOutput(StreamSpec stream)
+    {
+        if (stream.Playlist?.MediaParts.Count != 1 || stream.SkippedDuration > 0)
+            return false;
+        var part = stream.Playlist.MediaParts[0];
+        if (Math.Abs(part.OutputStart ?? 0) > 0.001)
+            return false;
+        if (part.PeriodIndex == null)
+            return Math.Abs(part.MediaSegments.FirstOrDefault()?.HlsTime ?? 0) <= 0.001;
+        // DASH 仍需处理非零 PTO、共同 inpoint 和跨越 Period 尾部的分片。
+        return Math.Abs(GetPartInpoint(part) ?? 0) <= 0.001 &&
+            (part.OutputDuration == null || part.OutputDuration >= part.MediaSegments.Sum(s => s.Duration) - 0.001);
     }
 
     private async Task<bool> MergeSubtitlesAsync(List<MediaPart> parts, List<OutputFile> outputs, string output)

@@ -26,6 +26,7 @@ internal partial class SimpleDownloadManager
     List<OutputFile> OutputFiles = [];
     private VodInitCache? initCache;
     private ConcurrentDictionary<long, double>? hlsMediaOrigins;
+    private Task<bool>? hlsMediaReady;
     private bool hlsSubtitleOnlyCuts;
     private HashSet<string>? partLogMessages;
 
@@ -437,6 +438,11 @@ internal partial class SimpleDownloadManager
         {
             return false;
         }
+
+        // 字幕分片可以与音视频并发下载；仅修正时间轴时才依赖媒体的源 PTS。
+        // 媒体失败时结束等待并保留字幕输入，避免挂起或使用不完整的原点。
+        if (streamSpec.MediaType == MediaType.SUBTITLES && hlsMediaReady != null && !await hlsMediaReady)
+            return false;
 
         if (isPart && hlsMediaOrigins != null && streamSpec.MediaType != MediaType.SUBTITLES)
         {
@@ -855,12 +861,12 @@ internal partial class SimpleDownloadManager
                 return (item, task);
             }).ToDictionary(item => item.item, item => item.task);
 
-            // 字幕映射依赖媒体的源 PTS。先完成音视频，再处理字幕；同类轨道仍可并发。
+            // 顺序模式仍先处理媒体；并发模式同时下载两类轨道，只让字幕修复等待媒体。
             List<KeyValuePair<StreamSpec, ProgressTask>>[] batches = alignedHlsSubtitles
                 ? [dic.Where(kp => kp.Key.MediaType != MediaType.SUBTITLES).ToList(),
                     dic.Where(kp => kp.Key.MediaType == MediaType.SUBTITLES).ToList()]
                 : [dic.ToList()];
-            foreach (var batch in batches)
+            async Task DownloadBatchAsync(List<KeyValuePair<StreamSpec, ProgressTask>> batch)
             {
                 if (!DownloaderConfig.MyOptions.ConcurrentDownload)
                 {
@@ -877,8 +883,34 @@ internal partial class SimpleDownloadManager
                     await Parallel.ForEachAsync(batch, async (kp, _) =>
                         Results[kp.Key] = await DownloadStreamAsync(kp.Key, kp.Value, SpeedContainerDic[kp.Value.Id]));
                 }
-                if (Results.Values.Any(v => v != true))
-                    break;
+            }
+            if (alignedHlsSubtitles && DownloaderConfig.MyOptions.ConcurrentDownload)
+            {
+                var ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                hlsMediaReady = ready.Task;
+                async Task DownloadMediaAsync()
+                {
+                    var completed = false;
+                    try
+                    {
+                        await DownloadBatchAsync(batches[0]);
+                        completed = batches[0].All(kp => Results.TryGetValue(kp.Key, out var result) && result == true);
+                    }
+                    finally
+                    {
+                        ready.TrySetResult(completed);
+                    }
+                }
+                await Task.WhenAll(DownloadMediaAsync(), DownloadBatchAsync(batches[1]));
+            }
+            else
+            {
+                foreach (var batch in batches)
+                {
+                    await DownloadBatchAsync(batch);
+                    if (Results.Values.Any(v => v != true))
+                        break;
+                }
             }
         });
 
