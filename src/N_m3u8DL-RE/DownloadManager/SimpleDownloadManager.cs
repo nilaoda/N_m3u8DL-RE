@@ -157,7 +157,7 @@ internal partial class SimpleDownloadManager
         }
 
         var type = streamSpec.MediaType ?? Common.Enum.MediaType.VIDEO;
-        var dirName = $"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
+        var dirName = OtherUtil.GetSafeFileName($"{task.Id}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}");
         var tmpDir = Path.Combine(DownloaderConfig.DirPrefix, dirName);
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
 
@@ -974,9 +974,10 @@ internal partial class SimpleDownloadManager
             var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
             var ext = OtherUtil.GetMuxExtension(DownloaderConfig.MyOptions.MuxOptions.MuxFormat);
             var dirName = Path.GetFileName(DownloaderConfig.DirPrefix);
-            var outName = $"{dirName}.MUX";
-            var outPath = Path.Combine(saveDir, outName);
-            Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}{ext}[/]");
+            // 为临时 .MUX 和最终媒体扩展名共同预留空间。
+            var outName = OtherUtil.GetSafeFileName(dirName, ".MUX" + ext);
+            var outPath = Path.Combine(saveDir, Path.GetFileNameWithoutExtension(outName));
+            Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}[/]");
             var result = false;
             if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
             else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);

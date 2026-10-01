@@ -22,7 +22,7 @@ internal partial class SimpleDownloadManager
         speed.ResetVars();
         task.MaxValue = parts.Sum(p => p.MediaSegments.Count + (p.MediaInit != null ? 1 : 0));
         task.StartTask();
-        var dirName = $"{task.Id}_{OtherUtil.GetValidFileName(stream.GroupId ?? "", "-")}_{stream.Codecs}_{stream.Bandwidth}_{stream.Language}";
+        var dirName = OtherUtil.GetSafeFileName($"{task.Id}_{OtherUtil.GetValidFileName(stream.GroupId ?? "", "-")}_{stream.Codecs}_{stream.Bandwidth}_{stream.Language}");
         var partsDir = Path.Combine(DownloaderConfig.DirPrefix, dirName, "parts");
         var outputs = new List<OutputFile>();
         // 集合只在当前轨道顺序下载期间使用，不跨轨道或跨次下载去重。

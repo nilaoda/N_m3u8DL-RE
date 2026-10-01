@@ -71,7 +71,7 @@ internal class HTTPLiveRecordManager
                      throw new InvalidDataException("HTTP live TS requires the original response stream.");
         var responseStream = source.Stream ??
                              throw new InvalidDataException("HTTP live TS response has no stream.");
-        var output = Path.Combine(saveDir, saveName + ".ts");
+        var output = Path.Combine(saveDir, OtherUtil.GetSafeFileName(saveName, ".ts"));
         if (File.Exists(output))
         {
             Logger.Warn($"File already exists, skipping recording: {output}");

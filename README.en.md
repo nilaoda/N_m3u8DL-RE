@@ -46,6 +46,8 @@ Cookies are matched by domain, path, HTTPS requirement and expiration for manife
 
 ## Command line parameters
 
+Long automatic names, custom save names and expanded filename patterns are shortened with a hash suffix to reduce collisions. Limits use UTF-8 bytes without splitting Chinese characters or emoji, with space reserved for automatic timestamps and media extensions.
+
 ```
 Description:
   N_m3u8DL-RE 0.6.0 20260628

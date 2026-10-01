@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
@@ -12,8 +14,11 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 
 public class HTTPLiveRecordManagerTests
 {
-    [Fact]
-    public async Task RecordsCompleteTsFromInitialResponseWithoutAnotherRequest()
+    [Theory]
+    [InlineData("short")]
+    [InlineData("save-name")]
+    [InlineData("pattern")]
+    public async Task RecordsCompleteTsFromInitialResponseWithoutAnotherRequest(string naming)
     {
         var bytes = new byte[188 * 60];
         new Random(956).NextBytes(bytes);
@@ -38,7 +43,8 @@ public class HTTPLiveRecordManagerTests
             var options = new MyOption
             {
                 Input = url,
-                SaveName = "recording",
+                SaveName = naming == "save-name" ? new string('中', 150) : "recording",
+                SavePattern = naming == "pattern" ? new string('a', 300) + ".<SaveName>" : null,
                 SaveDir = directory,
                 NoAnsiColor = true,
                 LogLevel = LogLevel.OFF
@@ -52,7 +58,12 @@ public class HTTPLiveRecordManagerTests
             Assert.True(await manager.StartRecordAsync().WaitAsync(TimeSpan.FromSeconds(5)));
             await serverTask.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, requestCount);
-            Assert.Equal(bytes, await File.ReadAllBytesAsync(Path.Combine(directory, "recording.ts")));
+            var output = Assert.Single(Directory.GetFiles(directory));
+            Assert.EndsWith(".ts", output);
+            Assert.InRange(Encoding.UTF8.GetByteCount(Path.GetFileName(output)), 1, OtherUtil.MaxFileNameBytes);
+            if (naming == "short")
+                Assert.Equal("recording.ts", Path.GetFileName(output));
+            Assert.Equal(bytes, await File.ReadAllBytesAsync(output));
             Assert.False(Directory.Exists(Path.Combine(directory, "metadata")));
         }
         finally
