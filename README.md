@@ -84,7 +84,7 @@ Options:
   --no-date-info                                          混流时不写入日期信息 [default: False]
   --no-log                                                关闭日志文件输出 [default: False]
   --write-meta-json                                       解析后的信息是否输出json文件 [default: True]
-  --append-url-params                                     将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com [default: False]
+  --append-url-params                                     将输入URL的查询参数添加至分片；本地清单使用 --base-url 的参数 [default: False]
   -mt, --concurrent-download                              并发下载已选择的音频、视频和字幕 [default: False]
   -H, --header <header>                                   为HTTP请求设置特定的请求头, 例如:
                                                           -H "Cookie: mycookie" -H "User-Agent: iOS"

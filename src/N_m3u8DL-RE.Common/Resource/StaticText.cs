@@ -174,9 +174,9 @@ internal static class StaticText
         ),
         ["cmd_appendUrlParams"] = new TextContainer
         (
-            zhCN: "将输入Url的Params添加至分片, 对某些网站很有用, 例如 kakao.com",
-            zhTW: "將輸入Url的Params添加至分片, 對某些網站很有用, 例如 kakao.com",
-            enUS: "Add Params of input Url to segments, useful for some websites, such as kakao.com"
+            zhCN: "将输入URL的查询参数添加至分片；本地清单使用 --base-url 的参数",
+            zhTW: "將輸入URL的查詢參數添加至分片；本地清單使用 --base-url 的參數",
+            enUS: "Append input URL query parameters to segments; local manifests use --base-url parameters"
         ),
         ["cmd_autoSelect"] = new TextContainer
         (
