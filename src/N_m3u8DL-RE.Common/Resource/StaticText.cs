@@ -604,6 +604,18 @@ internal static class StaticText
             zhTW: "HLS BYTERANGE 省略偏移時，必須存在前一個位元組範圍。",
             enUS: "Implicit HLS BYTERANGE requires a preceding byte range."
         ),
+        ["hlsInvalidDuration"] = new TextContainer
+        (
+            zhCN: "HLS 分片时长无效，清单中也没有可用于估算的有效时长。",
+            zhTW: "HLS 分片時長無效，清單中也沒有可用於估算的有效時長。",
+            enUS: "Invalid HLS segment duration, with no valid playlist duration available for estimation."
+        ),
+        ["hlsInvalidDurationFallback"] = new TextContainer
+        (
+            zhCN: "检测到异常 HLS 分片时长，已用清单中的有效时长估算；录制时长可能存在偏差。",
+            zhTW: "偵測到異常 HLS 分片時長，已用清單中的有效時長估算；錄製時長可能存在偏差。",
+            enUS: "Invalid HLS segment durations were estimated from valid playlist durations; recording duration may be approximate."
+        ),
         ["mediaPartInputMismatch"] = new TextContainer
         (
             zhCN: "每个媒体段必须对应一个输入文件。",

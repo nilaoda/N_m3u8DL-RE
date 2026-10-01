@@ -158,8 +158,10 @@ public partial class WebVttSub
         if ((this.Cues.Count > 0 && sub.Cues.Count > 0 && sub.Cues.First().StartTime < this.Cues.Last().EndTime && sub.Cues.First().EndTime != this.Cues.Last().EndTime) || this.Cues.Count == 0)
         {
             // The MPEG2 transport stream clocks (PCR, PTS, DTS) all have units of 1/90000 second
-            var seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000;
-            var offset = TimeSpan.FromSeconds(seconds);
+            // 90 kHz 时间戳可能包含小数秒，不能先做整数除法丢掉字幕偏移。
+            var seconds = (sub.MpegtsTimestamp - baseTimestamp) / 90000.0;
+            // 转换时取最近的 tick，避免 2.002 秒等值被截断后显示成 2.001 秒。
+            var offset = TimeSpan.FromTicks((long)Math.Round(seconds * TimeSpan.TicksPerSecond));
             // 当前预添加的字幕的起始时间小于实际上已经走过的时间(如offset已经是100秒，而字幕起始却是2秒)，才修复
             if (sub.Cues.Count > 0 && sub.Cues.First().StartTime < offset)
             {

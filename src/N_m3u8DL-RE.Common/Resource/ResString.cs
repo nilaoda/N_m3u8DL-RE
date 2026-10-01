@@ -175,6 +175,8 @@ public static class ResString
     public static string hlsSubtitleOriginMissing => GetText("hlsSubtitleOriginMissing");
     public static string hlsTimestampMapInvalid => GetText("hlsTimestampMapInvalid");
     public static string hlsByteRangeMissingPrevious => GetText("hlsByteRangeMissingPrevious");
+    public static string hlsInvalidDuration => GetText("hlsInvalidDuration");
+    public static string hlsInvalidDurationFallback => GetText("hlsInvalidDurationFallback");
     public static string mediaPartInputMismatch => GetText("mediaPartInputMismatch");
     public static string concatInputPathInvalid => GetText("concatInputPathInvalid");
     public static string tfdtVersionUnsupported => GetText("tfdtVersionUnsupported");
