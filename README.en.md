@@ -34,6 +34,16 @@ Type `N_m3u8DL-RE --sub-` and press Tab to complete option names. Options such a
 
 Loading applies to the current session. To enable completion on startup, add the command above to `$PROFILE`. Use `--generate-completion powershell` on its own to view or save the script.
 
+## Cookie files
+
+Use `--cookies cookies.txt` to load a browser export in Netscape cookie format:
+
+```text
+N_m3u8DL-RE "https://example.com/video.m3u8" --cookies "cookies.txt"
+```
+
+Cookies are matched by domain, path, HTTPS requirement and expiration for manifests, keys, initialization files and segments, including VOD and live streams. A custom `-H "Cookie: ..."` header takes precedence. Server cookie updates are kept in memory and are not written back to the file.
+
 ## Command line parameters
 
 ```
@@ -75,6 +85,7 @@ Options:
                                                           [default: False]
   -H, --header <header>                                   Pass custom header(s) to server, Example:
                                                           -H "Cookie: mycookie" -H "User-Agent: iOS"
+  --cookies <FILE>                                       Load a Netscape cookie file; a custom Cookie header takes precedence
   --sub-only                                              Select only subtitle tracks [default: False]
   --sub-format <SRT|VTT>                                  Subtitle output format [default: SRT]
   --auto-subtitle-fix                                     Automatically fix subtitles [default: True]

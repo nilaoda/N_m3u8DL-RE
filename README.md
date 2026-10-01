@@ -36,6 +36,16 @@ N_m3u8DL-RE --generate-completion powershell | Out-String | Invoke-Expression
 
 加载仅对当前会话有效。如需每次启动时启用，可将上面的命令写入 `$PROFILE`。也可用 `--generate-completion powershell` 单独查看或保存脚本。
 
+## Cookie 文件
+
+使用 `--cookies cookies.txt` 读取浏览器导出的 Netscape 格式 Cookie 文件：
+
+```text
+N_m3u8DL-RE "https://example.com/video.m3u8" --cookies "cookies.txt"
+```
+
+Cookie 会按请求的域名、路径、HTTPS 条件及有效期匹配，适用于清单、密钥、初始化文件和分片，支持点播及直播。若同时设置 `-H "Cookie: ..."`，则以手动请求头为准。服务器更新的 Cookie 仅保存在内存中，不回写文件。
+
 ## 命令行参数
 
 ```
@@ -78,6 +88,7 @@ Options:
   -mt, --concurrent-download                              并发下载已选择的音频、视频和字幕 [default: False]
   -H, --header <header>                                   为HTTP请求设置特定的请求头, 例如:
                                                           -H "Cookie: mycookie" -H "User-Agent: iOS"
+  --cookies <FILE>                                       读取 Netscape 格式的 Cookie 文件；手动 Cookie 请求头优先
   --sub-only                                              只选取字幕轨道 [default: False]
   --sub-format <SRT|VTT>                                  字幕输出类型 [default: SRT]
   --auto-subtitle-fix                                     自动修正字幕 [default: True]

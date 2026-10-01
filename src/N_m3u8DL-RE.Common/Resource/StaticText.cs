@@ -256,6 +256,24 @@ internal static class StaticText
             zhTW: "為HTTP請求設置特定的請求頭, 例如:\r\n-H \"Cookie: mycookie\" -H \"User-Agent: iOS\"",
             enUS: "Pass custom header(s) to server, Example:\r\n-H \"Cookie: mycookie\" -H \"User-Agent: iOS\""
         ),
+        ["cmd_cookies"] = new TextContainer
+        (
+            zhCN: "读取 Netscape 格式的 Cookie 文件；手动设置的 Cookie 请求头优先",
+            zhTW: "讀取 Netscape 格式的 Cookie 檔案；手動設定的 Cookie 請求標頭優先",
+            enUS: "Load cookies from a Netscape cookie file; a custom Cookie header takes precedence"
+        ),
+        ["cookiesFileReadFailed"] = new TextContainer
+        (
+            zhCN: "无法读取 Cookie 文件",
+            zhTW: "無法讀取 Cookie 檔案",
+            enUS: "Unable to read cookie file"
+        ),
+        ["cookiesFileInvalidLine"] = new TextContainer
+        (
+            zhCN: "Cookie 文件第 {0} 行格式无效（需要 Netscape 格式）",
+            zhTW: "Cookie 檔案第 {0} 行格式無效（需要 Netscape 格式）",
+            enUS: "Invalid cookie file format at line {0} (Netscape format required)"
+        ),
         ["cmd_Input"] = new TextContainer
         (
             zhCN: "链接或文件",
