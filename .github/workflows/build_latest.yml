@@ -98,6 +98,14 @@ jobs:
       - run: dotnet publish src/N_m3u8DL-RE -r win-x64 -c Release -o artifact-x64
       - run: dotnet publish src/N_m3u8DL-RE -r win-arm64 -c Release -o artifact-arm64
 
+      - name: Verify completion [Windows PowerShell 5.1]
+        shell: powershell
+        run: ./src/N_m3u8DL-RE.Tests/CommandLine/PowerShellCompletion.Tests.ps1 -BinaryPath ./artifact-x64/N_m3u8DL-RE.exe
+
+      - name: Verify completion [PowerShell 7]
+        shell: pwsh
+        run: ./src/N_m3u8DL-RE.Tests/CommandLine/PowerShellCompletion.Tests.ps1 -BinaryPath ./artifact-x64/N_m3u8DL-RE.exe
+
       - name: Package [win]
         run: |
           cd artifact-x64
@@ -197,6 +205,11 @@ jobs:
               # 编译 Native AOT 输出到挂载的 artifact 目录
               dotnet publish src/N_m3u8DL-RE -r linux-musl-x64 -c Release -o /workspace/artifact
             "
+
+      # Docker 将纯静态 x64 产物写入挂载目录，可使用宿主机的 PowerShell 直接验证。
+      - name: Verify completion [PowerShell 7]
+        shell: pwsh
+        run: ./src/N_m3u8DL-RE.Tests/CommandLine/PowerShellCompletion.Tests.ps1 -BinaryPath ./artifact/N_m3u8DL-RE
 
       - name: Package [linux-x64]
         run: |
@@ -303,6 +316,12 @@ jobs:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
       - run: dotnet publish src/N_m3u8DL-RE -r osx-arm64 -c Release -o artifact-arm64 
       - run: dotnet publish src/N_m3u8DL-RE -r osx-x64 -c Release -o artifact-x64 
+
+      - name: Verify completion [PowerShell 7]
+        shell: pwsh
+        run: |
+          $architecture = $env:RUNNER_ARCH.ToLowerInvariant()
+          ./src/N_m3u8DL-RE.Tests/CommandLine/PowerShellCompletion.Tests.ps1 -BinaryPath "./artifact-$architecture/N_m3u8DL-RE"
 
       - name: Package [osx]
         run: |

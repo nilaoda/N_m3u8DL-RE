@@ -33,10 +33,19 @@ internal class Program
             }
         }
         
-        Console.CancelKeyPress += (_, _) => RestoreTerminal();
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
-        ServicePointManager.DefaultConnectionLimit = 1024;
-        try { Console.CursorVisible = true; } catch { }
+        // 补全只输出脚本或候选项；不要初始化终端或注册退出回调，否则 tput 等输出会混入结果。
+        var completionRequest = args.TakeWhile(arg => arg != "--").Any(arg => arg == "--generate-completion" ||
+            arg.StartsWith("--generate-completion=", StringComparison.Ordinal) ||
+            arg.StartsWith("--generate-completion:", StringComparison.Ordinal)) ||
+            args.Length > 0 && (args[0] == "[suggest]" ||
+                args[0].StartsWith("[suggest:", StringComparison.Ordinal) && args[0].EndsWith(']'));
+        if (!completionRequest)
+        {
+            Console.CancelKeyPress += (_, _) => RestoreTerminal();
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
+            ServicePointManager.DefaultConnectionLimit = 1024;
+            try { Console.CursorVisible = true; } catch { }
+        }
 
         string loc = CultureUtil.GetCurrentCultureName();
 

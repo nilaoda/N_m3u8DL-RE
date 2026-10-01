@@ -36,6 +36,8 @@ public static class ResString
     public static string cmd_maxSpeed => GetText("cmd_maxSpeed");
     public static string cmd_adKeyword => GetText("cmd_adKeyword");
     public static string cmd_moreHelp => GetText("cmd_moreHelp");
+    public static string cmd_generateCompletion => GetText("cmd_generateCompletion");
+    public static string completionShellInvalid => GetText("completionShellInvalid");
     public static string cmd_header => GetText("cmd_header");
     public static string cmd_muxImport => GetText("cmd_muxImport");
     public static string cmd_muxImport_more => GetText("cmd_muxImport_more");

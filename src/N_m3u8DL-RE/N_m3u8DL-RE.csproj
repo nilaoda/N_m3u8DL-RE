@@ -27,4 +27,8 @@
     <InternalsVisibleTo Include="N_m3u8DL-RE.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="CommandLine/PowerShellCompletion.ps1" />
+  </ItemGroup>
+
 </Project>
