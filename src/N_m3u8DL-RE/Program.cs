@@ -88,10 +88,6 @@ internal class Program
         }
         CustomAnsiConsole.InitConsole(option.ForceAnsiConsole, option.NoAnsiColor);
         
-        // 检测更新
-        if (!option.DisableUpdateCheck)
-            _ = CheckUpdateAsync();
-
         Logger.IsWriteFile = !option.NoLog;
         Logger.LogFilePath = option.LogFilePath;
         Logger.InitLogFile();
@@ -100,14 +96,19 @@ internal class Program
 
         if (option.UseSystemProxy == false)
         {
-            HTTPUtil.HttpClientHandler.UseProxy = false;
+            HTTPUtil.HttpHandler.UseProxy = false;
         }
 
         if (option.CustomProxy != null)
         {
-            HTTPUtil.HttpClientHandler.Proxy = option.CustomProxy;
-            HTTPUtil.HttpClientHandler.UseProxy = true;
+            HTTPUtil.HttpHandler.Proxy = option.CustomProxy;
+            HTTPUtil.HttpHandler.UseProxy = true;
         }
+
+        // 必须在首次网络请求前配置；清单、密钥、分片和代理连接都使用同一接口约束。
+        HTTPUtil.ConfigureNetworkInterface(option.NetworkInterface);
+        if (!option.DisableUpdateCheck)
+            _ = CheckUpdateAsync();
 
         // 检查互斥的选项
         if (option is { MuxAfterDone: false, MuxImports.Count: > 0 })
@@ -608,9 +609,10 @@ internal class Program
     static async Task<string> Get302Async(string url)
     {
         // this allows you to set the settings so that we can get the redirect url
-        var handler = new HttpClientHandler
+        var handler = new SocketsHttpHandler
         {
-            AllowAutoRedirect = false
+            AllowAutoRedirect = false,
+            ConnectCallback = HTTPUtil.HttpHandler.ConnectCallback,
         };
         var redirectedUrl = "";
         using var client = new HttpClient(handler);

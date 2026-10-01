@@ -394,6 +394,36 @@ internal static class StaticText
             zhTW: "錄製直播時即時合併",
             enUS: "Real-time merge into file when recording live"
         ),
+        ["cmd_networkInterface"] = new TextContainer
+        (
+            zhCN: "指定请求使用的网卡名或本机 IP，如 eth1 或 192.168.1.10",
+            zhTW: "指定請求使用的網卡名稱或本機 IP，如 eth1 或 192.168.1.10",
+            enUS: "Use the specified network interface or local IP address, e.g. eth1 or 192.168.1.10"
+        ),
+        ["networkInterfaceInvalid"] = new TextContainer
+        (
+            zhCN: "找不到可用的网络接口或本机 IP 地址: {0}",
+            zhTW: "找不到可用的網路介面或本機 IP 位址: {0}",
+            enUS: "No usable network interface or local IP address found: {0}"
+        ),
+        ["networkInterfaceUnsupported"] = new TextContainer
+        (
+            zhCN: "当前系统不支持按网卡名绑定，请指定本机 IP 地址",
+            zhTW: "目前系統不支援依網卡名稱綁定，請指定本機 IP 位址",
+            enUS: "Binding by interface name is unsupported on this system; specify a local IP address"
+        ),
+        ["networkInterfaceBindFailed"] = new TextContainer
+        (
+            zhCN: "无法绑定网络接口或本机 IP 地址 {0}: {1}",
+            zhTW: "無法綁定網路介面或本機 IP 位址 {0}: {1}",
+            enUS: "Cannot bind network interface or local IP address {0}: {1}"
+        ),
+        ["networkInterfaceConnectFailed"] = new TextContainer
+        (
+            zhCN: "无法通过指定网络接口或本机 IP 地址 {0} 连接到 {1}",
+            zhTW: "無法透過指定網路介面或本機 IP 位址 {0} 連線至 {1}",
+            enUS: "Cannot connect to {1} using network interface or local IP address {0}"
+        ),
         ["cmd_customProxy"] = new TextContainer
         (
             zhCN: "设置请求代理, 如 http://127.0.0.1:8888",

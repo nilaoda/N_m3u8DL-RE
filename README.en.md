@@ -92,6 +92,7 @@ Options:
   --custom-hls-scope <SCOPE>                              Apply custom HLS method, key and IV to selected media type (ALL|VIDEO|AUDIO) [default: ALL]
   --use-system-proxy                                      Use system default proxy [default: True]
   --custom-proxy <URL>                                    Set web request proxy, like http://127.0.0.1:8888
+  --interface <INTERFACE>                                 Use the specified network interface or local IP address
   --custom-range <RANGE>                                  Download only part of the segments. Use "--morehelp
                                                           custom-range" for more details
   --task-start-at <yyyyMMddHHmmss>                        Task execution will not start before this time
@@ -131,6 +132,8 @@ Options:
   --version                                               Show version information
   -?, -h, --help                                          Show help and usage information
 ```
+
+`--interface` accepts a network interface name (e.g. `eth1`, `en0` or `Wi-Fi`) or a local IP address. A name constrains the outgoing interface; an IP binds the connection source address. With a proxy, it applies to the connection to the proxy. DNS uses the system resolver. Binding failures are reported without falling back to another interface. Linux binding by name may require additional permissions; the diagnostic includes the system error.
 
 `--custom-hls-scope VIDEO` applies `--custom-hls-method`, `--custom-hls-key`, and `--custom-hls-iv` only to video renditions in a master playlist; `AUDIO` selects audio renditions. Audio-only variants can be identified through `CODECS`; variants without enough type information still use the video scope. The default `ALL` preserves the existing behavior. A standalone media playlist has no rendition type, so the custom settings apply to that playlist.
 

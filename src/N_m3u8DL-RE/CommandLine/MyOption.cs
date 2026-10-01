@@ -265,6 +265,10 @@ internal class MyOption
     /// </summary>
     public WebProxy? CustomProxy { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.NetworkInterface"/>.
+    /// </summary>
+    public string? NetworkInterface { get; set; }
+    /// <summary>
     /// See: <see cref="CommandInvoker.CustomRange"/>.
     /// </summary>
     public CustomRange? CustomRange { get; set; }
