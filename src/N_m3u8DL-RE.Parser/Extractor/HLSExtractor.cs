@@ -6,6 +6,7 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Parser.Util;
 using N_m3u8DL_RE.Parser.Constants;
 using N_m3u8DL_RE.Common.Util;
+using System.Globalization;
 
 namespace N_m3u8DL_RE.Parser.Extractor;
 
@@ -23,6 +24,7 @@ internal class HLSExtractor : IExtractor
     private string BaseUrl = string.Empty;
     private string M3u8Content = string.Empty;
     private bool MasterM3u8Flag = false;
+    private bool durationWarningShown;
 
     public ParserConfig ParserConfig { get; set; }
 
@@ -308,7 +310,9 @@ internal class HLSExtractor : IExtractor
             // 解析定义的分段长度
             else if (line.StartsWith(HLSTags.ext_x_targetduration))
             {
-                playlist.TargetDuration = Convert.ToDouble(ParserUtil.GetAttribute(line));
+                var value = ParserUtil.GetAttribute(line);
+                playlist.TargetDuration = double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var duration) &&
+                                          IsValidDuration(duration) && duration > 0 ? duration : null;
             }
             // 解析起始编号
             else if (line.StartsWith(HLSTags.ext_x_media_sequence))
@@ -372,7 +376,8 @@ internal class HLSExtractor : IExtractor
             else if (line.StartsWith(HLSTags.extinf))
             {
                 string[] tmp = ParserUtil.GetAttribute(line).Split(',');
-                segment.Duration = Convert.ToDouble(tmp[0]);
+                segment.Duration = double.TryParse(tmp[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var duration)
+                    ? duration : double.NaN;
                 segment.Index = segIndex;
                 // 是否有加密，有的话写入KEY和IV
                 if (currentEncryptInfo.Method != EncryptMethod.NONE)
@@ -488,6 +493,25 @@ internal class HLSExtractor : IExtractor
             });
         }
 
+        var invalidSegments = mediaParts.SelectMany(part => part.MediaSegments)
+            .Where(segment => !IsValidDuration(segment.Duration)).ToList();
+        if (invalidSegments.Count > 0)
+        {
+            // 异常 EXTINF（如跨天计算错误产生的负值）仍保留分片，用目标时长或正常分片估算，
+            // 防止异常值污染录制进度、时长上限和字幕时间轴；零时长的兼容片段保持原样。
+            var fallbackDuration = playlist.TargetDuration ?? mediaParts.SelectMany(part => part.MediaSegments)
+                .FirstOrDefault(segment => IsValidDuration(segment.Duration) && segment.Duration > 0)?.Duration;
+            if (fallbackDuration == null)
+                throw new FormatException(ResString.hlsInvalidDuration);
+            foreach (var invalidSegment in invalidSegments)
+                invalidSegment.Duration = fallbackDuration.Value;
+            if (!durationWarningShown)
+            {
+                Logger.Warn(ResString.hlsInvalidDurationFallback);
+                durationWarningShown = true;
+            }
+        }
+
         playlist.MediaParts = mediaParts;
         playlist.IsLive = !isEndlist;
         // 直播尚未发布首片时仍需要保留 init，供原有录制流程初始化；点播去掉孤立 MAP。
@@ -503,6 +527,9 @@ internal class HLSExtractor : IExtractor
 
         return Task.FromResult(playlist);
     }
+
+    private static bool IsValidDuration(double duration) =>
+        double.IsFinite(duration) && duration >= 0 && duration < TimeSpan.MaxValue.TotalSeconds;
 
     private EncryptInfo ParseKey(string keyLine, ParserConfig keyConfig)
     {

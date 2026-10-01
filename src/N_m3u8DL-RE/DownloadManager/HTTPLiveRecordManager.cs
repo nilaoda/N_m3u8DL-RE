@@ -10,6 +10,7 @@ using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text;
 
 namespace N_m3u8DL_RE.DownloadManager;
@@ -25,7 +26,7 @@ internal class HTTPLiveRecordManager
     DateTime? PublishDateTime;
     bool STOP_FLAG = false;
     bool READ_IFO = false;
-    ConcurrentDictionary<int, int> RecordingDurDic = new(); // 已录制时长
+    ConcurrentDictionary<int, TimeSpan> RecordingDurDic = new(); // 已录制时长
     ConcurrentDictionary<int, long> RecordingSizeDic = new(); // 已写入文件的大小
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
     List<byte> InfoBuffer = new List<byte>(188 * 5000); // 5000个分包中解析信息，没有就算了
@@ -192,6 +193,8 @@ internal class HTTPLiveRecordManager
     public async Task TimeCounterAsync(bool logProgress = false)
     {
         long previousSize = 0;
+        // 单调时钟不会受系统校时、跨天或每次 Delay 的调度误差影响。
+        var timer = Stopwatch.StartNew();
         while (!STOP_FLAG)
         {
             await Task.Delay(1000);
@@ -199,7 +202,7 @@ internal class HTTPLiveRecordManager
             {
                 break;
             }
-            RecordingDurDic[0]++;
+            RecordingDurDic[0] = timer.Elapsed;
             if (logProgress)
             {
                 var currentSize = RecordingSizeDic[0];
@@ -210,7 +213,7 @@ internal class HTTPLiveRecordManager
             }
 
             // 检测时长限制
-            if (RecordingDurDic.All(d => d.Value >= DownloaderConfig.MyOptions.LiveRecordLimit?.TotalSeconds))
+            if (DownloaderConfig.MyOptions.LiveRecordLimit is { } limit && RecordingDurDic.All(d => d.Value >= limit))
             {
                 Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
                 STOP_FLAG = true;
@@ -225,7 +228,7 @@ internal class HTTPLiveRecordManager
         if (Console.IsOutputRedirected || Console.IsErrorRedirected)
         {
             var stream = SelectedSteams.Single();
-            RecordingDurDic[0] = 0;
+            RecordingDurDic[0] = TimeSpan.Zero;
             RecordingSizeDic[0] = 0;
             return await RecordStreamAsync(stream, 0, new SpeedContainer());
         }
@@ -259,14 +262,14 @@ internal class HTTPLiveRecordManager
             {
                 var task = ctx.AddTask(item.ToShortString(), autoStart: false, maxValue: 0);
                 SpeedContainerDic[task.Id] = new SpeedContainer(); // 速度计算
-                RecordingDurDic[task.Id] = 0;
+                RecordingDurDic[task.Id] = TimeSpan.Zero;
                 RecordingSizeDic[task.Id] = 0;
                 return (item, task);
             }).ToDictionary(item => item.item, item => item.task);
 
             var limit = DownloaderConfig.MyOptions.LiveRecordLimit;
             if (limit != TimeSpan.MaxValue)
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime((int)limit.Value.TotalSeconds)}[/]");
+                Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimit}{GlobalUtil.FormatTime(limit.Value)}[/]");
             // 录制直播时，用户选了几个流就并发录几个
             var options = new ParallelOptions()
             {

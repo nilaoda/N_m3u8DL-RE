@@ -96,6 +96,19 @@ public class WebVttSubTests
         Assert.Equal(TimeSpan.FromSeconds(0), sub.Cues[0].EndTime);
     }
 
+    [Theory]
+    [InlineData(45000, 500)]
+    [InlineData(180180, 2002)]
+    public void AddCuesFromOne_KeepsFractionalTimestampOffset(long timestamp, int milliseconds)
+    {
+        var first = WebVttSub.Parse("WEBVTT\n\n00:00:00.000 --> 00:00:00.100\nFirst\n");
+        var second = WebVttSub.Parse("WEBVTT\n\n00:00:00.000 --> 00:00:00.200\nSecond\n");
+        second.MpegtsTimestamp = timestamp;
+        first.AddCuesFromOne(second);
+        Assert.Equal(TimeSpan.FromMilliseconds(milliseconds), first.Cues[1].StartTime);
+        Assert.Equal(TimeSpan.FromMilliseconds(milliseconds + 200), first.Cues[1].EndTime);
+    }
+
     [Fact]
     public void AddCuesFromOne_CombinesCorrectly()
     {

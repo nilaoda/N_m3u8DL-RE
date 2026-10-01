@@ -49,13 +49,14 @@ public static class GlobalUtil
         };
     }
 
-    // 此函数用于格式化输出时长  
-    public static string FormatTime(int time)
+    public static string FormatTime(int time) => FormatTime(TimeSpan.FromSeconds(time));
+
+    public static string FormatTime(TimeSpan time)
     {
-        TimeSpan ts = new TimeSpan(0, 0, time);
-        string str = "";
-        str = (ts.Hours.ToString("00") == "00" ? "" : ts.Hours.ToString("00") + "h") + ts.Minutes.ToString("00") + "m" + ts.Seconds.ToString("00") + "s";
-        return str;
+        // Hours 只表示一天内的小时数，录制超过 24 小时后仍需显示累计小时。
+        var hours = time.Ticks / TimeSpan.TicksPerHour;
+        return (hours == 0 ? "" : hours.ToString("00") + "h") +
+               time.Minutes.ToString("00") + "m" + time.Seconds.ToString("00") + "s";
     }
 
     /// <summary>
