@@ -22,6 +22,18 @@ yay -Syu n-m3u8dl-re-git
 
 ---
 
+## PowerShell completion
+
+Supports Windows PowerShell 5.1 and PowerShell 7. The completion script is embedded in the executable. Add `N_m3u8DL-RE` to `PATH`, then load it in PowerShell:
+
+```powershell
+N_m3u8DL-RE --generate-completion powershell | Out-String | Invoke-Expression
+```
+
+Type `N_m3u8DL-RE --sub-` and press Tab to complete option names. Options such as `--sub-format`, `--log-level` and `--ui-language` also complete their accepted values. Files and directories use PowerShell's default path completion. Calling the executable with `./N_m3u8DL-RE` or its full path also works.
+
+Loading applies to the current session. To enable completion on startup, add the command above to `$PROFILE`. Use `--generate-completion powershell` on its own to view or save the script.
+
 ## Command line parameters
 
 ```
@@ -129,6 +141,7 @@ Options:
   --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in live HLS (experimental; enabled for VOD) [default:
                                                           False]
   --morehelp <OPTION>                                     Set more help info about one option
+  --generate-completion <SHELL>                           Print the embedded completion script (powershell)
   --version                                               Show version information
   -?, -h, --help                                          Show help and usage information
 ```

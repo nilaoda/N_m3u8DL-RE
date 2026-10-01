@@ -92,6 +92,11 @@ internal static partial class CommandInvoker
 
     // morehelp
     private static readonly Option<string?> MoreHelp = new("--morehelp") { HelpName = "OPTION", Description = ResString.cmd_moreHelp };
+    private static readonly Option<string?> GenerateCompletion = new Option<string?>("--generate-completion")
+    {
+        HelpName = "SHELL", Arity = ArgumentArity.ExactlyOne,
+        Description = ResString.cmd_generateCompletion, Action = new PowerShellCompletionAction()
+    }.AcceptOnlyFromAmong("powershell");
 
     // 自定义KEY等
     private static readonly Option<EncryptMethod?> CustomHLSMethod = new("--custom-hls-method") { HelpName = "METHOD", Description = ResString.cmd_customHLSMethod };
@@ -767,7 +772,7 @@ internal static partial class CommandInvoker
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, NetworkInterface, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount,
-            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
+            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp, GenerateCompletion
         };
 
         rootCommand.TreatUnmatchedTokensAsErrors = true;

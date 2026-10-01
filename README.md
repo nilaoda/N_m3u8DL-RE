@@ -24,6 +24,18 @@ yay -Syu n-m3u8dl-re-git
 
 ---
 
+## PowerShell 补全
+
+支持 Windows PowerShell 5.1 和 PowerShell 7。补全脚本内嵌在可执行文件中。将 `N_m3u8DL-RE` 加入 `PATH`，然后在 PowerShell 中加载：
+
+```powershell
+N_m3u8DL-RE --generate-completion powershell | Out-String | Invoke-Expression
+```
+
+输入 `N_m3u8DL-RE --sub-` 后按 Tab 可补全参数名；`--sub-format`、`--log-level`、`--ui-language` 等参数可补全可选值，文件和目录使用 PowerShell 的默认路径补全。以 `./N_m3u8DL-RE` 或完整路径调用程序时也可以使用。
+
+加载仅对当前会话有效。如需每次启动时启用，可将上面的命令写入 `$PROFILE`。也可用 `--generate-completion powershell` 单独查看或保存脚本。
+
 ## 命令行参数
 
 ```
@@ -114,6 +126,7 @@ Options:
   --disable-update-check                                  禁用版本更新检测 [default: False]
   --allow-hls-multi-ext-map                               允许直播HLS中的多个#EXT-X-MAP(实验性；点播默认支持) [default: False]
   --morehelp <OPTION>                                     查看某个选项的详细帮助信息
+  --generate-completion <SHELL>                           输出内嵌的补全脚本（powershell）
   -?, -h, --help                                          Show help and usage information
   --version                                               Show version information
 ```

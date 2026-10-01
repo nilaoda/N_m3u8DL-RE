@@ -382,6 +382,18 @@ internal static class StaticText
             zhTW: "查看某個選項的詳細幫助訊息",
             enUS: "Set more help info about one option"
         ),
+        ["cmd_generateCompletion"] = new TextContainer
+        (
+            zhCN: "输出内嵌的补全脚本（powershell）",
+            zhTW: "輸出內嵌的補全腳本（powershell）",
+            enUS: "Print the embedded completion script (powershell)"
+        ),
+        ["completionShellInvalid"] = new TextContainer
+        (
+            zhCN: "--generate-completion 需要指定支持的 Shell: powershell",
+            zhTW: "--generate-completion 需要指定支援的 Shell: powershell",
+            enUS: "--generate-completion requires a supported shell: powershell"
+        ),
         ["cmd_urlProcessorArgs"] = new TextContainer
         (
             zhCN: "此字符串将直接传递给URL Processor",
