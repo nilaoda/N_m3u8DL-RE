@@ -5,5 +5,5 @@ namespace N_m3u8DL_RE.Downloader;
 
 internal interface IDownloader
 {
-    Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, bool singleFile = false);
+    Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, bool singleFile = false, CancellationToken cancellationToken = default, bool throwOnFailure = false, TimeSpan? networkTimeout = null);
 }

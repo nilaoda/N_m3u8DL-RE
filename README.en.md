@@ -62,32 +62,29 @@ Options:
   --tmp-dir <tmp-dir>                                     Set temporary file directory
   --save-dir <save-dir>                                   Set output directory
   --save-name <save-name>                                 Set output filename
+  --save-pattern <save-pattern>                           Set output filename pattern. Use "--morehelp save-pattern" for variables and examples
+  --log-file-path <log-file-path>                         Set log file path, Example: C:\Logs\log.txt
   --base-url <base-url>                                   Set BaseURL
   --thread-count <number>                                 Set download thread count [default: based on the number of CPU cores]
-  --download-retry-count <number>                         The number of retries when download segment error [default: 3]
-  --http-request-timeout <seconds>                        Timeout duration for HTTP requests (in seconds) [default: 100]
+  --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 3]
+  --http-request-timeout <seconds>                        HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time [default: 100]
   --force-ansi-console                                    Force assuming the terminal is ANSI-compatible and interactive
   --no-ansi-color                                         Remove ANSI colors
-  --auto-select                                           Automatically selects the best tracks of all types [default:
-                                                          False]
+  --auto-select                                           Automatically selects the best tracks of all types [default: False]
   --skip-merge                                            Skip segments merge [default: False]
   --skip-download                                         Skip download [default: False]
-  --check-segments-count                                  Check if the actual number of segments downloaded matches the
-                                                          expected number [default: True]
+  --check-segments-count                                  Check if the actual number of segments downloaded matches the expected number [default: True]
   --binary-merge                                          Binary merge [default: False]
-  --use-ffmpeg-concat-demuxer                             When merging with ffmpeg, use the concat demuxer instead of
-                                                          the concat protocol [default: False]
+  --use-ffmpeg-concat-demuxer                             When merging with ffmpeg, use the concat demuxer instead of the concat protocol [default: False]
   --del-after-done                                        Delete temporary files when done [default: True]
   --no-date-info                                          Date information is not written during muxing [default: False]
   --no-log                                                Disable log file output [default: False]
   --write-meta-json                                       Write meta json after parsed [default: True]
-  --append-url-params                                     Append input URL query parameters to segments; local
-                                                          manifests use --base-url parameters [default: False]
-  -mt, --concurrent-download                              Concurrently download the selected audio, video and subtitles
-                                                          [default: False]
+  --append-url-params                                     Append input URL query parameters to segments; local manifests use --base-url parameters [default: False]
+  -mt, --concurrent-download                              Concurrently download the selected audio, video and subtitles [default: False]
   -H, --header <header>                                   Pass custom header(s) to server, Example:
                                                           -H "Cookie: mycookie" -H "User-Agent: iOS"
-  --cookies <FILE>                                       Load a Netscape cookie file; a custom Cookie header takes precedence
+  --cookies <FILE>                                        Load cookies from a Netscape cookie file; a custom Cookie header takes precedence
   --sub-only                                              Select only subtitle tracks [default: False]
   --sub-format <SRT|VTT>                                  Subtitle output format [default: SRT]
   --auto-subtitle-fix                                     Automatically fix subtitles [default: True]
@@ -95,68 +92,50 @@ Options:
   --log-level <DEBUG|ERROR|INFO|OFF|WARN>                 Set log level [default: INFO]
   --ui-language <en-US|zh-CN|zh-TW>                       Set UI language
   --urlprocessor-args <urlprocessor-args>                 Give these arguments to the URL Processors.
-  --key <key>                                             Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg.
-                                                          format:
+  --key <key>                                             Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg. format:
                                                           --key KID1:KEY1 --key KID2:KEY2
                                                           or use --key KEY if all tracks share the same key.
-  --key-text-file <key-text-file>                         Set the kid-key file, the program will search the KEY with
-                                                          KID from the file.(Very large file are not recommended)
-  --decryption-engine <FFMPEG|MP4DECRYPT|SHAKA_PACKAGER>  Set the third-party program used for decryption [default:
-                                                          MP4DECRYPT]
-  --decryption-binary-path <PATH>                         Full path to the tool used for MP4 decryption, like
-                                                          C:\Tools\mp4decrypt.exe
+  --key-text-file <key-text-file>                         Set the kid-key file, the program will search the KEY with KID from the file.(Very large file are not recommended)
+  --decryption-engine <FFMPEG|MP4DECRYPT|SHAKA_PACKAGER>  Set the third-party program used for decryption [default: MP4DECRYPT]
+  --decryption-binary-path <PATH>                         Full path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe
   --mp4-real-time-decryption                              Decrypt MP4 segments in real time [default: False]
   -R, --max-speed <SPEED>                                 Set speed limit, Mbps or Kbps, for example: 15M 100K.
-  -M, --mux-after-done <OPTIONS>                          When all works is done, try to mux the downloaded streams.
-                                                          Use "--morehelp mux-after-done" for more details
-  --custom-hls-method <METHOD>                            Set HLS encryption method
-                                                          (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_
-                                                          CTR|UNKNOWN)
+  -M, --mux-after-done <OPTIONS>                          When all works is done, try to mux the downloaded streams. Use "--morehelp mux-after-done" for more details
+  --custom-hls-method <METHOD>                            Set HLS encryption method (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>                      Set the HLS decryption key. Can be file, HEX or Base64
   --custom-hls-iv <FILE|HEX|BASE64>                       Set the HLS decryption iv. Can be file, HEX or Base64
   --custom-hls-scope <SCOPE>                              Apply custom HLS method, key and IV to selected media type (ALL|VIDEO|AUDIO) [default: ALL]
   --use-system-proxy                                      Use system default proxy [default: True]
   --custom-proxy <URL>                                    Set web request proxy, like http://127.0.0.1:8888
-  --interface <INTERFACE>                                 Use the specified network interface or local IP address
-  --custom-range <RANGE>                                  Download only part of the segments. Use "--morehelp
-                                                          custom-range" for more details
+  --interface <INTERFACE>                                 Use the specified network interface or local IP address, e.g. eth1 or 192.168.1.10
+  --custom-range <RANGE>                                  Download only part of the segments. Use "--morehelp custom-range" for more details
   --task-start-at <yyyyMMddHHmmss>                        Task execution will not start before this time
   --live-perform-as-vod                                   Download live streams as vod [default: False]
   --live-real-time-merge                                  Real-time merge into file when recording live [default: False]
-  --live-keep-segments                                    Keep segments when recording a live (liveRealTimeMerge
-                                                          enabled) [default: True]
-  --live-pipe-mux                                         Real-time muxing to TS file through pipeline + ffmpeg
-                                                          (liveRealTimeMerge enabled) [default: False]
-  --live-fix-vtt-by-audio                                 Correct VTT sub by reading the start time of the audio file
-                                                          [default: False]
+  --live-keep-segments                                    Keep segments when recording a live (liveRealTimeMerge enabled) [default: True]
+  --live-pipe-mux                                         Real-time muxing to TS file through pipeline + ffmpeg (liveRealTimeMerge enabled) [default: False]
+  --live-fix-vtt-by-audio                                 Correct VTT sub by reading the start time of the audio file [default: False]
   --live-record-limit <HH:mm:ss>                          Recording time limit when recording live
   --live-wait-time <SEC>                                  Manually set the live playlist refresh interval
-  --live-idle-timeout <SEC>                               Stop recording when a live playlist has no new segments for
-                                                          this many seconds (disabled by default)
-  --live-take-count <NUM>                                 Manually set the number of segments downloaded for the first
-                                                          time when recording live [default: 16]
-  --mux-import <OPTIONS>                                  When MuxAfterDone enabled, allow to import local media files.
-                                                          Use "--morehelp mux-import" for more details
-  -sv, --select-video <OPTIONS>                           Select video streams by regular expressions. Use "--morehelp
-                                                          select-video" for more details
-  -sa, --select-audio <OPTIONS>                           Select audio streams by regular expressions. Use "--morehelp
-                                                          select-audio" for more details
-  -ss, --select-subtitle <OPTIONS>                        Select subtitle streams by regular expressions. Use
-                                                          "--morehelp select-subtitle" for more details
-  -dv, --drop-video <OPTIONS>                             Drop video streams by regular expressions.
-  -da, --drop-audio <OPTIONS>                             Drop audio streams by regular expressions.
-  -ds, --drop-subtitle <OPTIONS>                          Drop subtitle streams by regular expressions.
+  --live-idle-timeout <SEC>                               Stop recording when a live playlist has no new segments for this many seconds (disabled by default)
+  --live-take-count <NUM>                                 Manually set the number of segments downloaded for the first time when recording live [default: 16]
+  --mux-import <OPTIONS>                                  When MuxAfterDone enabled, allow to import local media files. Use "--morehelp mux-import" for more details
+  -sv, --select-video <OPTIONS>                           Select video streams by regular expressions. Use "--morehelp select-video" for more details
+  -sa, --select-audio <OPTIONS>                           Select audio streams by regular expressions. Use "--morehelp select-audio" for more details
+  -ss, --select-subtitle <OPTIONS>                        Select subtitle streams by regular expressions. Use "--morehelp select-subtitle" for more details
+  -dv, --drop-video <OPTIONS>                             Drop video streams by regular expressions. Accepts the same options as --select-video, use "--morehelp select-video" for more details
+  -da, --drop-audio <OPTIONS>                             Drop audio streams by regular expressions. Accepts the same options as --select-video, use "--morehelp select-video" for more details
+  -ds, --drop-subtitle <OPTIONS>                          Drop subtitle streams by regular expressions. Accepts the same options as --select-video, use "--morehelp select-video" for more details
   --ad-keyword <REG>                                      Set URL keywords (regular expressions) for AD segments
-  --vod-select-parts                                      VOD section selection: omitted = automatic, true = always prompt, false = disable
-  --vod-list-parts                                        List grouped VOD section IDs and total durations, then exit
-  --vod-drop-parts <IDS>                                  Drop VOD sections and matching audio/subtitles, e.g. 0,2-4
+  --vod-select-parts                                      Control VOD section selection: omitted = automatic, true = always prompt, false = disable (Space/Enter)
+  --vod-list-parts                                        List VOD sections grouped by media configuration, with IDs and total durations, then exit [default: False]
+  --vod-drop-parts <IDS>                                  Drop VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4
   --disable-update-check                                  Disable version update check [default: False]
-  --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in live HLS (experimental; enabled for VOD) [default:
-                                                          False]
+  --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in live HLS (experimental; enabled for VOD) [default: False]
   --morehelp <OPTION>                                     Set more help info about one option
   --generate-completion <SHELL>                           Print the embedded completion script (powershell)
-  --version                                               Show version information
   -?, -h, --help                                          Show help and usage information
+  --version                                               Show version information
 ```
 
 `--interface` accepts a network interface name (e.g. `eth1`, `en0` or `Wi-Fi`) or a local IP address. A name constrains the outgoing interface; an IP binds the connection source address. With a proxy, it applies to the connection to the proxy. DNS uses the system resolver. Binding failures are reported without falling back to another interface. Linux binding by name may require additional permissions; the diagnostic includes the system error.
@@ -175,20 +154,20 @@ More Help:
 
   --mux-after-done
 
-所有工作完成时尝试混流分离的音视频. 你能够以:分隔形式指定如下参数:
+When all works is done, try to mux the downloaded streams. OPTIONS is a colon separated list of:
 
-* format=FORMAT: 指定混流容器 mkv, mp4
-* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)
-* bin_path=PATH: 指定程序路径 (默认: 自动寻找)
-* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)
-* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)
+* format=FORMAT: set container. mkv, mp4, ts
+* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)
+* bin_path=PATH: set binary file path. (Default: auto)
+* skip_sub=BOOL: set whether or not skip subtitle files (Default: false)
+* keep=BOOL: set whether or not keep files. true, false (Default: false)
 
-例如:
-# 混流为mp4容器
+Examples:
+# mux to mp4
 -M format=mp4
-# 使用mkvmerge, 自动寻找程序
+# use mkvmerge, auto detect bin path
 -M format=mkv:muxer=mkvmerge
-# 使用mkvmerge, 自定义程序路径
+# use mkvmerge, set bin path
 -M format=mkv:muxer=mkvmerge:bin_path="C\:\Program Files\MKVToolNix\mkvmerge.exe"
 ```
 
@@ -215,13 +194,27 @@ More Help:
 
   --select-video
 
-Select video streams by regular expressions. OPTIONS is a colon separated list of:
+Select video streams by regular expressions. OPTIONS is a colon (:) separated list of the following sub-keys.
+The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and the matching --drop-video/--drop-audio/--drop-subtitle options.
 
-id=REGEX:lang=REGEX:name=REGEX:codecs=REGEX:res=REGEX:frame=REGEX
-segsMin=number:segsMax=number:ch=REGEX:range=REGEX:url=REGEX
-plistDurMin=hms:plistDurMax=hms:bwMin=int:bwMax=int:role=string:for=FOR
-
-* for=FOR: Select type. best[number], worst[number], all (Default: best)
+* id=REGEX: match by group/stream id
+* lang=REGEX: match by language code
+* name=REGEX: match by stream name
+* codecs=REGEX: match by codecs (e.g. hvc1, avc1, mp4a)
+* res=REGEX: match by resolution (e.g. 1920*, 3840*)
+* frame=REGEX: match by frame rate
+* channel=REGEX: match by audio channel count (e.g. 6, 2)
+* range=REGEX: match by video range (e.g. SDR, HDR, PQ)
+* url=REGEX: match by segment url
+* period=REGEX: match by DASH Period id (multi-Period MPD, e.g. ads/chapters)
+* segsMin=number: keep streams with at least number segments
+* segsMax=number: keep streams with at most number segments
+* plistDurMin=hms: keep streams whose playlist duration >= hms (e.g. 1h20m30s, 90s)
+* plistDurMax=hms: keep streams whose playlist duration <= hms
+* bwMin=int: keep streams with bandwidth >= int Kbps
+* bwMax=int: keep streams with bandwidth <= int Kbps
+* role=string: match by DASH role (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)
+* for=FOR: how many of the matched streams to keep. best[number], worst[number], all (Default: best)
 
 Examples:
 # select best video
@@ -233,6 +226,12 @@ Examples:
 -sv role="main":for=best
 # Select video with bandwidth between 800Kbps and 1Mbps
 -sv bwMin=800:bwMax=1000
+# Drop subtitle streams that have at most 2 segments (e.g. trick-play/ad playlists)
+-ds segsMax=2:for=all --auto-select
+# Keep only the main content Period (exclude ad Periods)
+-sv period="main":for=best
+# Drop video from the ad Period
+-dv period="ad":for=all
 ```
 
 ```
@@ -282,6 +281,38 @@ Examples:
 --custom-range -99
 # Download content from the 05:00 to 20:00
 --custom-range 05:00-20:00
+```
+
+```
+More Help:
+
+  --save-pattern
+
+Set each track's output filename stem using variables. The output extension is appended automatically.
+
+* <SaveName>: name specified by --save-name, or empty when omitted
+* <Id>: track download task ID
+* <Codecs>: codec information (e.g. avc1.64001f, mp4a.40.2)
+* <Language>: language code (e.g. en, zh-CN)
+* <Resolution>: video resolution (e.g. 1920x1080)
+* <Bandwidth>: bitrate value in bit/s (e.g. 5000000)
+* <MediaType>: media type (VIDEO, AUDIO, SUBTITLES)
+* <Channels>: audio channel information
+* <FrameRate>: video frame rate
+* <VideoRange>: video dynamic range (e.g. SDR, HDR10)
+* <GroupId>: stream group identifier
+
+Variables are case-sensitive. Missing values become empty strings. Do not include the output extension in the pattern.
+
+Examples:
+# Name video tracks by resolution
+--save-name video --save-pattern "<SaveName>_<Resolution>"
+# Include bitrate (bit/s)
+--save-name video --save-pattern "<SaveName>_<Resolution>_<Bandwidth>bps"
+# Name audio tracks by language and channels
+--save-name audio --save-pattern "<SaveName>_<Language>_<Channels>"
+# Use task IDs to distinguish tracks with the same configuration
+--save-name video --save-pattern "<SaveName>_<Id>_<Codecs>"
 ```
 
 </details>

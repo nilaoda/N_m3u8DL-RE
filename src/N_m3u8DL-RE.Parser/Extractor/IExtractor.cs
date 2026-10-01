@@ -13,7 +13,7 @@ public interface IExtractor
     Task<List<StreamSpec>> ExtractStreamsAsync(string rawText);
 
     Task FetchPlayListAsync(List<StreamSpec> streamSpecs);
-    Task RefreshPlayListAsync(List<StreamSpec> streamSpecs);
+    Task RefreshPlayListAsync(List<StreamSpec> streamSpecs, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null);
 
     string PreProcessUrl(string url);
 

@@ -69,6 +69,7 @@ public static class ResString
     public static string cmd_saveDir => GetText("cmd_saveDir");
     public static string cmd_saveName => GetText("cmd_saveName");
     public static string cmd_savePattern => GetText("cmd_savePattern");
+    public static string cmd_savePattern_more => GetText("cmd_savePattern_more");
     public static string cmd_logFilePath => GetText("cmd_logFilePath");
     public static string cmd_skipDownload => GetText("cmd_skipDownload");
     public static string cmd_noDateInfo => GetText("cmd_noDateInfo");
@@ -113,6 +114,11 @@ public static class ResString
     public static string liveLimitReached => GetText("liveLimitReached");
     public static string liveStreamEnded => GetText("liveStreamEnded");
     public static string liveIdleTimeoutReached => GetText("liveIdleTimeoutReached");
+    public static string liveNetworkRetry => GetText("liveNetworkRetry");
+    public static string liveNetworkTimeout => GetText("liveNetworkTimeout");
+    public static string liveNetworkRecovered => GetText("liveNetworkRecovered");
+    public static string liveSegmentUnavailable => GetText("liveSegmentUnavailable");
+    public static string httpTooManyRedirects => GetText("httpTooManyRedirects");
     public static string saveName => GetText("saveName");
     public static string taskStartAt => GetText("taskStartAt");
     public static string namedPipeCreated => GetText("namedPipeCreated");

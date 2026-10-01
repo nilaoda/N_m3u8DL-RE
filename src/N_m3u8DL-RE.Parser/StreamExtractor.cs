@@ -156,16 +156,13 @@ public class StreamExtractor : IDisposable
         }
     }
 
-    public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+    public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null)
     {
+        await semaphore.WaitAsync(cancellationToken);
         try
         {
-            await semaphore.WaitAsync();
-            await RetryUtil.WebRequestRetryAsync(async () =>
-            {
-                await extractor.RefreshPlayListAsync(streamSpecs);
-                return true;
-            }, retryDelayMilliseconds: 1000, maxRetries: 5);
+            // 直播录制器负责持续重试和停止条件；这里保留原异常，避免网络故障被包装后无法识别。
+            await extractor.RefreshPlayListAsync(streamSpecs, cancellationToken, requestTimeout);
         }
         finally
         {
