@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text;
 using N_m3u8DL_RE.Common.Util;
 
@@ -22,32 +21,34 @@ public class NetscapeCookieFileTests
             "example.com\tFALSE\t/\tFALSE\t0\tempty\t"
         ]);
 
-        var root = cookies.GetCookies(new Uri("http://example.com/"));
-        Assert.Equal("only", root["host"]!.Value);
-        Assert.Equal("shared", root["domain"]!.Value);
-        Assert.Equal("", root["empty"]!.Value);
-        Assert.Null(root["auth"]);
-        Assert.Null(root["expired"]);
-        Assert.Null(root["deleted"]);
-        Assert.Null(root["ancient"]);
-        var auth = cookies.GetCookies(new Uri("https://example.com/media/segment"))["auth"]!;
+        var root = Header(cookies, "http://example.com/");
+        Assert.Contains("host=only", root);
+        Assert.Contains("domain=shared", root);
+        Assert.Contains("empty=", root);
+        Assert.DoesNotContain("auth", root);
+        Assert.DoesNotContain("expired", root);
+        Assert.DoesNotContain("deleted", root);
+        Assert.DoesNotContain("ancient", root);
+        Assert.Contains("auth=secret", Header(cookies, "https://example.com/media/segment"));
+        var auth = cookies.FileCookies.Single(c => c.Name == "auth");
         Assert.True(auth.Secure);
         Assert.True(auth.HttpOnly);
-        Assert.Null(cookies.GetCookies(new Uri("https://example.com/other"))["auth"]);
-        Assert.Null(cookies.GetCookies(new Uri("http://example.com/media/segment"))["auth"]);
-        var subdomain = cookies.GetCookies(new Uri("https://cdn.example.com/media/segment"));
-        Assert.Null(subdomain["host"]);
-        Assert.Equal("shared", subdomain["domain"]!.Value);
-        Assert.Equal("secret", subdomain["auth"]!.Value);
-        Assert.Empty(cookies.GetCookieHeader(new Uri("https://otherexample.com/media/segment")));
+        Assert.DoesNotContain("auth", Header(cookies, "https://example.com/other"));
+        Assert.DoesNotContain("auth", Header(cookies, "https://example.com/mediaother"));
+        Assert.DoesNotContain("auth", Header(cookies, "http://example.com/media/segment"));
+        var subdomain = Header(cookies, "https://cdn.example.com/media/segment");
+        Assert.DoesNotContain("host", subdomain);
+        Assert.Contains("domain=shared", subdomain);
+        Assert.Contains("auth=secret", subdomain);
+        Assert.Empty(Header(cookies, "https://otherexample.com/media/segment"));
     }
 
     [Fact]
     public void HostOnlyFlagOverridesLeadingDot()
     {
         var cookies = NetscapeCookieFile.Parse([".example.com\tFALSE\t/\tFALSE\t0\ttoken\tvalue"]);
-        Assert.Equal("token=value", cookies.GetCookieHeader(new Uri("https://example.com/")));
-        Assert.Empty(cookies.GetCookieHeader(new Uri("https://sub.example.com/")));
+        Assert.Equal("token=value", Header(cookies, "https://example.com/"));
+        Assert.Empty(Header(cookies, "https://sub.example.com/"));
     }
 
     [Fact]
@@ -56,7 +57,7 @@ public class NetscapeCookieFileTests
         var lines = Enumerable.Range(0, 350)
             .Select(index => $"example.com\tFALSE\t/\tFALSE\t0\tc{index}\tvalue").ToArray();
         var cookies = NetscapeCookieFile.Parse(lines);
-        Assert.Equal(350, cookies.GetCookies(new Uri("https://example.com/")).Count);
+        Assert.Equal(350, Header(cookies, "https://example.com/").Split("; ").Length);
     }
 
     [Theory]
@@ -64,17 +65,68 @@ public class NetscapeCookieFileTests
     [InlineData("example.com\tinvalid\t/\tFALSE\t0\ttoken\tsecret")]
     [InlineData("example.com\tFALSE\t/\tinvalid\t0\ttoken\tsecret")]
     [InlineData("example.com\tFALSE\t/\tFALSE\tnot-a-time\ttoken\tsecret")]
-    [InlineData("example.com\tFALSE\t/\tFALSE\t9223372036854775807\ttoken\tsecret")]
     [InlineData("https://example.com\tFALSE\t/\tFALSE\t0\ttoken\tsecret")]
     [InlineData("example.com\tFALSE\tmedia\tFALSE\t0\ttoken\tsecret")]
     [InlineData("example.com\tFALSE\t/\tFALSE\t0\t\tsecret")]
-    [InlineData("example.com\tFALSE\t/\tFALSE\t0\ttoken\tsecret;invalid")]
     public void InvalidRowsReportLineNumberWithoutCookieContents(string row)
     {
         var error = Assert.Throws<FormatException>(() => NetscapeCookieFile.Parse(["# comment", row]));
         Assert.Contains("2", error.Message);
         Assert.DoesNotContain("secret", error.ToString());
         Assert.Null(error.InnerException);
+    }
+
+    [Fact]
+    public void ValuesWithCommasAreSentUnchanged()
+    {
+        // 浏览器导出的 JSON 值常含逗号，System.Net.Cookie 会拒绝这类值。
+        var cookies = NetscapeCookieFile.Parse([".example.com\tTRUE\t/\tFALSE\t0\t_policy\t{\"a\":true,\"b\":\"c\"}"]);
+        Assert.Equal("_policy={\"a\":true,\"b\":\"c\"}", Header(cookies, "https://www.example.com/"));
+    }
+
+    [Fact]
+    public void OutOfRangeExpirationsAreAccepted()
+    {
+        var future = DateTimeOffset.UtcNow.AddYears(1);
+        var past = DateTimeOffset.UtcNow.AddYears(-1);
+        // yt-dlp 可能写入 Chrome 时间戳（1601 年起的微秒数）。
+        static long Chrome(DateTimeOffset time) => (time.ToUnixTimeSeconds() + 11644473600) * 1_000_000;
+        var cookies = NetscapeCookieFile.Parse(
+        [
+            $"example.com\tFALSE\t/\tFALSE\t{Chrome(future)}\tchrome\tvalid",
+            $"example.com\tFALSE\t/\tFALSE\t{Chrome(past)}\tchromeExpired\told",
+            "example.com\tFALSE\t/\tFALSE\t9223372036854775807\tforever\tvalue",
+            "example.com\tFALSE\t/\tFALSE\t-9223372036854775808\tnegative\told"
+        ]);
+
+        var header = Header(cookies, "https://example.com/");
+        Assert.Contains("chrome=valid", header);
+        Assert.Contains("forever=value", header);
+        Assert.DoesNotContain("chromeExpired", header);
+        Assert.DoesNotContain("negative", header);
+        Assert.Equal(future.ToUnixTimeSeconds(), cookies.FileCookies.Single(c => c.Name == "chrome").Expires!.Value.ToUnixTimeSeconds());
+    }
+
+    [Theory]
+    [InlineData("example.com\tFALSE\t/\tFALSE\t0\ttoken\tsecret;invalid")]
+    [InlineData("example.com\tFALSE\t/\tFALSE\t0\tto=ken\tsecret")]
+    public void RowsThatCannotBeSentAreSkippedWithoutFailingTheFile(string row)
+    {
+        var cookies = NetscapeCookieFile.Parse([row, "example.com\tFALSE\t/\tFALSE\t0\tok\tvalue"]);
+        Assert.Equal("ok=value", Header(cookies, "https://example.com/"));
+    }
+
+    [Fact]
+    public void ServerUpdatesReplaceFileCookiesWithTheSameName()
+    {
+        var cookies = NetscapeCookieFile.Parse(
+        [
+            ".example.com\tTRUE\t/\tFALSE\t0\tsession\tfile",
+            "other.com\tFALSE\t/\tFALSE\t0\tsession\tother"
+        ]);
+        cookies.SetCookies(new Uri("https://www.example.com/"), "session=server; Path=/");
+        Assert.Equal("session=server", Header(cookies, "https://www.example.com/"));
+        Assert.Equal("session=other", Header(cookies, "https://other.com/"));
     }
 
     [Fact]
@@ -87,7 +139,7 @@ public class NetscapeCookieFileTests
                 new UTF8Encoding(true));
             var original = File.ReadAllBytes(path);
             var cookies = NetscapeCookieFile.Load(path);
-            Assert.Equal("token=value", cookies.GetCookieHeader(new Uri("https://example.com/")));
+            Assert.Equal("token=value", Header(cookies, "https://example.com/"));
             Assert.Equal(original, File.ReadAllBytes(path));
         }
         finally
@@ -101,4 +153,6 @@ public class NetscapeCookieFileTests
     {
         Assert.Throws<IOException>(() => NetscapeCookieFile.Load(Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}.txt")));
     }
+
+    private static string Header(CookieFileJar cookies, string url) => cookies.GetCookieHeader(new Uri(url));
 }

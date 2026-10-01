@@ -274,6 +274,12 @@ internal static class StaticText
             zhTW: "Cookie 檔案第 {0} 行格式無效（需要 Netscape 格式）",
             enUS: "Invalid cookie file format at line {0} (Netscape format required)"
         ),
+        ["cookiesFileSkippedLine"] = new TextContainer
+        (
+            zhCN: "已跳过 Cookie 文件第 {0} 行：名称或值无法用于请求头",
+            zhTW: "已略過 Cookie 檔案第 {0} 行：名稱或值無法用於請求標頭",
+            enUS: "Skipped cookie file line {0}: name or value cannot be sent in a request header"
+        ),
         ["cmd_Input"] = new TextContainer
         (
             zhCN: "链接或文件",

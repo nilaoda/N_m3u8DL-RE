@@ -42,6 +42,7 @@ public static class ResString
     public static string cmd_cookies => GetText("cmd_cookies");
     public static string cookiesFileReadFailed => GetText("cookiesFileReadFailed");
     public static string cookiesFileInvalidLine => GetText("cookiesFileInvalidLine");
+    public static string cookiesFileSkippedLine => GetText("cookiesFileSkippedLine");
     public static string cmd_muxImport => GetText("cmd_muxImport");
     public static string cmd_muxImport_more => GetText("cmd_muxImport_more");
     public static string cmd_selectVideo => GetText("cmd_selectVideo");
