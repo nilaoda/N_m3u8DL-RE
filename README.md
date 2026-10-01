@@ -88,6 +88,7 @@ Options:
   --custom-hls-scope <SCOPE>                              指定自定义HLS加密方式、KEY和IV的适用范围 (ALL|VIDEO|AUDIO) [default: ALL]
   --use-system-proxy                                      使用系统默认代理 [default: True]
   --custom-proxy <URL>                                    设置请求代理, 如 http://127.0.0.1:8888
+  --interface <INTERFACE>                                 指定请求使用的网卡名或本机 IP
   --custom-range <RANGE>                                  仅下载部分分片. 输入 "--morehelp custom-range" 以查看详细信息
   --task-start-at <yyyyMMddHHmmss>                        在此时间之前不会开始执行任务
   --live-perform-as-vod                                   以点播方式下载直播流 [default: False]
@@ -116,6 +117,8 @@ Options:
   -?, -h, --help                                          Show help and usage information
   --version                                               Show version information
 ```
+
+`--interface` 支持网卡名（如 `eth1`、`en0`、`Wi-Fi`）或本机 IP 地址。网卡名约束实际出口，IP 地址指定连接的源地址。使用代理时，约束应用于本机到代理的连接；DNS 仍由系统解析。绑定失败会明确报错，不会回退到其他网卡。Linux 按网卡名绑定可能需要额外权限，报错会包含系统原因。
 
 `--custom-hls-scope VIDEO` 仅对主播放列表中的视频流应用 `--custom-hls-method`、`--custom-hls-key` 和 `--custom-hls-iv`；`AUDIO` 仅对音频流应用。纯音频变体可通过 `CODECS` 识别；缺少足够类型信息的主变体仍按视频处理。默认 `ALL` 保持原有行为。直接输入单条媒体播放列表时无法识别轨道类型，自定义参数会应用于该播放列表。
 

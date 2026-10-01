@@ -84,6 +84,11 @@ public static class ResString
     public static string cmd_concurrentDownload => GetText("cmd_concurrentDownload");
     public static string cmd_useSystemProxy => GetText("cmd_useSystemProxy");
     public static string cmd_customProxy => GetText("cmd_customProxy");
+    public static string cmd_networkInterface => GetText("cmd_networkInterface");
+    public static string networkInterfaceInvalid => GetText("networkInterfaceInvalid");
+    public static string networkInterfaceUnsupported => GetText("networkInterfaceUnsupported");
+    public static string networkInterfaceBindFailed => GetText("networkInterfaceBindFailed");
+    public static string networkInterfaceConnectFailed => GetText("networkInterfaceConnectFailed");
     public static string cmd_customRange => GetText("cmd_customRange");
     public static string cmd_liveKeepSegments => GetText("cmd_liveKeepSegments");
     public static string cmd_livePipeMux => GetText("cmd_livePipeMux");

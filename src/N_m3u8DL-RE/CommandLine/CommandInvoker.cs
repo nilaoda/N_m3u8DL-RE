@@ -80,6 +80,8 @@ internal static partial class CommandInvoker
     private static readonly Option<long?> MaxSpeed = new("-R", "--max-speed") { HelpName = "SPEED", Description = ResString.cmd_maxSpeed, CustomParser = ParseSpeedLimit };
 
 
+    private static readonly Option<string?> NetworkInterface = new("--interface") { HelpName = "INTERFACE", Description = ResString.cmd_networkInterface };
+
     // 代理选项
     private static readonly Option<bool> UseSystemProxy = new Option<bool>("--use-system-proxy") { Description = ResString.cmd_useSystemProxy }.WithDefault(true);
     private static readonly Option<WebProxy?> CustomProxy = new("--custom-proxy") { HelpName = "URL", Description = ResString.cmd_customProxy, CustomParser = ParseProxy};
@@ -689,6 +691,7 @@ internal static partial class CommandInvoker
             LiveFixVttByAudio = result.GetValue(LiveFixVttByAudio),
             UseSystemProxy = result.GetValue(UseSystemProxy),
             CustomProxy = result.GetValue(CustomProxy),
+            NetworkInterface = result.GetValue(NetworkInterface),
             CustomRange = result.GetValue(CustomRange),
             LiveWaitTime = result.GetValue(LiveWaitTime),
             LiveIdleTimeout = result.GetValue(LiveIdleTimeout),
@@ -762,7 +765,7 @@ internal static partial class CommandInvoker
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
             MaxSpeed,
             MuxAfterDone,
-            CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, CustomRange, TaskStartAt,
+            CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, NetworkInterface, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount,
             MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp
         };

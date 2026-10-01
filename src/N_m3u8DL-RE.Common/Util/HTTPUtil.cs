@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Security;
 using System.Text;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -9,20 +10,32 @@ namespace N_m3u8DL_RE.Common.Util;
 
 public static class HTTPUtil
 {
-    public static readonly HttpClientHandler HttpClientHandler = new()
+    public static readonly SocketsHttpHandler HttpHandler = new()
     {
         AllowAutoRedirect = false,
         AutomaticDecompression = DecompressionMethods.All,
-        ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true,
+        SslOptions = new SslClientAuthenticationOptions
+        {
+            RemoteCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true,
+        },
         MaxConnectionsPerServer = 1024,
     };
 
-    public static readonly HttpClient AppHttpClient = new(HttpClientHandler)
+    public static readonly HttpClient AppHttpClient = new(HttpHandler)
     {
         Timeout = TimeSpan.FromSeconds(100),
         DefaultRequestVersion = HttpVersion.Version20,
         DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
+
+    public static void ConfigureNetworkInterface(string? value)
+    {
+        if (value == null)
+            return;
+        HttpHandler.ConnectCallback = NetworkInterfaceBinding.Create(value).ConnectAsync;
+        // 接口约束只用于 TCP；HTTP/3 的 QUIC 连接不会经过 ConnectCallback。
+        AppHttpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+    }
 
     private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null,
         bool identityEncoding = false, int redirectCount = 0)
