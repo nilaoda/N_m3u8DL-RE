@@ -19,6 +19,7 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.Headers"/>.
     /// </summary>
     public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
+    public string? Cookies { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.AdKeywords"/>.
     /// </summary>

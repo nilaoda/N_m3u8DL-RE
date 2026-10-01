@@ -21,12 +21,25 @@ public static class HTTPUtil
         MaxConnectionsPerServer = 1024,
     };
 
-    public static readonly HttpClient AppHttpClient = new(HttpHandler)
+    private static readonly CookieFileHandler CookieHandler = new(HttpHandler);
+
+    public static readonly HttpClient AppHttpClient = new(CookieHandler)
     {
         Timeout = TimeSpan.FromSeconds(100),
         DefaultRequestVersion = HttpVersion.Version20,
         DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
+
+    public static void ConfigureCookies(string? path)
+    {
+        if (path == null)
+            return;
+        var cookies = NetscapeCookieFile.Load(path);
+        // 文件模式由外层统一匹配和更新 Cookie，避免底层把容器内容追加到手动 Cookie 请求头。
+        // 未指定文件时仍由 SocketsHttpHandler 处理 Cookie，保持原有行为。
+        HttpHandler.UseCookies = false;
+        CookieHandler.Cookies = cookies;
+    }
 
     public static void ConfigureNetworkInterface(string? value)
     {

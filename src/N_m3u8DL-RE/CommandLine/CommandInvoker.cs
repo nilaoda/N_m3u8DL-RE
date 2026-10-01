@@ -44,6 +44,7 @@ internal static partial class CommandInvoker
     private static readonly Option<string?> UrlProcessorArgs = new("--urlprocessor-args") { Description = ResString.cmd_urlProcessorArgs };
     private static readonly Option<string> KeyTextFile = new("--key-text-file") { Description = ResString.cmd_keyText };
     private static readonly Option<Dictionary<string, string>> Headers = new("-H", "--header") { HelpName = "header", Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, Description = ResString.cmd_header, CustomParser = ParseHeaders };
+    private static readonly Option<string?> Cookies = new("--cookies") { HelpName = "FILE", Arity = ArgumentArity.ExactlyOne, Description = ResString.cmd_cookies };
     private static readonly Option<LogLevel> LogLevel = new("--log-level") { Description = ResString.cmd_logLevel, DefaultValueFactory = _ => Common.Log.LogLevel.INFO };
     private static readonly Option<SubtitleFormat> SubtitleFormat = new("--sub-format") { Description = ResString.cmd_subFormat, DefaultValueFactory = _ => Enum.SubtitleFormat.SRT };
     private static readonly Option<bool> DisableUpdateCheck = new Option<bool>("--disable-update-check") { Description = ResString.cmd_disableUpdateCheck }.WithDefault(false);
@@ -676,6 +677,7 @@ internal static partial class CommandInvoker
             DecryptionBinaryPath = result.GetValue(DecryptionBinaryPath),
             FFmpegBinaryPath = result.GetValue(FFmpegBinaryPath),
             KeyTextFile = result.GetValue(KeyTextFile),
+            Cookies = result.GetValue(Cookies),
             DownloadRetryCount = result.GetValue(DownloadRetryCount),
             HttpRequestTimeout = result.GetValue(HttpRequestTimeout),
             BaseUrl = result.GetValue(BaseUrl),
@@ -765,7 +767,7 @@ internal static partial class CommandInvoker
         var rootCommand = new RootCommand(VERSION_INFO)
         {
             Input, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
-            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, SubOnly, SubtitleFormat, AutoSubtitleFix,
+            BinaryMerge, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, Cookies, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
             MaxSpeed,

@@ -116,6 +116,7 @@ internal class Program
 
         // 必须在首次网络请求前配置；清单、密钥、分片和代理连接都使用同一接口约束。
         HTTPUtil.ConfigureNetworkInterface(option.NetworkInterface);
+        HTTPUtil.ConfigureCookies(option.Cookies);
         if (!option.DisableUpdateCheck)
             _ = CheckUpdateAsync();
 
