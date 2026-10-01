@@ -8,6 +8,9 @@ namespace N_m3u8DL_RE.Util;
 
 internal static partial class OtherUtil
 {
+    // 单个路径组件通常最多 255 字节，为工具可能追加的临时后缀保留余量。
+    public const int MaxFileNameBytes = 240;
+
     public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
     {
         Dictionary<string, string> dic = new();
@@ -52,8 +55,9 @@ internal static partial class OtherUtil
 
         var hash = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(name)))[..8].ToLowerInvariant();
         var suffix = "_" + hash;
+        if (maxBytes < suffix.Length)
+            return hash[..Math.Min(maxBytes, hash.Length)];
         var budget = maxBytes - suffix.Length;
-        if (budget < 0) budget = 0;
 
         // 按 Rune 累加, 避免在多字节字符(或代理对)中间截断
         var sb = new StringBuilder();
@@ -76,18 +80,31 @@ internal static partial class OtherUtil
     /// <returns></returns>
     public static string GetFileNameFromInput(string input, bool addSuffix = true)
     {
-        var saveName = addSuffix ? DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") : string.Empty;
+        var suffix = addSuffix ? "_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") : "_";
+        string name;
         if (File.Exists(input))
         {
-            saveName = Path.GetFileNameWithoutExtension(input) + "_" + saveName;
+            name = Path.GetFileNameWithoutExtension(input);
         }
         else
         {
             var uri = new Uri(input.Split('?').First());
-            var name = Path.GetFileNameWithoutExtension(uri.LocalPath);
-            saveName = GetValidFileName(name) + "_" + saveName;
+            name = GetValidFileName(Path.GetFileNameWithoutExtension(uri.LocalPath));
         }
-        return saveName;
+        // 自动保存名限制为 200 字节并保留时间戳，为后续语言、扩展名等后缀留出空间。
+        // 直播用于识别源分片时保留完整名称，随后在落盘处截断。
+        return addSuffix ? GetSafeFileName(name, suffix, maxBytes: 200) : name + suffix;
+    }
+
+    /// <summary>
+    /// 限制单个文件或目录名称的 UTF-8 字节数，后缀单独预留空间，保留时间戳及媒体扩展名。
+    /// </summary>
+    public static string GetSafeFileName(string name, string suffix = "", int maxBytes = MaxFileNameBytes)
+    {
+        var suffixBytes = Encoding.UTF8.GetByteCount(suffix);
+        if (suffixBytes >= maxBytes)
+            return TruncateFileName(name + suffix, maxBytes);
+        return TruncateFileName(name, maxBytes - suffixBytes) + suffix;
     }
 
     /// <summary>
@@ -250,12 +267,13 @@ internal static partial class OtherUtil
     /// <returns>不冲突的文件路径</returns>
     public static string HandleFileCollision(string originalPath, Common.Entity.StreamSpec streamSpec)
     {
-        if (!File.Exists(originalPath))
-            return originalPath;
-
         var dir = Path.GetDirectoryName(originalPath) ?? "";
         var nameWithoutExt = Path.GetFileNameWithoutExtension(originalPath);
         var ext = Path.GetExtension(originalPath);
+        // 先限制最终输出名；模板、语言及重名后缀拼接完成后都必须重新检查长度。
+        originalPath = Path.Combine(dir, GetSafeFileName(nameWithoutExt, ext));
+        if (!File.Exists(originalPath))
+            return originalPath;
 
         // 尝试使用元数据生成唯一文件名
         var attempts = new List<string>();
@@ -265,17 +283,17 @@ internal static partial class OtherUtil
         {
             if (!string.IsNullOrEmpty(streamSpec.Resolution))
             {
-                attempts.Add($"{nameWithoutExt}.{streamSpec.Resolution}{ext}");
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Resolution}");
             }
             if (streamSpec.Bandwidth.HasValue)
             {
                 var bandwidthMbps = streamSpec.Bandwidth.Value / 1000000.0;
-                attempts.Add($"{nameWithoutExt}.{bandwidthMbps:F1}Mbps{ext}");
+                attempts.Add($"{nameWithoutExt}.{bandwidthMbps:F1}Mbps");
             }
             if (!string.IsNullOrEmpty(streamSpec.Resolution) && streamSpec.Bandwidth.HasValue)
             {
                 var bandwidthMbps = streamSpec.Bandwidth.Value / 1000000.0;
-                attempts.Add($"{nameWithoutExt}.{streamSpec.Resolution}.{bandwidthMbps:F1}Mbps{ext}");
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Resolution}.{bandwidthMbps:F1}Mbps");
             }
         }
         // 对于音频流，尝试添加语言、声道和带宽
@@ -283,20 +301,20 @@ internal static partial class OtherUtil
         {
             if (!string.IsNullOrEmpty(streamSpec.Language))
             {
-                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}{ext}");
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}");
             }
             if (!string.IsNullOrEmpty(streamSpec.Channels))
             {
-                attempts.Add($"{nameWithoutExt}.{streamSpec.Channels}ch{ext}");
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Channels}ch");
             }
             if (!string.IsNullOrEmpty(streamSpec.Language) && !string.IsNullOrEmpty(streamSpec.Channels))
             {
-                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}.{streamSpec.Channels}ch{ext}");
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}.{streamSpec.Channels}ch");
             }
             if (streamSpec.Bandwidth.HasValue)
             {
                 var bandwidthKbps = streamSpec.Bandwidth.Value / 1000;
-                attempts.Add($"{nameWithoutExt}.{bandwidthKbps}kbps{ext}");
+                attempts.Add($"{nameWithoutExt}.{bandwidthKbps}kbps");
             }
         }
         // 对于字幕流，尝试添加语言
@@ -304,23 +322,26 @@ internal static partial class OtherUtil
         {
             if (!string.IsNullOrEmpty(streamSpec.Language))
             {
-                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}{ext}");
+                attempts.Add($"{nameWithoutExt}.{streamSpec.Language}");
             }
         }
 
         // 尝试所有基于元数据的文件名
         foreach (var attempt in attempts)
         {
-            var attemptPath = Path.Combine(dir, attempt);
+            var attemptPath = Path.Combine(dir, GetSafeFileName(attempt, ext));
             if (!File.Exists(attemptPath))
                 return attemptPath;
         }
 
         // 所有元数据方案都失败，回退到 "copy" 方案
         var output = originalPath;
+        var copySuffix = "";
         while (File.Exists(output))
         {
-            output = Path.Combine(dir, $"{Path.GetFileNameWithoutExtension(output)}.copy{Path.GetExtension(output)}");
+            // 从完整原名生成候选，避免重复截断的哈希使不同候选难以追踪。
+            copySuffix += ".copy";
+            output = Path.Combine(dir, GetSafeFileName(nameWithoutExt + copySuffix, ext));
         }
         return output;
     }

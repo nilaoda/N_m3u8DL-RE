@@ -86,8 +86,7 @@ internal static class BinaryDownloadRunner
             fileName = Path.GetFileNameWithoutExtension(fileName) + ".bin";
             fileExtension = ".bin";
         }
-        return OtherUtil.TruncateFileName(Path.GetFileNameWithoutExtension(fileName),
-            200 - Encoding.UTF8.GetByteCount(fileExtension)) + fileExtension;
+        return OtherUtil.GetSafeFileName(Path.GetFileNameWithoutExtension(fileName), fileExtension, maxBytes: 200);
     }
 
     private static async Task DownloadWithLogAsync(BinaryDownloadManager downloader, MyOption option,
