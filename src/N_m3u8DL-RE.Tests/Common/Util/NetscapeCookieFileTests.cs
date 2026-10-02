@@ -185,6 +185,20 @@ public class NetscapeCookieFileTests
         Assert.Equal("d=kept; b=new", Header(cookies, "https://example.com/"));
     }
 
+    [Theory]
+    [InlineData("session=\"a; expires=x\"; Path=/", "session=\"a; expires=x\"")]
+    [InlineData("session=\"a; max-age=0\"; Path=/", "session=\"a; max-age=0\"")]
+    [InlineData("session= \"a, b; Expires=Wed, 21 Oct 2099 07:28:00 GMT\"; Path=/", "session=\"a, b; Expires=Wed, 21 Oct 2099 07:28:00 GMT\"")]
+    [InlineData("session=\"a; max-age=5\"; Max-Age=0; Path=/", "")]
+    [InlineData("session=new; Expires=\"Thu, 01 Jan 1970 00:00:00 GMT\"; Path=/", "")]
+    public void ExpirationAttributesInsideQuotedValuesAreNotRewritten(string setCookie, string expected)
+    {
+        // 引号内的 "; expires=" 属于 Cookie 值，不能当作属性改写，否则文件中的旧值会与新值一起发送。
+        var cookies = NetscapeCookieFile.Parse(["example.com\tFALSE\t/\tFALSE\t0\tsession\told"]);
+        cookies.SetCookies(new Uri("https://example.com/"), setCookie);
+        Assert.Equal(expected, Header(cookies, "https://example.com/"));
+    }
+
     [Fact]
     public void DuplicateFileEntriesKeepTheLastValue()
     {

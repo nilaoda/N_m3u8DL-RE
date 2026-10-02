@@ -66,11 +66,11 @@ internal sealed partial class CookieFileJar(List<FileCookie> fileCookies)
 
     private static CookieContainer NewContainer() => new(int.MaxValue, int.MaxValue, int.MaxValue);
 
-    private static string WithoutExpiration(string setCookieHeader)
-    {
-        var header = ExpiresRegex().Replace(setCookieHeader, "${1}" + FutureExpires);
-        return MaxAgeRegex().Replace(header, "${1}" + FutureMaxAge);
-    }
+    private static string WithoutExpiration(string setCookieHeader) =>
+        ExpirationRegex().Replace(setCookieHeader, match =>
+            match.Groups["expires"].Success ? match.Groups["expires"].Value + FutureExpires
+            : match.Groups["maxAge"].Success ? match.Groups["maxAge"].Value + FutureMaxAge
+            : match.Value);
 
     private static bool Matches(FileCookie cookie, Uri uri, DateTimeOffset now)
     {
@@ -97,10 +97,10 @@ internal sealed partial class CookieFileJar(List<FileCookie> fileCookies)
         return requestPath.Length == cookiePath.Length || cookiePath.EndsWith('/') || requestPath[cookiePath.Length] == '/';
     }
 
+    // 与 CookieContainer 一致，紧跟 "=" 的引号内容视为整体，其中的 "; expires=" 等不是属性，原样保留。
     // Expires 的值可能以星期加逗号开头（如 "Wed, 21 Oct 2015 07:28:00 GMT"），逗号之后才是日期。
-    [GeneratedRegex(@"(;\s*expires\s*=)\s*(?:[a-z]+\s*,)?[^;,]*", RegexOptions.IgnoreCase)]
-    private static partial Regex ExpiresRegex();
-
-    [GeneratedRegex(@"(;\s*max-age\s*=)[^;,]*", RegexOptions.IgnoreCase)]
-    private static partial Regex MaxAgeRegex();
+    [GeneratedRegex("""
+        (?:(?<expires>;\s*expires\s*=)|(?<maxAge>;\s*max-age\s*=))\s*(?:"[^"]*"|(?:[a-z]+\s*,)?[^;,]*)|=\s*"[^"]*"
+        """, RegexOptions.IgnoreCase)]
+    private static partial Regex ExpirationRegex();
 }
