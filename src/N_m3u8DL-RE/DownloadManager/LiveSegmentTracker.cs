@@ -12,41 +12,51 @@ internal sealed class LiveSegmentTracker
     {
         if (lastSegment == null || segments.Count == 0) return segments;
 
+        var lastIndex = FindMatchingIndex(segments, lastSegment, isHls, getSourceName);
+        return lastIndex < 0 ? segments : segments.Skip(lastIndex + 1).ToList();
+    }
+
+    // 录制去重和 404 等待共用窗口匹配规则，统一处理序号重置、URL 复用和查询签名变化。
+    public static int FindMatchingIndex(List<MediaSegment> segments, MediaSegment target, bool isHls,
+        Func<MediaSegment, string> getSourceName)
+    {
+        if (segments.Count == 0)
+            return -1;
         int lastIndex;
-        if (lastSegment.DateTime is { } lastDateTime && segments.All(s => s.DateTime != null))
+        if (target.DateTime is { } lastDateTime && segments.All(s => s.DateTime != null))
         {
             var timestamp = GetUnixTimestamp(lastDateTime);
             bool sameTime(MediaSegment s) => GetUnixTimestamp(s.DateTime!.Value) == timestamp;
-            lastIndex = segments.FindLastIndex(s => sameTime(s) && s.Index == lastSegment.Index &&
-                SameSource(s, lastSegment));
+            lastIndex = segments.FindLastIndex(s => sameTime(s) && s.Index == target.Index &&
+                SameSource(s, target));
             if (lastIndex < 0 && isHls)
-                lastIndex = segments.FindLastIndex(s => sameTime(s) && s.Index == lastSegment.Index &&
-                    SamePathAndRange(s, lastSegment));
+                lastIndex = segments.FindLastIndex(s => sameTime(s) && s.Index == target.Index &&
+                    SamePathAndRange(s, target));
             if (lastIndex < 0)
-                lastIndex = FindUniqueIndex(segments, s => sameTime(s) && SameSource(s, lastSegment));
+                lastIndex = FindUniqueIndex(segments, s => sameTime(s) && SameSource(s, target));
             if (lastIndex < 0)
                 lastIndex = FindUniqueIndex(segments, sameTime);
         }
         else if (isHls)
         {
             // 循环复用 URL 的播放列表必须先用源序号定位重叠片段。
-            lastIndex = segments.FindLastIndex(s => s.Index == lastSegment.Index &&
-                SameSource(s, lastSegment));
+            lastIndex = segments.FindLastIndex(s => s.Index == target.Index &&
+                SameSource(s, target));
             // 签名查询参数可能随刷新变化，此时比较路径和源序号。
             if (lastIndex < 0)
-                lastIndex = segments.FindLastIndex(s => s.Index == lastSegment.Index &&
-                    SamePathAndRange(s, lastSegment));
+                lastIndex = segments.FindLastIndex(s => s.Index == target.Index &&
+                    SamePathAndRange(s, target));
             // 源序号重置时，只接受唯一的 URL 匹配；多个候选无法确定哪个是旧片段。
             if (lastIndex < 0)
-                lastIndex = FindUniqueIndex(segments, s => SameSource(s, lastSegment));
+                lastIndex = FindUniqueIndex(segments, s => SameSource(s, target));
         }
         else
         {
-            var lastName = getSourceName(lastSegment);
+            var lastName = getSourceName(target);
             lastIndex = segments.FindLastIndex(s => getSourceName(s) == lastName);
         }
 
-        return lastIndex < 0 ? segments : segments.Skip(lastIndex + 1).ToList();
+        return lastIndex;
     }
 
     public void Record(List<MediaSegment> segments)

@@ -46,6 +46,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
     ConcurrentDictionary<int, bool> LiveEndDic = new(); // 各流是否已结束直播(出现ENDLIST)
     ConcurrentDictionary<int, LiveSegmentTracker> SegmentTrackers = new(); // 各流的去重边界与录制顺序
+    ConcurrentDictionary<int, LiveSegmentNotFoundPolicy> NotFoundPolicies = new(); // 各流最新窗口与尾部 404 等待策略
     ConcurrentDictionary<int, (TimeSpan Request, TimeSpan Read)> RequestTimeouts = new(); // 各轨道的请求和无数据超时
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
     CancellationTokenSource DownloadCancellationTokenSource = new(); // 取消网络恢复等待和分片下载
@@ -73,9 +74,12 @@ internal class SimpleLiveRecordManager2
     }
 
     private async Task<DownloadResult?> DownloadLiveSegmentAsync(MediaSegment segment, string path,
-        SpeedContainer speedContainer, Dictionary<string, string> headers, TimeSpan networkTimeout, bool isInit = false)
+        SpeedContainer speedContainer, Dictionary<string, string> headers, TimeSpan networkTimeout, int taskId, bool isInit = false)
     {
         var reconnecting = false;
+        var notFoundFailures = 0;
+        var notFoundStart = 0L;
+        var publicationWait = TimeSpan.Zero;
         while (true)
         {
             try
@@ -86,9 +90,28 @@ internal class SimpleLiveRecordManager2
                     Logger.Info(ResString.liveNetworkRecovered);
                 return result;
             }
-            catch (HttpRequestException ex) when (!isInit && ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Gone)
+            catch (HttpRequestException ex) when (!isInit && ex.StatusCode == HttpStatusCode.NotFound)
             {
-                // 断网期间滑出服务端窗口的媒体无法补回，保留后续分片并在录制结果中标记缺片。
+                var policy = NotFoundPolicies[taskId];
+                if (++notFoundFailures == 1)
+                {
+                    notFoundStart = Stopwatch.GetTimestamp();
+                    publicationWait = policy.GetPublicationWait(segment);
+                }
+                if (!policy.ShouldRetry(segment, notFoundFailures, DownloaderConfig.MyOptions.DownloadRetryCount,
+                    Stopwatch.GetElapsedTime(notFoundStart), publicationWait))
+                {
+                    Logger.Warn(ResString.liveSegmentUnavailable);
+                    return null;
+                }
+                if (!reconnecting)
+                    Logger.Warn(ResString.liveSegmentNotReady);
+                reconnecting = true;
+                await Task.Delay(TimeSpan.FromSeconds(NetworkRetryDelaySeconds), DownloadCancellationTokenSource.Token);
+            }
+            catch (HttpRequestException ex) when (!isInit && ex.StatusCode == HttpStatusCode.Gone)
+            {
+                // 410 表示服务端已移除媒体，保留后续分片并在录制结果中标记缺片。
                 Logger.Warn(ResString.liveSegmentUnavailable);
                 return null;
             }
@@ -285,7 +308,7 @@ internal class SimpleLiveRecordManager2
                     }
 
                     var path = Path.Combine(tmpDir, "_init.mp4.tmp");
-                    var result = await DownloadLiveSegmentAsync(mediaInit, path, speedContainer, headers, RequestTimeouts[task.Id].Read, isInit: true);
+                    var result = await DownloadLiveSegmentAsync(mediaInit, path, speedContainer, headers, RequestTimeouts[task.Id].Read, task.Id, isInit: true);
                     FileDic[mediaInit] = result;
                     if (result is not { Success: true })
                     {
@@ -351,11 +374,11 @@ internal class SimpleLiveRecordManager2
                     // 获取文件名
                     var filename = LiveSegmentTracker.GetFileName(seg, GetSegmentName(seg, allHasDatetime, SamePathDic[task.Id]));
                     var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
-                    var result = await DownloadLiveSegmentAsync(seg, path, speedContainer, headers, RequestTimeouts[task.Id].Read);
+                    var result = await DownloadLiveSegmentAsync(seg, path, speedContainer, headers, RequestTimeouts[task.Id].Read, task.Id);
                     FileDic[seg] = result;
                     if (result is not { Success: true })
                     {
-                        // 首片已过期时继续找可用分片，不能跳过媒体探测或 MSS init 重建。
+                        // 首片无法获取时继续找可用分片，不能跳过媒体探测或 MSS init 重建。
                         recordingFailed = true;
                         continue;
                     }
@@ -438,7 +461,7 @@ internal class SimpleLiveRecordManager2
                         // 获取文件名
                         var filename = LiveSegmentTracker.GetFileName(seg, GetSegmentName(seg, allHasDatetime, SamePathDic[task.Id]));
                         var path = Path.Combine(tmpDir, filename + $".{streamSpec.Extension ?? "clip"}.tmp");
-                        var result = await DownloadLiveSegmentAsync(seg, path, speedContainer, headers, RequestTimeouts[task.Id].Read);
+                        var result = await DownloadLiveSegmentAsync(seg, path, speedContainer, headers, RequestTimeouts[task.Id].Read, task.Id);
                         FileDic[seg] = result;
                         if (result is { Success: true })
                             task.Increment(1);
@@ -850,6 +873,7 @@ internal class SimpleLiveRecordManager2
                     var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
                     SamePathDic[task.Id] = allSamePath;
                 }
+                NotFoundPolicies[task.Id].Update(streamSpec.Playlist.MediaParts[0].MediaSegments, refreshDelaySeconds);
                 // 过滤不需要下载的片段
                 FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
                 var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
@@ -1042,6 +1066,8 @@ internal class SimpleLiveRecordManager2
                 RefreshedDurDic[task.Id] = TimeSpan.Zero;
                 RecordingSizeDic[task.Id] = 0;
                 SegmentTrackers[task.Id] = new LiveSegmentTracker();
+                NotFoundPolicies[task.Id] = new LiveSegmentNotFoundPolicy(StreamExtractor.ExtractorType == ExtractorType.HLS,
+                    segment => GetSegmentName(segment, false, SamePathDic[task.Id]));
                 RequestTimeouts[task.Id] = LiveRequestTimeoutPolicy.GetTimeouts(item, DownloaderConfig.MyOptions);
                 BlockDic[task.Id] = new BufferBlock<List<MediaSegment>>();
                 return (item, task);

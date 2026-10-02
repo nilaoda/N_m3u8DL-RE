@@ -9,6 +9,7 @@ using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
+using System.Net;
 
 namespace N_m3u8DL_RE.Downloader;
 
@@ -186,7 +187,8 @@ internal class SimpleDownloader : IDownloader
             {
                 Logger.Extra($"The retry attempts have been exhausted and the download of this segment has failed.{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
                 // 直播的临时故障由外层统一提示，诊断信息仍保留在详细日志中。
-                if (!throwOnFailure || !RetryUtil.IsTransientNetworkError(ex))
+                if (!throwOnFailure || !(RetryUtil.IsTransientNetworkError(ex) ||
+                    ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound }))
                     Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
             }
             // 直播需要原始异常区分临时网络故障；点播仍沿用失败时返回空结果的行为。

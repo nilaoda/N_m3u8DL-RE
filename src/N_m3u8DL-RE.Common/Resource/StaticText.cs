@@ -1181,9 +1181,15 @@ internal static class StaticText
         ),
         ["liveSegmentUnavailable"] = new TextContainer
         (
-            zhCN: "直播分片已不可用，跳过并继续录制；录制结果将标记为不完整",
-            zhTW: "直播分片已無法取得，跳過並繼續錄製；錄製結果將標記為不完整",
-            enUS: "Live segment is no longer available, skipping it; the recording will be marked incomplete"
+            zhCN: "无法获取直播分片，跳过并继续录制；录制结果将标记为不完整",
+            zhTW: "無法取得直播分片，跳過並繼續錄製；錄製結果將標記為不完整",
+            enUS: "Unable to retrieve live segment, skipping it; the recording will be marked incomplete"
+        ),
+        ["liveSegmentNotReady"] = new TextContainer
+        (
+            zhCN: "直播分片暂时不可用，稍后重试...",
+            zhTW: "直播分片暫時無法取得，稍後重試...",
+            enUS: "Live segment is temporarily unavailable, retrying shortly..."
         ),
         ["httpTooManyRedirects"] = new TextContainer
         (

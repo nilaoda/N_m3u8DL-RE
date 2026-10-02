@@ -118,6 +118,7 @@ public static class ResString
     public static string liveNetworkTimeout => GetText("liveNetworkTimeout");
     public static string liveNetworkRecovered => GetText("liveNetworkRecovered");
     public static string liveSegmentUnavailable => GetText("liveSegmentUnavailable");
+    public static string liveSegmentNotReady => GetText("liveSegmentNotReady");
     public static string httpTooManyRedirects => GetText("httpTooManyRedirects");
     public static string saveName => GetText("saveName");
     public static string taskStartAt => GetText("taskStartAt");

@@ -424,14 +424,185 @@ public class LiveNetworkRecoveryTests
         }
     }
 
-    private static async Task<StreamExtractor> Load(MediaFixtureServer server)
+    [Theory]
+    [InlineData("hls", false)]
+    [InlineData("hls", true)]
+    [InlineData("dash", false)]
+    [InlineData("dash", true)]
+    public async Task Tail404WaitsForPublicationAndPermanent404StillFinishes(string format, bool permanent)
+    {
+        if (!HasTool("ffmpeg") || !HasTool("ffprobe"))
+            return;
+        var root = Directory.CreateTempSubdirectory("live-tail-404-").FullName;
+        try
+        {
+            await GenerateCutMedia(root);
+            var manifestPath = format == "hls" ? "live.m3u8" : "live.mpd";
+            await using var server = new MediaFixtureServer(root,
+                (path, version) => path == manifestPath
+                    ? PublicationManifest(format, 0, version == 0 ? 1 : 3, version == 0) : null,
+                responseStatus: (path, count) => path == "media-2.m4s" && (permanent || count <= 4)
+                    ? HttpStatusCode.NotFound : null);
+            using var extractor = await Load(server, manifestPath);
+            using var stop = new CancellationTokenSource();
+            var recording = CreateManager(root, await extractor.ExtractStreamsAsync(), extractor,
+                recordLimit: format == "dash" ? TimeSpan.FromSeconds(6) : null).StartRecordAsync(stop.Token);
+            try
+            {
+                Assert.Equal(!permanent, await recording.WaitAsync(TimeSpan.FromSeconds(12)));
+            }
+            finally
+            {
+                stop.Cancel();
+                await recording.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            Assert.InRange(server.RequestCount("media-2.m4s"), permanent ? 6 : 5, permanent ? 7 : 5);
+            Assert.Equal(1, server.RequestCount("media-0.m4s"));
+            Assert.Equal(1, server.RequestCount("media-1.m4s"));
+            Assert.Equal(1, server.RequestCount("init.mp4"));
+            await AssertVideo(Assert.Single(Directory.GetFiles(Path.Combine(root, "out"))), permanent ? 4 : 6, permanent ? 100 : 150);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("hls")]
+    [InlineData("dash")]
+    public async Task WindowAdvancementStopsWaitingForMissingTail(string format)
+    {
+        if (!HasTool("ffmpeg") || !HasTool("ffprobe"))
+            return;
+        var root = Directory.CreateTempSubdirectory("live-window-404-").FullName;
+        try
+        {
+            await GenerateCutMedia(root);
+            var manifestPath = format == "hls" ? "live.m3u8" : "live.mpd";
+            await using var server = new MediaFixtureServer(root,
+                (path, version) => path == manifestPath
+                    ? PublicationManifest(format, version == 0 ? 0 : 1, version == 0 ? 1 : 2, version == 0) : null,
+                responseStatus: (path, _) => path == "media-0.m4s" ? HttpStatusCode.NotFound : null);
+            using var extractor = await Load(server, manifestPath);
+            using var stop = new CancellationTokenSource();
+            var recording = CreateManager(root, await extractor.ExtractStreamsAsync(), extractor,
+                recordLimit: format == "dash" ? TimeSpan.FromSeconds(6) : null).StartRecordAsync(stop.Token);
+            try
+            {
+                Assert.False(await recording.WaitAsync(TimeSpan.FromSeconds(5)));
+            }
+            finally
+            {
+                stop.Cancel();
+                await recording.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            Assert.InRange(server.RequestCount("media-0.m4s"), 2, 3);
+            await AssertVideo(Assert.Single(Directory.GetFiles(Path.Combine(root, "out"))), 6, 100);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task Ordinary404UsesConfiguredRetries()
+    {
+        if (!HasTool("ffmpeg") || !HasTool("ffprobe"))
+            return;
+        var root = Directory.CreateTempSubdirectory("live-middle-404-").FullName;
+        try
+        {
+            await GenerateCutMedia(root);
+            await using var server = new MediaFixtureServer(root,
+                (path, _) => path == "live.m3u8" ? PublicationManifest("hls", 0, 3, false) : null,
+                responseStatus: (path, count) => path == "media-0.m4s" && count <= 2 ? HttpStatusCode.NotFound : null);
+            using var extractor = await Load(server);
+            var options = CreateOptions(root);
+            options.LiveRealTimeMerge = true;
+            options.LiveWaitTime = 1;
+            options.LiveTakeCount = 16;
+            options.DownloadRetryCount = 2;
+            var manager = new SimpleLiveRecordManager2(new DownloaderConfig
+                { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options }, await extractor.ExtractStreamsAsync(), extractor);
+            Assert.True(await manager.StartRecordAsync().WaitAsync(TimeSpan.FromSeconds(8)));
+            Assert.Equal(3, server.RequestCount("media-0.m4s"));
+            await AssertVideo(Assert.Single(Directory.GetFiles(Path.Combine(root, "out"))), 6, 150);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task StopInterruptsTail404Wait(bool idleTimeout)
+    {
+        var root = Directory.CreateTempSubdirectory("live-404-stop-").FullName;
+        using var stop = new CancellationTokenSource();
+        Task<bool>? recording = null;
+        try
+        {
+            await using var server = new MediaFixtureServer(root,
+                (path, _) => path == "live.m3u8" ? "#EXTM3U\n#EXT-X-TARGETDURATION:10\n#EXTINF:10,\nmedia.ts\n" : null,
+                responseStatus: (path, _) => path == "media.ts" ? HttpStatusCode.NotFound : null);
+            using var extractor = await Load(server);
+            var options = CreateOptions(root);
+            options.LiveWaitTime = 1;
+            options.LiveTakeCount = 16;
+            options.LiveIdleTimeout = idleTimeout ? 2 : null;
+            var manager = new SimpleLiveRecordManager2(new DownloaderConfig
+                { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options }, await extractor.ExtractStreamsAsync(), extractor);
+            recording = manager.StartRecordAsync(stop.Token);
+            var timer = Stopwatch.StartNew();
+            while (server.RequestCount("media.ts") < 1 && timer.Elapsed < TimeSpan.FromSeconds(3))
+                await Task.Delay(20);
+            Assert.True(server.RequestCount("media.ts") >= 1);
+            if (!idleTimeout)
+                stop.Cancel();
+            Assert.True(await recording.WaitAsync(TimeSpan.FromSeconds(4)));
+            Assert.InRange(server.RequestCount("media.ts"), 1, 3);
+        }
+        finally
+        {
+            stop.Cancel();
+            if (recording != null)
+                await recording.WaitAsync(TimeSpan.FromSeconds(5));
+            Directory.Delete(root, true);
+        }
+    }
+
+    private static string PublicationManifest(string format, int start, int count, bool live)
+    {
+        if (format == "hls")
+            return $"#EXTM3U\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:{start}\n#EXT-X-MAP:URI=\"init.mp4\"\n" +
+                string.Join('\n', Enumerable.Range(start, count).Select(i => $"#EXTINF:2,\nmedia-{i}.m4s")) +
+                (live ? "\n" : "\n#EXT-X-ENDLIST\n");
+        return $"""
+            <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="dynamic" minimumUpdatePeriod="PT1S">
+              <Period duration="PT6S"><AdaptationSet mimeType="video/mp4">
+                <Representation id="v" bandwidth="1000" codecs="avc1.64001e">
+                  <SegmentTemplate initialization="init.mp4" media="media-$Number$.m4s" timescale="1" startNumber="{start}">
+                    <SegmentTimeline><S t="{start * 2}" d="2" r="{count - 1}"/></SegmentTimeline>
+                  </SegmentTemplate>
+                </Representation>
+              </AdaptationSet></Period>
+            </MPD>
+            """;
+    }
+
+    private static async Task<StreamExtractor> Load(MediaFixtureServer server, string manifestPath = "live.m3u8")
     {
         var extractor = new StreamExtractor(new ParserConfig { KeyRetryCount = 0 });
-        await extractor.LoadSourceFromUrlAsync(server.Url + "live.m3u8");
+        await extractor.LoadSourceFromUrlAsync(server.Url + manifestPath);
         return extractor;
     }
 
-    private static SimpleLiveRecordManager2 CreateManager(string root, List<StreamSpec> streams, StreamExtractor extractor)
+    private static SimpleLiveRecordManager2 CreateManager(string root, List<StreamSpec> streams, StreamExtractor extractor,
+        TimeSpan? recordLimit = null)
     {
         var options = CreateOptions(root);
         options.LiveRealTimeMerge = true;
@@ -439,6 +610,7 @@ public class LiveNetworkRecoveryTests
         options.LiveWaitTime = 1;
         options.LiveTakeCount = 16;
         options.DownloadRetryCount = 0;
+        options.LiveRecordLimit = recordLimit;
         return new SimpleLiveRecordManager2(new DownloaderConfig
             { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options }, streams, extractor);
     }
