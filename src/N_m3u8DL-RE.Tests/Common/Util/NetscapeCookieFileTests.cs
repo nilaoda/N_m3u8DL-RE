@@ -117,16 +117,87 @@ public class NetscapeCookieFileTests
     }
 
     [Fact]
-    public void ServerUpdatesReplaceFileCookiesWithTheSameName()
+    public void ServerUpdatesReplaceFileCookiesWithTheSameIdentity()
     {
         var cookies = NetscapeCookieFile.Parse(
         [
             ".example.com\tTRUE\t/\tFALSE\t0\tsession\tfile",
             "other.com\tFALSE\t/\tFALSE\t0\tsession\tother"
         ]);
-        cookies.SetCookies(new Uri("https://www.example.com/"), "session=server; Path=/");
+        cookies.SetCookies(new Uri("https://www.example.com/"), "session=server; Domain=.Example.com; Path=/");
         Assert.Equal("session=server", Header(cookies, "https://www.example.com/"));
+        Assert.Equal("session=server", Header(cookies, "https://cdn.example.com/"));
         Assert.Equal("session=other", Header(cookies, "https://other.com/"));
+    }
+
+    [Fact]
+    public void ServerUpdatesAtOtherPathsKeepFileCookies()
+    {
+        var cookies = NetscapeCookieFile.Parse(["example.com\tFALSE\t/\tFALSE\t0\tsession\tfile"]);
+        var uri = new Uri("https://example.com/auth/login");
+        cookies.SetCookies(uri, "session=server; Path=/auth");
+        Assert.Equal("session=server; session=file", Header(cookies, "https://example.com/auth/login"));
+        Assert.Equal("session=file", Header(cookies, "https://example.com/"));
+
+        cookies.SetCookies(uri, "session=; Max-Age=0; Path=/auth");
+        Assert.Equal("session=file", Header(cookies, "https://example.com/auth/login"));
+    }
+
+    [Fact]
+    public void HostOnlyServerUpdatesKeepSharedFileCookies()
+    {
+        var cookies = NetscapeCookieFile.Parse([".example.com\tTRUE\t/\tFALSE\t0\tsession\tshared"]);
+        cookies.SetCookies(new Uri("https://www.example.com/"), "session=www; Path=/");
+        Assert.Equal("session=shared; session=www", Header(cookies, "https://www.example.com/"));
+        Assert.Equal("session=shared", Header(cookies, "https://cdn.example.com/"));
+
+        cookies.SetCookies(new Uri("https://www.example.com/"), "session=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/");
+        Assert.Equal("session=shared", Header(cookies, "https://www.example.com/"));
+    }
+
+    [Fact]
+    public void ServerDeletionsRemoveFileCookiesWithTheSameIdentity()
+    {
+        var cookies = NetscapeCookieFile.Parse(
+        [
+            "example.com\tFALSE\t/auth\tFALSE\t0\tsession\tauth",
+            "example.com\tFALSE\t/\tFALSE\t0\tsession\troot"
+        ]);
+        cookies.SetCookies(new Uri("https://example.com/auth/login"), "session=; Max-Age=0; Path=/auth");
+        Assert.Equal("session=root", Header(cookies, "https://example.com/auth/login"));
+    }
+
+    [Fact]
+    public void EveryCookieInACombinedSetCookieValueIsApplied()
+    {
+        var cookies = NetscapeCookieFile.Parse(
+        [
+            "example.com\tFALSE\t/\tFALSE\t0\ta\told",
+            "example.com\tFALSE\t/\tFALSE\t0\tb\told",
+            "example.com\tFALSE\t/\tFALSE\t0\tc\told",
+            "example.com\tFALSE\t/\tFALSE\t0\td\tkept"
+        ]);
+        var uri = new Uri("https://example.com/");
+        cookies.SetCookies(uri, "a=new; Path=/, b=new; Path=/");
+        Assert.Equal("c=old; d=kept; a=new; b=new", Header(cookies, "https://example.com/"));
+
+        cookies.SetCookies(uri, "a=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/, c=; Max-Age=0; Path=/");
+        Assert.Equal("d=kept; b=new", Header(cookies, "https://example.com/"));
+    }
+
+    [Fact]
+    public void DuplicateFileEntriesKeepTheLastValue()
+    {
+        var cookies = NetscapeCookieFile.Parse(
+        [
+            ".example.com\tTRUE\t/\tFALSE\t0\tsession\tfirst",
+            "example.com\tFALSE\t/\tFALSE\t0\tother\tvalue",
+            "Example.COM\tTRUE\t/\tFALSE\t0\tsession\tlast",
+            "example.com\tFALSE\t/media\tFALSE\t0\tsession\tmedia"
+        ]);
+        Assert.Equal("session=last; other=value", Header(cookies, "https://example.com/"));
+        Assert.Equal("session=media; session=last; other=value", Header(cookies, "https://example.com/media/a"));
+        Assert.Equal(3, cookies.FileCookies.Count);
     }
 
     [Fact]

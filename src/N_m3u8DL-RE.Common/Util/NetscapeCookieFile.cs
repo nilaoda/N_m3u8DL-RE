@@ -28,6 +28,7 @@ internal static class NetscapeCookieFile
     internal static CookieFileJar Parse(string[] lines)
     {
         var cookies = new List<FileCookie>();
+        var indexes = new Dictionary<(string Name, string Domain, string Path), int>();
         for (var index = 0; index < lines.Length; index++)
         {
             var line = lines[index];
@@ -82,7 +83,17 @@ internal static class NetscapeCookieFile
                     continue;
             }
 
-            cookies.Add(new FileCookie(domain, !includeSubdomains, fields[2], secure, httpOnly, expiration, fields[5], fields[6]));
+            // 名称、域和路径相同的重复条目以最后一行为准，与浏览器写入同一 Cookie 的行为一致。
+            var cookie = new FileCookie(domain, !includeSubdomains, fields[2], secure, httpOnly, expiration, fields[5], fields[6]);
+            if (indexes.TryGetValue(cookie.Key, out var existing))
+            {
+                cookies[existing] = cookie;
+            }
+            else
+            {
+                indexes[cookie.Key] = cookies.Count;
+                cookies.Add(cookie);
+            }
         }
         return new CookieFileJar(cookies);
     }
