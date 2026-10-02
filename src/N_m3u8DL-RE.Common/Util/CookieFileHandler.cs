@@ -4,7 +4,7 @@ namespace N_m3u8DL_RE.Common.Util;
 
 internal sealed class CookieFileHandler(HttpMessageHandler innerHandler) : DelegatingHandler(innerHandler)
 {
-    internal CookieContainer? Cookies { get; set; }
+    internal CookieFileJar? Cookies { get; set; }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
