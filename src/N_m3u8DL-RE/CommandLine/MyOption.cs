@@ -88,6 +88,8 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.HttpRequestTimeout"/>.
     /// </summary>
     public double HttpRequestTimeout { get; set; }
+    // 保留参数来源，直播录制仅在未手动设置时启用自动超时。
+    public bool HttpRequestTimeoutSpecified { get; set; }
     /// <summary>
     /// See: <see cref="CommandInvoker.LiveRecordLimit"/>.
     /// </summary>

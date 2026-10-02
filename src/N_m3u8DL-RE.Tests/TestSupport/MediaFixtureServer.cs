@@ -16,7 +16,9 @@ internal sealed class MediaFixtureServer : IAsyncDisposable
     public string Url { get; }
     public int RequestCount(string path) => requests.GetValueOrDefault(path);
 
-    public MediaFixtureServer(string root, Func<string, int, string?> manifest, Func<string, Task>? beforeResponse = null)
+    public MediaFixtureServer(string root, Func<string, int, string?> manifest, Func<string, Task>? beforeResponse = null,
+        Func<string, int, HttpStatusCode?>? responseStatus = null,
+        Func<string, int, Stream, CancellationToken, Task<bool>>? responseWriter = null)
     {
         listener.Start();
         Url = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}/";
@@ -27,11 +29,23 @@ internal sealed class MediaFixtureServer : IAsyncDisposable
                 while (!stop.IsCancellationRequested)
                 {
                     var client = await listener.AcceptTcpClientAsync(stop.Token);
-                    handlers.Add(Serve(client));
+                    handlers.Add(ServeSafely(client));
                 }
             }
             catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
         });
+        async Task ServeSafely(TcpClient client)
+        {
+            try
+            {
+                await Serve(client);
+            }
+            catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+            catch (IOException ex) when (ex.InnerException is SocketException)
+            {
+                // 取消请求时客户端可能已断开连接，与真实 HTTP 服务一样结束该连接即可。
+            }
+        }
         async Task Serve(TcpClient client)
         {
             using (client)
@@ -46,6 +60,14 @@ internal sealed class MediaFixtureServer : IAsyncDisposable
                 var count = requests.AddOrUpdate(path, 1, (_, old) => old + 1);
                 if (beforeResponse != null)
                     await beforeResponse(path);
+                if (responseWriter != null && await responseWriter(path, count, stream, stop.Token))
+                    return;
+                if (responseStatus?.Invoke(path, count) is { } status)
+                {
+                    var errorHeaders = Encoding.ASCII.GetBytes($"HTTP/1.1 {(int)status} {status}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                    await stream.WriteAsync(errorHeaders, stop.Token);
+                    return;
+                }
                 var text = manifest(path, count - 1);
                 var bytes = text != null ? Encoding.UTF8.GetBytes(text) : await File.ReadAllBytesAsync(Path.Combine(root, path), stop.Token);
                 var headers = Encoding.ASCII.GetBytes($"HTTP/1.1 200 OK\r\nContent-Length: {bytes.Length}\r\nConnection: close\r\n\r\n");

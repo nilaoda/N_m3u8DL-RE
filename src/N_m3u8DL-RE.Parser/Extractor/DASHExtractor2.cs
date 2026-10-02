@@ -620,19 +620,19 @@ internal partial class DASHExtractor2 : IExtractor
         return starts.Select((start, i) => (start, durations[i])).ToArray();
     }
 
-    public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+    public async Task RefreshPlayListAsync(List<StreamSpec> streamSpecs, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null)
     {
         if (streamSpecs.Count == 0) return;
 
         var (rawText, url) = ("", ParserConfig.Url);
         try
         {
-            (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.Url, ParserConfig.Headers);
+            (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.Url, ParserConfig.Headers, cancellationToken, requestTimeout);
         }
         catch (HttpRequestException) when (ParserConfig.Url!= ParserConfig.OriginalUrl)
         {
             // 当URL无法访问时，再请求原始URL
-            (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers);
+            (rawText, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers, cancellationToken, requestTimeout);
         }
 
         ParserConfig.Url = url;

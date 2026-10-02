@@ -210,15 +210,15 @@ internal static class StaticText
         ),
         ["cmd_downloadRetryCount"] = new TextContainer
         (
-            zhCN: "每个分片下载异常时的重试次数",
-            zhTW: "每個分片下載異常時的重試次數",
-            enUS: "The number of retries when download segment error"
+            zhCN: "每个分片下载异常时的重试次数；分片直播临时网络故障在重试耗尽后仍会等待恢复",
+            zhTW: "每個分片下載異常時的重試次數；分片直播暫時網路故障在重試耗盡後仍會等待恢復",
+            enUS: "Retries per segment; segmented live recording keeps waiting for recovery after transient network failures"
         ),
         ["cmd_httpRequestTimeout"] = new TextContainer
         (
-            zhCN: "HTTP请求的超时时间(秒)",
-            zhTW: "HTTP請求的超時時間(秒)",
-            enUS: "Timeout duration for HTTP requests (in seconds)"
+            zhCN: "HTTP请求超时(秒)；分片直播未指定时自动调整，指定后也用于分片连续无数据超时，不限制总下载时长",
+            zhTW: "HTTP請求逾時(秒)；分片直播未指定時自動調整，指定後也用於分片連續無資料逾時，不限制總下載時長",
+            enUS: "HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time"
         ),
         ["cmd_decryptionBinaryPath"] = new TextContainer
         (
@@ -324,21 +324,78 @@ internal static class StaticText
         ),
         ["cmd_savePattern"] = new TextContainer
         (
-            zhCN: "设置保存文件命名模板, 支持使用变量: \n" +
-                  "<SaveName>, <Id>, <Codecs>, <Language>, <Resolution>, \n" +
-                  "<Bandwidth>, <MediaType>, <Channels>, <FrameRate>, \n" +
-                  "<VideoRange>, <GroupId>, <Ext>\n" +
-                  "示例: --save-pattern \"<SaveName>_<Resolution>_<Bandwidth>\"",
-            zhTW: "設置保存檔案命名模板, 支持使用變數: \n" +
-                  "<SaveName>, <Id>, <Codecs>, <Language>, <Resolution>, \n" +
-                  "<Bandwidth>, <MediaType>, <Channels>, <FrameRate>, \n" +
-                  "<VideoRange>, <GroupId>, <Ext>\n" +
-                  "示例: --save-pattern \"<SaveName>_<Resolution>_<Bandwidth>\"",
-            enUS: "Set output filename pattern with variables: \n" +
-                  "<SaveName>, <Id>, <Codecs>, <Language>, <Resolution>, \n" +
-                  "<Bandwidth>, <MediaType>, <Channels>, <FrameRate>, \n" +
-                  "<VideoRange>, <GroupId>, <Ext>\n" +
-                  "Example: --save-pattern \"<SaveName>_<Resolution>_<Bandwidth>\""
+            zhCN: "设置保存文件命名模板. 输入 \"--morehelp save-pattern\" 以查看变量和示例",
+            zhTW: "設置保存檔案命名模板. 輸入 \"--morehelp save-pattern\" 以查看變數和範例",
+            enUS: "Set output filename pattern. Use \"--morehelp save-pattern\" for variables and examples"
+        ),
+        ["cmd_savePattern_more"] = new TextContainer
+        (
+            zhCN: "使用变量设置各轨道的输出文件名主体，程序自动追加输出扩展名.\r\n\r\n" +
+                  "* <SaveName>: --save-name 指定的保存名称，未指定时为空\r\n" +
+                  "* <Id>: 轨道下载任务ID\r\n" +
+                  "* <Codecs>: 编码信息 (如 avc1.64001f, mp4a.40.2)\r\n" +
+                  "* <Language>: 语言代码 (如 en, zh-CN)\r\n" +
+                  "* <Resolution>: 视频分辨率 (如 1920x1080)\r\n" +
+                  "* <Bandwidth>: 码率数值，单位 bit/s (如 5000000)\r\n" +
+                  "* <MediaType>: 媒体类型 (VIDEO, AUDIO, SUBTITLES)\r\n" +
+                  "* <Channels>: 音频声道信息\r\n" +
+                  "* <FrameRate>: 视频帧率\r\n" +
+                  "* <VideoRange>: 视频动态范围 (如 SDR, HDR10)\r\n" +
+                  "* <GroupId>: 流组标识符\r\n\r\n" +
+                  "变量区分大小写，缺失的信息替换为空字符串. 模板不需要包含扩展名.\r\n\r\n" +
+                  "例如:\r\n" +
+                  "# 按分辨率命名视频\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Resolution>\"\r\n" +
+                  "# 加入码率 (bit/s)\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Resolution>_<Bandwidth>bps\"\r\n" +
+                  "# 按语言和声道命名音轨\r\n" +
+                  "--save-name audio --save-pattern \"<SaveName>_<Language>_<Channels>\"\r\n" +
+                  "# 用任务ID区分多个配置相同的轨道\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Id>_<Codecs>\"\r\n",
+            zhTW: "使用變數設置各軌道的輸出檔案名稱主體，程式自動附加輸出副檔名.\r\n\r\n" +
+                  "* <SaveName>: --save-name 指定的保存名稱，未指定時為空\r\n" +
+                  "* <Id>: 軌道下載任務ID\r\n" +
+                  "* <Codecs>: 編碼資訊 (如 avc1.64001f, mp4a.40.2)\r\n" +
+                  "* <Language>: 語言代碼 (如 en, zh-CN)\r\n" +
+                  "* <Resolution>: 影片解析度 (如 1920x1080)\r\n" +
+                  "* <Bandwidth>: 碼率數值，單位 bit/s (如 5000000)\r\n" +
+                  "* <MediaType>: 媒體類型 (VIDEO, AUDIO, SUBTITLES)\r\n" +
+                  "* <Channels>: 音訊聲道資訊\r\n" +
+                  "* <FrameRate>: 影片影格率\r\n" +
+                  "* <VideoRange>: 影片動態範圍 (如 SDR, HDR10)\r\n" +
+                  "* <GroupId>: 串流群組識別碼\r\n\r\n" +
+                  "變數區分大小寫，缺失的資訊替換為空字串. 模板不需要包含副檔名.\r\n\r\n" +
+                  "例如:\r\n" +
+                  "# 按解析度命名影片\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Resolution>\"\r\n" +
+                  "# 加入碼率 (bit/s)\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Resolution>_<Bandwidth>bps\"\r\n" +
+                  "# 按語言和聲道命名音軌\r\n" +
+                  "--save-name audio --save-pattern \"<SaveName>_<Language>_<Channels>\"\r\n" +
+                  "# 用任務ID區分多個配置相同的軌道\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Id>_<Codecs>\"\r\n",
+            enUS: "Set each track's output filename stem using variables. The output extension is appended automatically.\r\n\r\n" +
+                  "* <SaveName>: name specified by --save-name, or empty when omitted\r\n" +
+                  "* <Id>: track download task ID\r\n" +
+                  "* <Codecs>: codec information (e.g. avc1.64001f, mp4a.40.2)\r\n" +
+                  "* <Language>: language code (e.g. en, zh-CN)\r\n" +
+                  "* <Resolution>: video resolution (e.g. 1920x1080)\r\n" +
+                  "* <Bandwidth>: bitrate value in bit/s (e.g. 5000000)\r\n" +
+                  "* <MediaType>: media type (VIDEO, AUDIO, SUBTITLES)\r\n" +
+                  "* <Channels>: audio channel information\r\n" +
+                  "* <FrameRate>: video frame rate\r\n" +
+                  "* <VideoRange>: video dynamic range (e.g. SDR, HDR10)\r\n" +
+                  "* <GroupId>: stream group identifier\r\n\r\n" +
+                  "Variables are case-sensitive. Missing values become empty strings. Do not include the output extension in the pattern.\r\n\r\n" +
+                  "Examples:\r\n" +
+                  "# Name video tracks by resolution\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Resolution>\"\r\n" +
+                  "# Include bitrate (bit/s)\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Resolution>_<Bandwidth>bps\"\r\n" +
+                  "# Name audio tracks by language and channels\r\n" +
+                  "--save-name audio --save-pattern \"<SaveName>_<Language>_<Channels>\"\r\n" +
+                  "# Use task IDs to distinguish tracks with the same configuration\r\n" +
+                  "--save-name video --save-pattern \"<SaveName>_<Id>_<Codecs>\"\r\n"
         ),
         ["cmd_logFilePath"] = new TextContainer
         (
@@ -1103,6 +1160,42 @@ internal static class StaticText
             zhCN: "连续 {0} 秒没有新分片，即将停止录制",
             zhTW: "連續 {0} 秒沒有新分片，即將停止錄製",
             enUS: "No new segments for {0} seconds, stopping live recording"
+        ),
+        ["liveNetworkRetry"] = new TextContainer
+        (
+            zhCN: "直播请求暂时失败，等待网络恢复后重试...",
+            zhTW: "直播請求暫時失敗，等待網路恢復後重試...",
+            enUS: "Live request temporarily failed, waiting to retry..."
+        ),
+        ["liveNetworkRecovered"] = new TextContainer
+        (
+            zhCN: "直播请求已恢复，继续录制",
+            zhTW: "直播請求已恢復，繼續錄製",
+            enUS: "Live request recovered, continuing recording"
+        ),
+        ["liveNetworkTimeout"] = new TextContainer
+        (
+            zhCN: "直播请求等待超时",
+            zhTW: "直播請求等待逾時",
+            enUS: "Live request timed out"
+        ),
+        ["liveSegmentUnavailable"] = new TextContainer
+        (
+            zhCN: "无法获取直播分片，跳过并继续录制；录制结果将标记为不完整",
+            zhTW: "無法取得直播分片，跳過並繼續錄製；錄製結果將標記為不完整",
+            enUS: "Unable to retrieve live segment, skipping it; the recording will be marked incomplete"
+        ),
+        ["liveSegmentNotReady"] = new TextContainer
+        (
+            zhCN: "直播分片暂时不可用，稍后重试...",
+            zhTW: "直播分片暫時無法取得，稍後重試...",
+            enUS: "Live segment is temporarily unavailable, retrying shortly..."
+        ),
+        ["httpTooManyRedirects"] = new TextContainer
+        (
+            zhCN: "HTTP重定向次数过多，请检查资源URL",
+            zhTW: "HTTP重新導向次數過多，請檢查資源URL",
+            enUS: "Too many HTTP redirects, please check the resource URL"
         ),
         ["saveName"] = new TextContainer
         (

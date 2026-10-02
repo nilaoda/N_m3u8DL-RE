@@ -680,6 +680,7 @@ internal static partial class CommandInvoker
             Cookies = result.GetValue(Cookies),
             DownloadRetryCount = result.GetValue(DownloadRetryCount),
             HttpRequestTimeout = result.GetValue(HttpRequestTimeout),
+            HttpRequestTimeoutSpecified = result.GetResult(HttpRequestTimeout) is { Implicit: false },
             BaseUrl = result.GetValue(BaseUrl),
             MuxImports = result.GetValue(MuxImports),
             ConcurrentDownload = result.GetValue(ConcurrentDownload),
@@ -758,6 +759,7 @@ internal static partial class CommandInvoker
                 "select-audio" => ResString.cmd_selectAudio_more,
                 "select-subtitle" => ResString.cmd_selectSubtitle_more,
                 "custom-range" => ResString.cmd_custom_range,
+                "save-pattern" => ResString.cmd_savePattern_more,
                 _ => $"Option=\"{option}\" not found"
             };
             Console.WriteLine($"More Help:\r\n\r\n  --{option}\r\n\r\n" + msg);
@@ -793,7 +795,8 @@ internal static partial class CommandInvoker
         {
             var parseResult = rootCommand.Parse(args, config);
             var exitCode = await parseResult.InvokeAsync();
-            Environment.Exit(exitCode);
+            // 下载或录制失败会设置进程退出码，不能被命令行解析成功返回的 0 覆盖。
+            Environment.Exit(exitCode != 0 ? exitCode : Environment.ExitCode);
         }
         catch (Exception ex)
         {

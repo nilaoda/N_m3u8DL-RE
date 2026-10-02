@@ -2,12 +2,14 @@ using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.Crypto;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using Spectre.Console;
+using System.Net;
 
 namespace N_m3u8DL_RE.Downloader;
 
@@ -23,10 +25,10 @@ internal class SimpleDownloader : IDownloader
         DownloaderConfig = config;
     }
 
-    public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, bool singleFile = false)
+    public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, bool singleFile = false, CancellationToken cancellationToken = default, bool throwOnFailure = false, TimeSpan? networkTimeout = null)
     {
         var url = segment.Url;
-        var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount, singleFile);
+        var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount, singleFile, cancellationToken, throwOnFailure, networkTimeout);
         if (dResult is { Success: true } && dResult.ActualFilePath != des)
         {
             switch (segment.EncryptInfo.Method)
@@ -78,7 +80,7 @@ internal class SimpleDownloader : IDownloader
         return dResult;
     }
 
-    private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3, bool singleFile = false)
+    private async Task<(string des, DownloadResult? dResult)> DownClipAsync(string url, string path, SpeedContainer speedContainer, long? fromPosition, long? toPosition, Dictionary<string, string>? headers = null, int retryCount = 3, bool singleFile = false, CancellationToken cancellationToken = default, bool throwOnFailure = false, TimeSpan? networkTimeout = null)
     {
         CancellationTokenSource? cancellationTokenSource = null;
         Task? watcher = null;
@@ -86,7 +88,8 @@ internal class SimpleDownloader : IDownloader
         retry:
         try
         {
-            cancellationTokenSource = new();
+            cancellationToken.ThrowIfCancellationRequested();
+            cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var des = Path.ChangeExtension(path, null);
 
             // 已下载跳过
@@ -139,49 +142,58 @@ internal class SimpleDownloader : IDownloader
                 });
             }
 
-            // 另起线程进行监控
-            var cts = cancellationTokenSource;
-            watcher = Task.Run(async () =>
+            // 直播按每片读取独立检测超时，点播保留原有的整条流零速监控。
+            if (networkTimeout == null)
             {
-                try
+                var cts = cancellationTokenSource;
+                watcher = Task.Run(async () =>
                 {
-                    while (!cts.IsCancellationRequested)
+                    try
                     {
-                        if (speedContainer.ShouldStop)
+                        while (!cts.IsCancellationRequested)
                         {
-                            cts.Cancel();
-                            Logger.DebugMarkUp(ResString.downloadCancelled);
-                            break;
+                            if (speedContainer.ShouldStop)
+                            {
+                                cts.Cancel();
+                                Logger.DebugMarkUp(ResString.downloadCancelled);
+                                break;
+                            }
+                            await Task.Delay(500, cts.Token);
                         }
-                        await Task.Delay(500, cts.Token);
                     }
-                }
-                catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
-            });
+                    catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
+                });
+            }
 
             // 调用下载
-            var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition);
+            var result = await DownloadUtil.DownloadToFileAsync(url, path, speedContainer, cancellationTokenSource, headers, fromPosition, toPosition, networkTimeout);
             return (des, result);
 
             throw new Exception("please retry");
         }
         catch (Exception ex)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             Logger.DebugMarkUp($"[grey]{ex.Message.EscapeMarkup()} retryCount: {retryCount}[/]");
             Logger.Debug(url + " " + ex);
             Logger.Extra($"Ah oh!{Environment.NewLine}RetryCount => {retryCount}{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
             // 整文件的正文重试由 BinaryDownloadManager 负责，不能在外层再次重下。
-            if (!binaryStarted && retryCount-- > 0)
+            if (!binaryStarted && retryCount-- > 0 && (!throwOnFailure || RetryUtil.IsTransientNetworkError(ex)))
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000, cancellationToken);
                 goto retry;
             }
             else
             {
                 Logger.Extra($"The retry attempts have been exhausted and the download of this segment has failed.{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
-                Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
+                // 直播的临时故障由外层统一提示，诊断信息仍保留在详细日志中。
+                if (!throwOnFailure || !(RetryUtil.IsTransientNetworkError(ex) ||
+                    ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound }))
+                    Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()}[/]");
             }
-            // throw new Exception("download failed", ex);
+            // 直播需要原始异常区分临时网络故障；点播仍沿用失败时返回空结果的行为。
+            if (throwOnFailure)
+                throw;
             return default;
         }
         finally

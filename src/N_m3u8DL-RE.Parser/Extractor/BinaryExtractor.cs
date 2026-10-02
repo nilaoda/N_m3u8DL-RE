@@ -11,7 +11,7 @@ internal sealed class BinaryExtractor(ParserConfig parserConfig) : IExtractor
     public ParserConfig ParserConfig { get; set; } = parserConfig;
     public Task<List<StreamSpec>> ExtractStreamsAsync(string rawText) => Task.FromResult(new List<StreamSpec>());
     public Task FetchPlayListAsync(List<StreamSpec> streamSpecs) => Task.CompletedTask;
-    public Task RefreshPlayListAsync(List<StreamSpec> streamSpecs) => Task.CompletedTask;
+    public Task RefreshPlayListAsync(List<StreamSpec> streamSpecs, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null) => Task.CompletedTask;
     public void PreProcessContent() { }
     public string PreProcessUrl(string url) => url;
 }

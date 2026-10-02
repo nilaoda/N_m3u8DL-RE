@@ -45,7 +45,7 @@ internal class LiveTSExtractor : IExtractor
         throw new NotImplementedException();
     }
 
-    public Task RefreshPlayListAsync(List<StreamSpec> streamSpecs)
+    public Task RefreshPlayListAsync(List<StreamSpec> streamSpecs, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null)
     {
         throw new NotImplementedException();
     }
