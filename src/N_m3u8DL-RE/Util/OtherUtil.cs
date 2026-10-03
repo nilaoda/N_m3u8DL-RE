@@ -13,7 +13,7 @@ internal static partial class OtherUtil
 
     public static Dictionary<string, string> SplitHeaderArrayToDic(string[]? headers)
     {
-        Dictionary<string, string> dic = new();
+        Dictionary<string, string> dic = new(StringComparer.OrdinalIgnoreCase);
         if (headers == null) return dic;
         
         foreach (string header in headers)
@@ -21,7 +21,8 @@ internal static partial class OtherUtil
             var index = header.IndexOf(':');
             if (index != -1)
             {
-                dic[header[..index].Trim().ToLower()] = header[(index + 1)..].Trim();
+                // HTTP 请求头名称不区分大小写，也不受当前 UI 语言的大小写规则影响。
+                dic[header[..index].Trim().ToLowerInvariant()] = header[(index + 1)..].Trim();
             }
         }
 

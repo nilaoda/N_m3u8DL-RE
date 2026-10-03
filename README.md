@@ -46,6 +46,38 @@ N_m3u8DL-RE "https://example.com/video.m3u8" --cookies "cookies.txt"
 
 Cookie 会按请求的域名、路径、HTTPS 条件及有效期匹配，适用于清单、密钥、初始化文件和分片，支持点播及直播。若同时设置 `-H "Cookie: ..."`，则以手动请求头为准。服务器更新的 Cookie 仅保存在内存中，不回写文件。
 
+## 配置文件
+
+常用选项可以保存到 UTF-8 文本配置文件中，程序启动时自动读取：
+
+- Linux / macOS：`~/.config/N_m3u8DL-RE/config.conf`；若设置了绝对路径的 `XDG_CONFIG_HOME`，则使用 `$XDG_CONFIG_HOME/N_m3u8DL-RE/config.conf`。
+- Windows：`%APPDATA%\N_m3u8DL-RE\config.conf`。
+
+程序不会自动创建配置文件，默认文件不存在时使用内置默认值。配置沿用命令行参数语法，支持以 `#` 开头的注释行；包含空格的参数值使用双引号：
+
+```text
+# 常用下载选项
+-mt
+--no-log
+--auto-select
+--thread-count 16
+--save-dir "Downloads/My Videos"
+```
+
+优先级为 **命令行 > 配置文件 > 内置默认值**。同一选项按短名和长名识别，单值选项由命令行替换配置值，被替换的值不再进行下载参数转换或文件读取。`--key`、`--ad-keyword`、`--mux-import` 等可重复选项按配置在前、命令行在后的顺序合并。`-H` / `--header` 按请求头名称合并，名称不区分大小写；不同名称保留，同名以命令行为准。布尔选项可用 `false` 关闭，例如 `--no-log false`。配置中的 HTTP 超时也视为手动指定，会关闭直播的自动超时调整。
+
+```text
+N_m3u8DL-RE "https://example.com/video.m3u8" --thread-count 8
+N_m3u8DL-RE "https://example.com/video.m3u8" --config "custom.conf"
+N_m3u8DL-RE "https://example.com/video.m3u8" --no-config
+```
+
+`--config FILE` 只读取指定文件，替代默认配置；文件不存在或内容无效时报错。`--no-config` 不读取配置文件，不能与 `--config` 同时使用。配置只允许保存下载选项，不允许保存下载地址、配置加载选项或帮助、版本、补全操作。相对路径按当前工作目录解析，程序目录和当前目录不会被自动搜索。
+
+帮助信息会使用配置中的 UI 语言；生成补全脚本及 Tab 补全请求不读取配置。原有 `@args.txt` 参数文件仍可使用，其中的参数具有命令行优先级。
+
+Docker 部署建议将配置只读挂载到 `/config/config.conf`，并传入 `--config /config/config.conf`，不依赖容器的 HOME 或运行用户。
+
 ## 命令行参数
 
 过长的自动保存名、自定义保存名和模板生成的文件名会自动缩短，并附加短哈希以减少重名。长度按 UTF-8 字节计算，不会截断中文或 emoji；自动名称的时间戳和输出文件的媒体扩展名会预留空间。
@@ -61,6 +93,8 @@ Arguments:
   <input>  链接或文件
 
 Options:
+  --config <FILE>                                         读取指定配置文件，替代用户默认配置；命令行选项优先
+  --no-config                                             不读取配置文件，不能与 --config 同时使用
   --tmp-dir <tmp-dir>                                     设置临时文件存储目录
   --save-dir <save-dir>                                   设置输出目录
   --save-name <save-name>                                 设置保存文件名
