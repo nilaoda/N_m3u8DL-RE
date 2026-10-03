@@ -33,12 +33,29 @@ internal class Program
             }
         }
         
+        var loc = new ConfigFile(args, []).GetLanguage() ?? CultureUtil.GetCurrentCultureName();
+        ResString.CurrentLoc = loc;
+        CultureUtil.ChangeCurrentCultureName(loc);
+
+        ConfigFile configFile;
+        try
+        {
+            configFile = ConfigFile.Load(args);
+        }
+        catch (Exception ex) when (ex is ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"{ResString.configFileLoadFailed}: {ex.Message}");
+            Environment.ExitCode = 1;
+            return;
+        }
+
+        // 在生成帮助文本前选定配置中的语言，使帮助与实际运行语言一致。
+        loc = configFile.GetLanguage() ?? loc;
+        ResString.CurrentLoc = loc;
+        CultureUtil.ChangeCurrentCultureName(loc);
+
         // 补全只输出脚本或候选项；不要初始化终端或注册退出回调，否则 tput 等输出会混入结果。
-        var completionRequest = args.TakeWhile(arg => arg != "--").Any(arg => arg == "--generate-completion" ||
-            arg.StartsWith("--generate-completion=", StringComparison.Ordinal) ||
-            arg.StartsWith("--generate-completion:", StringComparison.Ordinal)) ||
-            args.Length > 0 && (args[0] == "[suggest]" ||
-                args[0].StartsWith("[suggest:", StringComparison.Ordinal) && args[0].EndsWith(']'));
+        var completionRequest = ConfigFile.IsCompletionRequest(configFile.Arguments);
         if (!completionRequest)
         {
             Console.CancelKeyPress += (_, _) => RestoreTerminal();
@@ -47,21 +64,7 @@ internal class Program
             try { Console.CursorVisible = true; } catch { }
         }
 
-        string loc = CultureUtil.GetCurrentCultureName();
-
-        // 处理用户-h等请求
-        var index = -1;
-        var list = new List<string>(args);
-        if ((index = list.IndexOf("--ui-language")) != -1 && list.Count > index + 1 && new List<string> { "en-US", "zh-CN", "zh-TW" }.Contains(list[index + 1]))
-        {
-            loc = list[index + 1];
-        }
-        
-        ResString.CurrentLoc = loc;
-
-        CultureUtil.ChangeCurrentCultureName(loc);
-
-        await CommandInvoker.InvokeArgs(args, DoWorkAsync);
+        await CommandInvoker.InvokeArgs(configFile, DoWorkAsync);
     }
 
     static void RestoreTerminal()

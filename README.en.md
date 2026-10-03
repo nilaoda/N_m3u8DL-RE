@@ -44,6 +44,38 @@ N_m3u8DL-RE "https://example.com/video.m3u8" --cookies "cookies.txt"
 
 Cookies are matched by domain, path, HTTPS requirement and expiration for manifests, keys, initialization files and segments, including VOD and live streams. A custom `-H "Cookie: ..."` header takes precedence. Server cookie updates are kept in memory and are not written back to the file.
 
+## Configuration file
+
+Save common options in a UTF-8 text file. The program automatically reads:
+
+- Linux / macOS: `~/.config/N_m3u8DL-RE/config.conf`, or `$XDG_CONFIG_HOME/N_m3u8DL-RE/config.conf` when `XDG_CONFIG_HOME` is an absolute path.
+- Windows: `%APPDATA%\N_m3u8DL-RE\config.conf`.
+
+The program does not create this file automatically. A missing default file uses the built-in defaults. Configuration files use command-line argument syntax, support comment lines starting with `#`, and accept double-quoted values containing spaces:
+
+```text
+# Common download options
+-mt
+--no-log
+--auto-select
+--thread-count 16
+--save-dir "Downloads/My Videos"
+```
+
+Precedence is **command line > configuration file > built-in defaults**. Short and long aliases identify the same option. Command-line values replace configured values for single-value options; replaced values are not converted or read by download option parsers. Repeatable options such as `--key`, `--ad-keyword` and `--mux-import` are combined with configuration values first and command-line values last. `-H` / `--header` values are merged by case-insensitive header name: distinct headers are retained, and command-line values override configured headers with the same name. Use `false` to disable a configured boolean, for example `--no-log false`. A configured HTTP timeout counts as an explicit timeout and disables automatic live timeout adjustment.
+
+```text
+N_m3u8DL-RE "https://example.com/video.m3u8" --thread-count 8
+N_m3u8DL-RE "https://example.com/video.m3u8" --config "custom.conf"
+N_m3u8DL-RE "https://example.com/video.m3u8" --no-config
+```
+
+`--config FILE` loads only the specified file instead of the default configuration; missing or invalid files are errors. `--no-config` disables configuration loading and cannot be combined with `--config`. Configuration files may contain download options only, not input URLs, configuration-loading options, help, version or completion actions. Relative paths use the current working directory. The executable directory and working directory are not searched automatically.
+
+Help uses the configured UI language. Completion script generation and Tab completion do not read configuration files. Existing `@args.txt` response files remain supported and their arguments have command-line precedence.
+
+For Docker, mount the file read-only at `/config/config.conf` and pass `--config /config/config.conf`, independently of the container's HOME or runtime user.
+
 ## Command line parameters
 
 Long automatic names, custom save names and expanded filename patterns are shortened with a hash suffix to reduce collisions. Limits use UTF-8 bytes without splitting Chinese characters or emoji, with space reserved for automatic timestamps and media extensions.
@@ -59,13 +91,15 @@ Arguments:
   <input>  Input Url or File
 
 Options:
+  --config <FILE>                                         Read a configuration file instead of the user default; command-line options take precedence
+  --no-config                                             Disable configuration loading; cannot be combined with --config
   --tmp-dir <tmp-dir>                                     Set temporary file directory
   --save-dir <save-dir>                                   Set output directory
   --save-name <save-name>                                 Set output filename
   --save-pattern <save-pattern>                           Set output filename pattern. Use "--morehelp save-pattern" for variables and examples
   --log-file-path <log-file-path>                         Set log file path, Example: C:\Logs\log.txt
   --base-url <base-url>                                   Set BaseURL
-  --thread-count <number>                                 Set download thread count [default: based on the number of CPU cores]
+  --thread-count <number>                                 Set download thread count [default: CPU thread count]
   --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 3]
   --http-request-timeout <seconds>                        HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time [default: 100]
   --force-ansi-console                                    Force assuming the terminal is ANSI-compatible and interactive

@@ -4,6 +4,42 @@ internal static class StaticText
 {
     public static readonly Dictionary<string, TextContainer> LANG_DIC = new()
     {
+        ["cmd_config"] = new TextContainer
+        (
+            zhCN: "读取指定配置文件，替代用户默认配置；命令行选项优先",
+            zhTW: "讀取指定設定檔，取代使用者預設設定；命令列選項優先",
+            enUS: "Read a configuration file instead of the user default; command-line options take precedence"
+        ),
+        ["cmd_noConfig"] = new TextContainer
+        (
+            zhCN: "不读取配置文件，不能与 --config 同时使用",
+            zhTW: "不讀取設定檔，不能與 --config 同時使用",
+            enUS: "Disable configuration loading; cannot be combined with --config"
+        ),
+        ["configFileLoadFailed"] = new TextContainer
+        (
+            zhCN: "配置文件加载失败",
+            zhTW: "設定檔載入失敗",
+            enUS: "Failed to load configuration"
+        ),
+        ["configFileConflict"] = new TextContainer
+        (
+            zhCN: "--config 与 --no-config 不能同时使用",
+            zhTW: "--config 與 --no-config 不能同時使用",
+            enUS: "--config and --no-config cannot be used together"
+        ),
+        ["configFileOptionsOnly"] = new TextContainer
+        (
+            zhCN: "配置文件只能包含下载选项，不能包含下载地址、--config、--no-config、帮助、版本或补全操作",
+            zhTW: "設定檔只能包含下載選項，不能包含下載網址、--config、--no-config、說明、版本或補全操作",
+            enUS: "Configuration files may only contain download options, not input URLs, --config, --no-config, help, version or completion actions"
+        ),
+        ["responseFileRecursion"] = new TextContainer
+        (
+            zhCN: "参数文件存在循环引用或嵌套层数过多",
+            zhTW: "參數檔案存在循環引用或巢狀層數過多",
+            enUS: "Response files contain a reference cycle or are nested too deeply"
+        ),
         ["singleFileSplitWarn"] = new TextContainer
         (
             zhCN: "整段文件已被自动切割为小分片以加速下载",
