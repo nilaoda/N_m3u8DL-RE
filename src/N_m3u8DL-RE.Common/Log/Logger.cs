@@ -1,4 +1,5 @@
 ﻿using Spectre.Console;
+using Spectre.Console.Rendering;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -91,6 +92,33 @@ public static partial class Logger
         return DateTime.Now.ToString("HH:mm:ss.fff");
     }
 
+    private sealed class PlainLogLine(string prefix, string message, bool noAnsiOutput) : Renderable
+    {
+        private readonly IRenderable prefixMarkup = new Markup(prefix);
+        // 普通日志正文按原始文本处理，保留方括号和 :emoji: 等内容，不解释为 markup。
+        private readonly IRenderable body = new Text(message);
+
+        protected override IEnumerable<Segment> Render(RenderOptions options, int maxWidth)
+        {
+            if (noAnsiOutput)
+            {
+                var line = prefix.RemoveMarkup() + message + Environment.NewLine;
+                // 控制段跳过 ANSI 后端的文本分行，让 NonAnsiWriter 一次收到整条日志，
+                // 保留正文空行和缩进；非 ANSI 后端直接写出普通文本段。
+                yield return options.Ansi ? Segment.Control(line) : new Segment(line);
+                yield break;
+            }
+
+            // 只取消日志的硬折行，不修改全局终端宽度，进度条仍按实际宽度布局。
+            // 终端自行做视觉折行，鼠标复制长 URL 时不会带入额外的换行符。
+            foreach (var segment in prefixMarkup.Render(options, int.MaxValue))
+                yield return segment;
+            foreach (var segment in body.Render(options, int.MaxValue))
+                yield return segment;
+            yield return Segment.LineBreak;
+        }
+    }
+
     private static void HandleLog(string write, string subWrite = "")
     {
         try
@@ -101,8 +129,9 @@ public static partial class Logger
             }
             else
             {
-                CustomAnsiConsole.Markup(write);
-                Console.WriteLine(subWrite);
+                // 前缀和正文必须在同一次渲染中输出，避免正文绕过进度条的光标管理。
+                var console = CustomAnsiConsole.Console;
+                console.Write(new PlainLogLine(write, subWrite, console.Profile.Out.Writer is NonAnsiWriter));
             }
 
             if (!IsWriteFile || !File.Exists(LogFilePath)) return;
