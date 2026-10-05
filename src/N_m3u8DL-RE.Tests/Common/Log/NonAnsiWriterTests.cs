@@ -69,6 +69,19 @@ public class NonAnsiWriterTests
     }
 
     [Fact]
+    public void Write_MultilineText_PreservesBlankLinesAndIndentation()
+    {
+        const string message = "header:\n  key: value\n\n  end\n";
+        Assert.Equal(message, Capture(message));
+    }
+
+    [Fact]
+    public void Write_RepeatedText_IsPreserved()
+    {
+        Assert.Equal("sample.ts\nsample.ts\n", Capture("sample.ts\n", "sample.ts\n"));
+    }
+
+    [Fact]
     public void Write_EscapeSequences_AreStripped()
     {
         Assert.Equal("sample.ts", Capture($"{(char)27}[31msample.ts{(char)27}[0m"));

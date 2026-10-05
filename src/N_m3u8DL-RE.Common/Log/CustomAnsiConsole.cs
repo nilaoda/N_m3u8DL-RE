@@ -19,11 +19,6 @@ public partial class NonAnsiWriter : TextWriter
 
     public override void Write(string? value)
     {
-        if (_lastOut == value)
-        {
-            return;
-        }
-        _lastOut = value;
         RemoveAnsiEscapeSequences(value);
     }
 
@@ -32,9 +27,17 @@ public partial class NonAnsiWriter : TextWriter
         // Use regular expression to remove ANSI escape sequences
         var output = MyRegex().Replace(input ?? "", "");
         output = MyRegex1().Replace(output, "");
-        output = MyRegex2().Replace(output, "");
-        if (string.IsNullOrWhiteSpace(output))
+        // 进度条的回行控制可能和后面的日志合并写出，剥离后不能残留在正文开头。
+        output = output.TrimStart('\r');
+        var whitespaceOnly = string.IsNullOrWhiteSpace(output);
+        // 只去重控制序列和留白；连续相同的正文也可能是有效日志，不能丢弃。
+        if (whitespaceOnly && _lastOut == input)
+            return;
+        _lastOut = input;
+        if (whitespaceOnly)
         {
+            // 进度条留白才需要清理，正文中的换行、空行和缩进必须原样保留。
+            output = MyRegex2().Replace(output, "");
             // 只剩空白通常是被剥离的控制序列残渣，但有两类必须保留：
             //  1) 含换行的行分隔（Spectre.Console 0.57 起换行独立写出），
             //     丢弃会让重定向后的 stdout 全程没有换行。渲染帧上下各有留白，
