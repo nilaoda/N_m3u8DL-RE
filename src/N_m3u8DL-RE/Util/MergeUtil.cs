@@ -7,6 +7,7 @@ using System.Text;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Common.Entity;
 using System.Globalization;
+using System.Net.Sockets;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -46,7 +47,7 @@ internal static class MergeUtil
         return InvokeFFmpeg(binary, command, workingDirectory, out _);
     }
 
-    private static int InvokeFFmpeg(string binary, string command, string workingDirectory, out string errorOutput)
+    private static int InvokeFFmpeg(string binary, string command, string workingDirectory, out string errorOutput, bool loopbackInput = false)
     {
         Logger.DebugMarkUp($"{binary}: {command}");
 
@@ -62,6 +63,13 @@ internal static class MergeUtil
             RedirectStandardError = true,
             UseShellExecute = false
         };
+        if (loopbackInput)
+        {
+            // concat 内部打开 HTTP 时不会继承 http_proxy 参数，只对当前子进程
+            // 增补回环地址的代理豁免，不能修改整个程序的代理环境。
+            p.StartInfo.Environment.TryGetValue("no_proxy", out var noProxy);
+            p.StartInfo.Environment["no_proxy"] = string.IsNullOrEmpty(noProxy) ? "127.0.0.1" : $"{noProxy},127.0.0.1";
+        }
         p.ErrorDataReceived += (sendProcess, output) =>
         {
             if (!string.IsNullOrEmpty(output.Data))
@@ -98,11 +106,11 @@ internal static class MergeUtil
     /// concat demuxer 通过临时清单文件逐个读取分片, 上述两个限制都不存在;
     /// 而分块合并会把上百个分片按字节直接拼进单个 TS 中间文件, ffmpeg 只能把它当作一条连续流读取,
     /// 无法处理文件内部的时间戳重置, 导致时间轴错乱、时长严重偏短(见 #946)。
-    /// 因此使用 concat demuxer 时不再做分块合并。
+    /// 本机虚拟输入也没有上述两个限制，只在用户显式选择直接 concat 协议时保留分块合并。
     /// </summary>
-    internal static bool ShouldPartialMerge(int fileCount, bool useConcatDemuxer)
+    internal static bool ShouldPartialMerge(int fileCount, FFmpegConcatMode mode)
     {
-        return fileCount >= PartialMergeThreshold && !useConcatDemuxer;
+        return fileCount >= PartialMergeThreshold && mode == FFmpegConcatMode.PROTOCOL;
     }
 
     internal static string BuildPartsConcatList(string[] files, IReadOnlyList<MediaPart> parts)
@@ -208,7 +216,7 @@ internal static class MergeUtil
 
     public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
         bool fastStart = false,
-        bool writeDate = true, bool useConcatDemuxer = false, string poster = "", string audioName = "", string title = "",
+        bool writeDate = true, FFmpegConcatMode concatMode = FFmpegConcatMode.LOCAL_HTTP, string poster = "", string audioName = "", string title = "",
         string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
     {
         // 改为绝对路径
@@ -221,17 +229,37 @@ internal static class MergeUtil
         ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
         if (!string.IsNullOrEmpty(ddpAudio)) useAACFilter = false;
 
-        // 根据是否使用 concat demuxer 构建 ffmpeg 命令
+        ConcatInputServer? concatInputServer = null;
+        string? listPath = null;
+        if (concatMode == FFmpegConcatMode.LOCAL_HTTP)
+        {
+            try
+            {
+                concatInputServer = new ConcatInputServer(files);
+            }
+            catch (Exception ex) when (ex is IOException or SocketException or UnauthorizedAccessException)
+            {
+                Logger.WarnMarkUp(string.Format(ResString.ffmpegConcatInputFailed, ex.Message).EscapeMarkup());
+                return false;
+            }
+        }
+
+        // 三种模式只改变输入构造，转封装参数保持一致。
         string BuildCommand()
         {
             StringBuilder command = new StringBuilder("-loglevel warning -nostdin ");
-            if (useConcatDemuxer)
+            if (concatMode == FFmpegConcatMode.DEMUXER)
             {
                 // 使用 concat demuxer合并
                 var text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
-                var tempFile = Path.GetTempFileName();
-                File.WriteAllText(tempFile, text);
-                command.Append($" -f concat -safe 0 -i \"{tempFile}");
+                listPath = Path.GetTempFileName();
+                File.WriteAllText(listPath, text);
+                command.Append($" -f concat -safe 0 -i \"{listPath}");
+            }
+            else if (concatInputServer != null)
+            {
+                // 仍交给 concat 协议读取连续字节，但只打开一个可 seek 的虚拟资源。
+                command.Append($" -protocol_whitelist concat,http,tcp -i \"concat:{concatInputServer.Url}");
             }
             else
             {
@@ -285,19 +313,26 @@ internal static class MergeUtil
             return command.ToString();
         }
 
-        var workingDirectory = Path.GetDirectoryName(files[0])!;
-        var code = InvokeFFmpeg(binary, BuildCommand(), workingDirectory, out var errorOutput);
-
-        // concat 协议会一次性打开全部分片。当系统文件句柄上限过低（如 macOS 默认 256）
-        // 且分片数量过多时，ffmpeg 会报 "Too many open files" 导致合并失败。这里给出明确提示，
-        // 引导用户提高句柄上限或改用其它合并方式；已下载的分片仍保留在临时目录中，不会丢失。
-        // See: https://github.com/nilaoda/N_m3u8DL-RE/issues/338 and #89
-        if (code != 0 && IsTooManyOpenFilesError(errorOutput))
+        try
         {
-            Logger.WarnMarkUp(ResString.ffmpegMergeReachLimit);
+            var workingDirectory = Path.GetDirectoryName(files[0])!;
+            var code = InvokeFFmpeg(binary, BuildCommand(), workingDirectory, out var errorOutput, loopbackInput: concatInputServer != null);
+            if (concatInputServer?.Error is { } error)
+            {
+                Logger.WarnMarkUp(string.Format(ResString.ffmpegConcatInputFailed, error.Message).EscapeMarkup());
+                return false;
+            }
+            // 直接 concat 协议仍可能耗尽句柄；失败时不改变时间轴处理方式，也不删除分片。
+            if (code != 0 && IsTooManyOpenFilesError(errorOutput))
+                Logger.WarnMarkUp(ResString.ffmpegMergeReachLimit);
+            return code == 0;
         }
-
-        return code == 0;
+        finally
+        {
+            concatInputServer?.Dispose();
+            if (listPath != null)
+                File.Delete(listPath);
+        }
     }
 
     public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, MuxFormat muxFormat, bool dateinfo)

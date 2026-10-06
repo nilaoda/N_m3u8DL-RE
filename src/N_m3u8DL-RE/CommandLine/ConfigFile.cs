@@ -141,11 +141,20 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
 
         var configuration = new ParserConfiguration { EnablePosixBundling = false, ResponseFileTokenReplacer = null };
         var syntaxCommand = CreateSyntaxCommand(command);
-        var supplied = syntaxCommand.Parse(Arguments, configuration).CommandResult.Children.OfType<OptionResult>()
+        var suppliedResult = syntaxCommand.Parse(Arguments, configuration);
+        var supplied = suppliedResult.CommandResult.Children.OfType<OptionResult>()
             .Where(result => !result.Implicit).Select(result => result.Option.Name).ToHashSet();
         // 多值选项按原有解析规则合并：配置在前，命令行在后；只替换单值选项。
         supplied.ExceptWith(command.Options.Where(option => option.Arity.MaximumNumberOfValues > 1)
             .Select(option => option.Name));
+        // 两种写法描述同一个合并模式，配置中的旧参数不能压过命令行的新参数。
+        // 旧参数为 false 时只取消强制 demuxer，不抹掉配置中显式选择的其他模式。
+        const string concatMode = "--ffmpeg-concat-mode";
+        const string concatDemuxer = "--use-ffmpeg-concat-demuxer";
+        if (supplied.Contains(concatDemuxer) && suppliedResult.GetValue<bool>(concatDemuxer))
+            supplied.Add(concatMode);
+        if (supplied.Contains(concatMode))
+            supplied.Add(concatDemuxer);
         // 占住唯一的位置参数，配置中再出现下载地址或裸值时由原解析器报错。
         var defaults = syntaxCommand.Parse(["<config-input>", .. Defaults], configuration);
         var syntaxErrors = defaults.Errors.Where(error => error.SymbolResult is not OptionResult optionResult ||

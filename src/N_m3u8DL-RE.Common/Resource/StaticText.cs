@@ -232,11 +232,29 @@ internal static class StaticText
             zhTW: "二進位制合併",
             enUS: "Binary merge"
         ),
+        ["cmd_ffmpegConcatMode"] = new TextContainer
+        (
+            zhCN: "FFmpeg 合并输入方式：LOCAL_HTTP 本机虚拟输入(默认)，PROTOCOL 直接打开全部分片，DEMUXER 使用文件列表",
+            zhTW: "FFmpeg 合併輸入方式：LOCAL_HTTP 本機虛擬輸入(預設)，PROTOCOL 直接開啟全部分片，DEMUXER 使用檔案清單",
+            enUS: "FFmpeg merge input: LOCAL_HTTP local virtual input (default), PROTOCOL opens all segments directly, DEMUXER uses a file list"
+        ),
+        ["ffmpegConcatInputFailed"] = new TextContainer
+        (
+            zhCN: "本机合并输入失败：{0}。已下载的分片保留，可使用 --ffmpeg-concat-mode PROTOCOL 回退到直接打开分片的 concat 协议。",
+            zhTW: "本機合併輸入失敗：{0}。已下載的分片保留，可使用 --ffmpeg-concat-mode PROTOCOL 回退至直接開啟分片的 concat 協議。",
+            enUS: "Local merge input failed: {0}. Downloaded segments are preserved; use --ffmpeg-concat-mode PROTOCOL to fall back to opening segments directly with the concat protocol."
+        ),
+        ["concatInputLengthChanged"] = new TextContainer
+        (
+            zhCN: "合并期间分片长度发生变化",
+            zhTW: "合併期間分片長度發生變化",
+            enUS: "A segment's length changed during merging"
+        ),
         ["cmd_useFFmpegConcatDemuxer"] = new TextContainer
         (
-            zhCN: "使用 ffmpeg 合并时，使用 concat 分离器而非 concat 协议",
-            zhTW: "使用 ffmpeg 合併時，使用 concat 分離器而非 concat 協議",
-            enUS: "When merging with ffmpeg, use the concat demuxer instead of the concat protocol"
+            zhCN: "使用 concat 分离器合并，等同于 --ffmpeg-concat-mode DEMUXER；同一层同时指定时优先",
+            zhTW: "使用 concat 分離器合併，等同於 --ffmpeg-concat-mode DEMUXER；同一層同時指定時優先",
+            enUS: "Merge with the concat demuxer; equivalent to --ffmpeg-concat-mode DEMUXER, taking precedence when both are supplied at the same level"
         ),
         ["cmd_checkSegmentsCount"] = new TextContainer
         (
@@ -1277,9 +1295,9 @@ internal static class StaticText
         ),
         ["ffmpegMergeReachLimit"] = new TextContainer
         (
-            zhCN: "合并失败：打开的文件过多(Too many open files)。已下载的分片仍保留在临时目录，可提高系统文件句柄上限(如 ulimit -n)后重试，或改用 --binary-merge / --use-ffmpeg-concat-demuxer 重新合并。",
-            zhTW: "合併失敗：開啟的檔案過多(Too many open files)。已下載的分片仍保留在臨時目錄，可提高系統檔案句柄上限(如 ulimit -n)後重試，或改用 --binary-merge / --use-ffmpeg-concat-demuxer 重新合併。",
-            enUS: "Merge failed: too many open files. The downloaded segments are kept in the temp directory; raise the open-file limit (e.g. ulimit -n) and retry, or re-merge with --binary-merge / --use-ffmpeg-concat-demuxer."
+            zhCN: "合并失败：打开的文件过多(Too many open files)。已下载的分片仍保留在临时目录，可改用 --ffmpeg-concat-mode LOCAL_HTTP，或提高系统文件句柄上限(如 ulimit -n)后重试。",
+            zhTW: "合併失敗：開啟的檔案過多(Too many open files)。已下載的分片仍保留在臨時目錄，可改用 --ffmpeg-concat-mode LOCAL_HTTP，或提高系統檔案句柄上限(如 ulimit -n)後重試。",
+            enUS: "Merge failed: too many open files. The downloaded segments are kept in the temp directory; use --ffmpeg-concat-mode LOCAL_HTTP, or raise the open-file limit (e.g. ulimit -n) and retry."
         ),
         ["ffmpegNotFound"] = new TextContainer
         (

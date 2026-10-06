@@ -99,7 +99,7 @@ Options:
   --save-pattern <save-pattern>                           Set output filename pattern. Use "--morehelp save-pattern" for variables and examples
   --log-file-path <log-file-path>                         Set log file path, Example: C:\Logs\log.txt
   --base-url <base-url>                                   Set BaseURL
-  --thread-count <number>                                 Set download thread count [default: CPU thread count]
+  --thread-count <number>                                 Set download thread count [default: 10]
   --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 3]
   --http-request-timeout <seconds>                        HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time [default: 100]
   --force-ansi-console                                    Force assuming the terminal is ANSI-compatible and interactive
@@ -109,7 +109,8 @@ Options:
   --skip-download                                         Skip download [default: False]
   --check-segments-count                                  Check if the actual number of segments downloaded matches the expected number [default: True]
   --binary-merge                                          Binary merge [default: False]
-  --use-ffmpeg-concat-demuxer                             When merging with ffmpeg, use the concat demuxer instead of the concat protocol [default: False]
+  --ffmpeg-concat-mode <DEMUXER|LOCAL_HTTP|PROTOCOL>      FFmpeg merge input: LOCAL_HTTP local virtual input (default), PROTOCOL opens all segments directly, DEMUXER uses a file list [default: LOCAL_HTTP]
+  --use-ffmpeg-concat-demuxer                             Merge with the concat demuxer; equivalent to --ffmpeg-concat-mode DEMUXER, taking precedence when both are supplied at the same level [default: False]
   --del-after-done                                        Delete temporary files when done [default: True]
   --no-date-info                                          Date information is not written during muxing [default: False]
   --no-log                                                Disable log file output [default: False]
@@ -170,6 +171,7 @@ Options:
   --generate-completion <SHELL>                           Print the embedded completion script (powershell)
   -?, -h, --help                                          Show help and usage information
   --version                                               Show version information
+
 ```
 
 `--interface` accepts a network interface name (e.g. `eth1`, `en0` or `Wi-Fi`) or a local IP address. A name constrains the outgoing interface; an IP binds the connection source address. With a proxy, it applies to the connection to the proxy. DNS uses the system resolver. Binding failures are reported without falling back to another interface. Linux binding by name may require additional permissions; the diagnostic includes the system error.
@@ -357,6 +359,16 @@ Examples:
 ```
 
 </details>
+
+## FFmpeg segment merging
+
+The default, `--ffmpeg-concat-mode LOCAL_HTTP`, serves a seekable byte stream through a temporary input listening only on `127.0.0.1`. Segments are opened one at a time without writing a full intermediate file or hitting file-handle and command-line limits caused by segment counts.
+
+- `LOCAL_HTTP`: the default local virtual input, preserving byte concatenation through the concat protocol.
+- `PROTOCOL`: fall back to `concat:file1|file2|…`, opening all segments directly; large inputs can still exhaust file handles.
+- `DEMUXER`: use a concat file list, processing each file's media timeline; results can differ from byte concatenation.
+
+The existing `--use-ffmpeg-concat-demuxer` remains supported. Command-line choices override configuration defaults; when both forms are supplied at the same level, the enabled legacy option takes precedence. The mode only affects FFmpeg segment merging; binary merging, independently initialized sections, and live pipe muxing keep their respective processing flows.
 
 ## Others
 From v0.1.5, you can try to enable `live-pipe-mux` instead of the above command
