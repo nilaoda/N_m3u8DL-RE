@@ -306,6 +306,9 @@ More Help:
 
 Download only part of the segments when downloading vod content.
 
+Use MM:SS or HH:MM:SS. Omit the start to download from the beginning, or omit the end to download to the end.
+Time ranges select segments by their start times, including both boundaries. Whole segments are retained; no precise trimming is performed.
+
 Examples:
 # Download [0,10], a total of 11 segments
 --custom-range 0-10
@@ -315,6 +318,10 @@ Examples:
 --custom-range -99
 # Download content from the 05:00 to 20:00
 --custom-range 05:00-20:00
+# Skip the first 26 seconds and download the remaining content
+--custom-range 00:26-
+# Download only the first 26 seconds (whole segments may extend beyond 26 seconds)
+--custom-range -00:26
 ```
 
 ```

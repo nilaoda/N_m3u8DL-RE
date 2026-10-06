@@ -1032,6 +1032,8 @@ internal static class StaticText
         ["cmd_custom_range"] = new TextContainer
         (
             zhCN: "下载点播内容时, 仅下载部分分片.\r\n\r\n" +
+                  "时间格式为 MM:SS 或 HH:MM:SS，省略起点表示从头开始，省略终点表示下载到末尾.\r\n" +
+                  "时间范围按分片起始时间筛选（包含起止边界），保留完整分片，不进行精确裁切.\r\n\r\n" +
                   "例如: \r\n" +
                   "# 下载[0,10]共11个分片\r\n" +
                   "--custom-range 0-10\r\n" +
@@ -1040,8 +1042,14 @@ internal static class StaticText
                   "# 下载前100个分片\r\n" +
                   "--custom-range -99\r\n" +
                   "# 下载第5分钟到20分钟的内容\r\n" +
-                  "--custom-range 05:00-20:00\r\n",
+                  "--custom-range 05:00-20:00\r\n" +
+                  "# 跳过前26秒，下载后续内容\r\n" +
+                  "--custom-range 00:26-\r\n" +
+                  "# 仅下载前26秒的内容（可能包含跨越26秒边界的完整分片）\r\n" +
+                  "--custom-range -00:26\r\n",
             zhTW: "下載點播內容時, 僅下載部分分片.\r\n\r\n" +
+                  "時間格式為 MM:SS 或 HH:MM:SS，省略起點表示從頭開始，省略終點表示下載到末尾.\r\n" +
+                  "時間範圍按分片起始時間篩選（包含起止邊界），保留完整分片，不進行精確裁切.\r\n\r\n" +
                   "例如: \r\n" +
                   "# 下載[0,10]共11個分片\r\n" +
                   "--custom-range 0-10\r\n" +
@@ -1050,8 +1058,14 @@ internal static class StaticText
                   "# 下載前100個分片\r\n" +
                   "--custom-range -99\r\n" +
                   "# 下載第5分鐘到20分鐘的內容\r\n" +
-                  "--custom-range 05:00-20:00\r\n",
+                  "--custom-range 05:00-20:00\r\n" +
+                  "# 跳過前26秒，下載後續內容\r\n" +
+                  "--custom-range 00:26-\r\n" +
+                  "# 僅下載前26秒的內容（可能包含跨越26秒邊界的完整分片）\r\n" +
+                  "--custom-range -00:26\r\n",
             enUS: "Download only part of the segments when downloading vod content.\r\n\r\n" +
+                  "Use MM:SS or HH:MM:SS. Omit the start to download from the beginning, or omit the end to download to the end.\r\n" +
+                  "Time ranges select segments by their start times, including both boundaries. Whole segments are retained; no precise trimming is performed.\r\n\r\n" +
                   "Examples: \r\n" +
                   "# Download [0,10], a total of 11 segments\r\n" +
                   "--custom-range 0-10\r\n" +
@@ -1060,7 +1074,11 @@ internal static class StaticText
                   "# Download the first 100 segments\r\n" +
                   "--custom-range -99\r\n" +
                   "# Download content from the 05:00 to 20:00\r\n" +
-                  "--custom-range 05:00-20:00\r\n"
+                  "--custom-range 05:00-20:00\r\n" +
+                  "# Skip the first 26 seconds and download the remaining content\r\n" +
+                  "--custom-range 00:26-\r\n" +
+                  "# Download only the first 26 seconds (whole segments may extend beyond 26 seconds)\r\n" +
+                  "--custom-range -00:26\r\n"
         ),
         ["cmd_selectSubtitle_more"] = new TextContainer
         (
