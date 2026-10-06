@@ -182,6 +182,83 @@ public class ConcatInputServerTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData("GET", "rAnGe: BYTES=1-4\r\n", "206 Partial Content", 1, 4)]
+    [InlineData("GET", "Range: bytes=0-1\r\nRange: bytes=2-3\r\n", "416 Range Not Satisfiable", 0, 0)]
+    [InlineData("GET", "Range: bytes=1--4\r\n", "416 Range Not Satisfiable", 0, 0)]
+    [InlineData("HEAD", "Range: bytes=bad-\r\n", "200 OK", 0, 0)]
+    [InlineData("GET extra", "", "404 Not Found", 0, 0)]
+    public async Task RawRequestsPreserveMethodAndRangeRules(string method, string headers, string status, int start, int count)
+    {
+        using var server = new ConcatInputServer(Files());
+        var uri = new Uri(server.Url);
+        using var client = new TcpClient();
+        await client.ConnectAsync(uri.Host, uri.Port);
+        var stream = client.GetStream();
+        await stream.WriteAsync(Encoding.ASCII.GetBytes($"{method} {uri.AbsolutePath} HTTP/1.1\r\nHost: 127.0.0.1\r\n{headers}\r\n"));
+        var response = await ReadResponseAsync(stream);
+        var headerEnd = response.AsSpan().IndexOf("\r\n\r\n"u8);
+        Assert.True(headerEnd >= 0);
+        var responseHeaders = Encoding.ASCII.GetString(response, 0, headerEnd);
+        Assert.StartsWith($"HTTP/1.1 {status}\r\n", responseHeaders);
+        Assert.Contains($"Content-Length: {(method == "HEAD" ? 6 : count)}\r\n", responseHeaders);
+        if (status == "206 Partial Content")
+            Assert.Contains($"Content-Range: bytes {start}-{start + count - 1}/6", responseHeaders);
+        else if (status == "416 Range Not Satisfiable")
+            Assert.Contains("Content-Range: bytes */6", responseHeaders);
+        else
+            Assert.DoesNotContain("Content-Range:", responseHeaders);
+        Assert.Equal(Enumerable.Range(start, count).Select(i => (byte)i), response[(headerEnd + 4)..]);
+        Assert.Null(server.Error);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task HeaderTerminatorCanSpanReads(int trailingBytes)
+    {
+        using var server = new ConcatInputServer(Files());
+        var uri = new Uri(server.Url);
+        using var client = new TcpClient { NoDelay = true };
+        await client.ConnectAsync(uri.Host, uri.Port);
+        var stream = client.GetStream();
+        var request = Encoding.ASCII.GetBytes($"GET {uri.AbsolutePath} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n");
+        await stream.WriteAsync(request.AsMemory(0, request.Length - trailingBytes));
+        var pendingResponse = ReadResponseAsync(stream);
+        // 给服务器时间读取不完整的结束标记，再发送剩余字节。
+        await Task.Delay(20);
+        Assert.False(pendingResponse.IsCompleted);
+        await stream.WriteAsync(request.AsMemory(request.Length - trailingBytes));
+        var response = await pendingResponse;
+        Assert.StartsWith("HTTP/1.1 200 OK\r\n", Encoding.ASCII.GetString(response));
+        Assert.Equal([0, 1, 2, 3, 4, 5], response[^6..]);
+    }
+
+    [Fact]
+    public async Task ReusedTransferBufferStillEnforcesHeaderLimit()
+    {
+        using var server = new ConcatInputServer(Files());
+        var uri = new Uri(server.Url);
+        using var client = new TcpClient();
+        await client.ConnectAsync(uri.Host, uri.Port);
+        var stream = client.GetStream();
+        await stream.WriteAsync(Encoding.ASCII.GetBytes(new string('x', 16 * 1024)));
+        var response = await ReadResponseAsync(stream);
+        Assert.StartsWith("HTTP/1.1 400 Bad Request\r\n", Encoding.ASCII.GetString(response));
+        // 后续请求正常读取，不能受缓冲中残留的超长请求头影响。
+        Assert.Equal([0, 1, 2, 3, 4, 5], await _client.GetByteArrayAsync(server.Url));
+        Assert.Null(server.Error);
+    }
+
+    private static async Task<byte[]> ReadResponseAsync(NetworkStream stream)
+    {
+        using var response = new MemoryStream();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await stream.CopyToAsync(response, timeout.Token);
+        return response.ToArray();
+    }
+
     public void Dispose()
     {
         _client.Dispose();
