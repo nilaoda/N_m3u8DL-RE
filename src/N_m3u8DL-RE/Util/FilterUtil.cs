@@ -48,7 +48,7 @@ public static class FilterUtil
         if (filter.BandwidthMax != null)
             inputs = inputs.Where(i => i.Bandwidth <= filter.BandwidthMax);
         if (filter.Role.HasValue)
-            inputs = inputs.Where(i => i.Role == filter.Role);
+            inputs = inputs.Where(i => i.HasRole(filter.Role.Value));
 
         // Apply "for" selection.
         if (filter.For == "best")

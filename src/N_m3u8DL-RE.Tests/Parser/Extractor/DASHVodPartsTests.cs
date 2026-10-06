@@ -112,16 +112,21 @@ public class DASHVodPartsTests
     [Fact]
     public async Task MultipleSelectedQualitiesDoNotReuseTheSameLaterRepresentation()
     {
-        var streams = await Parse($"""
+        var streams = await Parse("""
             <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT8S">
-              {Period("p0", "high0", "a")}{Period("p1", "high1", "b")}
+              <Period duration="PT4S"><AdaptationSet mimeType="video/mp4">
+                <SegmentTemplate duration="2" initialization="$RepresentationID$-init.mp4" media="$RepresentationID$-$Number$.m4s"/>
+                <Representation id="high0" bandwidth="1000000" width="1920" height="1080" codecs="avc1.640028"/>
+                <Representation id="low0" bandwidth="500000" width="1280" height="720" codecs="avc1.640028"/>
+              </AdaptationSet></Period>
+              <Period duration="PT4S"><AdaptationSet mimeType="video/mp4">
+                <SegmentTemplate duration="2" initialization="$RepresentationID$-init.mp4" media="$RepresentationID$-$Number$.m4s"/>
+                <Representation id="high1" bandwidth="1000000" width="1920" height="1080" codecs="avc1.640028"/>
+                <Representation id="low1" bandwidth="500000" width="1280" height="720" codecs="avc1.640028"/>
+              </AdaptationSet></Period>
             </MPD>
             """);
-        var low0 = streams[0].WithPlaylist(streams[0].Playlist!);
-        low0.Resolution = "1280x720"; low0.GroupId = "low0";
-        var low1 = streams[1].WithPlaylist(streams[1].Playlist!);
-        low1.Resolution = "1280x720"; low1.GroupId = "low1";
-        var plans = VodStreamPlanner.Build([streams[0], low0, streams[1], low1], [streams[0], low0, streams[1], low1]);
+        var plans = VodStreamPlanner.Build(streams, streams);
         Assert.Equal(2, plans.Count);
         Assert.Equal(["high0", "high1"], plans[0].Playlist!.MediaParts.Select(p => p.RepresentationId));
         Assert.Equal(["low0", "low1"], plans[1].Playlist!.MediaParts.Select(p => p.RepresentationId));

@@ -191,7 +191,7 @@ internal static partial class VodPartSelector
 
     // 画质选择仍保留同分辨率的不同码率和命名轨道，仅去掉各 Period 中重复出现的选项。
     private static string QualityKey(StreamSpec stream) =>
-        $"{ManifestConfiguration(stream, stream.Playlist?.MediaParts.FirstOrDefault() ?? new MediaPart()).Key}|{stream.Bandwidth}|{stream.Name}|{stream.Characteristics}";
+        $"{ManifestConfiguration(stream, stream.Playlist?.MediaParts.FirstOrDefault() ?? new MediaPart()).Key}|{stream.Bandwidth}|{stream.Name?.ToUpperInvariant()}|{stream.Characteristics}|{stream.VolumeAdjust?.ToUpperInvariant()}";
 
     internal static List<StreamSpec> QualityChoices(List<StreamSpec> streams, List<StreamSpec>? sourceStreams = null)
     {
@@ -216,7 +216,7 @@ internal static partial class VodPartSelector
                 return id;
             var source = sources.FirstOrDefault(s => s.MediaType == type && s.GroupId == id);
             var target = source == null ? null : tracks.FirstOrDefault(s => QualityKey(s) == QualityKey(source)) ??
-                tracks.Where(s => s.Language == source.Language && s.Role == source.Role)
+                tracks.Where(s => VodStreamPlanner.SameTrack(source, s))
                     .OrderByDescending(s => s.Bandwidth).FirstOrDefault();
             return (target ?? tracks.FirstOrDefault())?.GroupId;
         }
@@ -230,7 +230,7 @@ internal static partial class VodPartSelector
             stream.Channels == null ? null : $"{stream.Channels}CH", stream.VideoRange,
             type is MediaType.AUDIO or MediaType.SUBTITLES ? stream.Language : null];
         var label = string.Join(" ", values.Where(s => !string.IsNullOrWhiteSpace(s)));
-        return new Configuration($"{label}|{stream.FrameRate}|{stream.Language}|{stream.Role}", label);
+        return new Configuration($"{label}|{stream.FrameRate}|{stream.Language}|{stream.GetRoleKey()}", label);
     }
 
     [GeneratedRegex(@"\b\d+ Hz\b|\b(?:mono|stereo|\d+(?:\.\d+)?(?:\(side\))? channels?|\d+\.\d+(?:\([a-z]+\))?)(?=\s|,|$)", RegexOptions.IgnoreCase)]
@@ -299,7 +299,7 @@ internal static partial class VodPartSelector
                     return manifest;
                 var identity = VodInitCache.Identity(part.MediaInit);
                 if (probed.TryGetValue(identity, out var actual) && actual != null)
-                    return actual with { Key = $"{actual.Key}|{stream.Language}|{stream.Role}" };
+                    return actual with { Key = $"{actual.Key}|{stream.Language}|{stream.GetRoleKey()}" };
                 // 无法验证的不同 init 不按 rendition 描述盲目合并，也不把 URL 显示给用户。
                 return new Configuration($"{manifest.Key}|{identity}", $"{manifest.Label} ({ResString.vodConfigUnknown})");
             });

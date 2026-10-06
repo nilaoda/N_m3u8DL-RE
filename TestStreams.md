@@ -7,6 +7,8 @@
 * https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd (ttml + mp4)
 * http://media.axprod.net/TestVectors/v6-Clear/Manifest_1080p.mpd (vtt + mp4)
 * https://storage.googleapis.com/shaka-demo-assets/angel-one-hls/hls.m3u8 (HLS vtt)
+* https://ott.dolby.com/webapi/testasset_dashjs/multiAudio.mpd (DASH Label、多音轨、Accessibility 口述影像)
+* https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-full.mpd (DASH 多语言、多 Role、TVA 口述影像)
 * https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8 (高级HLS fMP4+VTT)
 * https://events-delivery.apple.com/0205eyyhwbbqexozkwmgccegwnjyrktg/m3u8/vod_index-dpyfrsVksFWjneFiptbXnAMYBtGYbXeZ.m3u8 (高级HLS fMP4+VTT)
 * http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest

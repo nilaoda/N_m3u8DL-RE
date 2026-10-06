@@ -32,13 +32,17 @@ internal static partial class VodStreamPlanner
                 _ => videoFilter,
             };
             var parts = new List<MediaPart>();
+            var seedPeriod = periods.FirstOrDefault(p => p.Key == seed.Playlist?.MediaParts.FirstOrDefault()?.PeriodIndex)?.ToList() ?? [seed];
+            var trackIdentity = seed;
             long index = 0;
             double sourceElapsed = 0;
             foreach (var period in periods)
             {
                 // best/worst 必须在当前逻辑轨道内比较，不能让高码率音频挤掉视频。
-                IEnumerable<StreamSpec> candidates = streams.Where(s =>
-                    s.Playlist?.MediaParts.FirstOrDefault()?.PeriodIndex == period.Key && SameTrack(seed, s));
+                // 使用完整源 Period 判断命名是否有歧义，不能让去广告/删轨改变身份判断。
+                var periodTracks = MatchingTracks(trackIdentity, period, seedPeriod);
+                var candidates = streams.Where(s => s.Playlist?.MediaParts.FirstOrDefault()?.PeriodIndex == period.Key &&
+                    periodTracks.Any(source => SameTrack(source, s))).ToList();
                 var available = candidates.Where(s => CompatibleTrack(seed, s)).ToList();
                 // 先约束编码/声道，再选 best/worst，避免另一编码的高码率流抢占名额。
                 if (filter != null)
@@ -53,7 +57,7 @@ internal static partial class VodStreamPlanner
                     .FirstOrDefault();
                 // 源编号要计入被排除的 Period 和段内广告。广告编码可以与正文不同，
                 // 它只参与源位置计算，不参与兼容性检查或下载。
-                var source = period.Where(s => SameTrack(seed, s))
+                var source = periodTracks
                     .OrderByDescending(s => ReferenceEquals(s, match))
                     .ThenByDescending(s => match != null && s.GroupId == match.GroupId)
                     .ThenByDescending(s => CompatibleTrack(seed, s))
@@ -83,11 +87,17 @@ internal static partial class VodStreamPlanner
                     if ((filter == null ? candidates : FilterUtil.DoFilterKeep(candidates, filter))
                         .Any(s => !CompatibleTrack(seed, s)))
                         throw new NotSupportedException(string.Format(ResString.vodPeriodIncompatible, period.Key, seed.ToShortShortString()));
-                    if (candidates.Any() && filter?.PeriodIdReg == null)
+                    var ambiguousLabel = seed.MediaType == MediaType.AUDIO && candidates.Count == 0 &&
+                        streams.Any(s => s.Playlist?.MediaParts.FirstOrDefault()?.PeriodIndex == period.Key &&
+                            SameTrack(trackIdentity, s, ignoreName: true) && (string.IsNullOrEmpty(trackIdentity.Name) || string.IsNullOrEmpty(s.Name)));
+                    if ((candidates.Count > 0 || ambiguousLabel) && filter?.PeriodIdReg == null)
                         Logger.Warn(string.Format(ResString.vodPeriodNoMatch, period.Key, seed.ToShortShortString()));
                     continue;
                 }
                 consumed.Add(match);
+                // 种子没有 Label 时，记住所匹配音轨首次出现的名称；不能把后续不同增强级别都视为缺失名称。
+                if (seed.MediaType == MediaType.AUDIO && string.IsNullOrEmpty(trackIdentity.Name) && !string.IsNullOrEmpty(match.Name))
+                    trackIdentity = match;
                 // 点播，同一逻辑轨道的各 Period 作为新的 part 出现，init 和时间轴随 part 保留。
                 foreach (var part in match.Playlist!.MediaParts)
                 {
@@ -99,7 +109,7 @@ internal static partial class VodStreamPlanner
                         PeriodStart = part.PeriodStart,
                         PeriodDuration = part.PeriodDuration,
                         PresentationTimeOffset = part.PresentationTimeOffset,
-                        RepresentationId = match.GroupId,
+                        RepresentationId = part.RepresentationId ?? match.GroupId,
                         Codecs = match.Codecs,
                         MediaSegments = part.MediaSegments.Select(segment =>
                         {
@@ -125,14 +135,33 @@ internal static partial class VodStreamPlanner
         return result;
     }
 
-    private static bool SameTrack(StreamSpec a, StreamSpec b) =>
+    internal static bool SameTrack(StreamSpec a, StreamSpec b, bool ignoreName = false) =>
         (a.MediaType ?? MediaType.VIDEO) == (b.MediaType ?? MediaType.VIDEO) &&
         string.Equals(a.Language ?? "und", b.Language ?? "und", StringComparison.OrdinalIgnoreCase) &&
-        (a.Role ?? (a.MediaType == MediaType.SUBTITLES ? RoleType.Subtitle : RoleType.Main)) ==
-        (b.Role ?? (b.MediaType == MediaType.SUBTITLES ? RoleType.Subtitle : RoleType.Main));
+        a.GetRoleKey() == b.GetRoleKey() &&
+        // 同语言、同编码的增强音轨也可能有不同用途，不能按码率接到另一条音轨上。
+        (a.MediaType != MediaType.AUDIO ||
+         (ignoreName || string.Equals(a.Name, b.Name, StringComparison.OrdinalIgnoreCase)) &&
+         string.Equals(a.VolumeAdjust, b.VolumeAdjust, StringComparison.OrdinalIgnoreCase));
+
+    private static List<StreamSpec> MatchingTracks(StreamSpec seed, IEnumerable<StreamSpec> tracks, List<StreamSpec> seedPeriod)
+    {
+        var candidates = tracks.Where(s => SameTrack(seed, s, ignoreName: true)).ToList();
+        var named = candidates.Where(s => SameTrack(seed, s)).ToList();
+        if (named.Count > 0 || seed.MediaType != MediaType.AUDIO)
+            return named;
+
+        // Label 可能只在某个 Period 出现。仅在两端都只有一种命名音轨时允许缺失，
+        // 避免把缺少 Label 的普通音轨误接到 High/Medium 等增强音轨上。
+        if (candidates.Select(s => s.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1 ||
+            seedPeriod.Where(s => SameTrack(seed, s, ignoreName: true))
+                .Select(s => s.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+            return [];
+        return candidates.Where(s => string.IsNullOrEmpty(seed.Name) || string.IsNullOrEmpty(s.Name)).ToList();
+    }
 
     private static bool CompatibleTrack(StreamSpec a, StreamSpec b) =>
-        SameTrack(a, b) && (a.Codecs == null || b.Codecs == null || CodecFamily(a.Codecs) == CodecFamily(b.Codecs)) &&
+        SameTrack(a, b, ignoreName: true) && (a.Codecs == null || b.Codecs == null || CodecFamily(a.Codecs) == CodecFamily(b.Codecs)) &&
         (a.Channels == null || b.Channels == null || a.Channels == b.Channels) &&
         (a.VideoRange == null || b.VideoRange == null || a.VideoRange == b.VideoRange);
 
