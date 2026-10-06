@@ -27,8 +27,20 @@ public static class HTTPUtil
     {
         Timeout = TimeSpan.FromSeconds(100),
         DefaultRequestVersion = HttpVersion.Version20,
-        DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
+        DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
     };
+
+    public static HttpRequestMessage CreateRequest(HttpMethod method, string url, HttpClient? client = null)
+    {
+        client ??= AppHttpClient;
+        // SendAsync 不会把 HttpClient 的默认版本复制到手动创建的请求，必须显式设置。
+        // 默认在 HTTPS 上优先协商 HTTP/2，服务端不支持时回退 HTTP/1.1。
+        return new HttpRequestMessage(method, url)
+        {
+            Version = client.DefaultRequestVersion,
+            VersionPolicy = client.DefaultVersionPolicy,
+        };
+    }
 
     public static void ConfigureCookies(string? path)
     {
@@ -46,8 +58,6 @@ public static class HTTPUtil
         if (value == null)
             return;
         HttpHandler.ConnectCallback = NetworkInterfaceBinding.Create(value).ConnectAsync;
-        // 接口约束只用于 TCP；HTTP/3 的 QUIC 连接不会经过 ConnectCallback。
-        AppHttpClient.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
     }
 
     private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null,
@@ -58,7 +68,7 @@ public static class HTTPUtil
             throw new HttpRequestException(HttpRequestError.ConfigurationLimitExceeded, ResString.httpTooManyRedirects);
         }
         Logger.Debug(ResString.fetch + url);
-        using var webRequest = new HttpRequestMessage(HttpMethod.Get, url);
+        using var webRequest = CreateRequest(HttpMethod.Get, url);
         webRequest.Headers.TryAddWithoutValidation("Accept-Encoding", identityEncoding ? "identity" : "gzip, deflate");
         webRequest.Headers.CacheControl = CacheControlHeaderValue.Parse("no-cache");
         webRequest.Headers.Connection.Clear();
@@ -267,7 +277,7 @@ public static class HTTPUtil
     public static async Task<string> GetPostResponseAsync(string Url, byte[] postData)
     {
         string htmlCode;
-        using HttpRequestMessage request = new(HttpMethod.Post, Url);
+        using var request = CreateRequest(HttpMethod.Post, Url);
         request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
         request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());
         request.Content = new ByteArrayContent(postData);
