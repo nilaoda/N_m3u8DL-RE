@@ -32,6 +32,9 @@ public static class ResString
     public static string cmd_autoSelect => GetText("cmd_autoSelect");
     public static string cmd_disableUpdateCheck => GetText("cmd_disableUpdateCheck");
     public static string cmd_binaryMerge => GetText("cmd_binaryMerge");
+    public static string cmd_ffmpegConcatMode => GetText("cmd_ffmpegConcatMode");
+    public static string ffmpegConcatInputFailed => GetText("ffmpegConcatInputFailed");
+    public static string concatInputLengthChanged => GetText("concatInputLengthChanged");
     public static string cmd_useFFmpegConcatDemuxer => GetText("cmd_useFFmpegConcatDemuxer");
     public static string cmd_checkSegmentsCount => GetText("cmd_checkSegmentsCount");
     public static string cmd_decryptionBinaryPath => GetText("cmd_decryptionBinaryPath");

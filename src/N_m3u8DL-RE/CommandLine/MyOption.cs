@@ -119,6 +119,13 @@ internal class MyOption
     /// </summary>
     public bool UseFFmpegConcatDemuxer { get; set; }
     /// <summary>
+    /// See: <see cref="CommandInvoker.FFmpegConcatMode"/>.
+    /// </summary>
+    public FFmpegConcatMode FFmpegConcatMode { get; set; }
+    // 旧布尔参数仍可选择文件列表模式，统一得到实际使用的合并方式。
+    internal FFmpegConcatMode EffectiveConcatMode => UseFFmpegConcatDemuxer
+        ? Enum.FFmpegConcatMode.DEMUXER : FFmpegConcatMode;
+    /// <summary>
     /// See: <see cref="CommandInvoker.DelAfterDone"/>.
     /// </summary>
     public bool DelAfterDone { get; set; }
