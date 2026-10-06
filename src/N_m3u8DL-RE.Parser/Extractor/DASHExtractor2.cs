@@ -187,11 +187,6 @@ internal partial class DASHExtractor2 : IExtractor
                         "audio" => MediaType.AUDIO,
                         _ => null
                     };
-                    // 特殊处理
-                    if (representation.Attribute("volumeAdjust") != null)
-                    {
-                        streamSpec.GroupId += "-" + representation.Attribute("volumeAdjust")?.Value;
-                    }
                     // 推测后缀名
                     var mType = representation.Attribute("mimeType")?.Value ?? adaptationSet.Attribute("mimeType")?.Value;
                     if (mType != null)
@@ -204,37 +199,12 @@ internal partial class DASHExtractor2 : IExtractor
                     {
                         streamSpec.MediaType = MediaType.SUBTITLES;
                     }
-                    // 优化字幕场景识别
-                    var role = representation.Elements().FirstOrDefault(e => e.Name.LocalName == "Role") ?? adaptationSet.Elements().FirstOrDefault(e => e.Name.LocalName == "Role");
-                    if (role != null)
+                    ReadTrackMetadata(streamSpec, adaptationSet, representation);
+                    if (streamSpec.HasRole(RoleType.Subtitle) || streamSpec.HasRole(RoleType.ForcedSubtitle))
                     {
-                        var roleValue = role.Attribute("value")?.Value;
-                        if (Enum.TryParse(roleValue, true, out RoleType roleType))
-                        {
-                            streamSpec.Role = roleType;
-
-                            if (roleType == RoleType.Subtitle)
-                            {
-                                streamSpec.MediaType = MediaType.SUBTITLES;
-                                if (mType != null && mType.Contains("ttml"))
-                                    streamSpec.Extension = "ttml";
-                            }
-                        }
-                        else if (roleValue != null && roleValue.Contains('-'))
-                        {
-                            roleValue = roleValue.Replace("-", "");
-                            if (Enum.TryParse(roleValue, true, out RoleType roleType_))
-                            {
-                                streamSpec.Role = roleType_;
-
-                                if (roleType_ == RoleType.ForcedSubtitle)
-                                {
-                                    streamSpec.MediaType = MediaType.SUBTITLES; // or maybe MediaType.CLOSED_CAPTIONS?
-                                    if (mType != null && mType.Contains("ttml"))
-                                        streamSpec.Extension = "ttml";
-                                }
-                            }
-                        }
+                        streamSpec.MediaType = MediaType.SUBTITLES;
+                        if (mType != null && mType.Contains("ttml"))
+                            streamSpec.Extension = "ttml";
                     }
                     streamSpec.Playlist.IsLive = isLive;
                     streamSpec.Playlist.MinimumUpdatePeriod = minimumUpdatePeriod;
@@ -361,7 +331,8 @@ internal partial class DASHExtractor2 : IExtractor
                         var segmentTemplate = (segmentTemplateElements.FirstOrDefault() ?? segmentTemplateElementsOuter.FirstOrDefault())!;
                         var segmentTemplateOuter = (segmentTemplateElementsOuter.FirstOrDefault() ?? segmentTemplateElements.FirstOrDefault())!;
                         var varDic = new Dictionary<string, object?>();
-                        varDic[DASHTags.TemplateRepresentationID] = streamSpec.GroupId;
+                        // URL 模板必须使用清单中的原始 ID，显示用的 volumeAdjust 后缀不能带入 URL。
+                        varDic[DASHTags.TemplateRepresentationID] = mediaPart.RepresentationId;
                         varDic[DASHTags.TemplateBandwidth] = bandwidth?.Value;
                         // presentationTimeOffset
                         var presentationTimeOffsetStr = segmentTemplate.Attribute("presentationTimeOffset")?.Value ?? segmentTemplateOuter.Attribute("presentationTimeOffset")?.Value ?? "0";
@@ -585,6 +556,48 @@ internal partial class DASHExtractor2 : IExtractor
         return Task.FromResult(streamList);
     }
 
+    private static void ReadTrackMetadata(StreamSpec stream, XElement adaptationSet, XElement representation)
+    {
+        const string roleScheme = "urn:mpeg:dash:role:2011";
+        const string audioPurposeScheme = "urn:tva:metadata:cs:AudioPurposeCS:2007";
+        var elements = representation.Elements().Concat(adaptationSet.Elements()).ToList();
+        // 最近一级的有效 Label 优先；名称也用于区分同语言的普通、增强等音轨。
+        stream.Name = elements.FirstOrDefault(e => e.Name.LocalName == "Label" && !string.IsNullOrWhiteSpace(e.Value))?.Value.Trim();
+        stream.VolumeAdjust = (representation.Attribute("volumeAdjust") ?? adaptationSet.Attribute("volumeAdjust"))?.Value.Trim();
+        if (string.IsNullOrEmpty(stream.VolumeAdjust))
+            stream.VolumeAdjust = null;
+        else
+            stream.GroupId += "-" + stream.VolumeAdjust;
+
+        foreach (var element in elements.Where(e => e.Name.LocalName == "Role"))
+        {
+            var scheme = element.Attribute("schemeIdUri")?.Value;
+            var value = element.Attribute("value")?.Value.Trim().Replace("-", "");
+            // 不同描述方案可能使用同名值，不能把未知方案误当成 DASH Role。
+            if ((scheme == null || scheme == roleScheme) && Enum.TryParse(value, true, out RoleType role) &&
+                string.Equals(role.ToString(), value, StringComparison.OrdinalIgnoreCase) &&
+                !stream.Roles.Contains(role))
+                stream.Roles.Add(role);
+        }
+        // 口述影像也可能由 Accessibility 标记：BBC 使用 TVA 的 1，Dolby 使用 DASH Role 的 description。
+        // 仅对音频和已知方案映射用途，保留原有 alternate/dub 等 Role 供筛选。
+        if (stream.MediaType == MediaType.AUDIO && elements.Any(e => e.Name.LocalName == "Accessibility" &&
+                (e.Attribute("schemeIdUri")?.Value == audioPurposeScheme && e.Attribute("value")?.Value.Trim() == "1" ||
+                 e.Attribute("schemeIdUri")?.Value == roleScheme && e.Attribute("value")?.Value.Trim() == "description")) &&
+            !stream.Roles.Contains(RoleType.Description))
+            stream.Roles.Add(RoleType.Description);
+
+        // main 可以与具体用途并存；保留全部 Role，同时优先用具体用途匹配跨 Period 的轨道。
+        if (stream.HasRole(RoleType.ForcedSubtitle))
+            stream.Role = RoleType.ForcedSubtitle;
+        else if (stream.HasRole(RoleType.Subtitle))
+            stream.Role = RoleType.Subtitle;
+        else if (stream.HasRole(RoleType.Description))
+            stream.Role = RoleType.Description;
+        else if (stream.Roles.Count > 0)
+            stream.Role = stream.Roles.Order().FirstOrDefault(role => role != RoleType.Main, stream.Roles[0]);
+    }
+
     /// <summary>
     /// 如果有非法字符 返回und
     /// </summary>
@@ -641,14 +654,44 @@ internal partial class DASHExtractor2 : IExtractor
         var newStreams = await ExtractStreamsAsync(rawText);
         foreach (var streamSpec in streamSpecs)
         {
-            // 有的网站每次请求MPD返回的码率不一致，导致ToShortString()无法匹配 无法更新playlist
-            // 故增加通过init url来匹配 (如果有的话)
-            var match = newStreams.Where(n => n.ToShortString() == streamSpec.ToShortString());
+            // 多种增强音轨可能共用 init；显示文本和 init 匹配都必须先约束用途和增强级别。
+            var tracks = newStreams.Where(n => n.MediaType == streamSpec.MediaType &&
+                string.Equals(n.Language, streamSpec.Language, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(n.VolumeAdjust, streamSpec.VolumeAdjust, StringComparison.OrdinalIgnoreCase) &&
+                n.GetRoleKey() == streamSpec.GetRoleKey()).ToList();
+            var candidates = tracks.Where(n => string.Equals(n.Name, streamSpec.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+            // 优先使用稳定 ID，并校验媒体配置；码率或 Label 暂时变化时也能刷新无 init 的流。
+            // 必须在全部同用途音轨中查找，否则另一条无名称音轨会挡住新出现的 Label。
+            var match = tracks.Where(n => streamSpec.GroupId != null && n.GroupId == streamSpec.GroupId &&
+                (string.Equals(n.Name, streamSpec.Name, StringComparison.OrdinalIgnoreCase) ||
+                 string.IsNullOrEmpty(n.Name) || string.IsNullOrEmpty(streamSpec.Name)) &&
+                n.Codecs == streamSpec.Codecs && n.Resolution == streamSpec.Resolution && n.Channels == streamSpec.Channels);
             if (!match.Any())
-                match = newStreams.Where(n => n.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url == streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url);
+                match = candidates.Where(n => n.ToShortString() == streamSpec.ToShortString());
+            // ID/码率变化时可按 init 回退，但不能把两个缺少 init 的流当成相同流。
+            if (!match.Any())
+            {
+                var initUrl = streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url;
+                var initTracks = tracks.Where(n => initUrl != null &&
+                    n.Playlist?.MediaParts.FirstOrDefault()?.MediaInit?.Url == initUrl).ToList();
+                var sameName = initTracks.Where(n => string.Equals(n.Name, streamSpec.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+                // 共享 init 时，已知名称必须匹配；全无名称的旧清单仍沿用原有回退。
+                // 若名称发生补齐/缺失，只有唯一 init 候选能证明身份，不能把空名称当成匹配依据。
+                if (sameName.Count > 0 && (!string.IsNullOrEmpty(streamSpec.Name) || initTracks.All(n => string.IsNullOrEmpty(n.Name))))
+                    match = sameName;
+                else if (initTracks.Count == 1 && (string.IsNullOrEmpty(streamSpec.Name) || string.IsNullOrEmpty(initTracks[0].Name)))
+                    match = initTracks;
+                else
+                    match = [];
+            }
 
-            if (match.Any())
-                streamSpec.Playlist!.MediaParts = match.First().Playlist!.MediaParts; // 不更新init
+            var matched = match.FirstOrDefault();
+            if (matched != null)
+            {
+                streamSpec.Playlist!.MediaParts = matched.Playlist!.MediaParts;
+                // 首次补齐的 Label 也要保留为身份依据，后续不能再把不同名称都当成缺失。
+                streamSpec.Name ??= matched.Name;
+            }
         }
         // 这里才调用URL预处理器，节省开销
         await ProcessUrlAsync(streamSpecs);
