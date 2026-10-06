@@ -354,7 +354,7 @@ internal sealed class BinaryDownloadManager
     {
         for (var redirects = 0; redirects <= 10; redirects++)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            using var request = HTTPUtil.CreateRequest(HttpMethod.Get, url, _client);
             request.Headers.TryAddWithoutValidation("Accept-Encoding", "identity");
             foreach (var header in headers)
             {
