@@ -22,3 +22,5 @@
 * https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd (DASH 多 Period，无 Period ID、MP4 WVTT 字幕)
 * https://storage.googleapis.com/shaka-demo-assets/sintel-mixed-encryption/clear-enc-clear.mpd (DASH 明文/加密/明文 Period)
 * https://downloads.a2d.tv/synctest/multivariant.m3u8 (HLS 多 MAP、discontinuity、广告、原始 VTT 字幕)
+* https://masterpl.hls.nhkworld.jp/hls/w/202922320260226001/master.m3u8 (NHK WORLD 点播、fMP4、多语言 VTT)
+* https://masterpl.hls.nhkworld.jp/hls/w/live/smarttv.m3u8 (NHK WORLD 直播、fMP4、累计小时 VTT)

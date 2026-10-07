@@ -54,6 +54,8 @@ internal class SimpleLiveRecordManager2
 
     private readonly Lock lockObj = new();
     TimeSpan? audioStart = null;
+    private readonly TaskCompletionSource<TimeSpan?> audioClockReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly HashSet<StreamSpec> pendingAudioClocks = [];
 
     public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
     {
@@ -62,6 +64,21 @@ internal class SimpleLiveRecordManager2
         PublishDateTime = selectedSteams.FirstOrDefault()?.PublishTime;
         StreamExtractor = streamExtractor;
         SelectedSteams = selectedSteams;
+    }
+
+    private void ReportAudioClock(StreamSpec stream, TimeSpan? start)
+    {
+        lock (lockObj)
+        {
+            if (start != null)
+            {
+                audioStart ??= start;
+                audioClockReady.TrySetResult(audioStart);
+            }
+            // 每条音频在首片探测或录制结束时报告一次；都没有 PTS 时明确使用源字幕时间。
+            if (pendingAudioClocks.Remove(stream) && pendingAudioClocks.Count == 0)
+                audioClockReady.TrySetResult(null);
+        }
     }
 
     private void StopRecording(bool cancelDownloads = true)
@@ -346,10 +363,6 @@ internal class SimpleLiveRecordManager2
                             Logger.WarnMarkUp(ResString.readingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                            lock (lockObj)
-                            {
-                                if (audioStart == null) audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
-                            }
                             ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                             readInfo = true;
                         }
@@ -367,7 +380,9 @@ internal class SimpleLiveRecordManager2
                 }
 
                 // 下载第一个分片
-                while ((!readInfo || StreamExtractor.ExtractorType == ExtractorType.MSS) && segments.Any())
+                var probeAudioClock = DownloaderConfig.MyOptions.LiveFixVttByAudio &&
+                    streamSpec.MediaType == MediaType.AUDIO && audioStart == null && mediaInit != null;
+                while ((!readInfo || probeAudioClock || StreamExtractor.ExtractorType == ExtractorType.MSS) && segments.Any())
                 {
                     var seg = segments.First();
                     segments = segments.Skip(1);
@@ -419,6 +434,22 @@ internal class SimpleLiveRecordManager2
                         }
                         // 从文件读取KEY
                         await SearchKeyAsync(currentKID);
+                        if (probeAudioClock)
+                        {
+                            // fMP4 init 没有样本 PTS，须结合首个成功下载的分片读取源时钟。
+                            // 外部解密工具可能重置 PTS，必须在调用工具前探测；加密样本无需解码。
+                            var clockFile = Path.Combine(tmpDir, "_audio-clock.mp4");
+                            try
+                            {
+                                MergeUtil.CombineMultipleFilesIntoSingleFile([mp4InitFile, result.ActualFilePath], clockFile);
+                                var clockInfo = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, clockFile);
+                                ReportAudioClock(streamSpec, clockInfo.FirstOrDefault(info => info.Type == "Audio")?.StartTime);
+                            }
+                            finally
+                            {
+                                File.Delete(clockFile);
+                            }
+                        }
                         // 实时解密
                         if (seg.IsEncrypted && DownloaderConfig.MyOptions.MP4RealTimeDecryption && !string.IsNullOrEmpty(currentKID))
                         {
@@ -437,10 +468,7 @@ internal class SimpleLiveRecordManager2
                             Logger.WarnMarkUp(ResString.readingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                            lock (lockObj)
-                            {
-                                if (audioStart == null) audioStart = mediaInfos.FirstOrDefault(x => x.Type == "Audio")?.StartTime;
-                            }
+                            ReportAudioClock(streamSpec, mediaInfos.FirstOrDefault(info => info.Type == "Audio")?.StartTime);
                             ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
                             readInfo = true;
                         }
@@ -504,18 +532,27 @@ internal class SimpleLiveRecordManager2
                 {
                     // 排序字幕并修正时间戳
                     var keys = FileDic.Keys.OrderBy(GetRecordOrder).ToList();
+                    // 音频首片可能仍在重试，不能先按源时钟写字幕、后续再切换为归零时钟。
+                    // 音频探测/结束后仍无原点时保留源时间；停止录制可取消等待。
+                    var origin = DownloaderConfig.MyOptions.LiveFixVttByAudio
+                        ? await audioClockReady.Task.WaitAsync(DownloadCancellationTokenSource.Token) : audioStart;
                     foreach (var seg in keys)
                     {
                         var vttContent = await File.ReadAllTextAsync(FileDic[seg]!.ActualFilePath);
-                        var waitCount = 0;
-                        while (DownloaderConfig.MyOptions.LiveFixVttByAudio && audioStart == null && waitCount++ < 5)
+                        var subOffset = origin != null ? (long)origin.Value.TotalMilliseconds : 0L;
+                        // 无 timestamp-map 的字幕可能已使用播放相对时间，沿用原来的偏移和逐片修复，不能强减广播原点。
+                        var mapByAudio = DownloaderConfig.MyOptions.LiveFixVttByAudio && origin != null &&
+                            HlsSubtitleTimeline.HasTimestampMap(vttContent);
+                        var vtt = WebVttSub.Parse(vttContent, mapByAudio ? 0 : subOffset);
+                        if (mapByAudio)
                         {
-                            await Task.Delay(1000);
+                            var segmentStart = RecordedDurDic[task.Id].TotalSeconds +
+                                keys.Where(s => GetRecordOrder(s) < GetRecordOrder(seg)).Sum(s => s.Duration);
+                            HlsSubtitleTimeline.Normalize(vtt, vttContent, origin!.Value.TotalSeconds, segmentStart);
+                            HlsSubtitleTimeline.ClipBeforeStart(vtt);
                         }
-                        var subOffset = audioStart != null ? (long)audioStart.Value.TotalMilliseconds : 0L;
-                        var vtt = WebVttSub.Parse(vttContent, subOffset);
                         // 手动计算MPEGTS
-                        if (currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
+                        if (!mapByAudio && currentVtt.MpegtsTimestamp == 0 && vtt.MpegtsTimestamp == 0)
                         {
                             vtt.MpegtsTimestamp = (long)(90000 * (RecordedDurDic[task.Id].TotalSeconds + keys.Where(s => GetRecordOrder(s) < GetRecordOrder(seg)).Sum(s => s.Duration)));
                         }
@@ -1008,7 +1045,8 @@ internal class SimpleLiveRecordManager2
             Logger.WarnMarkUp($"set refresh interval to {WAIT_SEC} seconds");
         }
         // 如果没有选中音频 取消通过音频修复vtt时间轴
-        if (SelectedSteams.All(x => x.MediaType != MediaType.AUDIO))
+        pendingAudioClocks.UnionWith(SelectedSteams.Where(x => x.MediaType == MediaType.AUDIO));
+        if (pendingAudioClocks.Count == 0)
         {
             DownloaderConfig.MyOptions.LiveFixVttByAudio = false;
         }
@@ -1109,6 +1147,10 @@ internal class SimpleLiveRecordManager2
                         Logger.ErrorMarkUp(ex);
                         Results[kp.Key] = false;
                         StopRecording();
+                    }
+                    finally
+                    {
+                        ReportAudioClock(kp.Key, null);
                     }
                 });
             }
