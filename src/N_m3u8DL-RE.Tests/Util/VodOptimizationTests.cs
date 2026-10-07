@@ -85,4 +85,19 @@ public class VodOptimizationTests
         Assert.InRange(sub.Cues[0].StartTime.TotalSeconds, 1.749999, 1.750001);
         Assert.InRange(sub.Cues[0].EndTime.TotalSeconds, 2.499999, 2.500001);
     }
+
+    [Theory]
+    [InlineData(2758898.142, 0, 0.0346222222)]
+    [InlineData(2758898.142 - 100000, 100000, 100000.0346222222)]
+    public void TimestampMapUsesCurrentCueToResolveOldBroadcastAnchor(double origin, double segmentStart, double expected)
+    {
+        // LOCAL 锚点与当前 cue 相隔约一天，媒体已累计多个 MPEGTS 周期。
+        var text = "WEBVTT\nX-TIMESTAMP-MAP=LOCAL:742:20:24.094,MPEGTS:3000\n\n" +
+            "766:21:38.142 --> 766:21:44.148\ncue\n";
+        var sub = WebVttSub.Parse(text);
+        HlsSubtitleTimeline.Normalize(sub, text, origin, segmentStart);
+        Assert.InRange(sub.Cues[0].StartTime.TotalSeconds, expected - 0.000001, expected + 0.000001);
+        Assert.InRange(sub.Cues[0].EndTime.TotalSeconds, expected + 6.005999, expected + 6.006001);
+        Assert.Equal(0, sub.MpegtsTimestamp);
+    }
 }

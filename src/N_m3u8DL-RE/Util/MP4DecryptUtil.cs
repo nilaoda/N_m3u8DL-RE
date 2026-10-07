@@ -106,8 +106,15 @@ internal static partial class MP4DecryptUtil
             }
             
             // 多 Period 后续仍需用 PTO 裁剪，不能在解密时把源时间戳归零。
-            var timestampOptions = preserveTimestamp ? " -copyts -avoid_negative_ts disabled" : "";
-            cmd = $"-loglevel error -nostdin -y{timestampOptions} -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy \"{dest}\"";
+            var timestampOptions = preserveTimestamp || init != "" ? " -copyts" : "";
+            // 实时解密的目标通常是 .m4s，须显式指定 MP4；分片输出保留源时钟并使用可直接拼接的 fMP4。
+            var outputOptions = preserveTimestamp || init != "" ? " -avoid_negative_ts disabled" : "";
+            if (init != "")
+            {
+                // frag_discont 使 tfdt 保留源 DTS；禁用每片的 edit list 偏移和局部索引，避免拼接后时钟归零或索引失效。
+                outputOptions += " -f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof+frag_discont+skip_trailer -use_editlist 0";
+            }
+            cmd = $"-loglevel error -nostdin -y{timestampOptions} -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy{outputOptions} \"{dest}\"";
         }
 
         var isSuccess = false;

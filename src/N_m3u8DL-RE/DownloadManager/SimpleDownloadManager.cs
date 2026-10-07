@@ -528,7 +528,7 @@ internal partial class SimpleDownloadManager
                     {
                         if (!hlsMediaOrigins!.TryGetValue(part.DiscontinuitySequence ?? 0, out var origin))
                             throw new InvalidOperationException(ResString.hlsSubtitleOriginMissing);
-                        HlsSubtitleTimeline.Normalize(vtt, vttContent, origin);
+                        HlsSubtitleTimeline.Normalize(vtt, vttContent, origin, seg.HlsTime.Value);
                     }
                 }
                 // 手动计算MPEGTS
@@ -539,6 +539,8 @@ internal partial class SimpleDownloadManager
                 if (first) { finalVtt = vtt; first = false; }
                 else finalVtt.AddCuesFromOne(vtt);
             }
+            if (isPart && (hlsMediaOrigins != null || hlsSubtitleOnlyCuts))
+                HlsSubtitleTimeline.ClipBeforeStart(finalVtt);
             // 写出字幕
             var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
             foreach (var item in files) File.Delete(item);
