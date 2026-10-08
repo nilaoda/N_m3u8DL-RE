@@ -57,8 +57,11 @@ internal static partial class VodStreamPlanner
                     .FirstOrDefault();
                 // 源编号要计入被排除的 Period 和段内广告。广告编码可以与正文不同，
                 // 它只参与源位置计算，不参与兼容性检查或下载。
+                var firstSegment = match?.Playlist!.MediaParts.SelectMany(p => p.MediaSegments).FirstOrDefault();
                 var source = periodTracks
                     .OrderByDescending(s => ReferenceEquals(s, match))
+                    // 快照与当前轨道共用分片对象；相同 ID 的不同 AdaptationSet 不能相互替代。
+                    .ThenByDescending(s => firstSegment != null && s.Playlist!.MediaParts.Any(p => p.MediaSegments.Contains(firstSegment)))
                     .ThenByDescending(s => match != null && s.GroupId == match.GroupId)
                     .ThenByDescending(s => CompatibleTrack(seed, s))
                     .ThenByDescending(s => s.Resolution == seed.Resolution)

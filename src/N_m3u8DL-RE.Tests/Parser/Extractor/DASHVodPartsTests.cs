@@ -132,6 +132,53 @@ public class DASHVodPartsTests
         Assert.Equal(["low0", "low1"], plans[1].Playlist!.MediaParts.Select(p => p.RepresentationId));
     }
 
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    [InlineData(-1, false)]
+    [InlineData(1, true)]
+    public async Task SubtitleTracksWithRepeatedIdsKeepTheirOwnSourceSegments(int selectedIndex, bool dropFirstSegment)
+    {
+        // #987：不同 AdaptationSet 的字幕可以使用相同 Representation ID、语言和用途。
+        var streams = await Parse("""
+            <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT4S">
+            <Period duration="PT4S">
+              <AdaptationSet contentType="text" mimeType="application/mp4" lang="nld" codecs="stpp.ttml.im1t">
+                <Role value="forced_subtitle"/><Role value="subtitle"/>
+                <Representation id="textstream_nld=1000" bandwidth="1000">
+                  <SegmentTemplate duration="2" initialization="first-init.mp4" media="first-$Number$.m4s"/>
+                </Representation>
+              </AdaptationSet>
+              <AdaptationSet contentType="text" mimeType="application/mp4" lang="nld" codecs="stpp.ttml.im1t">
+                <Role value="caption"/><Role value="subtitle"/>
+                <Representation id="textstream_nld=1000" bandwidth="1000">
+                  <SegmentTemplate duration="1" initialization="second-init.mp4" media="second-$Number$.m4s"/>
+                </Representation>
+              </AdaptationSet>
+            </Period>
+            </MPD>
+            """);
+        var source = VodPartSelector.SnapshotStreams(streams);
+        var selected = selectedIndex < 0 ? streams : new List<StreamSpec> { streams[selectedIndex] };
+        if (dropFirstSegment)
+            selected[0].Playlist!.MediaParts[0].MediaSegments.RemoveAt(0);
+        var plans = VodStreamPlanner.Build(streams, selected, sourceStreams: source);
+        Assert.Equal(selected.Count, plans.Count);
+        for (var i = 0; i < plans.Count; i++)
+        {
+            var trackIndex = selectedIndex < 0 ? i : selectedIndex;
+            var sourcePart = source[trackIndex].Playlist!.MediaParts[0];
+            var expected = sourcePart.MediaSegments.Skip(dropFirstSegment ? 1 : 0).ToList();
+            var part = Assert.Single(plans[i].Playlist!.MediaParts);
+            var segments = part.MediaSegments;
+            Assert.Same(sourcePart.MediaInit, part.MediaInit);
+            Assert.Equal(expected.Select(s => s.Url), segments.Select(s => s.Url));
+            Assert.Equal(expected.Select(s => s.Index), segments.Select(s => s.Index));
+            Assert.Equal(expected.Select(s => (double?)(s.Index * s.Duration)), segments.Select(s => s.SourceTime));
+            Assert.All(expected, s => Assert.Null(s.SourceTime));
+        }
+    }
+
     [Fact]
     public async Task IncompatibleCodecFailsInsteadOfSilentlyDroppingAPeriod()
     {
