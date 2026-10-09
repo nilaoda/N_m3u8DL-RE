@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Text.Json;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Util;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.Util;
 
@@ -70,11 +72,14 @@ public class MergeUtilTests
         return (stderr.Split("Video:").Length - 1, stderr.Split("Audio:").Length - 1);
     }
 
-    [Fact]
-    public void MuxInputsByFFmpeg_KeepsAudioFromACombinedVideoAudioInput()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MuxKeepsAudioAndMetadataFromACombinedVideoAudioInput(bool useMkvmerge)
     {
         var ffmpeg = FfmpegPath();
         if (ffmpeg == null) return; // no ffmpeg on PATH - skip rather than fail the run
+        if (!HasTool("ffprobe") || useMkvmerge && !OnPath("mkvmerge")) return;
 
         var dir = Directory.CreateTempSubdirectory().FullName;
         try
@@ -84,14 +89,23 @@ public class MergeUtilTests
 
             var files = new[]
             {
-                new OutputFile { Index = 0, FilePath = combined, MediaType = MediaType.VIDEO },
+                new OutputFile { Index = 0, FilePath = combined, MediaType = MediaType.VIDEO,
+                    LangCode = "en", Description = "Main [Track] \"Original\"" },
             };
             var outPath = Path.Combine(dir, "out");
-            Assert.True(MergeUtil.MuxInputsByFFmpeg(ffmpeg, files, outPath, MuxFormat.MKV, dateinfo: false));
+            Assert.True(useMkvmerge ? MergeUtil.MuxInputsByMkvmerge("mkvmerge", files, outPath)
+                : MergeUtil.MuxInputsByFFmpeg(ffmpeg, files, outPath, MuxFormat.MKV, dateinfo: false));
 
             var (video, audio) = CountStreams(ffmpeg, outPath + ".mkv");
             Assert.Equal(1, video);
             Assert.Equal(1, audio);
+            using var json = JsonDocument.Parse(await Run("ffprobe", "-v", "error", "-show_entries",
+                "stream_tags=language,title", "-of", "json", outPath + ".mkv"));
+            Assert.All(json.RootElement.GetProperty("streams").EnumerateArray(), stream =>
+            {
+                Assert.Equal("eng", stream.GetProperty("tags").GetProperty("language").GetString());
+                Assert.Equal("Main [Track] \"Original\"", stream.GetProperty("tags").GetProperty("title").GetString());
+            });
         }
         finally { Directory.Delete(dir, true); }
     }

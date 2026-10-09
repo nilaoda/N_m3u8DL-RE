@@ -6,6 +6,8 @@ using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Util;
 using System.CommandLine;
+using System.CommandLine.Help;
+using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Globalization;
 using System.Net;
@@ -36,15 +38,15 @@ internal static partial class CommandInvoker
     [GeneratedRegex("^[0-9a-fA-f]{32}$")]
     private static partial Regex SingleHexKeyRegex();
 
-    private static readonly Argument<string> Input = new Argument<string>("input").WithDescription(() => ResString.cmd_Input);
-    private static readonly Option<string?> Config = new Option<string?>("--config") { HelpName = "FILE", Arity = ArgumentArity.ExactlyOne }.WithDescription(() => ResString.cmd_config);
-    private static readonly Option<bool> NoConfig = new Option<bool>("--no-config").WithDescription(() => ResString.cmd_noConfig);
+    private static readonly Argument<string> Input = CreateInputArgument();
+    internal static readonly Option<string?> Config = new Option<string?>("--config") { HelpName = "FILE", Arity = ArgumentArity.ExactlyOne, Recursive = true }.WithDescription(() => ResString.cmd_config);
+    internal static readonly Option<bool> NoConfig = new Option<bool>("--no-config") { Recursive = true }.WithDescription(() => ResString.cmd_noConfig);
     private static readonly Option<string?> TmpDir = new Option<string?>("--tmp-dir").WithDescription(() => ResString.cmd_tmpDir);
     private static readonly Option<string?> SaveDir = new Option<string?>("--save-dir").WithDescription(() => ResString.cmd_saveDir);
     private static readonly Option<string?> SaveName = new Option<string?>("--save-name") { CustomParser = ParseSaveName }.WithDescription(() => ResString.cmd_saveName);
     private static readonly Option<string?> SavePattern = new Option<string?>("--save-pattern").WithDescription(() => ResString.cmd_savePattern);
     private static readonly Option<string?> LogFilePath = new Option<string?>("--log-file-path") { CustomParser = ParseFilePath }.WithDescription(() => ResString.cmd_logFilePath);
-    private static readonly Option<string?> UILanguage = new Option<string?>("--ui-language").AcceptOnlyFromAmong("en-US", "zh-CN", "zh-TW").WithDescription(() => ResString.cmd_uiLanguage);
+    internal static readonly Option<string?> UILanguage = new Option<string?>("--ui-language") { Recursive = true }.AcceptOnlyFromAmong("en-US", "zh-CN", "zh-TW").WithDescription(() => ResString.cmd_uiLanguage);
     private static readonly Option<string?> UrlProcessorArgs = new Option<string?>("--urlprocessor-args").WithDescription(() => ResString.cmd_urlProcessorArgs);
     private static readonly Option<string> KeyTextFile = new Option<string>("--key-text-file").WithDescription(() => ResString.cmd_keyText);
     private static readonly Option<Dictionary<string, string>> Headers = new Option<Dictionary<string, string>>("-H", "--header") { HelpName = "header", Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, CustomParser = ParseHeaders }.WithDescription(() => ResString.cmd_header);
@@ -61,20 +63,20 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> SkipDownload = new Option<bool>("--skip-download").WithDefault(false).WithDescription(() => ResString.cmd_skipDownload);
     private static readonly Option<bool> NoDateInfo = new Option<bool>("--no-date-info").WithDefault(false).WithDescription(() => ResString.cmd_noDateInfo);
     private static readonly Option<bool> BinaryMerge = new Option<bool>("--binary-merge").WithDefault(false).WithDescription(() => ResString.cmd_binaryMerge);
-    private static readonly Option<FFmpegConcatMode> FFmpegConcatMode = new Option<FFmpegConcatMode>("--ffmpeg-concat-mode") { DefaultValueFactory = _ => Enum.FFmpegConcatMode.LOCAL_HTTP }.WithDescription(() => ResString.cmd_ffmpegConcatMode);
-    private static readonly Option<bool> UseFFmpegConcatDemuxer = new Option<bool>("--use-ffmpeg-concat-demuxer").WithDefault(false).WithDescription(() => ResString.cmd_useFFmpegConcatDemuxer);
+    internal static readonly Option<FFmpegConcatMode> FFmpegConcatMode = new Option<FFmpegConcatMode>("--ffmpeg-concat-mode") { DefaultValueFactory = _ => Enum.FFmpegConcatMode.LOCAL_HTTP }.WithDescription(() => ResString.cmd_ffmpegConcatMode);
+    internal static readonly Option<bool> UseFFmpegConcatDemuxer = new Option<bool>("--use-ffmpeg-concat-demuxer").WithDefault(false).WithDescription(() => ResString.cmd_useFFmpegConcatDemuxer);
     private static readonly Option<bool> DelAfterDone = new Option<bool>("--del-after-done").WithDefault(true).WithDescription(() => ResString.cmd_delAfterDone);
-    private static readonly Option<bool> AutoSubtitleFix = new Option<bool>("--auto-subtitle-fix").WithDefault(true).WithDescription(() => ResString.cmd_subtitleFix);
+    private static readonly Option<bool> AutoSubtitleFix = CreateAutoSubtitleFixOption().WithDescription(() => ResString.cmd_subtitleFix);
     private static readonly Option<bool> CheckSegmentsCount = new Option<bool>("--check-segments-count").WithDefault(true).WithDescription(() => ResString.cmd_checkSegmentsCount);
     private static readonly Option<bool> WriteMetaJson = new Option<bool>("--write-meta-json").WithDefault(true).WithDescription(() => ResString.cmd_writeMetaJson);
     private static readonly Option<bool> AppendUrlParams = new Option<bool>("--append-url-params").WithDefault(false).WithDescription(() => ResString.cmd_appendUrlParams);
     private static readonly Option<bool> MP4RealTimeDecryption = new Option<bool>("--mp4-real-time-decryption").WithDefault(false).WithDescription(() => ResString.cmd_MP4RealTimeDecryption);
     private static readonly Option<bool> UseShakaPackager = new Option<bool>("--use-shaka-packager") { Hidden = true }.WithDefault(false).WithDescription(() => ResString.cmd_useShakaPackager);
-    private static readonly Option<DecryptEngine> DecryptionEngine = new Option<DecryptEngine>("--decryption-engine") { DefaultValueFactory = _ => DecryptEngine.MP4DECRYPT }.WithDescription(() => ResString.cmd_decryptionEngine);
-    private static readonly Option<bool> ForceAnsiConsole = new Option<bool>("--force-ansi-console").WithDescription(() => ResString.cmd_forceAnsiConsole);
-    private static readonly Option<bool> NoAnsiColor = new Option<bool>("--no-ansi-color").WithDescription(() => ResString.cmd_noAnsiColor);
-    private static readonly Option<string?> DecryptionBinaryPath = new Option<string?>("--decryption-binary-path") { HelpName = "PATH" }.WithDescription(() => ResString.cmd_decryptionBinaryPath);
-    private static readonly Option<string?> FFmpegBinaryPath = new Option<string?>("--ffmpeg-binary-path") { HelpName = "PATH" }.WithDescription(() => ResString.cmd_ffmpegBinaryPath);
+    internal static readonly Option<DecryptEngine> DecryptionEngine = new Option<DecryptEngine>("--decryption-engine") { DefaultValueFactory = _ => DecryptEngine.MP4DECRYPT }.WithDescription(() => ResString.cmd_decryptionEngine);
+    internal static readonly Option<bool> ForceAnsiConsole = new Option<bool>("--force-ansi-console").WithDescription(() => ResString.cmd_forceAnsiConsole);
+    internal static readonly Option<bool> NoAnsiColor = new Option<bool>("--no-ansi-color").WithDescription(() => ResString.cmd_noAnsiColor);
+    internal static readonly Option<string?> DecryptionBinaryPath = new Option<string?>("--decryption-binary-path") { HelpName = "PATH" }.WithDescription(() => ResString.cmd_decryptionBinaryPath);
+    internal static readonly Option<string?> FFmpegBinaryPath = new Option<string?>("--ffmpeg-binary-path") { HelpName = "PATH" }.WithDescription(() => ResString.cmd_ffmpegBinaryPath);
     private static readonly Option<string?> BaseUrl = new Option<string?>("--base-url").WithDescription(() => ResString.cmd_baseUrl);
     private static readonly Option<bool> ConcurrentDownload = new Option<bool>("-mt", "--concurrent-download").WithDefault(false).WithDescription(() => ResString.cmd_concurrentDownload);
     private static readonly Option<bool> NoLog = new Option<bool>("--no-log").WithDefault(false).WithDescription(() => ResString.cmd_noLog);
@@ -97,7 +99,7 @@ internal static partial class CommandInvoker
 
 
     // morehelp
-    private static readonly Option<string?> MoreHelp = new Option<string?>("--morehelp") { HelpName = "OPTION" }.WithDescription(() => ResString.cmd_moreHelp);
+    internal static readonly Option<string?> MoreHelp = new Option<string?>("--morehelp") { HelpName = "OPTION" }.WithDescription(() => ResString.cmd_moreHelp);
     private static readonly Option<string?> GenerateCompletion = new Option<string?>("--generate-completion")
     {
         HelpName = "SHELL", Arity = ArgumentArity.ExactlyOne,
@@ -130,7 +132,7 @@ internal static partial class CommandInvoker
 
     // 复杂命令行如下
     private static readonly Option<MuxOptions?> MuxAfterDone = new Option<MuxOptions?>("-M", "--mux-after-done") { HelpName = "OPTIONS", CustomParser = ParseMuxAfterDone }.WithDescription(() => ResString.cmd_muxAfterDone);
-    private static readonly Option<List<OutputFile>> MuxImports = new Option<List<OutputFile>>("--mux-import") { HelpName = "OPTIONS", Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, CustomParser = ParseImports }.WithDescription(() => ResString.cmd_muxImport);
+    private static readonly Option<List<OutputFile>> MuxImports = CreateMuxImportsOption().WithDescription(() => ResString.cmd_muxImport);
     private static readonly Option<StreamFilter?> VideoFilter = new Option<StreamFilter?>("-sv", "--select-video") { HelpName = "OPTIONS", CustomParser = ParseStreamFilter }.WithDescription(() => ResString.cmd_selectVideo);
     private static readonly Option<StreamFilter?> AudioFilter = new Option<StreamFilter?>("-sa", "--select-audio") { HelpName = "OPTIONS", CustomParser = ParseStreamFilter }.WithDescription(() => ResString.cmd_selectAudio);
     private static readonly Option<StreamFilter?> SubtitleFilter = new Option<StreamFilter?>("-ss", "--select-subtitle") { HelpName = "OPTIONS", CustomParser = ParseStreamFilter }.WithDescription(() => ResString.cmd_selectSubtitle);
@@ -538,31 +540,36 @@ internal static partial class CommandInvoker
     /// </summary>
     /// <param name="result"></param>
     /// <returns></returns>
-    private static List<OutputFile> ParseImports(ArgumentResult result)
+    internal static List<OutputFile> ParseImports(ArgumentResult result)
     {
         var imports = new List<OutputFile>();
 
         foreach (var item in result.Tokens)
         {
-            var p = new ComplexParamParser(item.Value);
-            var path = p.GetValue("path") ?? item.Value; // 若未获取到，直接整个字符串作为path
-            var lang = p.GetValue("lang");
-            var name = p.GetValue("name");
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            var file = ParseMuxInput(item.Value);
+            if (string.IsNullOrEmpty(file.FilePath) || !File.Exists(file.FilePath))
             {
                 result.AddError("path empty or file not exists!");
                 return imports;
             }
-            imports.Add(new OutputFile()
-            {
-                Index = 999,
-                FilePath = path,
-                LangCode = lang,
-                Description = name
-            });
+            imports.Add(file);
         }
 
         return imports;
+    }
+
+    internal static OutputFile ParseMuxInput(string value)
+    {
+        // 已有普通路径原样保留，复合参数复用现有 path/lang/name 格式。
+        var p = new ComplexParamParser(value);
+        var options = !File.Exists(value) && p.GetValue("path") != null;
+        return new OutputFile
+        {
+            Index = 999,
+            FilePath = options ? p.GetValue("path") ?? "" : value, // 若未获取到 path，直接整个字符串作为路径
+            LangCode = options ? p.GetValue("lang") : null,
+            Description = options ? p.GetValue("name") : null
+        };
     }
 
     /// <summary>
@@ -755,12 +762,23 @@ internal static partial class CommandInvoker
         return symbol;
     }
 
+    // 参数名、默认值和解析规则共用定义；下载和工具命令分别提供各自的帮助说明。
+    internal static Option<bool> CreateAutoSubtitleFixOption() =>
+        new Option<bool>("--auto-subtitle-fix").WithDefault(true);
+
+    internal static Option<List<OutputFile>> CreateMuxImportsOption() =>
+        new("--mux-import")
+        {
+            HelpName = "OPTIONS", Arity = ArgumentArity.OneOrMore,
+            AllowMultipleArgumentsPerToken = false, CustomParser = ParseImports
+        };
+
     internal static RootCommand CreateRootCommand()
     {
         // 配置加载前也需要完整的参数边界；选定 UI 语言后再更新帮助文本。
         foreach (var (symbol, text) in Descriptions)
             symbol.Description = text();
-        return new(VERSION_INFO)
+        var root = new RootCommand(VERSION_INFO)
         {
             Input, Config, NoConfig, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, FFmpegConcatMode, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, Cookies, SubOnly, SubtitleFormat, AutoSubtitleFix,
@@ -772,6 +790,83 @@ internal static partial class CommandInvoker
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount,
             MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp, GenerateCompletion
         };
+        // 根命令仍可直接下载；参数边界解析时不能强制要求子命令。
+        root.SetAction(_ => { });
+        ToolCommands.AddTo(root);
+        root.Options.OfType<HelpOption>().Single().Action = new UtilityHelpAction(Input);
+        return root;
+    }
+
+    private static Argument<string> CreateInputArgument()
+    {
+        var input = new Argument<string>("input").WithDescription(() => ResString.cmd_Input);
+        input.Validators.Add(ValidateInput);
+        return input;
+    }
+
+    private static bool IsPathInput(string input) =>
+        Path.IsPathRooted(input) || input.IndexOfAny(['/', '\\']) >= 0 || Path.HasExtension(input) || input.StartsWith('.') ||
+        Uri.TryCreate(input, UriKind.Absolute, out var uri) && uri.IsFile;
+
+    private static void ValidateInput(ArgumentResult result)
+    {
+        if (result.Parent is not CommandResult { Command: RootCommand root })
+            return;
+        if (root.Subcommands.Any(command => result.GetResult(command) != null))
+            return;
+        var input = result.GetValueOrDefault<string>();
+        if (string.IsNullOrEmpty(input) || File.Exists(input))
+            return;
+        if (Uri.TryCreate(input, UriKind.Absolute, out var uri))
+        {
+            if (uri.Scheme is "http" or "https")
+                return;
+            if (uri.IsFile)
+            {
+                if (!File.Exists(uri.LocalPath))
+                    result.AddError($"{ResString.toolsInputMissing}: {input}");
+                return;
+            }
+        }
+        if (IsPathInput(input))
+        {
+            result.AddError($"{ResString.toolsInputMissing}: {input}");
+            return;
+        }
+        result.AddError(string.Format(ResString.inputInvalid, input));
+    }
+
+    internal static ParseResult ParseArgs(RootCommand root, string[] args, ParserConfiguration? configuration = null)
+    {
+        var result = root.Parse(args, configuration);
+        if (result.Action is not ParseErrorAction errorAction)
+            return result;
+        var input = result.GetResult(Input);
+        // 输入错误已有具体说明，避免再打印整页下载参数掩盖命令拼写提示。
+        if (result.Errors.Any(error => error.SymbolResult == result.RootCommandResult ||
+                error.SymbolResult == input && input?.Tokens.Count == 1))
+            errorAction.ShowHelp = false;
+        // 只有无效裸值才重新按命令解析；同时存在其他参数错误时保留完整错误信息。
+        if (input?.Tokens.Count != 1 || result.Errors.Count != 1 || result.Errors[0].SymbolResult != input ||
+            IsPathInput(input.Tokens[0].Value))
+            return result;
+        var commands = new RootCommand();
+        commands.SetAction(_ => { });
+        commands.Options.Clear();
+        commands.Directives.Clear();
+        foreach (var command in root.Subcommands)
+        {
+            var copy = new Command(command.Name) { Hidden = command.Hidden };
+            foreach (var alias in command.Aliases)
+                copy.Aliases.Add(alias);
+            commands.Subcommands.Add(copy);
+        }
+        // 无位置参数时输入会成为 UnmatchedTokens，由官方 ParseErrorAction 生成拼写建议。
+        var unmatched = commands.Parse(["--", input.Tokens[0].Value], configuration);
+        if (unmatched.Action is not ParseErrorAction suggestions)
+            return result;
+        suggestions.ShowHelp = false;
+        return unmatched;
     }
 
     public static async Task<int> InvokeArgs(ConfigFile configFile, Func<MyOption, Task> action)
@@ -790,7 +885,7 @@ internal static partial class CommandInvoker
         }
         var argList = new List<string>(args);
         var index = -1;
-        if ((index = argList.IndexOf("--morehelp")) >= 0 && argList.Count > index + 1)
+        if ((index = argList.IndexOf(MoreHelp.Name)) >= 0 && argList.Count > index + 1)
         {
             var option = argList[index + 1];
             var msg = option switch
@@ -823,7 +918,7 @@ internal static partial class CommandInvoker
 
         try
         {
-            var parseResult = rootCommand.Parse(args, config);
+            var parseResult = ParseArgs(rootCommand, args, config);
             var exitCode = await parseResult.InvokeAsync();
             // 下载或录制失败会设置进程退出码，不能被命令行解析成功返回的 0 覆盖。
             Environment.Exit(exitCode != 0 ? exitCode : Environment.ExitCode);

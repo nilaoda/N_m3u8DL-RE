@@ -78,6 +78,33 @@ N_m3u8DL-RE "https://example.com/video.m3u8" --no-config
 
 Docker 部署建议将配置只读挂载到 `/config/config.conf`，并传入 `--config /config/config.conf`，不依赖容器的 HOME 或运行用户。
 
+## 工具命令
+
+```text
+# 字节拼接，无需 FFmpeg
+N_m3u8DL-RE concat -i 1.ts -i 2.ts -o combined.ts
+
+# 也可从目录读取，按文件名自然排序；默认匹配 *.ts，可用 --pattern 修改
+# --input-dir 不能与 -i 混用
+N_m3u8DL-RE concat --input-dir segments --pattern "*.ts" -o combined.ts
+
+# 使用 FFmpeg 合并目录中的 TS 分片
+N_m3u8DL-RE merge --input-dir segments -o merged.mp4
+
+# 混流视频、音频和字幕
+# 默认自动调整字幕时间轴，原文件不变；添加 --auto-subtitle-fix false 可关闭
+N_m3u8DL-RE mux -i video.mp4 -i audio.m4a -i subtitle.srt -o output.mp4
+
+# 设置轨道语言（lang）、轨道标题（name）和影片标题（--title）
+# --mux-import 可追加外部音轨或字幕；lang、name 均可省略
+N_m3u8DL-RE mux -i video.mp4 -i "path=audio.m4a:lang=eng:name=English" --mux-import "path=subtitle.srt:lang=zh-Hans:name=简体中文" --title "影片标题" -o output.mkv
+# 复合参数值内的冒号需写为 \:，例如 path=C\:\media\audio.m4a:lang=eng
+
+# 检查工具版本和系统环境
+N_m3u8DL-RE doctor
+N_m3u8DL-RE doctor --json > doctor.json
+```
+
 ## 命令行参数
 
 过长的自动保存名、自定义保存名和模板生成的文件名会自动缩短，并附加短哈希以减少重名。长度按 UTF-8 字节计算，不会截断中文或 emoji；自动名称的时间戳和输出文件的媒体扩展名会预留空间。

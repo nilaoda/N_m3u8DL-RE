@@ -1,7 +1,9 @@
 ﻿using System.Globalization;
 using N_m3u8DL_RE.Entity;
-using System.Diagnostics;
+using Mp4SubtitleParser;
+using N_m3u8DL_RE.Common.Resource;
 using System.Text.RegularExpressions;
+using N_m3u8DL_RE.Common.Entity;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -27,6 +29,53 @@ internal static partial class MediainfoUtil
     private static partial Regex DoViRegex();
     [GeneratedRegex(@"Duration.*?start: (-?\d+(?:\.\d+)?)")]
     private static partial Regex StartRegex();
+    [GeneratedRegex(@"Duration:\s*(\d+:\d{2}:\d{2}\.\d+)")]
+    private static partial Regex DurationRegex();
+
+    internal static async Task<string[]> ReadStreamTypesAsync(string binary, string file, CancellationToken token)
+    {
+        var result = await ProcessUtil.RunAsync(binary, ["-nostdin", "-hide_banner", "-i", file], token,
+            captureLimit: int.MaxValue).ConfigureAwait(false);
+        return TextRegex().Matches(result.Error).Select(stream => TypeRegex().Match(stream.Value).Groups[1].Value)
+            .Where(type => type is "Video" or "Audio" or "Subtitle").ToArray();
+    }
+
+    internal static async Task<string[]> ReadTrackTypesAsync(string binary, OutputFile file, CancellationToken token)
+    {
+        var cached = file.Mediainfos.Select(info => info.Type).Where(type => type is "Video" or "Audio" or "Subtitle")
+            .Select(type => type!).ToArray();
+        if (cached.Length > 0)
+            return cached;
+        var extension = Path.GetExtension(file.FilePath).ToLowerInvariant();
+        string[]? types;
+        if (extension is ".mp4" or ".m4a" or ".m4v" or ".mov" or ".m4s")
+            types = MP4MediaInfoUtil.ReadTrackTypes(file.FilePath, token);
+        else if (extension is ".srt" or ".vtt" or ".ass" or ".ssa" or ".sup" or ".idx")
+            types = ["Subtitle"];
+        else
+            types = await ReadStreamTypesAsync(binary, file.FilePath, token).ConfigureAwait(false);
+        if (types == null || types.Length == 0)
+            throw new ArgumentException($"{ResString.toolsTrackInfoFailed}: {file.FilePath}");
+        return types;
+    }
+
+    internal static async Task<(double Start, double Duration)?> ReadTimingAsync(string binary, string file, CancellationToken token)
+    {
+        // 非 MP4 文件沿用下载流程的 FFmpeg 输入信息读取媒体时钟。
+        var result = await ProcessUtil.RunAsync(binary, ["-nostdin", "-hide_banner", "-i", file], token);
+        var start = StartRegex().Match(result.Error);
+        var duration = DurationRegex().Match(result.Error);
+        var hasMedia = TextRegex().Matches(result.Error).Any(stream =>
+            TypeRegex().Match(stream.Value).Groups[1].Value is "Audio" or "Video");
+        if (!hasMedia || !start.Success || !duration.Success ||
+            !double.TryParse(start.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var origin))
+            return null;
+        var seconds = WebVttSub.ParseTimestamp(duration.Groups[1].Value).TotalSeconds;
+        // Matroska 的 Duration 为时间轴终点，TS 等格式则直接报告媒体长度。
+        if (result.Error.Contains("Input #0, matroska,webm,", StringComparison.Ordinal))
+            seconds -= origin;
+        return seconds > 0 ? (origin, seconds) : null;
+    }
 
     public static async Task<List<Mediainfo>> ReadInfoAsync(string binary, string file)
     {
@@ -35,17 +84,10 @@ internal static partial class MediainfoUtil
         if (string.IsNullOrEmpty(file) || !File.Exists(file)) return result;
 
         // 探测进程不能抢占终端输入或切换终端模式，空格/回车留给程序的选择界面。
-        string cmd = "-nostdin -hide_banner -i \"" + file + "\"";
-        using var p = Process.Start(new ProcessStartInfo()
-        {
-            FileName = binary,
-            Arguments = cmd,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        })!;
-        var output = await p.StandardError.ReadToEndAsync();
-        await p.WaitForExitAsync();
+        // 复用统一的管道读取和进程管理。
+        var probe = await ProcessUtil.RunAsync(binary, ["-nostdin", "-hide_banner", "-i", file], default,
+            captureLimit: int.MaxValue).ConfigureAwait(false);
+        var output = probe.Error;
 
         foreach (Match stream in TextRegex().Matches(output))
         {

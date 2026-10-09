@@ -14,7 +14,6 @@ using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.CommandLine;
 using System.Net;
-using System.Runtime.InteropServices;
 using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE;
@@ -54,16 +53,6 @@ internal class Program
         ResString.CurrentLoc = loc;
         CultureUtil.ChangeCurrentCultureName(loc);
 
-        // 补全只输出脚本或候选项；不要初始化终端或注册退出回调，否则 tput 等输出会混入结果。
-        var completionRequest = ConfigFile.IsCompletionRequest(configFile.Arguments);
-        if (!completionRequest)
-        {
-            Console.CancelKeyPress += (_, _) => RestoreTerminal();
-            AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
-            ServicePointManager.DefaultConnectionLimit = 1024;
-            try { Console.CursorVisible = true; } catch { }
-        }
-
         await CommandInvoker.InvokeArgs(configFile, DoWorkAsync);
     }
 
@@ -91,6 +80,12 @@ internal class Program
 
     static async Task DoWorkAsync(MyOption option)
     {
+        // 补全只输出脚本或候选项；不要初始化终端或注册退出回调，否则 tput 等输出会混入结果。
+        // 仅在下载参数校验通过后初始化，工具命令和无效输入也不会触发下载退出提示。
+        Console.CancelKeyPress += (_, _) => RestoreTerminal();
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => RestoreTerminal();
+        ServicePointManager.DefaultConnectionLimit = 1024;
+        try { Console.CursorVisible = true; } catch { }
         HTTPUtil.AppHttpClient.Timeout = TimeSpan.FromSeconds(option.HttpRequestTimeout);
         if (Console.IsOutputRedirected || Console.IsErrorRedirected)
         {
@@ -508,7 +503,7 @@ internal class Program
             {
                 case DecryptEngine.SHAKA_PACKAGER:
                 {
-                    var file = FindShakaPackager();
+                    var file = BinaryToolUtil.FindShakaPackager();
                     if (file == null)
                     {
                         throw new FileNotFoundException(ResString.shakaPackagerNotFound);
@@ -549,53 +544,6 @@ internal class Program
                 if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
             }
         }
-    }
-
-    private static string? FindShakaPackager()
-    {
-        var file = GlobalUtil.FindExecutable("shaka-packager");
-        if (file != null) return file;
-
-        // 按照架构优先搜索同架构二进制
-        var names = new List<string>();
-        if (OperatingSystem.IsLinux())
-        {
-            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
-            {
-                names.Add("packager-linux-arm64");
-                names.Add("packager-linux-x64");
-            }
-            else
-            {
-                names.Add("packager-linux-x64");
-                names.Add("packager-linux-arm64");
-            }
-        }
-        else if (OperatingSystem.IsMacOS())
-        {
-            if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
-            {
-                names.Add("packager-osx-arm64");
-                names.Add("packager-osx-x64");
-            }
-            else
-            {
-                names.Add("packager-osx-x64");
-                names.Add("packager-osx-arm64");
-            }
-        }
-        else if (OperatingSystem.IsWindows())
-        {
-            names.Add("packager-win-x64");
-        }
-
-        foreach (var name in names)
-        {
-            file = GlobalUtil.FindExecutable(name);
-            if (file != null) return file;
-        }
-
-        return null;
     }
 
     static async Task CheckUpdateAsync()

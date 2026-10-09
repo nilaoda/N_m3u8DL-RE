@@ -4,6 +4,324 @@ internal static class StaticText
 {
     public static readonly Dictionary<string, TextContainer> LANG_DIC = new()
     {
+        ["cmd_toolsConcat"] = new TextContainer
+        (
+            zhCN: "按顺序二进制拼接文件，无需 FFmpeg",
+            zhTW: "依序以二進位串接檔案，無需 FFmpeg",
+            enUS: "Concatenate file bytes in order without FFmpeg"
+        ),
+        ["cmd_toolsMerge"] = new TextContainer
+        (
+            zhCN: "合并分片并转封装，默认使用 LOCAL_HTTP",
+            zhTW: "合併分片並重新封裝，預設使用 LOCAL_HTTP",
+            enUS: "Merge segments and remux using LOCAL_HTTP by default"
+        ),
+        ["cmd_toolsMux"] = new TextContainer
+        (
+            zhCN: "混流已有视频、音频和字幕文件",
+            zhTW: "混流現有視訊、音訊和字幕檔案",
+            enUS: "Mux existing video, audio and subtitle files"
+        ),
+        ["cmd_toolsInput"] = new TextContainer
+        (
+            zhCN: "输入文件，可重复 -i；按指定顺序处理",
+            zhTW: "輸入檔案，可重複 -i；依指定順序處理",
+            enUS: "Input file; repeat -i to specify files in order"
+        ),
+        ["cmd_toolsMuxInput"] = new TextContainer
+        (
+            zhCN: "输入文件，可重复 -i；也可使用 path=文件:lang=语言:name=轨道标题",
+            zhTW: "輸入檔案，可重複 -i；也可使用 path=檔案:lang=語言:name=軌道標題",
+            enUS: "Input file; repeat -i, or use path=FILE:lang=CODE:name=TRACK_TITLE"
+        ),
+        ["cmd_toolsMuxImport"] = new TextContainer
+        (
+            zhCN: "追加外部媒体文件，可重复；格式：path=文件:lang=语言:name=轨道标题",
+            zhTW: "附加外部媒體檔案，可重複；格式：path=檔案:lang=語言:name=軌道標題",
+            enUS: "Append external media files; repeat with path=FILE:lang=CODE:name=TRACK_TITLE"
+        ),
+        ["cmd_toolsTitle"] = new TextContainer
+        (
+            zhCN: "设置输出媒体的标题（需容器支持）",
+            zhTW: "設定輸出媒體的標題（需容器支援）",
+            enUS: "Set the output media title where supported by the container"
+        ),
+        ["toolsTrackInfoFailed"] = new TextContainer
+        (
+            zhCN: "无法读取输入轨道信息",
+            zhTW: "無法讀取輸入軌道資訊",
+            enUS: "Unable to read input track information"
+        ),
+        ["toolsProcessing"] = new TextContainer
+        (
+            zhCN: "{0}：开始处理 {1} 个输入文件",
+            zhTW: "{0}：開始處理 {1} 個輸入檔案",
+            enUS: "{0}: processing {1} input files"
+        ),
+        ["toolsCompleted"] = new TextContainer
+        (
+            zhCN: "处理完成",
+            zhTW: "處理完成",
+            enUS: "Processing completed"
+        ),
+        ["toolsProcessFailed"] = new TextContainer
+        (
+            zhCN: "{0} 执行失败（退出码 {1}）",
+            zhTW: "{0} 執行失敗（結束碼 {1}）",
+            enUS: "{0} failed (exit code {1})"
+        ),
+        ["toolsDryRun"] = new TextContainer
+        (
+            zhCN: "仅预览，不执行文件处理",
+            zhTW: "僅預覽，不執行檔案處理",
+            enUS: "Preview only; no files will be processed"
+        ),
+        ["cmd_toolsOutput"] = new TextContainer
+        (
+            zhCN: "完整输出路径，媒体容器由扩展名确定",
+            zhTW: "完整輸出路徑，媒體容器由副檔名決定",
+            enUS: "Full output path; the extension determines the media container"
+        ),
+        ["cmd_toolsOverwrite"] = new TextContainer
+        (
+            zhCN: "允许替换已有输出文件",
+            zhTW: "允許取代現有輸出檔案",
+            enUS: "Allow replacing an existing output file"
+        ),
+        ["cmd_toolsDryRun"] = new TextContainer
+        (
+            zhCN: "只显示输入顺序与输出路径",
+            zhTW: "只顯示輸入順序與輸出路徑",
+            enUS: "Show input order and output path without processing"
+        ),
+        ["cmd_toolsInputDir"] = new TextContainer
+        (
+            zhCN: "输入目录，按文件名自然排序；不能与 -i 同时使用",
+            zhTW: "輸入目錄，依檔名自然排序；不能與 -i 同時使用",
+            enUS: "Input directory, naturally sorted by filename; cannot be combined with -i"
+        ),
+        ["cmd_toolsPattern"] = new TextContainer
+        (
+            zhCN: "目录内的文件匹配模式（不递归）",
+            zhTW: "目錄內的檔案匹配模式（不遞迴）",
+            enUS: "Filename pattern within the input directory (non-recursive)"
+        ),
+        ["cmd_toolsMuxer"] = new TextContainer
+        (
+            zhCN: "混流工具：ffmpeg 或 mkvmerge",
+            zhTW: "混流工具：ffmpeg 或 mkvmerge",
+            enUS: "Muxer: ffmpeg or mkvmerge"
+        ),
+        ["cmd_doctor"] = new TextContainer
+        (
+            zhCN: "检查二进制工具并输出版本及系统环境",
+            zhTW: "檢查二進位工具並輸出版本及系統環境",
+            enUS: "Check binary tools and report versions and system environment"
+        ),
+        ["cmd_doctorJson"] = new TextContainer
+        (
+            zhCN: "输出 JSON 诊断报告",
+            zhTW: "輸出 JSON 診斷報告",
+            enUS: "Output a JSON diagnostic report"
+        ),
+        ["cmd_doctorToolTimeout"] = new TextContainer
+        (
+            zhCN: "每个工具的版本探测超时秒数；0 表示不限制",
+            zhTW: "每個工具的版本探測逾時秒數；0 表示不限制",
+            enUS: "Version probe timeout in seconds per tool; 0 disables the timeout"
+        ),
+        ["doctorToolTimeoutInvalid"] = new TextContainer
+        (
+            zhCN: "tool-timeout 必须是 0 到 4294967 之间的整数秒数",
+            zhTW: "tool-timeout 必須是 0 到 4294967 之間的整數秒數",
+            enUS: "tool-timeout must be an integer number of seconds between 0 and 4294967"
+        ),
+        ["doctorMissing"] = new TextContainer
+        (
+            zhCN: "未找到工具",
+            zhTW: "找不到工具",
+            enUS: "Tool not found"
+        ),
+        ["doctorTimeout"] = new TextContainer
+        (
+            zhCN: "版本探测超时（{0} 秒）",
+            zhTW: "版本探測逾時（{0} 秒）",
+            enUS: "Version probe timed out ({0} seconds)"
+        ),
+        ["doctorVersionUnknown"] = new TextContainer
+        (
+            zhCN: "工具未输出可识别的版本信息",
+            zhTW: "工具未輸出可辨識的版本資訊",
+            enUS: "The tool did not report a recognized version"
+        ),
+        ["doctorSearchOrder"] = new TextContainer
+        (
+            zhCN: "搜索顺序：指定路径 > 当前目录 > 程序目录 > PATH",
+            zhTW: "搜尋順序：指定路徑 > 目前目錄 > 程式目錄 > PATH",
+            enUS: "Search order: configured path > working directory > executable directory > PATH"
+        ),
+        ["doctorRequired"] = new TextContainer
+        (
+            zhCN: "必需",
+            zhTW: "必要",
+            enUS: "required"
+        ),
+        ["doctorOptional"] = new TextContainer
+        (
+            zhCN: "可选",
+            zhTW: "選用",
+            enUS: "optional"
+        ),
+        ["toolsInputConflict"] = new TextContainer
+        (
+            zhCN: "--input-dir 与 -i 不能同时使用",
+            zhTW: "--input-dir 與 -i 不能同時使用",
+            enUS: "--input-dir and -i cannot be combined"
+        ),
+        ["toolsInputRequired"] = new TextContainer
+        (
+            zhCN: "请使用 -i 或 --input-dir 指定至少一个输入文件",
+            zhTW: "請使用 -i 或 --input-dir 指定至少一個輸入檔案",
+            enUS: "Specify at least one input file with -i or --input-dir"
+        ),
+        ["toolsInputMissing"] = new TextContainer
+        (
+            zhCN: "输入文件不存在",
+            zhTW: "輸入檔案不存在",
+            enUS: "Input file does not exist"
+        ),
+        ["toolsOutputIsInput"] = new TextContainer
+        (
+            zhCN: "输出路径不能与输入路径相同",
+            zhTW: "輸出路徑不能與輸入路徑相同",
+            enUS: "Output path must differ from every input path"
+        ),
+        ["toolsOutputExists"] = new TextContainer
+        (
+            zhCN: "输出文件已存在；使用 --overwrite 允许替换",
+            zhTW: "輸出檔案已存在；使用 --overwrite 允許取代",
+            enUS: "Output already exists; use --overwrite to allow replacing it"
+        ),
+        ["toolsFormatInvalid"] = new TextContainer
+        (
+            zhCN: "输出扩展名必须为 .mp4、.mkv、.ts 或 .m4a",
+            zhTW: "輸出副檔名必須為 .mp4、.mkv、.ts 或 .m4a",
+            enUS: "Output extension must be .mp4, .mkv, .ts or .m4a"
+        ),
+        ["toolsMkvmergeFormat"] = new TextContainer
+        (
+            zhCN: "mkvmerge 只支持 .mkv 输出",
+            zhTW: "mkvmerge 只支援 .mkv 輸出",
+            enUS: "mkvmerge requires a .mkv output"
+        ),
+        ["toolsProtocolPath"] = new TextContainer
+        (
+            zhCN: "PROTOCOL 模式不支持文件名中的 |；请使用 LOCAL_HTTP 或 DEMUXER",
+            zhTW: "PROTOCOL 模式不支援檔名中的 |；請使用 LOCAL_HTTP 或 DEMUXER",
+            enUS: "PROTOCOL cannot use paths containing |; use LOCAL_HTTP or DEMUXER"
+        ),
+        ["doctorOS"] = new TextContainer
+        (
+            zhCN: "操作系统",
+            zhTW: "作業系統",
+            enUS: "OS"
+        ),
+        ["doctorArchitecture"] = new TextContainer
+        (
+            zhCN: "架构",
+            zhTW: "架構",
+            enUS: "Architecture"
+        ),
+        ["doctorRuntime"] = new TextContainer
+        (
+            zhCN: "运行时",
+            zhTW: "執行階段",
+            enUS: "Runtime"
+        ),
+        ["doctorCulture"] = new TextContainer
+        (
+            zhCN: "语言",
+            zhTW: "語言",
+            enUS: "Culture"
+        ),
+        ["doctorExecutable"] = new TextContainer
+        (
+            zhCN: "程序路径",
+            zhTW: "程式路徑",
+            enUS: "Executable"
+        ),
+        ["doctorWorkingDirectory"] = new TextContainer
+        (
+            zhCN: "工作目录",
+            zhTW: "工作目錄",
+            enUS: "Working directory"
+        ),
+        ["doctorConfiguration"] = new TextContainer
+        (
+            zhCN: "配置文件",
+            zhTW: "設定檔",
+            enUS: "Configuration"
+        ),
+        ["doctorPath"] = new TextContainer
+        (
+            zhCN: "路径",
+            zhTW: "路徑",
+            enUS: "Path"
+        ),
+        ["doctorVersion"] = new TextContainer
+        (
+            zhCN: "版本",
+            zhTW: "版本",
+            enUS: "Version"
+        ),
+        ["doctorExitCode"] = new TextContainer
+        (
+            zhCN: "退出码",
+            zhTW: "結束碼",
+            enUS: "Exit code"
+        ),
+        ["cmd_toolsAutoSubtitleFix"] = new TextContainer
+        (
+            zhCN: "自动修复 SRT/VTT 字幕时间轴；传 false 关闭（默认开启）",
+            zhTW: "自動修復 SRT/VTT 字幕時間軸；傳 false 關閉（預設開啟）",
+            enUS: "Automatically repair SRT/VTT subtitle timing; pass false to disable (enabled by default)"
+        ),
+        ["doctorChecking"] = new TextContainer
+        (
+            zhCN: "正在检查二进制工具…",
+            zhTW: "正在檢查二進位工具…",
+            enUS: "Checking binary tools…"
+        ),
+        ["toolsSubtitleProbeMissing"] = new TextContainer
+        (
+            zhCN: "未找到 FFmpeg，跳过字幕时间轴修复；可用 --ffmpeg-binary-path 指定路径",
+            zhTW: "找不到 FFmpeg，略過字幕時間軸修復；可用 --ffmpeg-binary-path 指定路徑",
+            enUS: "FFmpeg was not found; skipping subtitle timing repair. Set --ffmpeg-binary-path to specify it"
+        ),
+        ["toolsSubtitleProbeFailed"] = new TextContainer
+        (
+            zhCN: "无法探测媒体时间轴，跳过自动修复",
+            zhTW: "無法探測媒體時間軸，略過自動修復",
+            enUS: "Cannot probe the media timeline; skipping automatic repair"
+        ),
+        ["toolsSubtitleClockUnknown"] = new TextContainer
+        (
+            zhCN: "无法可靠确定字幕与媒体的公共时间轴，保留字幕原时间",
+            zhTW: "無法可靠確定字幕與媒體的共同時間軸，保留字幕原時間",
+            enUS: "Cannot reliably determine a shared subtitle and media timeline; keeping the original subtitle timing"
+        ),
+        ["toolsSubtitleFixed"] = new TextContainer
+        (
+            zhCN: "混流时调整字幕时间轴：{0}（偏移 {1} 秒，原文件未修改）",
+            zhTW: "混流時調整字幕時間軸：{0}（偏移 {1} 秒，原檔案未修改）",
+            enUS: "Adjusting subtitle timing for muxing: {0} (offset {1} seconds; original file unchanged)"
+        ),
+        ["inputInvalid"] = new TextContainer
+        (
+            zhCN: "无法识别输入“{0}”；请输入 HTTP/HTTPS 地址或本地文件路径",
+            zhTW: "無法識別輸入「{0}」；請輸入 HTTP/HTTPS 網址或本機檔案路徑",
+            enUS: "Unrecognized input '{0}'; provide an HTTP/HTTPS URL or a local file path"
+        ),
         ["cmd_config"] = new TextContainer
         (
             zhCN: "读取指定配置文件，替代用户默认配置；命令行选项优先",

@@ -17,6 +17,7 @@ try {
     }
     $script | Out-String | Invoke-Expression
     $cases = @(
+        @{ Line = 'N_m3u8DL-RE mux --muxer '; Expected = @('ffmpeg', 'mkvmerge') }
         @{ Line = 'N_m3u8DL-RE --sub-'; Expected = @('--sub-format', '--sub-only') }
         @{ Line = 'N_m3u8DL-RE --sub-format '; Expected = @('SRT', 'VTT') }
         @{ Line = 'N_m3u8DL-RE --sub-format V'; Expected = @('VTT') }

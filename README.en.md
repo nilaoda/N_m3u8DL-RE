@@ -76,6 +76,33 @@ Help uses the configured UI language. Completion script generation and Tab compl
 
 For Docker, mount the file read-only at `/config/config.conf` and pass `--config /config/config.conf`, independently of the container's HOME or runtime user.
 
+## Utility commands
+
+```text
+# Concatenate file bytes without FFmpeg
+N_m3u8DL-RE concat -i 1.ts -i 2.ts -o combined.ts
+
+# Read a directory in natural filename order; matches *.ts by default, configurable with --pattern
+# --input-dir cannot be combined with -i
+N_m3u8DL-RE concat --input-dir segments --pattern "*.ts" -o combined.ts
+
+# Use FFmpeg to merge TS segments from a directory
+N_m3u8DL-RE merge --input-dir segments -o merged.mp4
+
+# Mux video, audio and subtitles
+# Subtitle timing is adjusted automatically, preserving source files; disable with --auto-subtitle-fix false
+N_m3u8DL-RE mux -i video.mp4 -i audio.m4a -i subtitle.srt -o output.mp4
+
+# Set track language (lang), track title (name) and movie title (--title)
+# --mux-import appends external audio or subtitles; lang and name are optional
+N_m3u8DL-RE mux -i video.mp4 -i "path=audio.m4a:lang=eng:name=English" --mux-import "path=subtitle.srt:lang=zh-Hans:name=Simplified Chinese" --title "Movie Title" -o output.mkv
+# Escape colons within compound values as \:, e.g. path=C\:\media\audio.m4a:lang=eng
+
+# Check tool versions and system environment
+N_m3u8DL-RE doctor
+N_m3u8DL-RE doctor --json > doctor.json
+```
+
 ## Command line parameters
 
 Long automatic names, custom save names and expanded filename patterns are shortened with a hash suffix to reduce collisions. Limits use UTF-8 bytes without splitting Chinese characters or emoji, with space reserved for automatic timestamps and media extensions.
