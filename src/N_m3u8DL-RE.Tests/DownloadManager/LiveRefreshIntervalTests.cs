@@ -8,6 +8,14 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 public class LiveRefreshIntervalTests
 {
     [Fact]
+    public void MissingUpdatePeriodUsesAllRetainedPeriods()
+    {
+        var stream = CreateStream(4, 2);
+        stream.Playlist!.MediaParts.Add(new MediaPart { MediaSegments = [new() { Duration = 4 }, new() { Duration = 4 }] });
+        LiveRefreshInterval.GetSeconds([stream], ExtractorType.MPEG_DASH, null).ShouldBe(6);
+    }
+
+    [Fact]
     public void DashUsesMinimumUpdatePeriodEvenWithLongPlaylist()
     {
         var stream = CreateStream(6, 1000);

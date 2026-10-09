@@ -9,6 +9,34 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 public class LiveSegmentTrackerTests
 {
     [Fact]
+    public void DashQueryTemplateStillMatchesWhenSignatureChanges()
+    {
+        var tracker = new LiveSegmentTracker();
+        tracker.Record([new MediaSegment { Url = "https://example.com/media?t=100&token=old", NameFromVar = "100" }]);
+        var refreshed = new List<MediaSegment>
+        {
+            new() { Url = "https://example.com/media?t=100&token=new", NameFromVar = "100" },
+            new() { Url = "https://example.com/media?t=102&token=new", NameFromVar = "102" },
+        };
+        Assert.Equal([refreshed[1]], tracker.Filter(refreshed, false));
+        refreshed.Insert(1, new MediaSegment { Url = "https://example.com/media?t=100&token=other", NameFromVar = "100" });
+        Assert.Equal(refreshed, tracker.Filter(refreshed, false));
+    }
+
+    [Fact]
+    public void DashPeriodWithResetTemplateNumbersDoesNotMatchOldSegment()
+    {
+        var tracker = new LiveSegmentTracker();
+        tracker.Record([new MediaSegment { Url = "https://example.com/old/2.m4s", NameFromVar = "2" }]);
+        var refreshed = new List<MediaSegment>
+        {
+            new() { Url = "https://example.com/new/1.m4s", NameFromVar = "1" },
+            new() { Url = "https://example.com/new/2.m4s", NameFromVar = "2" },
+        };
+        Assert.Equal(refreshed, tracker.Filter(refreshed, false));
+    }
+
+    [Fact]
     public void SequenceReset_KeepsSourceIndexesAndUniqueRecordingFiles()
     {
         var tracker = new LiveSegmentTracker();
@@ -17,14 +45,14 @@ public class LiveSegmentTrackerTests
 
         // 刷新列表中有旧片段，媒体序号却已从 1 重新开始。
         var overlap = new[] { Segment(1, "old/99"), Segment(2, "old/100"), Segment(3, "new/1"), Segment(4, "new/2") }.ToList();
-        var second = tracker.Filter(overlap, true, s => s.Index.ToString());
+        var second = tracker.Filter(overlap, true);
         second.Select(s => s.Url).ShouldBe(new[] { "new/1", "new/2" });
         tracker.Record(second);
         second.Select(s => s.Index).ShouldBe(new long[] { 3, 4 });
 
         // 上一片已经滑出列表时，也要继续使用新的录制顺序。
         var reset = new[] { Segment(1, "reset/1"), Segment(2, "reset/2") }.ToList();
-        var third = tracker.Filter(reset, true, s => s.Index.ToString());
+        var third = tracker.Filter(reset, true);
         tracker.Record(third);
         third.Select(s => s.Index).ShouldBe(new long[] { 1, 2 });
 
@@ -41,7 +69,7 @@ public class LiveSegmentTrackerTests
         tracker.Record(new[] { Segment(3, "old/3") }.ToList());
 
         var reset = new[] { Segment(1, "new/1"), Segment(2, "new/2"), Segment(3, "new/3") }.ToList();
-        tracker.Filter(reset, true, s => s.Index.ToString()).ShouldBe(reset);
+        tracker.Filter(reset, true).ShouldBe(reset);
     }
 
     [Fact]
@@ -55,7 +83,7 @@ public class LiveSegmentTrackerTests
             Segment(11, "B.ts"), Segment(12, "A.ts"),
             Segment(13, "B.ts"), Segment(14, "A.ts")
         }.ToList();
-        var newSegments = tracker.Filter(refreshed, true, s => s.Index.ToString());
+        var newSegments = tracker.Filter(refreshed, true);
 
         newSegments.Select(s => s.Index).ShouldBe(new long[] { 13, 14 });
     }
@@ -72,7 +100,7 @@ public class LiveSegmentTrackerTests
             Segment(3, "B.ts"), Segment(4, "A.ts")
         }.ToList();
 
-        tracker.Filter(reset, true, s => s.Index.ToString()).ShouldBe(reset);
+        tracker.Filter(reset, true).ShouldBe(reset);
     }
 
     [Fact]
@@ -84,7 +112,7 @@ public class LiveSegmentTrackerTests
         tracker.Record(new[] { old }.ToList());
 
         var refreshed = new[] { Segment(1, "old/10", dateTime), Segment(2, "new/2", dateTime) }.ToList();
-        tracker.Filter(refreshed, true, s => s.Index.ToString()).Select(s => s.Url).ShouldBe(new[] { "new/2" });
+        tracker.Filter(refreshed, true).Select(s => s.Url).ShouldBe(new[] { "new/2" });
     }
 
     [Fact]
@@ -100,7 +128,7 @@ public class LiveSegmentTrackerTests
             Segment(13, "https://example.com/B.ts?token=new", dateTime)
         }.ToList();
 
-        tracker.Filter(refreshed, true, s => s.Index.ToString())
+        tracker.Filter(refreshed, true)
             .Select(s => s.Index).ShouldBe(new long[] { 13 });
     }
 
@@ -115,7 +143,7 @@ public class LiveSegmentTrackerTests
             Segment(20, "https://example.com/20.ts?token=new"),
             Segment(21, "https://example.com/21.ts?token=new")
         }.ToList();
-        tracker.Filter(refreshed, true, s => s.Index.ToString()).Select(s => s.Index).ShouldBe(new long[] { 21 });
+        tracker.Filter(refreshed, true).Select(s => s.Index).ShouldBe(new long[] { 21 });
     }
 
     [Fact]

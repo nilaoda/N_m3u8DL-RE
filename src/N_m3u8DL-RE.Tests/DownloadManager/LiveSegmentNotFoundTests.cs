@@ -10,7 +10,7 @@ public class LiveSegmentNotFoundTests
     [InlineData(true)]
     public void AdvancingWindowKeepsWaitForPresentSegmentAndEndsWaitForRemovedSegment(bool hls)
     {
-        var policy = new LiveSegmentNotFoundPolicy(hls, segment => segment.NameFromVar ?? segment.Url);
+        var policy = new LiveSegmentNotFoundPolicy(hls);
         var pending = Segment(2);
         policy.Update([Segment(0), Segment(1), pending], 1);
         var wait = policy.GetPublicationWait(pending);
@@ -30,7 +30,7 @@ public class LiveSegmentNotFoundTests
     [Fact]
     public void EmptyWindowAndRepeatedRefreshDoNotResetWaitBudget()
     {
-        var policy = new LiveSegmentNotFoundPolicy(false, segment => segment.NameFromVar ?? segment.Url);
+        var policy = new LiveSegmentNotFoundPolicy(false);
         var pending = Segment(2);
         policy.Update([Segment(0), Segment(1), pending], 1);
         Assert.Equal(TimeSpan.Zero, policy.GetPublicationWait(Segment(0)));
@@ -47,7 +47,7 @@ public class LiveSegmentNotFoundTests
     [InlineData(double.NaN, 11)]
     public void PublicationWaitIsBounded(double duration, double expected)
     {
-        var policy = new LiveSegmentNotFoundPolicy(false, segment => segment.NameFromVar ?? segment.Url);
+        var policy = new LiveSegmentNotFoundPolicy(false);
         var pending = Segment(0);
         pending.Duration = duration;
         policy.Update([pending], 1);
@@ -57,7 +57,7 @@ public class LiveSegmentNotFoundTests
     [Fact]
     public void WindowSnapshotDoesNotFollowProducerMutations()
     {
-        var policy = new LiveSegmentNotFoundPolicy(true, segment => segment.Url);
+        var policy = new LiveSegmentNotFoundPolicy(true);
         var pending = Segment(0);
         policy.Update([pending], 1);
         var original = pending.WithIndex(pending.Index);
@@ -73,7 +73,7 @@ public class LiveSegmentNotFoundTests
     [Fact]
     public void HlsSequenceResetUsesUniqueUrlAndRejectsAmbiguousUrlsOrDifferentRanges()
     {
-        var policy = new LiveSegmentNotFoundPolicy(true, segment => segment.Url);
+        var policy = new LiveSegmentNotFoundPolicy(true);
         var pending = Segment(0);
         pending.StartRange = 0;
         pending.ExpectLength = 100;
