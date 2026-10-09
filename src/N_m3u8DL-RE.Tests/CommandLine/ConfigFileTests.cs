@@ -8,6 +8,7 @@ using N_m3u8DL_RE.CommandLine;
 
 namespace N_m3u8DL_RE.Tests.CommandLine;
 
+[Collection("Download console")]
 public class ConfigFileTests : IDisposable
 {
     private readonly string directory = Directory.CreateTempSubdirectory("re-config-").FullName;
@@ -379,11 +380,24 @@ public class ConfigFileTests : IDisposable
     private static MyOption Parse(ConfigFile config)
     {
         var command = CommandInvoker.CreateRootCommand();
-        var result = command.Parse(config.Merge(command), new ParserConfiguration
+        // 这里只验证配置合并，下载输入的有效性由 InputValidationTests 单独覆盖。
+        var input = command.Arguments.Single();
+        var validators = input.Validators.ToArray();
+        ParseResult result;
+        try
         {
-            EnablePosixBundling = false,
-            ResponseFileTokenReplacer = null
-        });
+            input.Validators.Clear();
+            result = command.Parse(config.Merge(command), new ParserConfiguration
+            {
+                EnablePosixBundling = false,
+                ResponseFileTokenReplacer = null
+            });
+        }
+        finally
+        {
+            foreach (var validator in validators)
+                input.Validators.Add(validator);
+        }
         Assert.Empty(result.Errors);
         var getOptions = typeof(CommandInvoker).GetMethod("GetOptions", BindingFlags.Static | BindingFlags.NonPublic)!;
         return Assert.IsType<MyOption>(getOptions.Invoke(null, [result]));

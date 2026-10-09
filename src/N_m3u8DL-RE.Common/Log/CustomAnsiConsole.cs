@@ -4,16 +4,17 @@ using Spectre.Console;
 
 namespace N_m3u8DL_RE.Common.Log;
 
-public partial class NonAnsiWriter : TextWriter
+public partial class NonAnsiWriter(TextWriter? output = null) : TextWriter
 {
-    public override Encoding Encoding => Console.OutputEncoding;
+    private TextWriter Output => output ?? Console.Out;
+    public override Encoding Encoding => output?.Encoding ?? Console.OutputEncoding;
 
     private string? _lastOut = "";
     private bool _atLineStart = true;
 
     public override void Write(char value)
     {
-        Console.Write(value);
+        Output.Write(value);
         _atLineStart = value == '\n';
     }
 
@@ -48,16 +49,16 @@ public partial class NonAnsiWriter : TextWriter
             // 行首的空白仍然丢弃，避免输出被缩进或产生整行空白。
             if (output.Contains('\n') && !_atLineStart)
             {
-                Console.Write('\n');
+                Output.Write('\n');
                 _atLineStart = true;
             }
             else if (!_atLineStart && output.Contains(' '))
             {
-                Console.Write(output);
+                Output.Write(output);
             }
             return;
         }
-        Console.Write(output);
+        Output.Write(output);
         _atLineStart = output.EndsWith('\n');
     }
 

@@ -6,6 +6,9 @@ namespace N_m3u8DL_RE.CommandLine;
 
 internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
 {
+    internal static bool IsUtilityRequest(string[] args) =>
+        ParseSyntax(args).CommandResult.Command is not RootCommand;
+
     internal static bool IsCompletionRequest(string[] args)
     {
         if (args.Length > 0 && (args[0] == "[suggest]" ||
@@ -45,12 +48,12 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
         // 完整的选项定义才能区分 --save-name 的值与真正的配置控制选项。
         var result = ParseSyntax(args);
         var errors = result.Errors.Where(error => error.SymbolResult is OptionResult option &&
-            option.Option.Name is "--config" or "--no-config").ToList();
+            (option.Option.Name == CommandInvoker.Config.Name || option.Option.Name == CommandInvoker.NoConfig.Name)).ToList();
         if (errors.Count > 0)
             throw new ArgumentException(string.Join(Environment.NewLine, errors.Select(error => error.Message)));
 
-        var path = result.GetValue<string>("--config");
-        if (result.GetValue<bool>("--no-config"))
+        var path = result.GetValue<string>(CommandInvoker.Config.Name);
+        if (result.GetValue<bool>(CommandInvoker.NoConfig.Name))
         {
             if (path != null)
                 throw new ArgumentException(ResString.configFileConflict);
@@ -126,9 +129,9 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
 
     internal string? GetLanguage()
     {
-        var explicitLanguage = ParseSyntax(Arguments).GetResult("--ui-language") as OptionResult;
+        var explicitLanguage = ParseSyntax(Arguments).GetResult(CommandInvoker.UILanguage.Name) as OptionResult;
         var language = explicitLanguage is { Implicit: false } ? explicitLanguage :
-            ParseSyntax(Defaults).GetResult("--ui-language") as OptionResult;
+            ParseSyntax(Defaults).GetResult(CommandInvoker.UILanguage.Name) as OptionResult;
         // 启动时只提取单个合法语言值；缺值或重复选项留给后续解析器报告，避免提前取值抛异常。
         var value = language is { Tokens.Count: 1 } ? language.Tokens[0].Value : null;
         return value is "en-US" or "zh-CN" or "zh-TW" ? value : null;
@@ -142,6 +145,8 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
         var configuration = new ParserConfiguration { EnablePosixBundling = false, ResponseFileTokenReplacer = null };
         var syntaxCommand = CreateSyntaxCommand(command);
         var suppliedResult = syntaxCommand.Parse(Arguments, configuration);
+        if (suppliedResult.CommandResult.Command is not RootCommand)
+            return MergeUtility(command, suppliedResult, configuration);
         var supplied = suppliedResult.CommandResult.Children.OfType<OptionResult>()
             .Where(result => !result.Implicit).Select(result => result.Option.Name).ToHashSet();
         // 多值选项按原有解析规则合并：配置在前，命令行在后；只替换单值选项。
@@ -149,14 +154,16 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
             .Select(option => option.Name));
         // 两种写法描述同一个合并模式，配置中的旧参数不能压过命令行的新参数。
         // 旧参数为 false 时只取消强制 demuxer，不抹掉配置中显式选择的其他模式。
-        const string concatMode = "--ffmpeg-concat-mode";
-        const string concatDemuxer = "--use-ffmpeg-concat-demuxer";
+        var concatMode = CommandInvoker.FFmpegConcatMode.Name;
+        var concatDemuxer = CommandInvoker.UseFFmpegConcatDemuxer.Name;
         if (supplied.Contains(concatDemuxer) && suppliedResult.GetValue<bool>(concatDemuxer))
             supplied.Add(concatMode);
         if (supplied.Contains(concatMode))
             supplied.Add(concatDemuxer);
         // 占住唯一的位置参数，配置中再出现下载地址或裸值时由原解析器报错。
         var defaults = syntaxCommand.Parse(["<config-input>", .. Defaults], configuration);
+        if (defaults.CommandResult.Command is not RootCommand)
+            throw new ArgumentException(ResString.configFileOptionsOnly);
         var syntaxErrors = defaults.Errors.Where(error => error.SymbolResult is not OptionResult optionResult ||
             !supplied.Contains(optionResult.Option.Name)).ToList();
         if (syntaxErrors.Count > 0)
@@ -166,7 +173,7 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
             .Where(result => !result.Implicit).ToList();
         var options = command.Options.ToDictionary(option => option.Name);
         if (configuredOptions.Any(result => options[result.Option.Name].Action != null ||
-                result.Option.Name is "--config" or "--no-config" or "--morehelp") ||
+                IsConfigurationControlOption(result.Option)) ||
             defaults.Tokens.Any(token => token.Type is TokenType.DoubleDash or TokenType.Directive))
             throw new ArgumentException(ResString.configFileOptionsOnly);
 
@@ -215,6 +222,7 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
     private static RootCommand CreateSyntaxCommand(RootCommand command)
     {
         var syntax = new RootCommand();
+        syntax.SetAction(_ => { });
         // 此阶段只识别选项边界和别名，避免自定义解析器读取随后会被覆盖的文件。
         syntax.Directives.Clear();
         syntax.Options.Clear();
@@ -228,10 +236,99 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
                     : new Option<string[]>(option.Name, [.. option.Aliases]);
             copy.Arity = option.Arity;
             copy.AllowMultipleArgumentsPerToken = option.AllowMultipleArgumentsPerToken;
+            copy.Recursive = option.Recursive;
             syntax.Options.Add(copy);
         }
+        foreach (var child in command.Subcommands)
+            syntax.Subcommands.Add(CopySyntaxCommand(child));
         return syntax;
     }
+
+    private static Command CopySyntaxCommand(Command command)
+    {
+        var copy = new Command(command.Name, command.Description);
+        foreach (var option in command.Options)
+        {
+            Option syntaxOption = option.ValueType == typeof(bool)
+                ? new Option<bool>(option.Name, [.. option.Aliases])
+                : option.Arity.MaximumNumberOfValues <= 1
+                    ? new Option<string>(option.Name, [.. option.Aliases])
+                    : new Option<string[]>(option.Name, [.. option.Aliases]);
+            syntaxOption.Arity = option.Arity;
+            syntaxOption.Recursive = option.Recursive;
+            syntaxOption.AllowMultipleArgumentsPerToken = option.AllowMultipleArgumentsPerToken;
+            copy.Options.Add(syntaxOption);
+        }
+        foreach (var child in command.Subcommands)
+            copy.Subcommands.Add(CopySyntaxCommand(child));
+        return copy;
+    }
+
+    private string[] MergeUtility(RootCommand root, ParseResult supplied, ParserConfiguration configuration)
+    {
+        // 配置仍按下载选项解析边界，仅将当前工具支持的选项带入子命令。
+        // 不转换被忽略的下载参数，避免读取 key、cookie 等文件。
+        var defaults = CreateSyntaxCommand(root).Parse(["<config-input>", .. Defaults], configuration);
+        if (defaults.CommandResult.Command is not RootCommand)
+            throw new ArgumentException(ResString.configFileOptionsOnly);
+        if (defaults.Errors.Count > 0)
+            throw new ArgumentException(string.Join(Environment.NewLine, defaults.Errors.Select(e => e.Message)));
+        var configured = defaults.CommandResult.Children.OfType<OptionResult>().Where(r => !r.Implicit).ToList();
+        var rootOptions = root.Options.ToDictionary(o => o.Name);
+        if (configured.Any(r => rootOptions[r.Option.Name].Action != null ||
+                IsConfigurationControlOption(r.Option)) ||
+            defaults.Tokens.Any(t => t.Type is TokenType.DoubleDash or TokenType.Directive))
+            throw new ArgumentException(ResString.configFileOptionsOnly);
+
+        var path = new List<string>();
+        var explicitOptions = new HashSet<string>();
+        for (CommandResult? current = supplied.CommandResult; current != null; current = current.Parent as CommandResult)
+        {
+            if (current.Command is not RootCommand)
+                path.Insert(0, current.Command.Name);
+            explicitOptions.UnionWith(current.Children.OfType<OptionResult>().Where(r => !r.Implicit).Select(r => r.Option.Name));
+        }
+        Command selected = root;
+        foreach (var name in path)
+            selected = selected.Subcommands.Single(c => c.Name == name);
+        var allowed = selected.Options.Concat(root.Options.Where(o => o.Recursive)).Select(o => o.Name).ToHashSet();
+        var names = root.Options.SelectMany(o => o.Aliases.Prepend(o.Name).Select(n => (Name: n, Option: o)))
+            .ToDictionary(p => p.Name, p => p.Option);
+        List<string> retained = [];
+        var keep = false;
+        var previousWasOption = false;
+        foreach (var token in defaults.Tokens.Skip(1))
+        {
+            if (token.Type == TokenType.Option)
+            {
+                var name = names[token.Value].Name;
+                keep = allowed.Contains(name) && !explicitOptions.Contains(name);
+                if (keep)
+                    retained.Add(token.Value);
+                previousWasOption = true;
+            }
+            else
+            {
+                if (keep)
+                {
+                    if (previousWasOption)
+                        retained[^1] += "=" + token.Value;
+                    else
+                        retained.Add(token.Value);
+                }
+                previousWasOption = false;
+            }
+        }
+        // 前置参数继承只涉及全局选项，子命令参数放在结束标记 -- 之前。
+        var insertion = Array.IndexOf(Arguments, "--");
+        if (insertion < 0)
+            insertion = Arguments.Length;
+        return [.. Arguments.Take(insertion), .. retained, .. Arguments.Skip(insertion)];
+    }
+
+    private static bool IsConfigurationControlOption(Option option) =>
+        option.Name == CommandInvoker.Config.Name || option.Name == CommandInvoker.NoConfig.Name ||
+        option.Name == CommandInvoker.MoreHelp.Name;
 
     private static ParseResult ParseSyntax(string[] args) =>
         CreateSyntaxCommand(CommandInvoker.CreateRootCommand()).Parse(args, new ParserConfiguration

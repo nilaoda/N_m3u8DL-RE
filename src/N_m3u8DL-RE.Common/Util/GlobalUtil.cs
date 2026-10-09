@@ -66,9 +66,10 @@ public static class GlobalUtil
     /// <returns></returns>
     public static string? FindExecutable(string name)
     {
-        var fileExt = OperatingSystem.IsWindows() ? ".exe" : "";
+        var fileExt = OperatingSystem.IsWindows() && !name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? ".exe" : "";
         var searchPath = new[] { Environment.CurrentDirectory, Path.GetDirectoryName(Environment.ProcessPath) };
         var envPath = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? [];
-        return searchPath.Concat(envPath).Select(p => Path.Combine(p!, name + fileExt)).FirstOrDefault(File.Exists);
+        return searchPath.Concat(envPath).Where(p => !string.IsNullOrWhiteSpace(p))
+            .Select(p => Path.GetFullPath(Path.Combine(p!.Trim('"'), name + fileExt))).FirstOrDefault(File.Exists);
     }
 }

@@ -2,10 +2,10 @@
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
-using System.Diagnostics;
 using System.Text;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Common.Entity;
+using N_m3u8DL_RE.Common.Enum;
 using System.Globalization;
 using System.Net.Sockets;
 
@@ -20,69 +20,30 @@ internal static class MergeUtil
     /// <param name="outputFilePath"></param>
     public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath)
     {
-        if (files.Length == 0) return;
-        if (files.Length == 1)
-        {
-            FileInfo fi = new FileInfo(files[0]);
-            fi.CopyTo(outputFilePath, true);
+        CombineMultipleFilesIntoSingleFileAsync(files, outputFilePath).GetAwaiter().GetResult();
+    }
+
+    internal static async Task CombineMultipleFilesIntoSingleFileAsync(string[] files, string outputFilePath,
+        bool overwrite = true, CancellationToken token = default)
+    {
+        if (files.Length == 0)
             return;
-        }
-
-        if (!Directory.Exists(Path.GetDirectoryName(outputFilePath)))
-            Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath)!);
-
-        var inputFilePaths = files;
-        using var outputStream = File.Create(outputFilePath);
-        foreach (var inputFilePath in inputFilePaths)
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputFilePath))!);
+        using var outputStream = new FileStream(outputFilePath, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write);
+        foreach (var inputFilePath in files)
         {
             if (inputFilePath == "")
                 continue;
             using var inputStream = File.OpenRead(inputFilePath);
-            inputStream.CopyTo(outputStream);
+            await inputStream.CopyToAsync(outputStream, token).ConfigureAwait(false);
         }
     }
 
     private static int InvokeFFmpeg(string binary, string command, string workingDirectory)
     {
-        return InvokeFFmpeg(binary, command, workingDirectory, out _);
-    }
-
-    private static int InvokeFFmpeg(string binary, string command, string workingDirectory, out string errorOutput, bool loopbackInput = false)
-    {
-        Logger.DebugMarkUp($"{binary}: {command}");
-
-        // 收集 ffmpeg 的 stderr 输出，便于后续判断失败原因（如句柄耗尽）
-        var errorBuilder = new StringBuilder();
-        using var p = new Process();
-        p.StartInfo = new ProcessStartInfo()
-        {
-            WorkingDirectory = workingDirectory,
-            FileName = binary,
-            Arguments = command,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        if (loopbackInput)
-        {
-            // concat 内部打开 HTTP 时不会继承 http_proxy 参数，只对当前子进程
-            // 增补回环地址的代理豁免，不能修改整个程序的代理环境。
-            p.StartInfo.Environment.TryGetValue("no_proxy", out var noProxy);
-            p.StartInfo.Environment["no_proxy"] = string.IsNullOrEmpty(noProxy) ? "127.0.0.1" : $"{noProxy},127.0.0.1";
-        }
-        p.ErrorDataReceived += (sendProcess, output) =>
-        {
-            if (!string.IsNullOrEmpty(output.Data))
-            {
-                errorBuilder.AppendLine(output.Data);
-                Logger.WarnMarkUp($"[grey]{output.Data.EscapeMarkup()}[/]");
-            }
-        };
-        p.Start();
-        p.BeginErrorReadLine();
-        p.WaitForExit();
-        errorOutput = errorBuilder.ToString();
-        return p.ExitCode;
+        Logger.Debug($"{binary}: {command}");
+        return ProcessUtil.RunCommandAsync(binary, command, workingDirectory,
+            line => Logger.WarnMarkUp($"[grey]{line.EscapeMarkup()}[/]")).GetAwaiter().GetResult().ExitCode;
     }
 
     /// <summary>
@@ -221,244 +182,284 @@ internal static class MergeUtil
     {
         // 改为绝对路径
         outputPath = Path.GetFullPath(outputPath);
-
-        string dateString = string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime;
-
-        string ddpAudio = string.Empty;
-        string addPoster = "-map 1 -c:v:1 copy -disposition:v:1 attached_pic";
-        ddpAudio = (File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "");
-        if (!string.IsNullOrEmpty(ddpAudio)) useAACFilter = false;
-
-        ConcatInputServer? concatInputServer = null;
-        string? listPath = null;
-        if (concatMode == FFmpegConcatMode.LOCAL_HTTP)
+        var format = muxFormat.ToUpperInvariant();
+        var ddpAudio = File.Exists($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt")
+            ? File.ReadAllText($"{Path.GetFileNameWithoutExtension(outputPath + ".mp4")}.txt") : "";
+        if (!string.IsNullOrEmpty(ddpAudio))
+            useAACFilter = false;
+        var options = new List<string>();
+        if (format == "MP4")
         {
-            try
-            {
-                concatInputServer = new ConcatInputServer(files);
-            }
-            catch (Exception ex) when (ex is IOException or SocketException or UnauthorizedAccessException)
-            {
-                Logger.WarnMarkUp(string.Format(ResString.ffmpegConcatInputFailed, ex.Message).EscapeMarkup());
-                return false;
-            }
+            if (!string.IsNullOrEmpty(poster))
+                options.AddRange(["-i", Path.GetFullPath(poster)]);
+            if (!string.IsNullOrEmpty(ddpAudio))
+                options.AddRange(["-i", Path.GetFullPath(ddpAudio)]);
+            options.AddRange(["-map", "0:v?"]);
+            if (!string.IsNullOrEmpty(ddpAudio))
+                options.AddRange(["-map", string.IsNullOrEmpty(poster) ? "1:a" : "2:a"]);
+            options.AddRange(["-map", "0:a?", "-map", "0:s?"]);
+            if (!string.IsNullOrEmpty(poster))
+                options.AddRange(["-map", "1", "-c:v:1", "copy", "-disposition:v:1", "attached_pic"]);
+            if (writeDate)
+                options.AddRange(["-metadata", "date=" + (string.IsNullOrEmpty(recTime) ? DateTime.Now.ToString("o") : recTime)]);
+            options.AddRange(["-metadata", "encoding_tool=" + encodingTool, "-metadata", "title=" + title,
+                "-metadata", "copyright=" + copyright, "-metadata", "comment=" + comment]);
+            var audioIndex = string.IsNullOrEmpty(ddpAudio) ? 0 : 1;
+            options.AddRange([$"-metadata:s:a:{audioIndex}", "title=" + audioName,
+                $"-metadata:s:a:{audioIndex}", "handler=" + audioName]);
+            if (!string.IsNullOrEmpty(ddpAudio))
+                options.AddRange(["-metadata:s:a:0", "title=DD+", "-metadata:s:a:0", "handler=DD+"]);
+            if (fastStart)
+                options.AddRange(["-movflags", "+faststart"]);
         }
-
-        // 三种模式只改变输入构造，转封装参数保持一致。
-        string BuildCommand()
+        else
         {
-            StringBuilder command = new StringBuilder("-loglevel warning -nostdin ");
-            if (concatMode == FFmpegConcatMode.DEMUXER)
-            {
-                // 使用 concat demuxer合并
-                var text = string.Join(Environment.NewLine, files.Select(f => $"file '{f}'"));
-                listPath = Path.GetTempFileName();
-                File.WriteAllText(listPath, text);
-                command.Append($" -f concat -safe 0 -i \"{listPath}");
-            }
-            else if (concatInputServer != null)
-            {
-                // 仍交给 concat 协议读取连续字节，但只打开一个可 seek 的虚拟资源。
-                command.Append($" -protocol_whitelist concat,http,tcp -i \"concat:{concatInputServer.Url}");
-            }
-            else
-            {
-                command.Append(" -i concat:\"");
-                foreach (string t in files)
-                {
-                    command.Append(Path.GetFileName(t) + "|");
-                }
-            }
-
-
-            switch (muxFormat.ToUpper())
-            {
-                case ("MP4"):
-                    command.Append("\" " + (string.IsNullOrEmpty(poster) ? "" : "-i \"" + poster + "\""));
-                    command.Append(" " + (string.IsNullOrEmpty(ddpAudio) ? "" : "-i \"" + ddpAudio + "\""));
-                    command.Append(
-                        $" -map 0:v? {(string.IsNullOrEmpty(ddpAudio) ? "-map 0:a?" : $"-map {(string.IsNullOrEmpty(poster) ? "1" : "2")}:a -map 0:a?")} -map 0:s? " + (string.IsNullOrEmpty(poster) ? "" : addPoster)
-                        + (writeDate ? " -metadata date=\"" + dateString + "\"" : "") +
-                        " -metadata encoding_tool=\"" + encodingTool + "\" -metadata title=\"" + title +
-                        "\" -metadata copyright=\"" + copyright + "\" -metadata comment=\"" + comment +
-                        $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} title=\"" + audioName + $"\" -metadata:s:a:{(string.IsNullOrEmpty(ddpAudio) ? "0" : "1")} handler=\"" + audioName + "\" ");
-                    command.Append(string.IsNullOrEmpty(ddpAudio) ? "" : " -metadata:s:a:0 title=\"DD+\" -metadata:s:a:0 handler=\"DD+\" ");
-                    if (fastStart)
-                        command.Append("-movflags +faststart");
-                    command.Append("  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mp4\"");
-                    break;
-                case ("MKV"):
-                    command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".mkv\"");
-                    break;
-                case ("FLV"):
-                    command.Append("\" -map 0  -c copy -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".flv\"");
-                    break;
-                case ("M4A"):
-                    command.Append("\" -map 0  -c copy -f mp4 -y " + (useAACFilter ? "-bsf:a aac_adtstoasc" : "") + " \"" + outputPath + ".m4a\"");
-                    break;
-                case ("TS"):
-                    command.Append("\" -map 0  -c copy -y -f mpegts -bsf:v h264_mp4toannexb \"" + outputPath + ".ts\"");
-                    break;
-                case ("EAC3"):
-                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".eac3\"");
-                    break;
-                case ("AAC"):
-                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".m4a\"");
-                    break;
-                case ("AC3"):
-                    command.Append("\" -map 0:a -c copy -y \"" + outputPath + ".ac3\"");
-                    break;
-            }
-
-            return command.ToString();
+            options.AddRange(["-map", format is "EAC3" or "AAC" or "AC3" ? "0:a" : "0"]);
         }
-
+        options.AddRange(["-c", "copy"]);
+        if (format == "M4A")
+            options.AddRange(["-f", "mp4"]);
+        if (format == "TS")
+            options.AddRange(["-f", "mpegts", "-bsf:v", "h264_mp4toannexb"]);
+        else if (useAACFilter && format is "MP4" or "MKV" or "FLV" or "M4A")
+            options.AddRange(["-bsf:a", "aac_adtstoasc"]);
+        var extension = format == "AAC" ? ".m4a" : "." + format.ToLowerInvariant();
         try
         {
-            var workingDirectory = Path.GetDirectoryName(files[0])!;
-            var code = InvokeFFmpeg(binary, BuildCommand(), workingDirectory, out var errorOutput, loopbackInput: concatInputServer != null);
-            if (concatInputServer?.Error is { } error)
+            return MergeByFFmpegAsync(binary, files, outputPath + extension, concatMode, options,
+                overwrite: true, log: true).GetAwaiter().GetResult() == 0;
+        }
+        catch (Exception ex) when (ex is IOException or SocketException or UnauthorizedAccessException)
+        {
+            Logger.WarnMarkUp(string.Format(ResString.ffmpegConcatInputFailed, ex.Message).EscapeMarkup());
+            return false;
+        }
+    }
+
+    internal static async Task<int> MergeByFFmpegAsync(string binary, string[] files, string output,
+        FFmpegConcatMode mode, IReadOnlyList<string>? outputOptions = null, bool overwrite = false,
+        bool log = false, CancellationToken token = default)
+    {
+        files = files.Select(Path.GetFullPath).ToArray();
+        ConcatInputServer? server = null;
+        string? list = null;
+        try
+        {
+            List<string> arguments = ["-hide_banner", "-loglevel", "warning", "-nostdin", overwrite ? "-y" : "-n"];
+            // 三种模式只改变输入构造，转封装参数保持一致。
+            switch (mode)
             {
-                Logger.WarnMarkUp(string.Format(ResString.ffmpegConcatInputFailed, error.Message).EscapeMarkup());
-                return false;
+                case FFmpegConcatMode.LOCAL_HTTP:
+                    // 仍交给 concat 协议读取连续字节，但只打开一个可 seek 的虚拟资源。
+                    server = new ConcatInputServer(files);
+                    arguments.AddRange(["-protocol_whitelist", "concat,http,tcp", "-i", "concat:" + server.Url]);
+                    break;
+                case FFmpegConcatMode.PROTOCOL:
+                    if (files.Any(path => path.Contains('|')))
+                        throw new ArgumentException(ResString.toolsProtocolPath);
+                    arguments.AddRange(["-i", "concat:" + string.Join('|', files)]);
+                    break;
+                case FFmpegConcatMode.DEMUXER:
+                    // 使用 concat demuxer 合并
+                    if (files.Any(path => path.Contains('\r') || path.Contains('\n')))
+                        throw new ArgumentException(ResString.concatInputPathInvalid);
+                    list = Path.GetTempFileName();
+                    await File.WriteAllLinesAsync(list, files.Select(path => $"file '{path.Replace("'", "'\\''")}'"), token).ConfigureAwait(false);
+                    arguments.AddRange(["-f", "concat", "-safe", "0", "-i", list]);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode));
             }
+            if (outputOptions != null)
+                arguments.AddRange(outputOptions);
+            else
+            {
+                arguments.AddRange(["-map", "0:v?", "-map", "0:a?", "-map", "0:s?", "-c", "copy"]);
+                var format = Path.GetExtension(output).ToLowerInvariant();
+                if (format == ".mp4")
+                    arguments.AddRange(["-c:s", "mov_text"]);
+                if (format == ".m4a")
+                    arguments.AddRange(["-vn", "-sn"]);
+            }
+            arguments.Add(Path.GetFullPath(output));
+            var result = await RunMediaToolAsync(binary, arguments, token, log, server != null).ConfigureAwait(false);
+            if (server?.Error is { } error)
+                throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
             // 直接 concat 协议仍可能耗尽句柄；失败时不改变时间轴处理方式，也不删除分片。
-            if (code != 0 && IsTooManyOpenFilesError(errorOutput))
+            if (log && result.ExitCode != 0 && IsTooManyOpenFilesError(result.Error))
                 Logger.WarnMarkUp(ResString.ffmpegMergeReachLimit);
-            return code == 0;
+            return result.ExitCode;
         }
         finally
         {
-            concatInputServer?.Dispose();
-            if (listPath != null)
-                File.Delete(listPath);
+            server?.Dispose();
+            if (list != null)
+                File.Delete(list);
         }
     }
 
     public static bool MuxInputsByFFmpeg(string binary, OutputFile[] files, string outputPath, MuxFormat muxFormat, bool dateinfo)
     {
-        var ext = OtherUtil.GetMuxExtension(muxFormat);
-        string dateString = DateTime.Now.ToString("o");
-        StringBuilder command = new StringBuilder("-loglevel warning -nostdin -y -dn ");
-        if (files.Any(file => file.PreserveTimestamp))
-            command.Append("-copyts ");
-
-        // INPUT
-        foreach (var item in files)
-        {
-            command.Append($" -i \"{item.FilePath}\" ");
-        }
-
-        // MAP
-        // "-map {i}" pulls in every stream an input has, including ones the mux
-        // format can't hold. Some sites' segments carry a data stream alongside
-        // the real track (e.g. HLS timed_id3 metadata), and Matroska/MP4 reject
-        // the whole mux for it ("Only audio, video, and subtitles are supported"),
-        // even with -ignore_unknown set below.
-        //
-        // Map by stream type instead, not by whole input - and ask for all three
-        // types from every input rather than switching on each file's declared
-        // MediaType. A "video" input isn't always video-only: some sites hand
-        // out one combined file per rendition (audio muxed into the same
-        // stream), and restricting that input to just ":v?" would silently
-        // drop its audio. ":v?/:a?/:s?" are no-ops on a type a given input
-        // doesn't have, so this only ever adds streams, never mismatches one.
-        for (int i = 0; i < files.Length; i++)
-        {
-            command.Append($" -map {i}:v? -map {i}:a? -map {i}:s? ");
-        }
-
-        var srt = files.Any(x => x.FilePath.EndsWith(".srt"));
-
-        if (muxFormat == MuxFormat.MP4)
-            command.Append($" -strict unofficial -c:a copy -c:v copy -c:s mov_text "); // mp4不支持vtt/srt字幕，必须转换格式
-        else if (muxFormat == MuxFormat.TS)
-            command.Append($" -strict unofficial -c:a copy -c:v copy ");
-        else if (muxFormat == MuxFormat.MKV)
-            command.Append($" -strict unofficial -c:a copy -c:v copy -c:s {(srt ? "srt" : "webvtt")} ");
-        else throw new ArgumentException($"unknown format: {muxFormat}");
-
-        // CLEAN
-        command.Append(" -map_metadata -1 ");
-
-        // LANG and NAME
-        var streamIndex = 0;
-        for (int i = 0; i < files.Length; i++)
-        {
-            // 转换语言代码
-            LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-            command.Append($" -metadata:s:{streamIndex} language=\"{files[i].LangCode ?? "und"}\" ");
-            if (!string.IsNullOrEmpty(files[i].Description))
-            {
-                command.Append($" -metadata:s:{streamIndex} title=\"{files[i].Description}\" ");
-            }
-            /**
-             * -metadata:s:xx标记的是 输出的第xx个流的metadata，
-             * 若输入文件存在不止一个流时，这里单纯使用files的index
-             * 就有可能出现metadata错位的情况，所以加了如下逻辑
-             */
-            if (files[i].Mediainfos.Count > 0)
-                streamIndex += files[i].Mediainfos.Count;
-            else
-                streamIndex++;
-        }
-
-        var videoTracks = files.Where(x => x.MediaType != Common.Enum.MediaType.AUDIO && x.MediaType != Common.Enum.MediaType.SUBTITLES);
-        var audioTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-        var subTracks = files.Where(x => x.MediaType == Common.Enum.MediaType.AUDIO);
-        if (videoTracks.Any()) command.Append(" -disposition:v:0 default ");
-        // 字幕都不设置默认
-        if (subTracks.Any()) command.Append(" -disposition:s 0 ");
-        if (audioTracks.Any())
-        {
-            // 音频除了第一个音轨 都不设置默认
-            command.Append(" -disposition:a:0 default ");
-            for (int i = 1; i < audioTracks.Count(); i++)
-            {
-                command.Append($" -disposition:a:{i} 0 ");
-            }
-        }
-
-        if (dateinfo) command.Append($" -metadata date=\"{dateString}\" ");
-        command.Append($" -ignore_unknown -copy_unknown ");
-        command.Append($" \"{outputPath}{ext}\"");
-
-        var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
-
-        return code == 0;
+        return MuxInputsAsync(binary, files, outputPath + OtherUtil.GetMuxExtension(muxFormat),
+            downloadDefaults: true, dateinfo: dateinfo).GetAwaiter().GetResult() == 0;
     }
 
     public static bool MuxInputsByMkvmerge(string binary, OutputFile[] files, string outputPath)
     {
-        StringBuilder command = new StringBuilder($"-q --output \"{outputPath}.mkv\" ");
+        // mkvmerge 的 1 表示完成但有警告，2 才表示失败。
+        return MuxInputsAsync(binary, files, outputPath + ".mkv", useMkvmerge: true,
+            downloadDefaults: true).GetAwaiter().GetResult() is 0 or 1;
+    }
 
-        command.Append(" --no-chapters ");
-
-        var dFlag = false;
-
+    internal static async Task<int> MuxInputsAsync(string binary, OutputFile[] files, string output,
+        bool useMkvmerge = false, bool downloadDefaults = false, bool dateinfo = false,
+        MuxSubtitleTimeline? timeline = null, string? title = null, CancellationToken token = default)
+    {
         // LANG and NAME
-        for (int i = 0; i < files.Length; i++)
+        // 转换语言代码
+        foreach (var file in files)
+            LanguageCodeUtil.ConvertLangCodeAndDisplayName(file);
+        var inputs = timeline?.Inputs ?? files.Select(file => Path.GetFullPath(file.FilePath)).ToArray();
+        var format = Path.GetExtension(output).ToLowerInvariant();
+        List<string> arguments = useMkvmerge ? ["--output", Path.GetFullPath(output)]
+            : ["-hide_banner", "-loglevel", "warning", "-nostdin", downloadDefaults ? "-y" : "-n"];
+        if (useMkvmerge)
         {
-            // 转换语言代码
-            LanguageCodeUtil.ConvertLangCodeAndDisplayName(files[i]);
-            command.Append($" --language 0:\"{files[i].LangCode ?? "und"}\" ");
-            // 字幕都不设置默认
-            if (files[i].MediaType == Common.Enum.MediaType.SUBTITLES)
-                command.Append($" --default-track 0:no ");
-            // 音频除了第一个音轨 都不设置默认
-            if (files[i].MediaType == Common.Enum.MediaType.AUDIO)
+            if (title != null)
+                arguments.AddRange(["--title", title]);
+            var audioSeen = false;
+            for (var i = 0; i < files.Length; i++)
             {
-                if (dFlag)
-                    command.Append($" --default-track 0:no ");
-                dFlag = true;
+                if (downloadDefaults)
+                {
+                    arguments.Add("--no-chapters");
+                    // 字幕都不设置默认
+                    // 音频除了第一个音轨 都不设置默认
+                    if (files[i].MediaType == MediaType.SUBTITLES || files[i].MediaType == MediaType.AUDIO && audioSeen)
+                        arguments.AddRange(["--default-track-flag", "-1:no"]);
+                    if (files[i].MediaType == MediaType.AUDIO)
+                        audioSeen = true;
+                }
+                if (files[i].LangCode != null || downloadDefaults)
+                    arguments.AddRange(["--language", "-1:" + (files[i].LangCode ?? "und")]);
+                if (files[i].Description != null)
+                    arguments.AddRange(["--track-name", "-1:" + files[i].Description]);
+                if (timeline?.Origin != null && timeline.MediaStarts[i] is { } start)
+                {
+                    var milliseconds = Math.Round((start - timeline.Origin.Value) * 1000);
+                    arguments.AddRange(["--sync", "-1:" + milliseconds.ToString(CultureInfo.InvariantCulture)]);
+                }
+                arguments.Add(inputs[i]);
             }
-            if (!string.IsNullOrEmpty(files[i].Description))
-                command.Append($" --track-name 0:\"{files[i].Description}\" ");
-            command.Append($" \"{files[i].FilePath}\" ");
         }
+        else
+        {
+            if (timeline?.Origin != null || files.Any(file => file.PreserveTimestamp))
+                arguments.Add("-copyts");
+            // INPUT
+            for (var i = 0; i < inputs.Length; i++)
+            {
+                // 媒体共用原点，修复后的独立字幕已经位于播放时间轴。
+                if (timeline?.Origin != null && timeline.MediaStarts[i] != null)
+                    arguments.AddRange(["-itsoffset", (-timeline.Origin.Value).ToString("0.######", CultureInfo.InvariantCulture)]);
+                arguments.AddRange(["-i", inputs[i]]);
+            }
+            // CLEAN
+            if (downloadDefaults)
+                arguments.AddRange(["-map_metadata", "-1"]);
+            // MAP
+            // "-map {i}" pulls in every stream an input has, including ones the mux
+            // format can't hold. Some sites' segments carry a data stream alongside
+            // the real track (e.g. HLS timed_id3 metadata), and Matroska/MP4 reject
+            // the whole mux for it ("Only audio, video, and subtitles are supported"),
+            // even with -ignore_unknown set below.
+            //
+            // Map by stream type instead, not by whole input - and ask for all three
+            // types from every input rather than switching on each file's declared
+            // MediaType. A "video" input isn't always video-only: some sites hand
+            // out one combined file per rendition (audio muxed into the same
+            // stream), and restricting that input to just ":v?" would silently
+            // drop its audio. With metadata, map each known track explicitly;
+            // otherwise use optional ":v?/:a?/:s?" maps. M4A keeps only audio.
+            var trackCounts = new Dictionary<string, int> { ["Video"] = 0, ["Audio"] = 0, ["Subtitle"] = 0 };
+            if (downloadDefaults || files.Any(file => file.LangCode != null || file.Description != null))
+            {
+                // 用真实轨道数量定位元数据；复用下载时已读取的信息，MP4 直接读 box。
+                /**
+                 * -metadata:s:xx 标记的是输出的第 xx 个流的 metadata，
+                 * 若输入文件存在不止一个流，直接使用 files 的 index 会导致 metadata 错位。
+                 * 按实际映射的轨道推进 streamIndex，给该输入的每个输出轨道设置元数据。
+                 */
+                var streamIndex = 0;
+                for (var i = 0; i < files.Length; i++)
+                {
+                    var types = await MediainfoUtil.ReadTrackTypesAsync(binary, files[i], token).ConfigureAwait(false);
+                    foreach (var (type, specifier) in new[] { ("Video", "v"), ("Audio", "a"), ("Subtitle", "s") })
+                    {
+                        if (format == ".m4a" && type != "Audio")
+                            continue;
+                        var count = types.Count(t => t == type);
+                        trackCounts[type] += count;
+                        for (var track = 0; track < count; track++)
+                        {
+                            arguments.AddRange(["-map", $"{i}:{specifier}:{track}"]);
+                            if (files[i].LangCode != null || downloadDefaults)
+                                arguments.AddRange([$"-metadata:s:{streamIndex}", "language=" + (files[i].LangCode ?? "und")]);
+                            if (files[i].Description != null)
+                            {
+                                arguments.AddRange([$"-metadata:s:{streamIndex}", "title=" + files[i].Description]);
+                                if (format is ".mp4" or ".m4a")
+                                    arguments.AddRange([$"-metadata:s:{streamIndex}", "handler_name=" + files[i].Description]);
+                            }
+                            streamIndex++;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (var i = 0; i < files.Length; i++)
+                    arguments.AddRange(["-map", $"{i}:v?", "-map", $"{i}:a?", "-map", $"{i}:s?"]);
+            }
+            arguments.AddRange(["-c", "copy"]);
+            if (timeline?.Origin != null)
+                arguments.AddRange(["-avoid_negative_ts", "disabled"]);
+            // MP4 不支持 VTT/SRT 字幕，必须转换格式
+            if (format == ".mp4")
+                arguments.AddRange(["-c:s", "mov_text"]);
+            else if (downloadDefaults && format == ".mkv")
+                arguments.AddRange(["-c:s", files.Any(file => Path.GetExtension(file.FilePath).Equals(".srt", StringComparison.OrdinalIgnoreCase)) ? "srt" : "webvtt"]);
+            if (format == ".m4a")
+                arguments.AddRange(["-vn", "-sn"]);
+            if (downloadDefaults)
+            {
+                arguments.AddRange(["-strict", "unofficial", "-ignore_unknown", "-copy_unknown"]);
+                if (trackCounts["Video"] > 0)
+                    arguments.AddRange(["-disposition:v:0", "default"]);
+                // 字幕都不设置默认
+                if (trackCounts["Subtitle"] > 0)
+                    arguments.AddRange(["-disposition:s", "0"]);
+                // 音频除了第一个音轨 都不设置默认
+                for (var i = 0; i < trackCounts["Audio"]; i++)
+                    arguments.AddRange([$"-disposition:a:{i}", i == 0 ? "default" : "0"]);
+            }
+            if (dateinfo)
+                arguments.AddRange(["-metadata", "date=" + DateTime.Now.ToString("o")]);
+            if (title != null)
+                arguments.AddRange(["-metadata", "title=" + title]);
+            arguments.Add(Path.GetFullPath(output));
+        }
+        return (await RunMediaToolAsync(binary, arguments, token, downloadDefaults,
+            printOutput: useMkvmerge && !downloadDefaults).ConfigureAwait(false)).ExitCode;
+    }
 
-        var code = InvokeFFmpeg(binary, command.ToString(), Environment.CurrentDirectory);
-
-        return code == 0;
+    private static async Task<ProcessUtil.Result> RunMediaToolAsync(string binary, List<string> arguments,
+        CancellationToken token, bool log, bool loopbackInput = false, bool printOutput = false)
+    {
+        if (log)
+            Logger.Debug($"{binary}: {string.Join(" ", arguments.Select(argument => $"\"{argument}\""))}");
+        Action<string> write = line => Logger.WarnMarkUp($"[grey]{line.EscapeMarkup()}[/]");
+        return await ProcessUtil.RunAsync(binary, arguments, token, loopbackInput: loopbackInput,
+            errorLine: write, outputLine: printOutput ? line => Logger.InfoMarkUp($"[grey]{line.EscapeMarkup()}[/]") : null).ConfigureAwait(false);
     }
 }
