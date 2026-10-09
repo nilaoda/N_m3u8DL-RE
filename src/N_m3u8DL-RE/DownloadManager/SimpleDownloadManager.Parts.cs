@@ -97,7 +97,7 @@ internal partial class SimpleDownloadManager
         if (ext is ".m4s" or ".ts" && parts.Any(part => part.MediaInit != null))
             ext = stream.MediaType == MediaType.AUDIO ? ".m4a" : ".mp4";
         var outputPath = OtherUtil.HandleFileCollision(Path.Combine(
-            DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory, saveName + ext), stream);
+            DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory, saveName + ext), stream, reservedOutputPaths);
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         // 单段且没有裁剪/输出偏移时，子下载器的合并结果就是最终文件。

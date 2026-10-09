@@ -24,6 +24,9 @@ internal partial class SimpleDownloadManager
     StreamExtractor StreamExtractor;
     List<StreamSpec> SelectedSteams;
     List<OutputFile> OutputFiles = [];
+    // 预留路径贯穿合并和解密，不能以文件暂时不存在作为可复用的依据。
+    private readonly HashSet<string> reservedOutputPaths = new(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+        ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private VodInitCache? initCache;
     private ConcurrentDictionary<long, double>? hlsMediaOrigins;
     private Task<bool>? hlsMediaReady;
@@ -427,14 +430,6 @@ internal partial class SimpleDownloadManager
         }
         var output = Path.Combine(saveDir, saveName + outputExt);
 
-        // 检测目标文件是否存在，使用智能重命名
-        var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec);
-        if (finalOutput != output)
-        {
-            Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(finalOutput)}");
-            output = finalOutput;
-        }
-
         if (!string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, Keys.Length: > 0 } && mp4InitFile != "")
         {
             File.Delete(mp4InitFile);
@@ -717,6 +712,13 @@ internal partial class SimpleDownloadManager
             // 字幕也使用二进制合并
             if (DownloaderConfig.MyOptions.BinaryMerge || streamSpec.MediaType == MediaType.SUBTITLES)
             {
+                // 检测目标文件及已预留路径，使用智能重命名；只预留实际写入的文件。
+                var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec, reservedOutputPaths);
+                if (finalOutput != output)
+                {
+                    Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(finalOutput)}");
+                    output = finalOutput;
+                }
                 LogPartOnce("binary-merge", () => Logger.InfoMarkUp(ResString.binaryMerge));
                 var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
                 MergeUtil.CombineMultipleFilesIntoSingleFile(files, output);
@@ -729,8 +731,8 @@ internal partial class SimpleDownloadManager
                 LogPartOnce("ffmpeg-merge", () => Logger.InfoMarkUp(ResString.ffmpegMerge));
                 var ext = streamSpec.MediaType == MediaType.AUDIO ? "m4a" : "mp4";
                 var ffOut = Path.Combine(Path.GetDirectoryName(output)!, Path.GetFileNameWithoutExtension(output) + $".{ext}");
-                // 检测目标文件是否存在，使用智能重命名
-                var finalFfOut = OtherUtil.HandleFileCollision(ffOut, streamSpec);
+                // 检测目标文件及已预留路径，使用智能重命名；只预留转换扩展名后的文件。
+                var finalFfOut = OtherUtil.HandleFileCollision(ffOut, streamSpec, reservedOutputPaths);
                 if (finalFfOut != ffOut)
                 {
                     Logger.WarnMarkUp($"{Path.GetFileName(ffOut)} => {Path.GetFileName(finalFfOut)}");
@@ -786,17 +788,21 @@ internal partial class SimpleDownloadManager
         if (mergeSuccess && File.Exists(output) && !string.IsNullOrEmpty(currentKID) && DownloaderConfig.MyOptions is { MP4RealTimeDecryption: false, Keys.Length: > 0 })
         {
             var enc = output;
-            var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+            // 整轨解密使用独立临时文件，不能让固定的 _dec 名称覆盖另一条轨道的输出。
+            var dec = Path.Combine(tmpDir, $"{Guid.NewGuid():N}{Path.GetExtension(enc)}");
             mp4Info = MP4DecryptUtil.GetMP4Info(enc);
             Logger.InfoMarkUp($"[grey]Decrypting using {decryptEngine}...[/]");
-            var result = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, isMultiDRM: mp4Info.isMultiDRM, preserveTimestamp: isPart);
-            if (result)
+            try
             {
-                File.Delete(enc);
-                File.Move(dec, enc);
+                var result = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID, isMultiDRM: mp4Info.isMultiDRM, preserveTimestamp: isPart);
+                if (!result)
+                    return false;
+                File.Move(dec, enc, true);
             }
-            else
-                return false;
+            finally
+            {
+                File.Delete(dec);
+            }
         }
 
         // FFmpeg 的 stream copy 会丢掉 CENC 描述而保留密文，退出码 0 不代表已解密。

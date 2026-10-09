@@ -1,12 +1,85 @@
 using System.Text;
+using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
+using N_m3u8DL_RE.Config;
+using N_m3u8DL_RE.DownloadManager;
+using N_m3u8DL_RE.Parser;
+using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
 
 namespace N_m3u8DL_RE.Tests.Util;
 
 public class OutputFileNameTests
 {
+    [Fact]
+    public void PipeTracksReserveOnlyOneMuxOutput()
+    {
+        var root = Directory.CreateTempSubdirectory("pipe-output-").FullName;
+        try
+        {
+            var first = new StreamSpec { MediaType = MediaType.AUDIO, Language = "en-US" };
+            var second = new StreamSpec { MediaType = MediaType.AUDIO, Language = "en-US" };
+            using var extractor = new StreamExtractor(new ParserConfig());
+            var manager = new SimpleLiveRecordManager2(new DownloaderConfig
+                { DirPrefix = root, MyOptions = new MyOption { LivePipeMux = true } }, [first, second], extractor);
+            var path = Path.Combine(root, "result.en-US.ts");
+            Assert.Null(manager.RegisterPipeStream(1, "pipe-second", path, second));
+            var mux = manager.RegisterPipeStream(0, "pipe-first", path, first);
+            Assert.NotNull(mux);
+            Assert.Equal(path, mux.Value.Output);
+            Assert.Equal(["pipe-first", "pipe-second"], mux.Value.Names);
+            Assert.Null(manager.RegisterPipeStream(0, "pipe-first", path, first));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task ConcurrentTracksReserveDifferentPathsBeforeCreatingFiles()
+    {
+        var root = Directory.CreateTempSubdirectory("output-reservations-").FullName;
+        try
+        {
+            var path = Path.Combine(root, "result.en-US.m4a");
+            var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var stream = new StreamSpec { MediaType = MediaType.AUDIO, Language = "en-US" };
+            var outputs = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Task.Run(() =>
+                OtherUtil.HandleFileCollision(path, stream, reserved))));
+            Assert.Equal(4, outputs.Distinct().Count());
+            Assert.Contains(path, outputs);
+            Assert.All(outputs, output => Assert.False(File.Exists(output)));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void ReservedPathsRemainUnavailableDuringDecryptionRenames()
+    {
+        var root = Directory.CreateTempSubdirectory("output-reservations-").FullName;
+        try
+        {
+            var comparer = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            var reserved = new HashSet<string>(comparer);
+            var path = Path.Combine(root, "result.m4a");
+            var stream = new StreamSpec();
+            Assert.Equal(path, OtherUtil.HandleFileCollision(path, stream, reserved));
+            File.WriteAllText(path, "encrypted input");
+            var temporary = Path.Combine(root, "decrypting.m4a");
+            File.Move(path, temporary);
+            // 相对路径和大小写别名同样不能占用仍在解密的轨道路径。
+            var relative = Path.GetRelativePath(Environment.CurrentDirectory, path);
+            Assert.Equal(Path.Combine(root, "result.copy.m4a"), Path.GetFullPath(
+                OtherUtil.HandleFileCollision(relative, stream, reserved)));
+            var differentCase = Path.Combine(root, "RESULT.M4A");
+            var output = OtherUtil.HandleFileCollision(differentCase, stream, reserved);
+            Assert.Equal(comparer.Equals("a", "A") ? Path.Combine(root, "RESULT.copy.copy.M4A") : differentCase, output);
+            File.Move(temporary, path);
+            Assert.Equal("encrypted input", File.ReadAllText(path));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Theory]
     [InlineData("a", 300)]
     [InlineData("中", 150)]
