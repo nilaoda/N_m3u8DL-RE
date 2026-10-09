@@ -30,9 +30,9 @@ internal static class LiveRefreshInterval
                 return ClampAutomatic(period);
         }
 
-        // 启动录制时已经按 live-take-count 裁剪，沿用旧逻辑计算首个 MediaPart 的总时长。
+        // 启动录制时已经按 live-take-count 裁剪，刷新间隔使用保留窗口中所有 MediaPart 的总时长。
         var playlistDuration = streams
-            .Select(s => s.Playlist?.MediaParts.FirstOrDefault()?.MediaSegments.Sum(segment => segment.Duration))
+            .Select(s => s.Playlist is { MediaParts.Count: > 0 } playlist ? (double?)playlist.TotalDuration : null)
             .Where(duration => duration.HasValue && double.IsFinite(duration.Value))
             .Min();
 

@@ -8,17 +8,16 @@ internal sealed class LiveSegmentTracker
     private MediaSegment? lastSegment;
     private long nextRecordingIndex;
 
-    public List<MediaSegment> Filter(List<MediaSegment> segments, bool isHls, Func<MediaSegment, string> getSourceName)
+    public List<MediaSegment> Filter(List<MediaSegment> segments, bool isHls)
     {
         if (lastSegment == null || segments.Count == 0) return segments;
 
-        var lastIndex = FindMatchingIndex(segments, lastSegment, isHls, getSourceName);
+        var lastIndex = FindMatchingIndex(segments, lastSegment, isHls);
         return lastIndex < 0 ? segments : segments.Skip(lastIndex + 1).ToList();
     }
 
     // 录制去重和 404 等待共用窗口匹配规则，统一处理序号重置、URL 复用和查询签名变化。
-    public static int FindMatchingIndex(List<MediaSegment> segments, MediaSegment target, bool isHls,
-        Func<MediaSegment, string> getSourceName)
+    public static int FindMatchingIndex(List<MediaSegment> segments, MediaSegment target, bool isHls)
     {
         if (segments.Count == 0)
             return -1;
@@ -52,8 +51,13 @@ internal sealed class LiveSegmentTracker
         }
         else
         {
-            var lastName = getSourceName(target);
-            lastIndex = segments.FindLastIndex(s => getSourceName(s) == lastName);
+            // DASH 的 $Number$/$Time$ 可能在新 Period 重置，不能仅凭相同文件名跳过新分片。
+            lastIndex = segments.FindLastIndex(s => SameSource(s, target));
+            // 模板值也可能位于查询串中；签名变化时仍须同时约束路径、范围并排除重复候选。
+            if (lastIndex < 0 && !string.IsNullOrEmpty(target.NameFromVar))
+                lastIndex = FindUniqueIndex(segments, s => s.NameFromVar == target.NameFromVar && SamePathAndRange(s, target));
+            if (lastIndex < 0)
+                lastIndex = FindUniqueIndex(segments, s => SamePathAndRange(s, target));
         }
 
         return lastIndex;

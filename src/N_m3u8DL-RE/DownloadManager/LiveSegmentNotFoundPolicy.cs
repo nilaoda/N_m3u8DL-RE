@@ -2,7 +2,7 @@ using N_m3u8DL_RE.Common.Entity;
 
 namespace N_m3u8DL_RE.DownloadManager;
 
-internal sealed class LiveSegmentNotFoundPolicy(bool isHls, Func<MediaSegment, string> getSourceName)
+internal sealed class LiveSegmentNotFoundPolicy(bool isHls)
 {
     private sealed record Window(List<MediaSegment> Segments, double RefreshSeconds);
     private volatile Window? window;
@@ -25,7 +25,7 @@ internal sealed class LiveSegmentNotFoundPolicy(bool isHls, Func<MediaSegment, s
         var current = window;
         if (current == null)
             return TimeSpan.Zero;
-        var index = LiveSegmentTracker.FindMatchingIndex(current.Segments, segment, isHls, getSourceName);
+        var index = LiveSegmentTracker.FindMatchingIndex(current.Segments, segment, isHls);
         if (index < 0 || index < current.Segments.Count - 2)
             return TimeSpan.Zero;
         var duration = double.IsFinite(segment.Duration) && segment.Duration > 0 ? segment.Duration : 5;
@@ -42,6 +42,6 @@ internal sealed class LiveSegmentNotFoundPolicy(bool isHls, Func<MediaSegment, s
         // 清单已向前滑动且移除了目标，就停止额外等待。预算从首次 404 起算，不因刷新续期。
         var current = window;
         return elapsed < publicationWait && current != null &&
-            LiveSegmentTracker.FindMatchingIndex(current.Segments, segment, isHls, getSourceName) >= 0;
+            LiveSegmentTracker.FindMatchingIndex(current.Segments, segment, isHls) >= 0;
     }
 }

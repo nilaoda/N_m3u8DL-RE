@@ -25,6 +25,9 @@ namespace N_m3u8DL_RE.DownloadManager;
 
 internal class SimpleLiveRecordManager2
 {
+    // 分片与对应 init 一起入队，清单刷新后消费者仍使用该批次的初始化信息。
+    private sealed record LiveSegmentBatch(List<MediaSegment> Segments, MediaSegment? Init);
+
     // 网络失败后每秒重试，尽快恢复请求，减少分片滑出直播窗口。
     private const int NetworkRetryDelaySeconds = 1;
     IDownloader Downloader;
@@ -43,7 +46,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, TimeSpan> RecordedDurDic = new(); // 已录制时长
     ConcurrentDictionary<int, TimeSpan> RefreshedDurDic = new(); // 已刷新出的时长
     ConcurrentDictionary<int, long> RecordingSizeDic = new(); // 已写入文件的大小
-    ConcurrentDictionary<int, BufferBlock<List<MediaSegment>>> BlockDic = new(); // 各流的Block
+    ConcurrentDictionary<int, BufferBlock<LiveSegmentBatch>> BlockDic = new(); // 各流待录制的分片批次
     ConcurrentDictionary<int, bool> SamePathDic = new(); // 各流是否allSamePath
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
     ConcurrentDictionary<int, bool> LiveEndDic = new(); // 各流是否已结束直播(出现ENDLIST)
@@ -248,7 +251,11 @@ internal class SimpleLiveRecordManager2
         }
     }
 
-    private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, BufferBlock<List<MediaSegment>> source)
+    private static bool SameInit(MediaSegment? first, MediaSegment? second) =>
+        first?.Url == second?.Url && first?.StartRange == second?.StartRange &&
+        first?.ExpectLength == second?.ExpectLength && first?.EncryptInfo.KID == second?.EncryptInfo.KID;
+
+    private async Task<bool> RecordStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, BufferBlock<LiveSegmentBatch> source)
     {
         var baseTimestamp = PublishDateTime == null ? 0L : (long)(PublishDateTime.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, 0)).TotalMilliseconds;
         var decryptionBinaryPath = DownloaderConfig.MyOptions.DecryptionBinaryPath!;
@@ -257,7 +264,8 @@ internal class SimpleLiveRecordManager2
         var currentKID = "";
         var readInfo = false; // 是否读取过
         bool useAACFilter = false; // ffmpeg合并flag
-        bool initDownloaded = false; // 是否下载过init文件
+        bool initDownloaded = false; // 当前 init 是否已下载
+        var initIndex = 0; // init 切换时使用独立文件，保留已录制 Period 的初始化信息
         ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
         List<Mediainfo> mediaInfos = [];
         Stream? fileOutputStream = null;
@@ -316,20 +324,34 @@ internal class SimpleLiveRecordManager2
         {
             while (true && await source.OutputAvailableAsync())
             {
-                // 接收新片段 且总是拿全部未处理的片段
+                // 接收新片段，尽量合并使用相同 init 的待处理批次。
                 // 有时每次只有很少的片段，但是之前的片段下载慢，导致后面还没下载的片段都失效了
-                // TryReceiveAll可以稍微缓解一下
-                source.TryReceiveAll(out IList<List<MediaSegment>>? segmentsList);
-                var segments = segmentsList!.SelectMany(s => s);
-                if (segments == null || !segments.Any()) continue;
+                // 合并相同 init 的已入队批次，初始化边界必须保留，不能借用刷新后的清单状态。
+                var batch = await source.ReceiveAsync();
+                IEnumerable<MediaSegment> segments = batch.Segments;
+                while (source.TryReceive(next => SameInit(batch.Init, next.Init), out var next))
+                    segments = segments.Concat(next.Segments);
+                if (!segments.Any()) continue;
                 // 每片时长四舍五入为 ticks 再累计；直接 FromSeconds 可能因浮点误差少一个 tick，导致多录一片。
                 var segmentsDuration = TimeSpan.FromTicks(segments.Sum(s => (long)Math.Round(s.Duration * TimeSpan.TicksPerSecond)));
                 Logger.DebugMarkUp(string.Join(",", segments.Select(sss => GetSegmentName(sss, false, false))));
 
-                // 下载init
-                // 初始清单可能尚未发布 MAP，首片到来时重新取得 init；下载后保留原对象作字典键。
-                if (!initDownloaded)
-                    mediaInit = streamSpec.Playlist?.MediaParts.FirstOrDefault()?.MediaInit ?? mediaInit;
+                // 下载当前批次的 init；DASH 切换 init 时重新读取媒体信息和 KID。
+                // 初始清单可能尚未发布 MAP，首片到来时取得该批次的 init；下载后保留原对象作字典键。
+                if (StreamExtractor.ExtractorType == ExtractorType.MPEG_DASH && !SameInit(mediaInit, batch.Init))
+                {
+                    if (mediaInit != null)
+                        FileDic.TryRemove(mediaInit, out _);
+                    if (initDownloaded)
+                        initIndex++;
+                    mediaInit = batch.Init;
+                    initDownloaded = false;
+                    mp4InitFile = "";
+                    currentKID = "";
+                    readInfo = false;
+                }
+                else if (!initDownloaded)
+                    mediaInit = batch.Init ?? mediaInit;
                 if (!initDownloaded && mediaInit != null)
                 {
                     task.MaxValue += 1;
@@ -340,7 +362,7 @@ internal class SimpleLiveRecordManager2
                         Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge}[/]");
                     }
 
-                    var path = Path.Combine(tmpDir, "_init.mp4.tmp");
+                    var path = Path.Combine(tmpDir, initIndex == 0 ? "_init.mp4.tmp" : $"_init_{initIndex}.mp4.tmp");
                     var result = await DownloadLiveSegmentAsync(mediaInit, path, speedContainer, headers, RequestTimeouts[task.Id].Read, task.Id, isInit: true);
                     FileDic[mediaInit] = result;
                     if (result is not { Success: true })
@@ -355,7 +377,7 @@ internal class SimpleLiveRecordManager2
                     {
                         currentKID = MP4DecryptUtil.GetMP4Info(result.ActualFilePath).KID;
                         // MPD的cenc:default_KID优先
-                        if (mediaInit?.EncryptInfo.KID != null)
+                        if (mediaInit.EncryptInfo.KID != null)
                         {
                             currentKID = mediaInit.EncryptInfo.KID;
                             Logger.WarnMarkUp($"[grey]KID (from MPD): {currentKID}[/]");
@@ -914,25 +936,24 @@ internal class SimpleLiveRecordManager2
                     return;
                 }
 
-                var allHasDatetime = streamSpec.Playlist!.MediaParts[0].MediaSegments.All(s => s.DateTime != null);
+                var parts = streamSpec.Playlist.MediaParts;
+                var segments = parts.SelectMany(part => part.MediaSegments).ToList();
                 // 空清单或去重后的空窗口沿用最近的超时，不能丢失已知的正常分片时长。
                 if (streamSpec.Playlist.MediaParts.Any(part => part.MediaSegments.Any(segment => double.IsFinite(segment.Duration) && segment.Duration > 0)))
                     RequestTimeouts[task.Id] = LiveRequestTimeoutPolicy.GetTimeouts(streamSpec, DownloaderConfig.MyOptions);
                 if (!SamePathDic.ContainsKey(task.Id))
                 {
-                    var allName = streamSpec.Playlist!.MediaParts[0].MediaSegments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
+                    var allName = segments.Select(s => OtherUtil.GetFileNameFromInput(s.Url, false));
                     var allSamePath = allName.Count() > 1 && allName.Distinct().Count() == 1;
                     SamePathDic[task.Id] = allSamePath;
                 }
-                NotFoundPolicies[task.Id].Update(streamSpec.Playlist.MediaParts[0].MediaSegments, refreshDelaySeconds);
-                // 过滤不需要下载的片段
-                FilterMediaSegments(streamSpec, task, allHasDatetime, SamePathDic[task.Id]);
-                var newList = streamSpec.Playlist!.MediaParts[0].MediaSegments;
+                NotFoundPolicies[task.Id].Update(segments, refreshDelaySeconds);
+                // 过滤不需要下载的片段：在完整窗口中定位上一片，只保留尚未入队的分片。
+                var newList = FilterMediaSegments(segments, task);
                 // 过滤广告分片（在更新去重边界/时长记录之前剔除，避免污染统计）
                 if (AdKeywordRegexList.Count > 0)
                 {
                     newList = FilterUtil.CleanAdSegments(newList, AdKeywordRegexList);
-                    streamSpec.Playlist!.MediaParts[0].MediaSegments = newList;
                 }
                 if (newList.Count > 0)
                 {
@@ -940,8 +961,14 @@ internal class SimpleLiveRecordManager2
                     task.MaxValue += newList.Count;
                     // 保留源序号，单独分配录制顺序用于文件名和合并排序。
                     SegmentTrackers[task.Id].Record(newList);
-                    // 推送给消费者
-                    await BlockDic[task.Id].SendAsync(newList);
+                    // 按 MediaPart 分批入队，保留每段对应的 init，消费者再合并可共用 init 的批次。
+                    var newSegments = new HashSet<MediaSegment>(newList, ReferenceEqualityComparer.Instance);
+                    foreach (var part in parts)
+                    {
+                        var pending = part.MediaSegments.Where(newSegments.Contains).ToList();
+                        if (pending.Count > 0)
+                            await BlockDic[task.Id].SendAsync(new LiveSegmentBatch(pending, part.MediaInit));
+                    }
                     // 累加已获取到的时长
                     RefreshedDurDic[task.Id] += TimeSpan.FromTicks(newList.Sum(s => (long)Math.Round(s.Duration * TimeSpan.TicksPerSecond)));
                 }
@@ -1006,13 +1033,10 @@ internal class SimpleLiveRecordManager2
         }
     }
 
-    private void FilterMediaSegments(StreamSpec streamSpec, ProgressTask task, bool allHasDatetime, bool allSamePath)
+    private List<MediaSegment> FilterMediaSegments(List<MediaSegment> segments, ProgressTask task)
     {
-        var segments = streamSpec.Playlist!.MediaParts[0].MediaSegments;
-        streamSpec.Playlist.MediaParts[0].MediaSegments = SegmentTrackers[task.Id].Filter(
-            segments,
-            StreamExtractor.ExtractorType == ExtractorType.HLS,
-            segment => GetSegmentName(segment, allHasDatetime, allSamePath));
+        // 只返回待下载的分片，不修改完整清单；后续按原 MediaPart 查找各分片的 init。
+        return SegmentTrackers[task.Id].Filter(segments, StreamExtractor.ExtractorType == ExtractorType.HLS);
     }
 
     public async Task<bool> StartRecordAsync(CancellationToken cancellationToken = default)
@@ -1118,10 +1142,9 @@ internal class SimpleLiveRecordManager2
                 RefreshedDurDic[task.Id] = TimeSpan.Zero;
                 RecordingSizeDic[task.Id] = 0;
                 SegmentTrackers[task.Id] = new LiveSegmentTracker();
-                NotFoundPolicies[task.Id] = new LiveSegmentNotFoundPolicy(StreamExtractor.ExtractorType == ExtractorType.HLS,
-                    segment => GetSegmentName(segment, false, SamePathDic[task.Id]));
+                NotFoundPolicies[task.Id] = new LiveSegmentNotFoundPolicy(StreamExtractor.ExtractorType == ExtractorType.HLS);
                 RequestTimeouts[task.Id] = LiveRequestTimeoutPolicy.GetTimeouts(item, DownloaderConfig.MyOptions);
-                BlockDic[task.Id] = new BufferBlock<List<MediaSegment>>();
+                BlockDic[task.Id] = new BufferBlock<LiveSegmentBatch>();
                 return (item, task);
             }).ToDictionary(item => item.item, item => item.task);
 

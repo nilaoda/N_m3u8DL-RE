@@ -178,7 +178,9 @@ internal class SimpleDownloader : IDownloader
             Logger.Debug(url + " " + ex);
             Logger.Extra($"Ah oh!{Environment.NewLine}RetryCount => {retryCount}{Environment.NewLine}Exception  => {ex.Message}{Environment.NewLine}Url        => {url}");
             // 整文件的正文重试由 BinaryDownloadManager 负责，不能在外层再次重下。
-            if (!binaryStarted && retryCount-- > 0 && (!throwOnFailure || RetryUtil.IsTransientNetworkError(ex)))
+            // 直播分片也可能被服务端临时拒绝；403 只按配置次数重试，耗尽后仍抛出，不能无限等待。
+            if (!binaryStarted && retryCount-- > 0 && (!throwOnFailure || RetryUtil.IsTransientNetworkError(ex) ||
+                ex is HttpRequestException { StatusCode: HttpStatusCode.Forbidden }))
             {
                 await Task.Delay(1000, cancellationToken);
                 goto retry;

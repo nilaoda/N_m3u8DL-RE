@@ -19,6 +19,41 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 public class LiveNetworkRecoveryTests
 {
     [Theory]
+    [InlineData(HttpStatusCode.Forbidden, 1, 2, true)]
+    [InlineData(HttpStatusCode.Forbidden, 3, 2, false)]
+    [InlineData(HttpStatusCode.Forbidden, 1, 0, false)]
+    [InlineData(HttpStatusCode.Unauthorized, 1, 2, false)]
+    public async Task LiveDownloadRetriesForbiddenWithinConfiguredLimit(HttpStatusCode status, int failures, int retries, bool succeeds)
+    {
+        var root = Directory.CreateTempSubdirectory("live-forbidden-retry-").FullName;
+        try
+        {
+            await using var server = new MediaFixtureServer(root, (_, _) => "media",
+                responseStatus: (_, count) => count <= failures ? status : null);
+            var options = CreateOptions(root);
+            options.DownloadRetryCount = retries;
+            var downloader = new SimpleDownloader(new DownloaderConfig { DirPrefix = root, MyOptions = options });
+            var segment = new MediaSegment { Url = server.Url + "media.ts" };
+            var download = downloader.DownloadSegmentAsync(segment, Path.Combine(root, "media.ts.tmp"), new SpeedContainer(),
+                throwOnFailure: true, networkTimeout: TimeSpan.FromSeconds(2));
+            if (succeeds)
+            {
+                var result = await download.WaitAsync(TimeSpan.FromSeconds(5));
+                Assert.True(result?.Success);
+                Assert.Equal("media", await File.ReadAllTextAsync(result!.ActualFilePath));
+            }
+            else
+            {
+                var error = await Assert.ThrowsAsync<HttpRequestException>(() => download.WaitAsync(TimeSpan.FromSeconds(5)));
+                Assert.Equal(status, error.StatusCode);
+            }
+            Assert.Equal(status == HttpStatusCode.Unauthorized ? 1 : Math.Min(failures, retries) + 1,
+                server.RequestCount("media.ts"));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Theory]
     [InlineData("manifest", 5, false)]
     [InlineData("init", 5, false)]
     [InlineData("media", 5, false)]

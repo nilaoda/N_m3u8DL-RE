@@ -95,7 +95,7 @@ internal partial class DASHExtractor2 : IExtractor
         var maxSegmentDuration = mpdElement.Attribute("maxSegmentDuration")?.Value;
         // 分片从该时间起可用
         var availabilityStartTime = mpdElement.Attribute("availabilityStartTime")?.Value;
-        // 在availabilityStartTime的前XX段时间，分片有效
+        // 直播允许回看的时间窗口长度
         var timeShiftBufferDepth = mpdElement.Attribute("timeShiftBufferDepth")?.Value;
         if (string.IsNullOrEmpty(timeShiftBufferDepth))
         {
@@ -119,11 +119,16 @@ internal partial class DASHExtractor2 : IExtractor
         // 全部Period
         var periods = mpdElement.Elements().Where(e => e.Name.LocalName == "Period").ToList();
         var periodTimings = ResolvePeriodTimings(periods, mediaPresentationDuration);
+        var livePosition = isLive && DateTimeOffset.TryParse(availabilityStartTime, CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var availableStart) ? (double?)(timeProvider.GetUtcNow() - availableStart).TotalSeconds : null;
         for (var periodIndex = 0; periodIndex < periods.Count; periodIndex++)
         {
             var period = periods[periodIndex];
             // 本Period时长
             var (periodStartSeconds, periodDurationSeconds) = periodTimings[periodIndex];
+            // 直播清单可能提前公布下一个 Period，尚未开始时继续使用当前可用内容。
+            if (livePosition is { } position && periodStartSeconds > position)
+                continue;
             var periodDuration = periodDurationSeconds is { } seconds
                 ? XmlConvert.ToString(TimeSpan.FromSeconds(seconds)) : period.Attribute("duration")?.Value;
 
@@ -374,6 +379,33 @@ internal partial class DASHExtractor2 : IExtractor
                                 var _duration = Convert.ToInt64(_durationStr);
                                 var timescale = Convert.ToInt32(timescaleStr);
                                 var _repeatCount = Convert.ToInt64(_repeatCountStr);
+                                if (_repeatCount < 0)
+                                {
+                                    // r=-1 重复到下一个显式 t 或本 Period 结束；结束时间在源时间轴上，
+                                    // 需要加 PTO 并扣掉当前 t，不能重复整个 Period 的时长。
+                                    var nextTime = S.ElementsAfterSelf().FirstOrDefault(e => e.Name.LocalName == "S")?.Attribute("t")?.Value;
+                                    if (nextTime == null && periodDuration == null && mediaPresentationDuration == null && livePosition is { } liveTime)
+                                    {
+                                        // 未结束的直播 Period 按当前时间展开，只请求已经完整发布的分片，并限制在回看窗口内。
+                                        var endTime = (liveTime - (periodStartSeconds ?? 0)) * timescale +
+                                            Convert.ToDouble(presentationTimeOffsetStr, CultureInfo.InvariantCulture);
+                                        var earliestTime = endTime - XmlConvert.ToTimeSpan(timeShiftBufferDepth!).TotalSeconds * timescale;
+                                        var skipped = Math.Max(0, (long)Math.Floor((earliestTime - currentTime) / _duration));
+                                        currentTime += skipped * _duration;
+                                        segNumber += skipped;
+                                        var count = (long)Math.Floor((endTime - currentTime) / _duration);
+                                        if (count <= 0)
+                                            continue;
+                                        _repeatCount = count - 1;
+                                    }
+                                    else
+                                    {
+                                        var endTime = nextTime != null ? Convert.ToDouble(nextTime, CultureInfo.InvariantCulture)
+                                            : XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale
+                                                + Convert.ToDouble(presentationTimeOffsetStr, CultureInfo.InvariantCulture);
+                                        _repeatCount = Math.Max(0, (long)Math.Ceiling((endTime - currentTime) / _duration) - 1);
+                                    }
+                                }
                                 varDic[DASHTags.TemplateTime] = currentTime;
                                 varDic[DASHTags.TemplateNumber] = segNumber++;
                                 var hasTime = mediaTemplate!.Contains(DASHTags.TemplateTime);
@@ -387,16 +419,6 @@ internal partial class DASHExtractor2 : IExtractor
                                 mediaSegment.PresentationTime = currentTime / (double)timescale;
                                 mediaSegment.Index = segIndex++;
                                 mediaPart.MediaSegments.Add(mediaSegment);
-                                if (_repeatCount < 0)
-                                {
-                                    // r=-1 重复到下一个显式 t 或本 Period 结束；结束时间在源时间轴上，
-                                    // 需要加 PTO 并扣掉当前 t，不能重复整个 Period 的时长。
-                                    var nextTime = S.ElementsAfterSelf().FirstOrDefault(e => e.Name.LocalName == "S")?.Attribute("t")?.Value;
-                                    var endTime = nextTime != null ? Convert.ToDouble(nextTime, CultureInfo.InvariantCulture)
-                                        : XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale
-                                            + Convert.ToDouble(presentationTimeOffsetStr, CultureInfo.InvariantCulture);
-                                    _repeatCount = Math.Max(0, (long)Math.Ceiling((endTime - currentTime) / _duration) - 1);
-                                }
                                 for (long i = 0; i < _repeatCount; i++)
                                 {
                                     currentTime += _duration;
@@ -471,8 +493,9 @@ internal partial class DASHExtractor2 : IExtractor
                         }
                     }
 
-                    // 如果依旧没被添加分片，直接把BaseUrl塞进去就好
-                    if (mediaPart.MediaSegments.Count == 0)
+                    // 没有分片描述时可直接使用 BaseURL；直播的空 SegmentList/Timeline 应等待媒体发布。
+                    if (mediaPart.MediaSegments.Count == 0 && !(isLive &&
+                        (segmentList != null || segmentTemplateElements.Any() || segmentTemplateElementsOuter.Any())))
                     {
                         mediaPart.MediaSegments.Add
                         (
@@ -510,24 +533,51 @@ internal partial class DASHExtractor2 : IExtractor
                     }
 
                     mediaPart.Codecs = streamSpec.Codecs;
-                    // 处理同一ID分散在不同Period的情况；点播先保留 Period，选流后再编排。
-                    var _index = isLive ? streamList.FindIndex(_f => _f.PeriodId != streamSpec.PeriodId && _f.GroupId == streamSpec.GroupId && _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType) : -1;
-                    if (_index > -1)
+                    // 处理同一轨道分散在不同 Period 的情况；点播先保留 Period，选流后再编排。
+                    // 直播以最新可用 Period 的信息展示轨道，并保留录制窗口；匹配使用清单顺序而非 Period ID。
+                    var _index = isLive ? streamList.FindIndex(_f =>
+                        _f.Playlist!.MediaParts[^1].PeriodIndex != periodIndex && _f.GroupId == streamSpec.GroupId &&
+                        _f.Resolution == streamSpec.Resolution && _f.MediaType == streamSpec.MediaType &&
+                        _f.Language == streamSpec.Language && _f.VolumeAdjust == streamSpec.VolumeAdjust &&
+                        _f.GetRoleKey() == streamSpec.GetRoleKey() &&
+                        (_f.Name == streamSpec.Name || string.IsNullOrEmpty(_f.Name) || string.IsNullOrEmpty(streamSpec.Name))) : -1;
+                    if (isLive && _index < 0)
                     {
-                        // 直播，这种情况直接略过新的；直播多 Period 单独改造。
+                        // Representation ID 可以随 Period 改变；只有唯一的同配置、同用途轨道才允许接续。
+                        var compatible = streamList.Where(s => s.Playlist!.MediaParts[^1].PeriodIndex != periodIndex &&
+                            SameLiveTrack(s, streamSpec) && s.Bandwidth == streamSpec.Bandwidth).ToList();
+                        if (compatible.Count == 1)
+                            _index = streamList.IndexOf(compatible[0]);
                     }
-                    else
+                    // 修复mp4类型字幕；只有 init 的直播轨道也需规范化，后续刷新才能正确处理字幕。
+                    if (streamSpec is { MediaType: MediaType.SUBTITLES, Extension: "mp4" })
                     {
-                        // 修复mp4类型字幕
-                        if (streamSpec is { MediaType: MediaType.SUBTITLES, Extension: "mp4" })
-                        {
-                            streamSpec.Extension = "m4s";
-                        }
+                        streamSpec.Extension = "m4s";
+                    }
+                    if (_index < 0 || mediaPart.MediaSegments.Count > 0)
+                    {
                         // 分片默认后缀m4s
                         if (streamSpec.MediaType != MediaType.SUBTITLES && (streamSpec.Extension == null || streamSpec.Playlist.MediaParts.Sum(x => x.MediaSegments.Count) > 1))
                         {
                             streamSpec.Extension = "m4s";
                         }
+                        if (_index < 0)
+                            streamList.Add(streamSpec);
+                        else
+                        {
+                            var previous = streamList[_index];
+                            // 兼容轨道保留窗口中的 Period 及各自的 init，跨边界刷新时不会丢失上一段的尾片。
+                            if (previous.Codecs == streamSpec.Codecs && previous.Channels == streamSpec.Channels)
+                                streamSpec.Playlist.MediaParts.InsertRange(0, previous.Playlist!.MediaParts);
+                            streamList[_index] = streamSpec;
+                        }
+                    }
+                    else
+                    {
+                        // 新 Period 的部分轨道可能只有 init；保留其初始化信息和兼容轨道的尾片等待刷新。
+                        var previous = streamList[_index];
+                        if (previous.Codecs == streamSpec.Codecs && previous.Channels == streamSpec.Channels)
+                            streamSpec.Playlist.MediaParts.InsertRange(0, previous.Playlist!.MediaParts);
                         streamList.Add(streamSpec);
                     }
                     // 恢复BaseURL相对位置
@@ -535,6 +585,24 @@ internal partial class DASHExtractor2 : IExtractor
                 }
                 // 恢复BaseURL相对位置
                 segBaseUrl = adaptationSetsBaseUrl;
+            }
+        }
+
+        if (isLive && streamList.Count > 0)
+        {
+            // 过往 Period 独有的清晰度/音轨已不属于当前直播，不能因码率更高而选中旧内容。
+            var availableParts = streamList.SelectMany(s => s.Playlist!.MediaParts)
+                .Where(part => part.MediaSegments.Count > 0).ToList();
+            var latestPeriod = availableParts.Count > 0 ? availableParts.Max(part => part.PeriodIndex)
+                : streamList.Max(s => s.Playlist!.MediaParts[^1].PeriodIndex);
+            streamList.RemoveAll(s => s.Playlist!.MediaParts[^1].PeriodIndex != latestPeriod);
+            foreach (var stream in streamList)
+            {
+                // 相邻 Period 也可能引用同一分片；仅在初始化信息相同时去重，保留各段的解码边界。
+                var seen = new HashSet<string>();
+                foreach (var part in stream.Playlist!.MediaParts)
+                    part.MediaSegments = part.MediaSegments.Where(s => seen.Add(
+                        $"{part.MediaInit?.Url}|{part.MediaInit?.StartRange}|{part.MediaInit?.ExpectLength}|{part.MediaInit?.EncryptInfo.KID}|{s.Url}|{s.StartRange}|{s.ExpectLength}")).ToList();
             }
         }
 
@@ -597,6 +665,14 @@ internal partial class DASHExtractor2 : IExtractor
         else if (stream.Roles.Count > 0)
             stream.Role = stream.Roles.Order().FirstOrDefault(role => role != RoleType.Main, stream.Roles[0]);
     }
+
+    private static bool SameLiveTrack(StreamSpec first, StreamSpec second) =>
+        first.MediaType == second.MediaType && first.Codecs == second.Codecs &&
+        first.Resolution == second.Resolution && first.Channels == second.Channels &&
+        string.Equals(first.Language, second.Language, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(first.Name, second.Name, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(first.VolumeAdjust, second.VolumeAdjust, StringComparison.OrdinalIgnoreCase) &&
+        first.GetRoleKey() == second.GetRoleKey();
 
     /// <summary>
     /// 如果有非法字符 返回und
@@ -668,6 +744,19 @@ internal partial class DASHExtractor2 : IExtractor
                 n.Codecs == streamSpec.Codecs && n.Resolution == streamSpec.Resolution && n.Channels == streamSpec.Channels);
             if (!match.Any())
                 match = candidates.Where(n => n.ToShortString() == streamSpec.ToShortString());
+            if (!match.Any())
+            {
+                var previousPart = streamSpec.Playlist?.MediaParts.LastOrDefault();
+                var compatible = candidates.Where(n => SameLiveTrack(n, streamSpec)).ToList();
+                var sameBandwidth = compatible.Where(n => n.Bandwidth == streamSpec.Bandwidth).ToList();
+                if (sameBandwidth.Count == 1)
+                    compatible = sameBandwidth;
+                // 只在 Period 确实切换且配置唯一时回退，不能把同一 Period 中身份不明的音轨猜成另一条。
+                if (compatible.Count == 1 && previousPart != null &&
+                    (compatible[0].PeriodId != previousPart.PeriodId ||
+                     compatible[0].Playlist!.MediaParts[^1].PeriodStart != previousPart.PeriodStart))
+                    match = compatible;
+            }
             // ID/码率变化时可按 init 回退，但不能把两个缺少 init 的流当成相同流。
             if (!match.Any())
             {
@@ -689,6 +778,11 @@ internal partial class DASHExtractor2 : IExtractor
             if (matched != null)
             {
                 streamSpec.Playlist!.MediaParts = matched.Playlist!.MediaParts;
+                streamSpec.Playlist.IsLive = matched.Playlist.IsLive;
+                streamSpec.Playlist.MinimumUpdatePeriod = matched.Playlist.MinimumUpdatePeriod;
+                streamSpec.GroupId = matched.GroupId;
+                streamSpec.PeriodId = matched.PeriodId;
+                streamSpec.PublishTime = matched.PublishTime;
                 // 首次补齐的 Label 也要保留为身份依据，后续不能再把不同名称都当成缺失。
                 streamSpec.Name ??= matched.Name;
             }
