@@ -265,15 +265,32 @@ internal static partial class OtherUtil
     /// </summary>
     /// <param name="originalPath">原始文件路径</param>
     /// <param name="streamSpec">流规格（用于获取元数据）</param>
+    /// <param name="reservedPaths">当前下载已预留的完整路径，文件被解密器临时改名时仍保留</param>
     /// <returns>不冲突的文件路径</returns>
-    public static string HandleFileCollision(string originalPath, Common.Entity.StreamSpec streamSpec)
+    public static string HandleFileCollision(string originalPath, Common.Entity.StreamSpec streamSpec,
+        HashSet<string>? reservedPaths = null)
     {
+        if (reservedPaths == null)
+            return FindAvailableOutputPath(originalPath, streamSpec, null);
+        // 检查与预留必须一起完成，避免并发轨道在创建文件前取得同一路径。
+        lock (reservedPaths)
+        {
+            var output = FindAvailableOutputPath(originalPath, streamSpec, reservedPaths);
+            reservedPaths.Add(Path.GetFullPath(output));
+            return output;
+        }
+    }
+
+    private static string FindAvailableOutputPath(string originalPath, Common.Entity.StreamSpec streamSpec,
+        HashSet<string>? reservedPaths)
+    {
+        bool Exists(string path) => File.Exists(path) || reservedPaths?.Contains(Path.GetFullPath(path)) == true;
         var dir = Path.GetDirectoryName(originalPath) ?? "";
         var nameWithoutExt = Path.GetFileNameWithoutExtension(originalPath);
         var ext = Path.GetExtension(originalPath);
         // 先限制最终输出名；模板、语言及重名后缀拼接完成后都必须重新检查长度。
         originalPath = Path.Combine(dir, GetSafeFileName(nameWithoutExt, ext));
-        if (!File.Exists(originalPath))
+        if (!Exists(originalPath))
             return originalPath;
 
         // 尝试使用元数据生成唯一文件名
@@ -331,14 +348,14 @@ internal static partial class OtherUtil
         foreach (var attempt in attempts)
         {
             var attemptPath = Path.Combine(dir, GetSafeFileName(attempt, ext));
-            if (!File.Exists(attemptPath))
+            if (!Exists(attemptPath))
                 return attemptPath;
         }
 
         // 所有元数据方案都失败，回退到 "copy" 方案
         var output = originalPath;
         var copySuffix = "";
-        while (File.Exists(output))
+        while (Exists(output))
         {
             // 从完整原名生成候选，避免重复截断的哈希使不同候选难以追踪。
             copySuffix += ".copy";

@@ -33,6 +33,8 @@ internal class SimpleLiveRecordManager2
     List<StreamSpec> SelectedSteams;
     ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
     List<OutputFile> OutputFiles = [];
+    private readonly HashSet<string> reservedOutputPaths = new(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+        ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     DateTime? PublishDateTime;
     volatile bool STOP_FLAG = false;
     bool fatalError;
@@ -64,6 +66,20 @@ internal class SimpleLiveRecordManager2
         PublishDateTime = selectedSteams.FirstOrDefault()?.PublishTime;
         StreamExtractor = streamExtractor;
         SelectedSteams = selectedSteams;
+    }
+
+    internal (string[] Names, string Output)? RegisterPipeStream(int taskId, string pipeName, string output, StreamSpec streamSpec)
+    {
+        // 管道轨道不落盘；全部就绪后只预留一次最终混流文件。
+        lock (PipeSteamNamesDic)
+        {
+            if (!PipeSteamNamesDic.TryAdd(taskId, pipeName) ||
+                PipeSteamNamesDic.Count != SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES))
+                return null;
+            var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec, reservedOutputPaths);
+            var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
+            return (names, finalOutput);
+        }
     }
 
     private void ReportAudioClock(StreamSpec stream, TimeSpan? start)
@@ -702,16 +718,15 @@ internal class SimpleLiveRecordManager2
                     // 设置输出流
                     if (fileOutputStream == null)
                     {
-                        // 检测目标文件是否存在，使用智能重命名
-                        var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec);
-                        if (finalOutput != output)
-                        {
-                            Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(finalOutput)}");
-                            output = finalOutput;
-                        }
-
                         if (!DownloaderConfig.MyOptions.LivePipeMux || streamSpec.MediaType == MediaType.SUBTITLES)
                         {
+                            // 检测目标文件及已预留路径，使用智能重命名
+                            var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec, reservedOutputPaths);
+                            if (finalOutput != output)
+                            {
+                                Logger.WarnMarkUp($"{Path.GetFileName(output)} => {Path.GetFileName(finalOutput)}");
+                                output = finalOutput;
+                            }
                             fileOutputStream = new FileStream(output, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
                         }
                         else
@@ -721,12 +736,11 @@ internal class SimpleLiveRecordManager2
                             var pipeName = $"RE_pipe_{Guid.NewGuid()}";
                             fileOutputStream = PipeUtil.CreatePipe(pipeName);
                             Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
-                            PipeSteamNamesDic[task.Id] = pipeName;
-                            if (PipeSteamNamesDic.Count == SelectedSteams.Count(x => x.MediaType != MediaType.SUBTITLES))
+                            var mux = RegisterPipeStream(task.Id, pipeName, output, streamSpec);
+                            if (mux is { } ready)
                             {
-                                var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
-                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(output).EscapeMarkup()}[/]");
-                                var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, names, output);
+                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(ready.Output).EscapeMarkup()}[/]");
+                                var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, ready.Names, ready.Output);
                             }
 
                             // Windows only
