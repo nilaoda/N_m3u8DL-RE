@@ -1200,6 +1200,66 @@ internal static class StaticText
             zhTW: "按 --vod-list-parts 的編號刪除整個點播段及對應音訊/字幕，例如 0,2-4",
             enUS: "Drop VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4"
         ),
+        ["cmd_liveCatchup"] = new TextContainer
+        (
+            zhCN: "回看指定时长之前或指定日期时间开始的直播内容；覆盖 --live-take-count，例如 01:00:00 或 2026-10-10T21:00:00+08:00",
+            zhTW: "回看指定時長之前或指定日期時間開始的直播內容；覆蓋 --live-take-count，例如 01:00:00 或 2026-10-10T21:00:00+08:00",
+            enUS: "Download live catch-up from a lookback duration or date/time; overrides --live-take-count, e.g. 01:00:00 or 2026-10-10T21:00:00+08:00"
+        ),
+        ["liveCatchupInvalid"] = new TextContainer
+        (
+            zhCN: "--live-catchup 需要正数 HH:mm:ss 或日期时间；录制时长也必须为正数",
+            zhTW: "--live-catchup 需要正數 HH:mm:ss 或日期時間；錄製時長也必須為正數",
+            enUS: "--live-catchup requires a positive HH:mm:ss duration or a date/time; recording duration must also be positive"
+        ),
+        ["liveCatchupConflict"] = new TextContainer
+        (
+            zhCN: "--live-catchup 不能与 --live-perform-as-vod 或 --custom-range 同时使用",
+            zhTW: "--live-catchup 不能與 --live-perform-as-vod 或 --custom-range 同時使用",
+            enUS: "--live-catchup cannot be combined with --live-perform-as-vod or --custom-range"
+        ),
+        ["liveCatchupRequireLive"] = new TextContainer
+        (
+            zhCN: "--live-catchup 仅支持具有时间信息的 DASH/HLS 直播",
+            zhTW: "--live-catchup 僅支援具有時間資訊的 DASH/HLS 直播",
+            enUS: "--live-catchup requires a DASH/HLS live stream with timing information"
+        ),
+        ["liveCatchupMissingTime"] = new TextContainer
+        (
+            zhCN: "无法可靠确定直播回看时间，清单缺少时间信息或可用分片",
+            zhTW: "無法可靠確定直播回看時間，清單缺少時間資訊或可用分片",
+            enUS: "Cannot reliably determine catch-up time: the manifest lacks timing information or available segments"
+        ),
+        ["liveCatchupOutsideWindow"] = new TextContainer
+        (
+            zhCN: "回看起点 {0} 超出可用时间范围：{1} 至 {2}",
+            zhTW: "回看起點 {0} 超出可用時間範圍：{1} 至 {2}",
+            enUS: "Catch-up start {0} is outside the available time range: {1} to {2}"
+        ),
+        ["liveCatchupRange"] = new TextContainer
+        (
+            zhCN: "直播回看：{} 至 {}",
+            zhTW: "直播回看：{} 至 {}",
+            enUS: "Live catch-up: {} to {}"
+        ),
+        ["liveCatchupActualRange"] = new TextContainer
+        (
+            zhCN: "已下载回看分片时间范围：{} 至 {}",
+            zhTW: "已下載回看分片時間範圍：{} 至 {}",
+            enUS: "Downloaded catch-up segment time range: {} to {}"
+        ),
+        ["liveCatchupRangeReached"] = new TextContainer
+        (
+            zhCN: "已获取指定回看范围的分片列表，等待下载完成",
+            zhTW: "已取得指定回看範圍的分片列表，等待下載完成",
+            enUS: "Catch-up segment list is complete; waiting for downloads to finish"
+        ),
+        ["liveCatchupUntilStopped"] = new TextContainer
+        (
+            zhCN: "停止录制为止",
+            zhTW: "停止錄製為止",
+            enUS: "recording is stopped"
+        ),
         ["cmd_liveTakeCount"] = new TextContainer
         (
             zhCN: "手动设置录制直播时首次获取分片的数量",

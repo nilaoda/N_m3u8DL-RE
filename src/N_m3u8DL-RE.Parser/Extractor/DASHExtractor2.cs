@@ -102,6 +102,17 @@ internal partial class DASHExtractor2 : IExtractor
             // 如果没有 默认一分钟有效
             timeShiftBufferDepth = "PT1M";
         }
+        // 回看边界只使用服务端明确声明的窗口；展开分片用的默认一分钟不能限制显式历史时间线。
+        TimeSpan? declaredBufferDepth = null;
+        if (isLive && mpdElement.Attribute("timeShiftBufferDepth") is { } bufferAttribute)
+        {
+            try
+            {
+                var depth = XmlConvert.ToTimeSpan(bufferAttribute.Value);
+                if (depth > TimeSpan.Zero) declaredBufferDepth = depth;
+            }
+            catch (Exception ex) when (ex is FormatException or OverflowException) { }
+        }
         // MPD发布时间
         var publishTime = mpdElement.Attribute("publishTime")?.Value;
         // MPD总时长
@@ -119,8 +130,10 @@ internal partial class DASHExtractor2 : IExtractor
         // 全部Period
         var periods = mpdElement.Elements().Where(e => e.Name.LocalName == "Period").ToList();
         var periodTimings = ResolvePeriodTimings(periods, mediaPresentationDuration);
-        var livePosition = isLive && DateTimeOffset.TryParse(availabilityStartTime, CultureInfo.InvariantCulture,
-            DateTimeStyles.None, out var availableStart) ? (double?)(timeProvider.GetUtcNow() - availableStart).TotalSeconds : null;
+        var availableStart = DateTimeOffset.TryParse(availabilityStartTime, CultureInfo.InvariantCulture,
+            DateTimeStyles.None, out var parsedStart) ? (DateTimeOffset?)parsedStart : null;
+        var livePosition = isLive && availableStart is { } origin
+            ? (double?)(timeProvider.GetUtcNow() - origin).TotalSeconds : null;
         for (var periodIndex = 0; periodIndex < periods.Count; periodIndex++)
         {
             var period = periods[periodIndex];
@@ -169,7 +182,11 @@ internal partial class DASHExtractor2 : IExtractor
                     StreamSpec streamSpec = new();
                     streamSpec.OriginalUrl = ParserConfig.OriginalUrl;
                     streamSpec.PeriodId = periodId;
-                    streamSpec.Playlist = new Playlist();
+                    streamSpec.Playlist = new Playlist
+                    {
+                        AvailabilityStartTime = isLive ? availableStart : null,
+                        TimeShiftBufferDepth = declaredBufferDepth,
+                    };
                     streamSpec.Playlist.MediaParts.Add(new MediaPart
                     {
                         PeriodIndex = periodIndex,
@@ -444,6 +461,7 @@ internal partial class DASHExtractor2 : IExtractor
                             // 没用SegmentTimeline 需要计算总分片数量 不精确
                             var timescale = Convert.ToInt32(timescaleStr);
                             var startNumber = Convert.ToInt64(startNumberStr);
+                            var templateStartNumber = startNumber;
                             var duration = Convert.ToInt64(durationStr);
                             var totalNumber = (long)Math.Ceiling(XmlConvert.ToTimeSpan(periodDuration ?? mediaPresentationDuration ?? "PT0S").TotalSeconds * timescale / duration);
                             // 直播的情况，需要自己计算totalNumber
@@ -451,15 +469,13 @@ internal partial class DASHExtractor2 : IExtractor
                             {
                                 var now = timeProvider.GetUtcNow();
                                 var availableTime = DateTimeOffset.Parse(availabilityStartTime!, CultureInfo.InvariantCulture);
-                                // 可用时间+偏移量
-                                // presentationTimeOffset 的单位是 timescale, 不是毫秒
-                                var offset = TimeSpan.FromSeconds(Convert.ToDouble(presentationTimeOffsetStr) / timescale);
-                                availableTime = availableTime.Add(offset);
-                                var ts = now - availableTime;
+                                // 按可用时间和 Period 起点计算已发布的时长；PTO 只用于源时间映射，不改变分片编号。
+                                var endTime = (now - availableTime).TotalSeconds - (periodStartSeconds ?? 0);
                                 var updateTs = XmlConvert.ToTimeSpan(timeShiftBufferDepth!);
-                                // (当前时间到发布时间的时间差 - 最小刷新间隔) / 分片时长
-                                startNumber += (long)((ts.TotalSeconds - updateTs.TotalSeconds) * timescale / duration);
-                                totalNumber = (long)(updateTs.TotalSeconds * timescale / duration);
+                                // 只展开回看窗口内已完整发布的分片，编号仍相对模板的原始 startNumber。
+                                var skipped = Math.Max(0, (long)Math.Floor((endTime - updateTs.TotalSeconds) * timescale / duration));
+                                startNumber += skipped;
+                                totalNumber = Math.Max(0, (long)Math.Floor(endTime * timescale / duration) - skipped);
                             }
                             for (long index = startNumber, segIndex = 0; index < startNumber + totalNumber; index++, segIndex++)
                             {
@@ -473,7 +489,9 @@ internal partial class DASHExtractor2 : IExtractor
                                     mediaSegment.NameFromVar = index.ToString();
                                 mediaSegment.Index = isLive ? index : segIndex; // 直播直接用startNumber
                                 mediaSegment.Duration = duration / (double)timescale;
-                                mediaSegment.PresentationTime = (mediaPart.PresentationTimeOffset ?? 0) + (index - startNumber) * duration / (double)timescale;
+                                // 直播窗口会移动起始编号，源时间仍从模板原始 startNumber 对应的 PTO 起算。
+                                mediaSegment.PresentationTime = (mediaPart.PresentationTimeOffset ?? 0) +
+                                    (index - templateStartNumber) * duration / (double)timescale;
                                 mediaPart.MediaSegments.Add(mediaSegment);
                             }
                         }
@@ -780,6 +798,9 @@ internal partial class DASHExtractor2 : IExtractor
                 streamSpec.Playlist!.MediaParts = matched.Playlist!.MediaParts;
                 streamSpec.Playlist.IsLive = matched.Playlist.IsLive;
                 streamSpec.Playlist.MinimumUpdatePeriod = matched.Playlist.MinimumUpdatePeriod;
+                // 最终清单可能省略直播原点，已确认的原点仍用于历史分片时间映射。
+                streamSpec.Playlist.AvailabilityStartTime = matched.Playlist.AvailabilityStartTime ?? streamSpec.Playlist.AvailabilityStartTime;
+                streamSpec.Playlist.TimeShiftBufferDepth = matched.Playlist.TimeShiftBufferDepth;
                 streamSpec.GroupId = matched.GroupId;
                 streamSpec.PeriodId = matched.PeriodId;
                 streamSpec.PublishTime = matched.PublishTime;

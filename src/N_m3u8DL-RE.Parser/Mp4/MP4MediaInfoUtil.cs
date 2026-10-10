@@ -82,7 +82,9 @@ public static class MP4MediaInfoUtil
                 {
                     // elst 的空白段用于广播源时钟，media_time 则可能裁掉编码预滚。
                     var start = Math.Max(track.Start, edit.MediaTime);
-                    var end = Math.Min(track.End, edit.MediaTime + duration * track.Timescale);
+                    // 直播 fMP4 init 的 elst 时长可以为 0，实际结束时间由后续 moof 分片确定。
+                    var end = edit.Duration == 0 && fragments.Count > 0
+                        ? track.End : Math.Min(track.End, edit.MediaTime + duration * track.Timescale);
                     if (end > start)
                         intervals.Add((elapsed + (start - edit.MediaTime) / track.Timescale,
                             elapsed + (end - edit.MediaTime) / track.Timescale));

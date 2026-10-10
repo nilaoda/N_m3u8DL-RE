@@ -10,6 +10,9 @@ public class Playlist
     public double RefreshIntervalMs { get; set; } = 15000;
     // DASH MPD 声明的最小更新周期
     public TimeSpan? MinimumUpdatePeriod { get; set; }
+    // DASH 直播的墙上时钟原点和服务端声明的回看窗口。
+    public DateTimeOffset? AvailabilityStartTime { get; set; }
+    public TimeSpan? TimeShiftBufferDepth { get; set; }
     // 所有分片时长总和
     public double TotalDuration => MediaParts.Sum(x => x.MediaSegments.Sum(m => m.Duration));
 

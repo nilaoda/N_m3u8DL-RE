@@ -58,6 +58,50 @@ public class DASHLivePeriodsTests
     }
 
     [Fact]
+    public async Task DurationTemplateKeepsSourceTimeWhileLiveWindowMoves()
+    {
+        var origin = new DateTimeOffset(2026, 10, 10, 0, 0, 0, TimeSpan.Zero);
+        var now = origin.AddSeconds(21);
+        var extractor = new DASHExtractor2(new ParserConfig { Url = "https://example.com/live.mpd" }, new FixedTimeProvider(now));
+        var stream = Assert.Single(await extractor.ExtractStreamsAsync($"""
+            <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="dynamic" availabilityStartTime="{origin:O}" timeShiftBufferDepth="PT6S">
+              <Period start="PT8S"><AdaptationSet mimeType="video/mp4"><Representation id="v">
+                <SegmentTemplate timescale="1000" presentationTimeOffset="8000" duration="2000" startNumber="100" media="media-$Number$.m4s"/>
+              </Representation></AdaptationSet></Period>
+            </MPD>
+            """));
+        Assert.Equal(origin, stream.Playlist!.AvailabilityStartTime);
+        Assert.Equal(TimeSpan.FromSeconds(6), stream.Playlist.TimeShiftBufferDepth);
+        Assert.Equal([14d, 16d, 18d], stream.Playlist.MediaParts[0].MediaSegments.Select(s => s.PresentationTime!.Value));
+        Assert.Equal(["https://example.com/media-103.m4s", "https://example.com/media-104.m4s", "https://example.com/media-105.m4s"],
+            stream.Playlist.MediaParts[0].MediaSegments.Select(s => s.Url));
+        var window = new LiveCatchupWindow(origin.AddSeconds(15), TimeSpan.FromSeconds(4));
+        window.Validate([stream], now);
+        Assert.Equal(3, window.Filter(stream, out var ended, now).Count);
+        Assert.True(ended);
+    }
+
+    [Fact]
+    public async Task DurationTemplateWithFinitePeriodStartsAtPto()
+    {
+        var origin = new DateTimeOffset(2026, 10, 10, 0, 0, 0, TimeSpan.Zero);
+        var now = origin.AddSeconds(16);
+        var extractor = new DASHExtractor2(new ParserConfig { Url = "https://example.com/live.mpd" }, new FixedTimeProvider(now));
+        var stream = Assert.Single(await extractor.ExtractStreamsAsync($"""
+            <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="dynamic" availabilityStartTime="{origin:O}">
+              <Period start="PT8S" duration="PT8S"><AdaptationSet mimeType="video/mp4"><Representation id="v">
+                <SegmentTemplate timescale="1000" presentationTimeOffset="8000" duration="2000" startNumber="100" media="media-$Number$.m4s"/>
+              </Representation></AdaptationSet></Period>
+            </MPD>
+            """));
+        var window = new LiveCatchupWindow(origin.AddSeconds(8), TimeSpan.FromSeconds(4));
+        window.Validate([stream], now);
+        Assert.Equal(["https://example.com/media-100.m4s", "https://example.com/media-101.m4s"],
+            window.Filter(stream, out var ended, now).Select(s => s.Url));
+        Assert.True(ended);
+    }
+
+    [Fact]
     public async Task EmptyOrFuturePeriodDoesNotDisplaceAvailableMedia()
     {
         var now = new DateTimeOffset(2026, 10, 10, 0, 0, 10, TimeSpan.Zero);

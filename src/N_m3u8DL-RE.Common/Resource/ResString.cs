@@ -179,6 +179,16 @@ public static class ResString
     public static string cmd_taskStartAt => GetText("cmd_taskStartAt");
     public static string cmd_liveWaitTime => GetText("cmd_liveWaitTime");
     public static string cmd_liveIdleTimeout => GetText("cmd_liveIdleTimeout");
+    public static string cmd_liveCatchup => GetText("cmd_liveCatchup");
+    public static string liveCatchupInvalid => GetText("liveCatchupInvalid");
+    public static string liveCatchupConflict => GetText("liveCatchupConflict");
+    public static string liveCatchupRequireLive => GetText("liveCatchupRequireLive");
+    public static string liveCatchupMissingTime => GetText("liveCatchupMissingTime");
+    public static string liveCatchupOutsideWindow => GetText("liveCatchupOutsideWindow");
+    public static string liveCatchupRange => GetText("liveCatchupRange");
+    public static string liveCatchupActualRange => GetText("liveCatchupActualRange");
+    public static string liveCatchupRangeReached => GetText("liveCatchupRangeReached");
+    public static string liveCatchupUntilStopped => GetText("liveCatchupUntilStopped");
     public static string cmd_liveTakeCount => GetText("cmd_liveTakeCount");
     public static string cmd_liveFixVttByAudio => GetText("cmd_liveFixVttByAudio");
     public static string cmd_liveRealTimeMerge => GetText("cmd_liveRealTimeMerge");
