@@ -153,10 +153,11 @@ internal static class ToolCommands
                 CustomAnsiConsole.Console = AnsiConsole.Create(new AnsiConsoleSettings
                 {
                     Ansi = noColor || result.GetValue(forceAnsi) ? AnsiSupport.Yes : AnsiSupport.Detect,
-                    Interactive = InteractionSupport.No,
+                    Interactive = noColor ? InteractionSupport.No : result.GetValue(forceAnsi) ? InteractionSupport.Yes : InteractionSupport.Detect,
                     Out = new AnsiConsoleOutput(noColor ? new NonAnsiWriter(Console.Error) : Console.Error)
                 });
-                CustomAnsiConsole.Console.Profile.Width = int.MaxValue;
+                if (!CustomAnsiConsole.Console.Profile.Capabilities.Interactive)
+                    CustomAnsiConsole.Console.Profile.Width = int.MaxValue;
                 Logger.LogLevel = LogLevel.INFO;
                 Logger.IsWriteFile = false;
                 Logger.Info(CommandInvoker.VERSION_INFO);

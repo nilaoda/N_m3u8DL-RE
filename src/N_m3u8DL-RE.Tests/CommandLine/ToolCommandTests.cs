@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Text.Json;
 using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Enum;
 using N_m3u8DL_RE.Util;
@@ -134,6 +135,7 @@ public sealed class ToolCommandTests : IDisposable
     [Fact]
     public async Task FileToolStatusUsesStderrAndPreservesPlainResultAndPaths()
     {
+        var originalConsole = CustomAnsiConsole.Console;
         var originalOutput = Console.Out;
         var originalError = Console.Error;
         using var stdout = new StringWriter();
@@ -148,6 +150,9 @@ public sealed class ToolCommandTests : IDisposable
             Assert.Equal(output + Environment.NewLine, stdout.ToString());
             Assert.Contains("INFO", stderr.ToString());
             Assert.Contains(ResString.toolsCompleted, stderr.ToString());
+            Assert.Contains(ResString.processingMerge, stderr.ToString());
+            Assert.DoesNotContain(ResString.processingPreparing, stderr.ToString());
+            Assert.DoesNotContain(ResString.processingFinishing, stderr.ToString());
             Assert.Contains(output, stderr.ToString());
             Assert.DoesNotContain('\u001b', stderr.ToString());
             stdout.GetStringBuilder().Clear();
@@ -167,6 +172,7 @@ public sealed class ToolCommandTests : IDisposable
         finally
         {
             Console.SetOut(originalOutput);
+            CustomAnsiConsole.Console = originalConsole;
             Console.SetError(originalError);
         }
     }

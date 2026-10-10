@@ -86,37 +86,45 @@ internal static class FileToolUtil
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         // 先写同目录临时文件，失败或取消时保留原输出；完成后才替换。
         var temporary = Path.Combine(Path.GetDirectoryName(output)!, $".re-{Guid.NewGuid():N}{format}");
-        try
+        var success = await MediaProcessingProgress.RunAsync(operation, async processing =>
         {
-            using var timeline = operation == "mux" && autoSubtitleFix
-                ? await MuxSubtitleTimeline.CreateAsync(inputs, ffmpegPath, token) : null;
-            if (operation == "concat")
+            try
             {
-                await MergeUtil.CombineMultipleFilesIntoSingleFileAsync(inputs, temporary, overwrite: false, token: token);
-            }
-            else
-            {
-                var exitCode = operation == "mux"
-                    ? await MergeUtil.MuxInputsAsync(binary!, files ?? inputs.Select(path => new OutputFile { Index = 999, FilePath = path }).ToArray(),
-                        temporary, useMkvmerge: muxer == "mkvmerge", timeline: timeline, title: title, token: token)
-                    : await MergeUtil.MergeByFFmpegAsync(binary!, inputs, temporary, mode, token: token);
-                // mkvmerge 的 1 表示成功但有警告，2 才是错误。
-                if (exitCode != 0 && !(muxer == "mkvmerge" && exitCode == 1))
+                using var timeline = operation == "mux" && autoSubtitleFix
+                    ? await MuxSubtitleTimeline.CreateAsync(inputs, ffmpegPath, token) : null;
+                if (operation == "concat")
                 {
-                    Logger.Error(string.Format(ResString.toolsProcessFailed, operation, exitCode));
-                    return 1;
+                    processing.Begin(ResString.processingMerge);
+                    await MergeUtil.CombineMultipleFilesIntoSingleFileAsync(inputs, temporary, overwrite: false, token: token, progress: processing.Report);
                 }
+                else
+                {
+                    processing.Begin(operation == "mux" ? ResString.processingMux : ResString.processingMerge);
+                    var exitCode = operation == "mux"
+                        ? await MergeUtil.MuxInputsAsync(binary!, files ?? inputs.Select(path => new OutputFile { Index = 999, FilePath = path }).ToArray(),
+                            temporary, useMkvmerge: muxer == "mkvmerge", timeline: timeline, title: title, token: token, progress: processing.Report)
+                        : await MergeUtil.MergeByFFmpegAsync(binary!, inputs, temporary, mode, token: token, progress: processing.Report);
+                    // mkvmerge 的 1 表示成功但有警告，2 才是错误。
+                    if (exitCode != 0 && !(muxer == "mkvmerge" && exitCode == 1))
+                    {
+                        Logger.Error(string.Format(ResString.toolsProcessFailed, operation, exitCode));
+                        return false;
+                    }
+                }
+                token.ThrowIfCancellationRequested();
+                processing.Begin(ResString.processingFinishing);
+                File.Move(temporary, output, overwrite);
+                processing.Report(new(Bytes: new FileInfo(output).Length));
+                return true;
             }
-            token.ThrowIfCancellationRequested();
-            File.Move(temporary, output, overwrite);
-            Logger.InfoMarkUp($"[green]{ResString.toolsCompleted.EscapeMarkup()}[/]");
+            finally
+            {
+                File.Delete(temporary);
+            }
+        });
+        if (success)
             Console.WriteLine(output);
-            return 0;
-        }
-        finally
-        {
-            File.Delete(temporary);
-        }
+        return success ? 0 : 1;
     }
 
     [StructLayout(LayoutKind.Sequential)]

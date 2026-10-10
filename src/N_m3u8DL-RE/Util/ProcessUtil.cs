@@ -19,10 +19,10 @@ internal static class ProcessUtil
     }
 
     internal static async Task<Result> RunCommandAsync(string binary, string command, string workingDirectory,
-        Action<string> errorLine, bool loopbackInput = false)
+        Action<string> errorLine, bool loopbackInput = false, Action<string>? outputLine = null)
     {
         return await RunAsync(new ProcessStartInfo(binary, command), default, false, workingDirectory,
-            loopbackInput, errorLine, 16384, null).ConfigureAwait(false);
+            loopbackInput, errorLine, 16384, outputLine).ConfigureAwait(false);
     }
 
     private static async Task<Result> RunAsync(ProcessStartInfo startInfo, CancellationToken token,
@@ -44,8 +44,8 @@ internal static class ProcessUtil
         }
         using var process = new Process { StartInfo = startInfo };
         process.Start();
-        var output = outputLine == null ? ReadAsync(process.StandardOutput, false, captureLimit) : ReadLinesAsync(process.StandardOutput, outputLine);
-        var error = errorLine == null ? ReadAsync(process.StandardError, printError, captureLimit) : ReadLinesAsync(process.StandardError, errorLine);
+        var output = outputLine == null ? ReadAsync(process.StandardOutput, false, captureLimit) : ReadLinesAsync(process.StandardOutput, outputLine, captureLimit);
+        var error = errorLine == null ? ReadAsync(process.StandardError, printError, captureLimit) : ReadLinesAsync(process.StandardError, errorLine, captureLimit);
         try
         {
             await process.WaitForExitAsync(token).ConfigureAwait(false);
@@ -64,14 +64,16 @@ internal static class ProcessUtil
         return new(process.ExitCode, await output.ConfigureAwait(false), await error.ConfigureAwait(false));
     }
 
-    private static async Task<string> ReadLinesAsync(StreamReader reader, Action<string> write)
+    private static async Task<string> ReadLinesAsync(StreamReader reader, Action<string> write, int captureLimit)
     {
-        // 收集 ffmpeg 的 stderr 输出，便于后续判断失败原因（如句柄耗尽）。
+        // 保留工具输出尾部，便于判断最后的失败原因；长时间处理的进度消息不能无限占用内存。
         // 下载和工具命令日志同时逐行输出；mkvmerge 的 stdout 也由这里处理。
         var text = new StringBuilder();
         while (await reader.ReadLineAsync().ConfigureAwait(false) is { } line)
         {
-            text.AppendLine(line);
+            text.AppendLine(line[Math.Max(0, line.Length - captureLimit)..]);
+            if (text.Length > captureLimit)
+                text.Remove(0, text.Length - captureLimit);
             if (!string.IsNullOrEmpty(line))
                 write(line);
         }

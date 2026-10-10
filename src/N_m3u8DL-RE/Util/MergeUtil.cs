@@ -8,6 +8,7 @@ using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using System.Globalization;
 using System.Net.Sockets;
+using Mp4SubtitleParser;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -18,32 +19,50 @@ internal static class MergeUtil
     /// </summary>
     /// <param name="files"></param>
     /// <param name="outputFilePath"></param>
-    public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath)
+    public static void CombineMultipleFilesIntoSingleFile(string[] files, string outputFilePath, Action<MediaProgress>? progress = null)
     {
-        CombineMultipleFilesIntoSingleFileAsync(files, outputFilePath).GetAwaiter().GetResult();
+        CombineMultipleFilesIntoSingleFileAsync(files, outputFilePath, progress: progress).GetAwaiter().GetResult();
     }
 
     internal static async Task CombineMultipleFilesIntoSingleFileAsync(string[] files, string outputFilePath,
-        bool overwrite = true, CancellationToken token = default)
+        bool overwrite = true, CancellationToken token = default, Action<MediaProgress>? progress = null)
     {
         if (files.Length == 0)
             return;
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputFilePath))!);
         using var outputStream = new FileStream(outputFilePath, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write);
+        var total = progress == null ? 0 : files.Where(file => file != "").Sum(file => new FileInfo(file).Length);
+        long written = 0;
+        var buffer = progress == null ? null : new byte[128 * 1024];
+        progress?.Invoke(new(total > 0 ? 0 : null, 0, total));
         foreach (var inputFilePath in files)
         {
             if (inputFilePath == "")
                 continue;
             using var inputStream = File.OpenRead(inputFilePath);
-            await inputStream.CopyToAsync(outputStream, token).ConfigureAwait(false);
+            if (buffer == null)
+            {
+                await inputStream.CopyToAsync(outputStream, token).ConfigureAwait(false);
+                continue;
+            }
+            int count;
+            while ((count = await inputStream.ReadAsync(buffer, token).ConfigureAwait(false)) > 0)
+            {
+                await outputStream.WriteAsync(buffer.AsMemory(0, count), token).ConfigureAwait(false);
+                written += count;
+                progress!(new(total > 0 ? (double)written / total : null, written, total));
+            }
         }
     }
 
-    private static int InvokeFFmpeg(string binary, string command, string workingDirectory)
+    private static int InvokeFFmpeg(string binary, string command, string workingDirectory, Action<MediaProgress>? progress = null, double? duration = null)
     {
+        if (progress != null)
+            command = "-progress pipe:1 -nostats " + command;
+        var reader = progress == null ? null : new MediaToolProgress(progress, duration, preserveTimestamp: command.Contains(" -copyts ", StringComparison.Ordinal));
         Logger.Debug($"{binary}: {command}");
         return ProcessUtil.RunCommandAsync(binary, command, workingDirectory,
-            line => Logger.WarnMarkUp($"[grey]{line.EscapeMarkup()}[/]")).GetAwaiter().GetResult().ExitCode;
+            line => Logger.WarnMarkUp($"[grey]{line.EscapeMarkup()}[/]"), outputLine: reader == null ? null : reader.ReadFFmpeg).GetAwaiter().GetResult().ExitCode;
     }
 
     /// <summary>
@@ -105,7 +124,7 @@ internal static class MergeUtil
         return text.ToString();
     }
 
-    public static bool ConcatMediaParts(string binary, string[] files, IReadOnlyList<MediaPart> parts, string output)
+    public static bool ConcatMediaParts(string binary, string[] files, IReadOnlyList<MediaPart> parts, string output, MediaProcessingProgress? progress = null)
     {
         // init+媒体先形成各自可读取的文件；concat demuxer 重新读取每份配置，
         // 避免直接按字节拼接多个 moov 和发生回退的 tfdt。
@@ -123,9 +142,10 @@ internal static class MergeUtil
                 // copyts 保留 PTO 对应的源时间，不能在此把每份输入单独归零。
                 var path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(inputs[i]))!, $"{Guid.NewGuid():N}.normalized.mp4");
                 normalized.Add(path);
+                progress?.Begin($"{ResString.processingNormalize} ({i + 1}/{inputs.Length})");
                 if (InvokeFFmpeg(binary,
                     $"-loglevel warning -nostdin -y -copyts -avoid_negative_ts disabled -i \"{Path.GetFullPath(inputs[i])}\" -map 0:v? -map 0:a? -map 0:s? -c copy -video_track_timescale 90000 \"{path}\"",
-                    Path.GetDirectoryName(path)!) != 0)
+                    Path.GetDirectoryName(path)!, progress == null ? null : progress.Report) != 0)
                     return false;
                 inputs[i] = path;
             }
@@ -136,9 +156,11 @@ internal static class MergeUtil
             // MPEG-TS 默认额外延迟输出时钟，字幕公共时间轴已经归零，必须保留该时间轴。
             var tsOptions = copyTs.Length > 0 && Path.GetExtension(output).Equals(".ts", StringComparison.OrdinalIgnoreCase)
                 ? " -mpegts_copyts 1 -muxdelay 0" : "";
+            progress?.Begin(ResString.processingMerge, logStart: false);
             return InvokeFFmpeg(binary,
                 $"-loglevel warning -nostdin -y{copyTs}{offset} -f concat -safe 0 -i \"{listPath}\" -map 0:v? -map 0:a? -map 0:s? -c copy{tsOptions} \"{Path.GetFullPath(output)}\"",
-                Path.GetDirectoryName(Path.GetFullPath(files[0]))!) == 0;
+                Path.GetDirectoryName(Path.GetFullPath(files[0]))!, progress == null ? null : progress.Report,
+                parts.Any(p => p.OutputStart != null) ? null : parts.Sum(p => p.OutputDuration ?? p.MediaSegments.Sum(s => s.Duration))) == 0;
         }
         finally
         {
@@ -147,13 +169,15 @@ internal static class MergeUtil
         }
     }
 
-    public static string[] PartialCombineMultipleFiles(string[] files)
+    public static string[] PartialCombineMultipleFiles(string[] files, Action<MediaProgress>? progress = null)
     {
         var newFiles = new List<string>();
         var div = files.Length <= 90000 ? 100 : 200;
 
         var outputName = Path.Combine(Path.GetDirectoryName(files[0])!, "T");
         var index = 0; // 序号
+        var total = progress == null ? 0 : files.Sum(file => new FileInfo(file).Length);
+        long written = 0;
 
         // 按照div的容量分割为小数组
         var li = Enumerable.Range(0, files.Length / div + 1).Select(x => files.Skip(x * div).Take(div).ToArray()).ToArray();
@@ -162,7 +186,10 @@ internal static class MergeUtil
             if (items.Length == 0)
                 continue;
             var output = outputName + index.ToString("0000") + ".ts";
-            CombineMultipleFilesIntoSingleFile(items, output);
+            CombineMultipleFilesIntoSingleFile(items, output, progress == null ? null : value =>
+                progress(new(total > 0 ? (double)(written + value.Bytes!.Value) / total : null, written + value.Bytes, total)));
+            if (progress != null)
+                written += new FileInfo(output).Length;
             newFiles.Add(output);
             // 合并后删除这些文件
             foreach (var item in items)
@@ -178,7 +205,7 @@ internal static class MergeUtil
     public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
         bool fastStart = false,
         bool writeDate = true, FFmpegConcatMode concatMode = FFmpegConcatMode.LOCAL_HTTP, string poster = "", string audioName = "", string title = "",
-        string copyright = "", string comment = "", string encodingTool = "", string recTime = "")
+        string copyright = "", string comment = "", string encodingTool = "", string recTime = "", Action<MediaProgress>? progress = null, double? duration = null)
     {
         // 改为绝对路径
         outputPath = Path.GetFullPath(outputPath);
@@ -227,7 +254,7 @@ internal static class MergeUtil
         try
         {
             return MergeByFFmpegAsync(binary, files, outputPath + extension, concatMode, options,
-                overwrite: true, log: true).GetAwaiter().GetResult() == 0;
+                overwrite: true, log: true, progress: progress, duration: duration).GetAwaiter().GetResult() == 0;
         }
         catch (Exception ex) when (ex is IOException or SocketException or UnauthorizedAccessException)
         {
@@ -238,7 +265,7 @@ internal static class MergeUtil
 
     internal static async Task<int> MergeByFFmpegAsync(string binary, string[] files, string output,
         FFmpegConcatMode mode, IReadOnlyList<string>? outputOptions = null, bool overwrite = false,
-        bool log = false, CancellationToken token = default)
+        bool log = false, CancellationToken token = default, Action<MediaProgress>? progress = null, double? duration = null)
     {
         files = files.Select(Path.GetFullPath).ToArray();
         ConcatInputServer? server = null;
@@ -282,7 +309,7 @@ internal static class MergeUtil
                     arguments.AddRange(["-vn", "-sn"]);
             }
             arguments.Add(Path.GetFullPath(output));
-            var result = await RunMediaToolAsync(binary, arguments, token, log, server != null).ConfigureAwait(false);
+            var result = await RunMediaToolAsync(binary, arguments, token, log, server != null, progress: progress, duration: duration).ConfigureAwait(false);
             if (server?.Error is { } error)
                 throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
             // 直接 concat 协议仍可能耗尽句柄；失败时不改变时间轴处理方式，也不删除分片。
@@ -313,7 +340,8 @@ internal static class MergeUtil
 
     internal static async Task<int> MuxInputsAsync(string binary, OutputFile[] files, string output,
         bool useMkvmerge = false, bool downloadDefaults = false, bool dateinfo = false,
-        MuxSubtitleTimeline? timeline = null, string? title = null, CancellationToken token = default)
+        MuxSubtitleTimeline? timeline = null, string? title = null, CancellationToken token = default,
+        Action<MediaProgress>? progress = null)
     {
         // LANG and NAME
         // 转换语言代码
@@ -449,17 +477,73 @@ internal static class MergeUtil
                 arguments.AddRange(["-metadata", "title=" + title]);
             arguments.Add(Path.GetFullPath(output));
         }
-        return (await RunMediaToolAsync(binary, arguments, token, downloadDefaults,
-            printOutput: useMkvmerge && !downloadDefaults).ConfigureAwait(false)).ExitCode;
+        var duration = progress == null || useMkvmerge || files.Any(file => file.PreserveTimestamp) || timeline?.Origin != null
+            ? null : GetDuration(files);
+        var result = await RunMediaToolAsync(binary, arguments, token, downloadDefaults,
+            printOutput: useMkvmerge && !downloadDefaults, progress: progress, useMkvmerge: useMkvmerge,
+            duration: duration).ConfigureAwait(false);
+        if (!useMkvmerge && format == ".mkv" && result.ExitCode != 0 &&
+            result.Error.Contains("Can't write packet with unknown timestamp", StringComparison.OrdinalIgnoreCase))
+        {
+            // 部分 TS 含只有 PPS 等参数集、没有 PTS/DTS 的独立视频包，Matroska 拒绝写入。
+            // 仅针对该错误重试一次：保留已有时间戳，缺失 PTS 优先沿用 DTS，否则沿用前包时间。
+            // 不删除这些包或改写源文件，也不能重建正常画面的时间轴（含 B 帧及 copyts）。
+            Logger.Warn(ResString.muxTimestampRetry);
+            if (!downloadDefaults)
+                arguments[arguments.IndexOf("-n")] = "-y"; // 只覆盖本次失败生成的半成品。
+            arguments.InsertRange(arguments.Count - 1, ["-bsf:v",
+                @"setts=pts=if(eq(PTS\,NOPTS)\,if(eq(DTS\,NOPTS)\,PREV_OUTPTS\,DTS)\,PTS):dts=if(eq(DTS\,NOPTS)\,PREV_OUTDTS\,DTS)"]);
+            progress?.Invoke(new());
+            result = await RunMediaToolAsync(binary, arguments, token, downloadDefaults,
+                progress: progress, duration: duration).ConfigureAwait(false);
+        }
+        return result.ExitCode;
+    }
+
+    private static double? GetDuration(OutputFile[] files)
+    {
+        var durations = new List<double>();
+        foreach (var file in files.Where(file => file.MediaType != MediaType.SUBTITLES))
+        {
+            var extension = Path.GetExtension(file.FilePath).ToLowerInvariant();
+            if (extension is ".srt" or ".vtt" or ".ass" or ".ssa" or ".sup" or ".idx")
+                continue;
+            var duration = file.Duration;
+            if (duration == null && extension is ".mp4" or ".m4a" or ".m4s")
+            {
+                try { duration = MP4MediaInfoUtil.ReadTiming(file.FilePath)?.Duration; }
+                catch (Exception ex) when (ex is IOException or ArgumentException or OverflowException) { }
+            }
+            if (duration is not > 0)
+                return null;
+            durations.Add(duration.Value);
+        }
+        return durations.Count == 0 ? null : durations.Max();
     }
 
     private static async Task<ProcessUtil.Result> RunMediaToolAsync(string binary, List<string> arguments,
-        CancellationToken token, bool log, bool loopbackInput = false, bool printOutput = false)
+        CancellationToken token, bool log, bool loopbackInput = false, bool printOutput = false,
+        Action<MediaProgress>? progress = null, bool useMkvmerge = false, double? duration = null)
     {
+        // 每次调用使用独立参数，重试时不能重复加入 progress/gui-mode。
+        arguments = [.. arguments];
+        var reader = progress == null ? null : new MediaToolProgress(progress, duration, preserveTimestamp: arguments.Contains("-copyts"));
+        if (reader != null)
+            arguments.InsertRange(0, useMkvmerge ? ["--gui-mode"] : ["-progress", "pipe:1", "-nostats"]);
         if (log)
             Logger.Debug($"{binary}: {string.Join(" ", arguments.Select(argument => $"\"{argument}\""))}");
         Action<string> write = line => Logger.WarnMarkUp($"[grey]{line.EscapeMarkup()}[/]");
         return await ProcessUtil.RunAsync(binary, arguments, token, loopbackInput: loopbackInput,
-            errorLine: write, outputLine: printOutput ? line => Logger.InfoMarkUp($"[grey]{line.EscapeMarkup()}[/]") : null).ConfigureAwait(false);
+            errorLine: write, outputLine: reader != null ? line =>
+            {
+                if (!useMkvmerge) reader.ReadFFmpeg(line);
+                else if (!reader.ReadMkvmerge(line))
+                {
+                    if (line.StartsWith("#GUI#warning", StringComparison.Ordinal) || line.StartsWith("#GUI#error", StringComparison.Ordinal))
+                        Logger.WarnMarkUp($"[grey]{line.EscapeMarkup()}[/]");
+                    else if (printOutput)
+                        Logger.InfoMarkUp($"[grey]{line.EscapeMarkup()}[/]");
+                }
+            } : printOutput ? line => Logger.InfoMarkUp($"[grey]{line.EscapeMarkup()}[/]") : null).ConfigureAwait(false);
     }
 }
