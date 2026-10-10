@@ -303,6 +303,14 @@ internal class Program
             subs = lists.Where(s => s.MediaType == MediaType.SUBTITLES).ToList();
         }
 
+        // 筛选后没有候选流时直接结束，避免交互选择访问空列表。
+        if (lists.Count == 0)
+        {
+            Logger.Error(ResString.noStreamsToDownload);
+            Environment.ExitCode = 1;
+            return;
+        }
+
         if (option.DropVideoFilter != null) Logger.Extra($"DropVideoFilter => {option.DropVideoFilter}");
         if (option.DropAudioFilter != null) Logger.Extra($"DropAudioFilter => {option.DropAudioFilter}");
         if (option.DropSubtitleFilter != null) Logger.Extra($"DropSubtitleFilter => {option.DropSubtitleFilter}");
@@ -340,7 +348,11 @@ internal class Program
         }
 
         if (selectedStreams.Count == 0)
-            throw new Exception(ResString.noStreamsToDownload);
+        {
+            Logger.Error(ResString.noStreamsToDownload);
+            Environment.ExitCode = 1;
+            return;
+        }
 
         if (extractor.ExtractorType == ExtractorType.MPEG_DASH && selectedStreams.All(s => s.Playlist?.IsLive == false))
             selectedStreams = VodStreamPlanner.Build(lists, selectedStreams,
@@ -393,7 +405,11 @@ internal class Program
         if (!livingFlag)
             selectedStreams.RemoveAll(stream => stream.SegmentsCount == 0);
         if (selectedStreams.Count == 0)
-            throw new Exception(ResString.noStreamsToDownload);
+        {
+            Logger.Error(ResString.noStreamsToDownload);
+            Environment.ExitCode = 1;
+            return;
+        }
 
         if (!livingFlag && extractor.ExtractorType == ExtractorType.MPEG_DASH &&
             (multiPeriodVod || selectedStreams.Any(s => s.Playlist!.MediaParts.Count > 1)))
@@ -405,7 +421,11 @@ internal class Program
         if (!livingFlag)
             selectedStreams.RemoveAll(s => s.SegmentsCount == 0);
         if (selectedStreams.Count == 0)
-            throw new Exception(ResString.noStreamsToDownload);
+        {
+            Logger.Error(ResString.noStreamsToDownload);
+            Environment.ExitCode = 1;
+            return;
+        }
 
         // 记录文件
         if (option.WriteMetaJson)
