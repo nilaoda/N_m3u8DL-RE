@@ -154,7 +154,7 @@ internal static class FileToolUtil
         return (information.VolumeSerialNumber, ((ulong)information.FileIndexHigh << 32) | information.FileIndexLow);
     }
 
-    private static string ResolvePath(string path)
+    internal static string ResolvePath(string path)
     {
         // Windows 的扩展路径与普通盘符、UNC 路径使用同一形式比较。
         if (OperatingSystem.IsWindows())

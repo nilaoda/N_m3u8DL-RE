@@ -1,4 +1,5 @@
 using N_m3u8DL_RE.Util;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.Util;
 
@@ -50,10 +51,8 @@ public class DownloadDirectoryCleanupTests
     }
 
     [Fact]
-    public void CleanupDoesNotFollowDirectoryLinks()
+    public async Task CleanupDoesNotFollowDirectoryLinks()
     {
-        if (OperatingSystem.IsWindows())
-            return;
         var root = Directory.CreateTempSubdirectory("download-cleanup-").FullName;
         try
         {
@@ -64,7 +63,7 @@ public class DownloadDirectoryCleanupTests
             var task = Path.Combine(root, "task");
             Directory.CreateDirectory(task);
             var link = Path.Combine(task, "link");
-            Directory.CreateSymbolicLink(link, outside);
+            await CreateLink(link, outside, directory: true);
 
             OtherUtil.SafeDeleteDir(task, cleanMetadata: true);
             OtherUtil.SafeDeleteDir(link, cleanMetadata: true);

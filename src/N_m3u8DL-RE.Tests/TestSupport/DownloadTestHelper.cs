@@ -44,6 +44,17 @@ internal static class DownloadTestHelper
         return await stdout;
     }
 
+    // Windows 使用普通用户可创建的目录联接或文件硬链接；Unix 使用符号链接。
+    internal static async Task CreateLink(string link, string target, bool directory)
+    {
+        if (OperatingSystem.IsWindows())
+            await Run("cmd.exe", "/d", "/c", "mklink", directory ? "/J" : "/H", link, target);
+        else if (directory)
+            Directory.CreateSymbolicLink(link, target);
+        else
+            File.CreateSymbolicLink(link, target);
+    }
+
     internal static MyOption CreateOptions(string root) => new()
     {
         SaveDir = Path.Combine(root, "out"), SaveName = "result", FFmpegBinaryPath = "ffmpeg",

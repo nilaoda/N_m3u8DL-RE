@@ -129,9 +129,7 @@ public class LiveNetworkRecoveryTests
                 if (!(target == "media" && i == 1))
                     Assert.Equal(1, server.RequestCount($"media-{i}.m4s"));
             await AssertVideo(Assert.Single(Directory.GetFiles(Path.Combine(root, "out"))), 6, 150);
-            var remaining = Directory.GetFiles(Path.Combine(root, "tmp"), "*", SearchOption.AllDirectories);
-            Assert.Single(remaining);
-            Assert.StartsWith("_init", Path.GetFileName(remaining[0]));
+            Assert.False(Directory.Exists(Path.Combine(root, "tmp")));
         }
         finally
         {
