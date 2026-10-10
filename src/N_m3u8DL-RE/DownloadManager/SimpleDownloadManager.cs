@@ -284,7 +284,7 @@ internal partial class SimpleDownloadManager
                     {
                         FileDic[mediaInit]!.ActualFilePath = dec;
                     }
-                    else if (isPart && decryptEngine == DecryptEngine.MP4DECRYPT && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                    else if (decryptEngine == DecryptEngine.MP4DECRYPT && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
                         return false;
                 }
                 // ffmpeg读取信息
@@ -337,7 +337,7 @@ internal partial class SimpleDownloadManager
                         {
                             FileDic[mediaInit!]!.ActualFilePath = dec;
                         }
-                        else if (isPart && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                        else if (decryptEngine == DecryptEngine.MP4DECRYPT && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
                             return false;
                     }
                 }
@@ -373,7 +373,7 @@ internal partial class SimpleDownloadManager
                         File.Delete(enc);
                         result.ActualFilePath = dec;
                     }
-                    else if (isPart && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                    else if (DownloaderConfig.MyOptions.Keys is { Length: > 0 })
                         return false;
                 }
                 if (!readInfo)
@@ -394,6 +394,7 @@ internal partial class SimpleDownloadManager
             MaxDegreeOfParallelism = DownloaderConfig.MyOptions.ThreadCount
         };
         speedContainer.SingleSegment = singleSegment && !isPart;
+        var decryptionFailed = 0;
         await Parallel.ForEachAsync(segments, options, async (seg, _) =>
         {
             var index = seg.Index;
@@ -414,10 +415,14 @@ internal partial class SimpleDownloadManager
                     File.Delete(enc);
                     result.ActualFilePath = dec;
                 }
-                else if (isPart && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
-                    result.ActualContentLength = null;
+                else if (DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                    Interlocked.Exchange(ref decryptionFailed, 1);
             }
         });
+
+        // 实时解密失败时保留输入，不能继续合并密文或报告处理成功。
+        if (decryptionFailed != 0)
+            return false;
 
         // 修改输出后缀
         var outputExt = "." + streamSpec.Extension;
