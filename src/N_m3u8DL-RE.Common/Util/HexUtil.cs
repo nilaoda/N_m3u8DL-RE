@@ -27,7 +27,7 @@ public static class HexUtil
     }
     
     /// <summary>
-    /// 判断是不是Base64字符串
+    /// 判断是不是Base64字符串，允许省略末尾填充
     /// </summary>
     /// <param name="s">input</param>
     /// <param name="key">hex string</param>
@@ -37,6 +37,10 @@ public static class HexUtil
         key = null;
         try
         {
+            // 与 FromBase64String 一样忽略空白，只为完全省略填充的输入补齐末尾等号。
+            s = s.Replace(" ", "").Replace("\t", "").Replace("\r", "").Replace("\n", "");
+            if (!s.Contains('=') && s.Length % 4 is 2 or 3)
+                s = s.PadRight(s.Length + 4 - s.Length % 4, '=');
             key = BytesToHex(Convert.FromBase64String(s));
             return true;
         }
