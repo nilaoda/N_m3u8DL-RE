@@ -1859,15 +1859,15 @@ internal static class StaticText
         ),
         ["matchHLS"] = new TextContainer
         (
-            zhCN: "内容匹配: [white on deepskyblue1]HTTP Live Streaming[/]",
-            zhTW: "內容匹配: [white on deepskyblue1]HTTP Live Streaming[/]",
-            enUS: "Content Matched: [white on deepskyblue1]HTTP Live Streaming[/]"
+            zhCN: "内容匹配: [white on deepskyblue3]HTTP Live Streaming[/]",
+            zhTW: "內容匹配: [white on deepskyblue3]HTTP Live Streaming[/]",
+            enUS: "Content Matched: [white on deepskyblue3]HTTP Live Streaming[/]"
         ),
         ["matchBinaryData"] = new TextContainer
         (
-            zhCN: "内容匹配: [white on deepskyblue1]Binary Data[/]",
-            zhTW: "內容匹配: [white on deepskyblue1]Binary Data[/]",
-            enUS: "Content Matched: [white on deepskyblue1]Binary Data[/]"
+            zhCN: "内容匹配: [white on deepskyblue3]Binary Data[/]",
+            zhTW: "內容匹配: [white on deepskyblue3]Binary Data[/]",
+            enUS: "Content Matched: [white on deepskyblue3]Binary Data[/]"
         ),
         ["partMerge"] = new TextContainer
         (

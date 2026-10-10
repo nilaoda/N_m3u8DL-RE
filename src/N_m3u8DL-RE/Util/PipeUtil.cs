@@ -80,7 +80,7 @@ internal static class PipeUtil
                 command.Append(customDest);
             else
                 command.Append($" -f mpegts -shortest \"{customDest}\"");
-            Logger.WarnMarkUp($"[deepskyblue1]{command.ToString().EscapeMarkup()}[/]");
+            Logger.WarnMarkUp($"[deepskyblue3]{command.ToString().EscapeMarkup()}[/]");
         }
         else
         {

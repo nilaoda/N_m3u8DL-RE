@@ -132,7 +132,12 @@ internal static class BinaryDownloadRunner
         var columns = new List<ProgressColumn> { new TaskDescriptionColumn() { Alignment = Justify.Left } };
         if (length is > 0)
         {
-            columns.Add(new ProgressBarColumn() { Width = 30 });
+            columns.Add(new ProgressBarColumn()
+            {
+                Width = 30,
+                CompletedStyle = new Style(Color.DarkOrange3_1),
+                IndeterminateStyle = new Style(Color.DarkOrange3_1)
+            });
             columns.Add(new PercentageColumn());
         }
         columns.Add(new BinaryDownloadSizeColumn(sizes, length));

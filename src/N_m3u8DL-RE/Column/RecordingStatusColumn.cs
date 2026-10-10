@@ -7,7 +7,7 @@ internal class RecordingStatusColumn : ProgressColumn
 {
     protected override bool NoWrap => true;
     public Style MyStyle { get; set; } = new Style(foreground: Color.Default);
-    public Style FinishedStyle { get; set; } = new Style(foreground: Color.Yellow);
+    public Style FinishedStyle { get; set; } = new Style(foreground: Color.DarkOrange3_1);
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
         if (task.IsFinished)

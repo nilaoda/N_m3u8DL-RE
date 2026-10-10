@@ -58,7 +58,7 @@ internal static class FileToolUtil
         if (operation == "mux" && muxer == "mkvmerge" && format != ".mkv")
             throw new ArgumentException(ResString.toolsMkvmergeFormat);
         Logger.Info(string.Format(ResString.toolsProcessing, operation, inputs.Length));
-        Logger.InfoMarkUp($"[deepskyblue1]{output.EscapeMarkup()}[/]");
+        Logger.InfoMarkUp($"[deepskyblue3]{output.EscapeMarkup()}[/]");
         if (dryRun)
         {
             if (files != null)

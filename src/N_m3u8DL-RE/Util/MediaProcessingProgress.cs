@@ -46,7 +46,7 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
         DisplayTask = new ProgressTask(task.Id, description, 100) { IsIndeterminate = true };
         task.Tag = this;
         active = true;
-        task.Description = $"{description} [cyan]{Part}{name.EscapeMarkup()}[/]";
+        task.Description = $"{description} [turquoise4]{Part}{name.EscapeMarkup()}[/]";
         // 短暂的准备/保存阶段只更新进度行；已有开始日志的调用方也不重复打印。
         if (logStart)
             WriteLog($"{description.RemoveMarkup()} {Part}{name}",
@@ -57,7 +57,7 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
     {
         Dispose();
         active = false;
-        task.Description = Part == null ? description : $"{description} [cyan]{Part}{ResString.processingDownload.EscapeMarkup()}[/]";
+        task.Description = Part == null ? description : $"{description} [turquoise4]{Part}{ResString.processingDownload.EscapeMarkup()}[/]";
     }
 
     public void Report(MediaProgress value)
@@ -150,7 +150,12 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
             return await Run(new ProgressTask(0, description, 100));
         return await console.Progress().AutoClear(true).Columns(
             new TaskDescriptionColumn(),
-            new MediaProcessingColumn(new ProgressBarColumn { Width = 30 }),
+            new MediaProcessingColumn(new ProgressBarColumn
+            {
+                Width = 30,
+                CompletedStyle = new Style(Color.DarkOrange3_1),
+                IndeterminateStyle = new Style(Color.DarkOrange3_1)
+            }),
             new MediaProcessingColumn(new PercentageColumn()),
             new MediaProcessingColumn(new DownloadedColumn()),
             new MediaProcessingColumn(new TransferSpeedColumn()),

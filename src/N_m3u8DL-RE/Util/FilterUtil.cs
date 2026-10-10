@@ -267,7 +267,7 @@ public static class FilterUtil
     {
         if (customRange == null) return;
 
-        Logger.InfoMarkUp($"{ResString.customRangeFound}[Cyan underline]{customRange.InputStr}[/]");
+        Logger.InfoMarkUp($"{ResString.customRangeFound}[turquoise4 underline]{customRange.InputStr}[/]");
         Logger.WarnMarkUp($"[darkorange3_1]{ResString.customRangeWarn}[/]");
 
         var filterByIndex = customRange is { StartSegIndex: not null, EndSegIndex: not null };
@@ -321,7 +321,7 @@ public static class FilterUtil
         var regList = ParseAdKeywords(keywords);
         foreach (var reg in log ? regList : [])
         {
-            Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
+            Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[turquoise4 underline]{reg}[/]");
         }
 
         foreach (var stream in selectedSteams)

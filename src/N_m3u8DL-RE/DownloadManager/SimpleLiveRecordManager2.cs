@@ -778,11 +778,11 @@ internal class SimpleLiveRecordManager2
                             output = Path.ChangeExtension(output, ".ts");
                             var pipeName = $"RE_pipe_{Guid.NewGuid()}";
                             fileOutputStream = PipeUtil.CreatePipe(pipeName);
-                            Logger.InfoMarkUp($"{ResString.namedPipeCreated} [cyan]{pipeName.EscapeMarkup()}[/]");
+                            Logger.InfoMarkUp($"{ResString.namedPipeCreated} [turquoise4]{pipeName.EscapeMarkup()}[/]");
                             var mux = RegisterPipeStream(task.Id, pipeName, output, streamSpec);
                             if (mux is { } ready)
                             {
-                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(ready.Output).EscapeMarkup()}[/]");
+                                Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue3]{Path.GetFileName(ready.Output).EscapeMarkup()}[/]");
                                 pipeMuxTask = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, ready.Names, ready.Output);
                             }
 
@@ -1119,7 +1119,7 @@ internal class SimpleLiveRecordManager2
         AdKeywordRegexList = FilterUtil.ParseAdKeywords(DownloaderConfig.MyOptions.AdKeywords);
         foreach (var reg in AdKeywordRegexList)
         {
-            Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[Cyan underline]{reg}[/]");
+            Logger.InfoMarkUp($"{ResString.customAdKeywordsFound}[turquoise4 underline]{reg}[/]");
         }
         // 设置等待时间
         if (WAIT_SEC == 0)
