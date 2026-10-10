@@ -404,6 +404,8 @@ internal class SimpleLiveRecordManager2
                             {
                                 FileDic[mediaInit]!.ActualFilePath = dec;
                             }
+                            else if (decryptEngine == DecryptEngine.MP4DECRYPT && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                                throw new InvalidOperationException(ResString.decryptionFailed);
                         }
                         // ffmpeg读取信息
                         if (!readInfo)
@@ -466,6 +468,8 @@ internal class SimpleLiveRecordManager2
                                 {
                                     FileDic[mediaInit!]!.ActualFilePath = dec;
                                 }
+                                else if (decryptEngine == DecryptEngine.MP4DECRYPT && DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                                    throw new InvalidOperationException(ResString.decryptionFailed);
                             }
                         }
                         // 读取init信息
@@ -511,6 +515,8 @@ internal class SimpleLiveRecordManager2
                                 File.Delete(enc);
                                 result.ActualFilePath = dec;
                             }
+                            else if (DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                                throw new InvalidOperationException(ResString.decryptionFailed);
                         }
                         if (!readInfo)
                         {
@@ -556,6 +562,8 @@ internal class SimpleLiveRecordManager2
                                 File.Delete(enc);
                                 result.ActualFilePath = dec;
                             }
+                            else if (DownloaderConfig.MyOptions.Keys is { Length: > 0 })
+                                throw new InvalidOperationException(ResString.decryptionFailed);
                         }
                         AddRecordedFileSize(task.Id, result);
                     }

@@ -60,16 +60,18 @@ internal static partial class MP4DecryptUtil
         var tmpFile = "";
         if (decryptEngine == DecryptEngine.SHAKA_PACKAGER)
         {
-            var enc = source;
+            // 与 mp4decrypt 一样使用工作目录及临时文件名，避免 Shaka 将路径中的逗号解析为字段分隔符。
+            bin = File.Exists(bin) ? Path.GetFullPath(bin) : bin;
+            workDir = Path.GetDirectoryName(Path.GetFullPath(source))!;
+            var enc = Path.Combine(workDir, $"{Guid.NewGuid():N}{Path.GetExtension(source)}");
+            tmpDecFile = Path.Combine(workDir, $"{Guid.NewGuid():N}{Path.GetExtension(dest)}");
             // shakaPackager 手动构造文件
             if (init != "")
-            {
-                tmpFile = Path.ChangeExtension(source, ".itmp");
-                MergeUtil.CombineMultipleFilesIntoSingleFile([init, source], tmpFile);
-                enc = tmpFile;
-            }
+                tmpFile = enc;
+            else
+                tmpEncFile = enc;
 
-            cmd = $"--quiet --enable_raw_key_decryption input=\"{enc}\",stream=0,output=\"{dest}\" " +
+            cmd = $"--quiet --enable_raw_key_decryption input=\"{Path.GetFileName(enc)}\",stream=0,output=\"{Path.GetFileName(tmpDecFile)}\" " +
                   $"--keys {(trackId != null ? $"label={trackId}:" : "")}key_id={(trackId != null ? ZeroKid : kid)}:key={keyPair.Split(':')[1]}";
         }
         else if (decryptEngine == DecryptEngine.MP4DECRYPT)
@@ -86,7 +88,6 @@ internal static partial class MP4DecryptUtil
             workDir = Path.GetDirectoryName(source)!;
             tmpEncFile = Path.Combine(workDir, $"{Guid.NewGuid()}{Path.GetExtension(source)}");
             tmpDecFile = Path.Combine(workDir, $"{Path.GetFileNameWithoutExtension(tmpEncFile)}_dec{Path.GetExtension(tmpEncFile)}");
-            File.Move(source, tmpEncFile);
             if (init != "")
             {
                 var infoFile = Path.GetDirectoryName(init) == workDir ? Path.GetFileName(init) : init;
@@ -100,8 +101,7 @@ internal static partial class MP4DecryptUtil
             // ffmpeg实时解密 手动构造文件
             if (init != "")
             {
-                tmpFile = Path.ChangeExtension(source, ".itmp");
-                MergeUtil.CombineMultipleFilesIntoSingleFile([init, source], tmpFile);
+                tmpFile = Path.Combine(Path.GetDirectoryName(source)!, $"{Guid.NewGuid():N}.itmp");
                 enc = tmpFile;
             }
             
@@ -120,26 +120,39 @@ internal static partial class MP4DecryptUtil
         var isSuccess = false;
         try
         {
+            if (tmpFile != "")
+                MergeUtil.CombineMultipleFilesIntoSingleFile([init, source], tmpFile);
+            else if (tmpEncFile != null)
+                File.Move(source, tmpEncFile);
             isSuccess = await RunCommandAsync(bin, cmd, workDir);
         }
         finally
         {
-            // mp4decrypt 还原文件改名操作；启动外部程序失败时也必须恢复源文件。
-            if (workDir is not null)
+            // mp4decrypt/Shaka 还原文件改名操作；启动外部程序失败时也必须恢复源文件。
+            try
             {
                 if (File.Exists(tmpEncFile))
                     File.Move(tmpEncFile, source);
                 if (File.Exists(tmpDecFile))
-                    File.Move(tmpDecFile, dest);
+                {
+                    if (isSuccess)
+                        File.Move(tmpDecFile, dest);
+                    else
+                        File.Delete(tmpDecFile!);
+                }
             }
-            if (!isSuccess)
-                File.Delete(dest);
+            finally
+            {
+                if (!isSuccess)
+                    File.Delete(dest);
+                if (tmpFile != "")
+                    File.Delete(tmpFile);
+            }
         }
 
         if (isSuccess && File.Exists(dest) && new FileInfo(dest).Length > 0)
         {
             File.Move(dest, requestedDest, true);
-            if (tmpFile != "" && File.Exists(tmpFile)) File.Delete(tmpFile);
             return true;
         }
         File.Delete(dest);
@@ -284,23 +297,39 @@ internal static partial class MP4DecryptUtil
 
         // TODO: handle the case that shaka packager actually decrypted (key ID == ZeroKid)
         //       - stop process
-        //       - remove {output}.tmp.webm
-        var cmd = $"--quiet --enable_raw_key_decryption input=\"{output}\",stream=0,output=\"{output}.tmp.webm\" " +
+        // KID 探测同样使用相对临时文件名，父目录中的逗号也不能传入 Shaka 描述符。
+        var workDir = Path.GetDirectoryName(Path.GetFullPath(output))!;
+        var source = Path.Combine(workDir, $"{Guid.NewGuid():N}{Path.GetExtension(output)}");
+        var dest = Path.Combine(workDir, $"{Guid.NewGuid():N}.webm");
+        var cmd = $"--quiet --enable_raw_key_decryption input=\"{Path.GetFileName(source)}\",stream=0,output=\"{Path.GetFileName(dest)}\" " +
                   $"--keys key_id={ZeroKid}:key={ZeroKid}";
 
-        using var p = new Process();
-        p.StartInfo = new ProcessStartInfo()
+        try
         {
-            FileName = bin,
-            Arguments = cmd,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-        p.Start();
-        var errorOutput = p.StandardError.ReadToEnd();
-        p.WaitForExit();
-        return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;
+            File.Move(output, source);
+            using var p = new Process();
+            p.StartInfo = new ProcessStartInfo()
+            {
+                FileName = File.Exists(bin) ? Path.GetFullPath(bin) : bin,
+                Arguments = cmd,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                WorkingDirectory = workDir
+            };
+            p.Start();
+            var standardOutput = p.StandardOutput.ReadToEndAsync();
+            var errorOutput = p.StandardError.ReadToEnd();
+            p.WaitForExit();
+            standardOutput.GetAwaiter().GetResult();
+            return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;
+        }
+        finally
+        {
+            if (File.Exists(source))
+                File.Move(source, output);
+            File.Delete(dest);
+        }
     }
 
     [GeneratedRegex("Key for key_id=([0-9a-f]+) was not found")]
