@@ -36,6 +36,8 @@ internal class SimpleLiveRecordManager2
     List<StreamSpec> SelectedSteams;
     ConcurrentDictionary<int, string> PipeSteamNamesDic = new();
     List<OutputFile> OutputFiles = [];
+    private readonly LiveRecordingCleanup recordingCleanup;
+    private Task<bool>? pipeMuxTask;
     private readonly HashSet<string> reservedOutputPaths = new(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
         ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     DateTime? PublishDateTime;
@@ -65,6 +67,7 @@ internal class SimpleLiveRecordManager2
     public SimpleLiveRecordManager2(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
     {
         this.DownloaderConfig = downloaderConfig;
+        recordingCleanup = new LiveRecordingCleanup(downloaderConfig.DirPrefix);
         Downloader = new SimpleDownloader(DownloaderConfig);
         PublishDateTime = selectedSteams.FirstOrDefault()?.PublishTime;
         StreamExtractor = streamExtractor;
@@ -265,6 +268,7 @@ internal class SimpleLiveRecordManager2
         var readInfo = false; // 是否读取过
         bool useAACFilter = false; // ffmpeg合并flag
         bool initDownloaded = false; // 当前 init 是否已下载
+        List<string> initFiles = []; // 当前 init 及其解密产物，成功写入输出后才允许清理
         var initIndex = 0; // init 切换时使用独立文件，保留已录制 Period 的初始化信息
         ConcurrentDictionary<MediaSegment, DownloadResult?> FileDic = new();
         List<Mediainfo> mediaInfos = [];
@@ -316,7 +320,8 @@ internal class SimpleLiveRecordManager2
 
         Logger.Debug($"dirName: {dirName}; tmpDir: {tmpDir}; saveDir: {saveDir}; saveName: {saveName}");
 
-        // 创建文件夹
+        // 创建文件夹，并登记轨道目录供录制成功后检查是否为空。
+        recordingCleanup.TrackDirectory(tmpDir);
         if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
         if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
 
@@ -346,6 +351,7 @@ internal class SimpleLiveRecordManager2
                         initIndex++;
                     mediaInit = batch.Init;
                     initDownloaded = false;
+                    initFiles.Clear();
                     mp4InitFile = "";
                     currentKID = "";
                     readInfo = false;
@@ -363,6 +369,8 @@ internal class SimpleLiveRecordManager2
                     }
 
                     var path = Path.Combine(tmpDir, initIndex == 0 ? "_init.mp4.tmp" : $"_init_{initIndex}.mp4.tmp");
+                    initFiles.Add(Path.ChangeExtension(path, null));
+                    recordingCleanup.TrackFile(initFiles[^1]);
                     var result = await DownloadLiveSegmentAsync(mediaInit, path, speedContainer, headers, RequestTimeouts[task.Id].Read, task.Id, isInit: true);
                     FileDic[mediaInit] = result;
                     if (result is not { Success: true })
@@ -389,6 +397,8 @@ internal class SimpleLiveRecordManager2
                         {
                             var enc = result.ActualFilePath;
                             var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+                            initFiles.Add(dec);
+                            recordingCleanup.TrackFile(dec);
                             var dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
                             if (dResult)
                             {
@@ -449,6 +459,8 @@ internal class SimpleLiveRecordManager2
                                 // 需要重新解密init
                                 var enc = FileDic[mediaInit!]!.ActualFilePath;
                                 var dec = Path.Combine(Path.GetDirectoryName(enc)!, Path.GetFileNameWithoutExtension(enc) + "_dec" + Path.GetExtension(enc));
+                                initFiles.Add(dec);
+                                recordingCleanup.TrackFile(dec);
                                 var dResult = await MP4DecryptUtil.DecryptAsync(decryptEngine, decryptionBinaryPath, DownloaderConfig.MyOptions.Keys, enc, dec, currentKID);
                                 if (dResult)
                                 {
@@ -762,7 +774,7 @@ internal class SimpleLiveRecordManager2
                             if (mux is { } ready)
                             {
                                 Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue1]{Path.GetFileName(ready.Output).EscapeMarkup()}[/]");
-                                var t = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, ready.Names, ready.Output);
+                                pipeMuxTask = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, ready.Names, ready.Output);
                             }
 
                             // Windows only
@@ -842,6 +854,7 @@ internal class SimpleLiveRecordManager2
                     if (fileOutputStream != null)
                     {
                         fileOutputStream.Flush();
+                        recordingCleanup.MarkMerged(initFiles);
                         RecordingSizeDic[task.Id] = mergedBytesWritten;
                     }
                 }
@@ -1201,15 +1214,21 @@ internal class SimpleLiveRecordManager2
 
         var success = !fatalError && Results.Values.All(v => v == true);
 
-        // 删除临时文件夹
-        if (DownloaderConfig.MyOptions is { SkipMerge: false, DelAfterDone: true } && success)
+        // 所有轨道关闭管道后等待 ffmpeg 收尾；输出失败时保留 init 供排查和恢复。
+        if (pipeMuxTask != null)
         {
-            foreach (var item in StreamExtractor.RawFiles)
+            try
             {
-                var file = Path.Combine(DownloaderConfig.DirPrefix, item.Key);
-                if (File.Exists(file)) File.Delete(file);
+                var muxSuccess = await pipeMuxTask;
+                if (!muxSuccess)
+                    Logger.Error("Mux failed");
+                success &= muxSuccess;
             }
-            OtherUtil.SafeDeleteDir(DownloaderConfig.DirPrefix);
+            catch (Exception ex)
+            {
+                Logger.ErrorMarkUp(ex);
+                success = false;
+            }
         }
 
         // 混流
@@ -1221,6 +1240,8 @@ internal class SimpleLiveRecordManager2
             {
                 OutputFiles = OutputFiles.Where(o => o.MediaType != MediaType.SUBTITLES).ToList();
             }
+            // 清理列表只包含本次录制参与混流的轨道，外部导入源始终保留。
+            var recordedFiles = OutputFiles.Select(f => f.FilePath).ToArray();
             if (DownloaderConfig.MyOptions.MuxImports != null)
             {
                 OutputFiles.AddRange(DownloaderConfig.MyOptions.MuxImports);
@@ -1228,6 +1249,7 @@ internal class SimpleLiveRecordManager2
             if (OutputFiles.Count == 0)
             {
                 Logger.Warn(ResString.processingMuxNoInputs);
+                CleanupRecording(success);
                 return success;
             }
             OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
@@ -1251,15 +1273,14 @@ internal class SimpleLiveRecordManager2
                     processing.Begin(ResString.processingFinishing);
                     processing.Report(new(Bytes: new FileInfo(outPath + ext).Length));
                 }
-                // 完成后删除各轨道文件
+                // 完成后删除本次录制的各轨道文件，保留外部导入源
                 if (result)
                 {
                     if (!DownloaderConfig.MyOptions.MuxOptions.KeepFiles)
                     {
                         Logger.WarnMarkUp("[grey]Cleaning files...[/]");
-                        OutputFiles.ForEach(f => File.Delete(f.FilePath));
-                        var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
-                        OtherUtil.SafeDeleteDir(tmpDir);
+                        foreach (var file in recordedFiles)
+                            File.Delete(file);
                     }
                 }
                 // 判断是否要改名
@@ -1274,6 +1295,18 @@ internal class SimpleLiveRecordManager2
             success &= muxSuccess;
         }
 
+        CleanupRecording(success);
         return success;
+    }
+
+    private void CleanupRecording(bool success)
+    {
+        // 录制和最终混流均成功后才清理；未实时合并或保留分片时不删除 init。
+        if (!success || DownloaderConfig.MyOptions is not { SkipMerge: false, DelAfterDone: true })
+            return;
+        foreach (var file in DownloaderConfig.CreatedMetadataFiles)
+            recordingCleanup.DeleteFile(file);
+        if (DownloaderConfig.MyOptions is { LiveRealTimeMerge: true, LiveKeepSegments: false })
+            recordingCleanup.Cleanup();
     }
 }

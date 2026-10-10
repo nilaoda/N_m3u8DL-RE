@@ -130,6 +130,8 @@ public class LiveSingleInitTests
             FilterUtil.CleanAd(streams, null); // 与 Program 的直播初始化流程一致。
             var options = CreateOptions(root);
             options.LiveRealTimeMerge = realtimeMerge;
+            // 明文/CENC 检查自动清理，AES 检查保留；未实时合并时 keep=false 也不能删除分片。
+            options.LiveKeepSegments = encryption == "aes";
             options.LiveWaitTime = 1;
             options.LiveTakeCount = 16;
             options.LiveIdleTimeout = 6;
@@ -155,6 +157,10 @@ public class LiveSingleInitTests
             }
             if (realtimeMerge)
             {
+                if (!options.LiveKeepSegments)
+                    Assert.False(Directory.Exists(Path.Combine(root, "tmp")));
+                else
+                    Assert.NotEmpty(Directory.GetFiles(Path.Combine(root, "tmp"), "*", SearchOption.AllDirectories));
                 var output = Assert.Single(Directory.GetFiles(Path.Combine(root, "out")));
                 await AssertVideo(output, mediaCount * 2, mediaCount * 50);
                 if (encryption == "cenc")

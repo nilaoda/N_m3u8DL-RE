@@ -56,7 +56,7 @@ public sealed class ToolCommandTests : IDisposable
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task SymbolicLinksCannotBypassInputProtection(bool directoryLink)
+    public async Task FileAliasesCannotBypassInputProtection(bool directoryLink)
     {
         var source = Write("input.ts", [1, 2]);
         var extra = Write("extra.ts", [3]);
@@ -64,13 +64,13 @@ public sealed class ToolCommandTests : IDisposable
         if (directoryLink)
         {
             var link = Path.Combine(directory, "linked-directory");
-            Directory.CreateSymbolicLink(link, directory);
+            await CreateLink(link, directory, directory: true);
             alias = Path.Combine(link, "input.ts");
         }
         else
         {
             alias = Path.Combine(directory, "linked-input.ts");
-            File.CreateSymbolicLink(alias, "input.ts");
+            await CreateLink(alias, OperatingSystem.IsWindows() ? source : "input.ts", directory: false);
         }
         Assert.Equal(1, await Invoke("concat", "-i", alias, "-i", extra, "-o", source, "--overwrite"));
         Assert.Equal(1, await Invoke("concat", "-i", source, "-i", extra, "-o", alias, "--overwrite"));
@@ -95,11 +95,11 @@ public sealed class ToolCommandTests : IDisposable
         var extra = Write("extra.ts", [3]);
         var link = Path.Combine(directory, "junction");
         // 目录联接无需启用开发者模式，也无需创建符号链接的权限。
-        await Run("cmd.exe", "/c", "mklink", "/J", link, directory);
+        await CreateLink(link, directory, directory: true);
         var alias = Path.Combine(link, "input.ts");
         var extended = @"\\?\" + source;
         var hardLink = Path.Combine(directory, "hard-link.ts");
-        await Run("cmd.exe", "/c", "mklink", "/H", hardLink, source);
+        await CreateLink(hardLink, source, directory: false);
         var aliases = new List<string> { alias, extended, source.ToUpperInvariant(), hardLink };
         // 本机管理共享可访问时，同时覆盖盘符路径与 UNC 路径的文件身份比较。
         var unc = @"\\localhost\" + Path.GetPathRoot(source)![0] + "$" + source[2..];

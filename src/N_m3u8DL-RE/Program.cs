@@ -252,7 +252,7 @@ internal class Program
             extractor.RawFiles["meta.json"] = GlobalUtil.ConvertToJson(lists);
         }
         // 写出文件
-        await WriteRawFilesAsync(option, extractor, tmpDir);
+        var createdMetadataFiles = await WriteRawFilesAsync(option, extractor, tmpDir);
 
         // 在 drop 筛选前记录多 Period 身份；只留下一个 Period 时仍需按 PTO 裁剪。
         var multiPeriodVod = extractor.ExtractorType == ExtractorType.MPEG_DASH &&
@@ -420,7 +420,7 @@ internal class Program
         }
 
         // 写出文件
-        await WriteRawFilesAsync(option, extractor, tmpDir);
+        createdMetadataFiles.AddRange(await WriteRawFilesAsync(option, extractor, tmpDir));
 
         if (option.SkipDownload)
         {
@@ -446,6 +446,7 @@ internal class Program
         {
             MyOptions = option,
             DirPrefix = tmpDir,
+            CreatedMetadataFiles = createdMetadataFiles,
             Headers = parserConfig.Headers, // 使用命令行解析得到的Headers
         };
 
@@ -531,9 +532,10 @@ internal class Program
         }
     }
 
-    private static async Task WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string tmpDir)
+    internal static async Task<List<string>> WriteRawFilesAsync(MyOption option, StreamExtractor extractor, string tmpDir)
     {
-        // 写出json文件
+        List<string> createdFiles = [];
+        // 写出json文件，并记录本次新建的文件，保留已有清单和元数据。
         if (option.WriteMetaJson)
         {
             if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
@@ -541,9 +543,16 @@ internal class Program
             foreach (var item in extractor.RawFiles)
             {
                 var file = Path.Combine(tmpDir, item.Key);
-                if (!File.Exists(file)) await File.WriteAllTextAsync(file, item.Value, Encoding.UTF8);
+                if (!Path.Exists(file))
+                {
+                    await using var stream = new FileStream(file, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+                    await using var writer = new StreamWriter(stream, Encoding.UTF8);
+                    await writer.WriteAsync(item.Value);
+                    createdFiles.Add(file);
+                }
             }
         }
+        return createdFiles;
     }
 
     static async Task CheckUpdateAsync()
