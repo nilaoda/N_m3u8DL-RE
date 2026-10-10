@@ -129,7 +129,7 @@ Options:
   --log-file-path <log-file-path>                         设置日志文件路径, 例如 C:\Logs\log.txt
   --base-url <base-url>                                   设置BaseURL
   --thread-count <number>                                 设置下载线程数 [default: 10]
-  --download-retry-count <number>                         每个分片下载异常时的重试次数；分片直播临时网络故障在重试耗尽后仍会等待恢复 [default: 3]
+  --download-retry-count <number>                         每个分片下载异常时的重试次数；分片直播临时网络故障在重试耗尽后仍会等待恢复 [default: 7]
   --http-request-timeout <seconds>                        HTTP请求超时(秒)；分片直播未指定时自动调整，指定后也用于分片连续无数据超时，不限制总下载时长 [default: 100]
   --force-ansi-console                                    强制认定终端为支持ANSI且可交互的终端
   --no-ansi-color                                         去除ANSI颜色
@@ -183,6 +183,7 @@ Options:
   --live-wait-time <SEC>                                  手动设置直播列表刷新间隔
   --live-idle-timeout <SEC>                               直播列表连续指定秒数无新分片时停止录制（默认关闭）
   --live-take-count <NUM>                                 手动设置录制直播时首次获取分片的数量 [default: 16]
+  --live-catchup <TIME>                                   从指定历史时间下载直播，支持回看时长或日期时间；覆盖 --live-take-count
   --mux-import <OPTIONS>                                  混流时引入外部媒体文件. 输入 "--morehelp mux-import" 以查看详细信息
   -sv, --select-video <OPTIONS>                           通过正则表达式选择符合要求的视频流. 输入 "--morehelp select-video" 以查看详细信息
   -sa, --select-audio <OPTIONS>                           通过正则表达式选择符合要求的音频流. 输入 "--morehelp select-audio" 以查看详细信息
@@ -398,6 +399,19 @@ More Help:
 - `DEMUXER`：使用 concat 文件列表，逐文件处理媒体时间轴，结果可能与字节拼接不同。
 
 原有 `--use-ffmpeg-concat-demuxer` 继续支持，命令行选择优先于配置文件；同一层同时指定两种写法时，启用的旧参数优先。该模式选项仅影响 FFmpeg 分片合并；二进制合并、独立 init 的多段拼接及直播管道仍使用各自的处理流程。
+
+## 直播回看
+
+```bash
+# 回看一小时前开始的节目，下载 30 分钟并混流为 MKV
+N_m3u8DL-RE "URL" --live-catchup "01:00:00" --live-record-limit "00:30:00" --live-real-time-merge -M mkv
+
+# 按节目日期时间回看；未指定时区时使用本地时区
+N_m3u8DL-RE "URL" --live-catchup "2026-10-10T21:00:00+08:00" --live-record-limit "00:30:00" --live-real-time-merge -M mkv
+
+# 需要清单提供可靠的时间信息，且起点仍在服务端回看窗口内。
+# 按完整分片下载，边界可能略有偏差；未设置录制时长时继续录制直到停止。
+```
 
 ## 其他
 从 v0.1.5 开始，可以尝试开启 `live-pipe-mux` 来代替以上命令

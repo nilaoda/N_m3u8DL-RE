@@ -136,6 +136,13 @@ internal class Program
             option.LiveRealTimeMerge = true;
         }
 
+        if (option.LiveCatchup != null && (option.LivePerformAsVod || option.CustomRange != null))
+        {
+            Logger.Error(ResString.liveCatchupConflict);
+            Environment.ExitCode = 1;
+            return;
+        }
+
         // 默认的headers
         var headers = new Dictionary<string, string>()
         {
@@ -180,6 +187,16 @@ internal class Program
             }
         }
 
+        try
+        {
+            option.LiveCatchupStart = option.LiveCatchup?.Resolve(DateTimeOffset.Now);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            Logger.Error(ResString.liveCatchupInvalid);
+            Environment.ExitCode = 1;
+            return;
+        }
         var url = option.Input;
 
         // 流提取器配置
@@ -190,6 +207,12 @@ internal class Program
             await extractor.LoadSourceFromUrlAsync(url);
             return true;
         });
+        if (option.LiveCatchup != null && extractor.ExtractorType is not (ExtractorType.MPEG_DASH or ExtractorType.HLS))
+        {
+            Logger.Error(ResString.liveCatchupRequireLive);
+            Environment.ExitCode = 1;
+            return;
+        }
         if (extractor.ExtractorType == ExtractorType.BINARY)
         {
             var binarySource = extractor.DirectSource ??
@@ -367,6 +390,23 @@ internal class Program
 
         // 直播检测
         var livingFlag = selectedStreams.Any(s => s.Playlist?.IsLive == true) && !option.LivePerformAsVod;
+        if (option.LiveCatchupStart is { } catchupStart)
+        {
+            LiveCatchupWindow window;
+            try
+            {
+                window = new LiveCatchupWindow(catchupStart, option.LiveRecordLimit);
+                window.Validate(selectedStreams, DateTimeOffset.Now);
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.Error(ex.Message);
+                Environment.ExitCode = 1;
+                return;
+            }
+            Logger.Info(ResString.liveCatchupRange, catchupStart.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz"),
+                window.End?.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz") ?? ResString.liveCatchupUntilStopped);
+        }
         if (option.VodSelectParts == true && selectedStreams.Any(s => s.Playlist?.IsLive == true))
             throw new NotSupportedException(ResString.vodPartsRequireVod);
         if (livingFlag)

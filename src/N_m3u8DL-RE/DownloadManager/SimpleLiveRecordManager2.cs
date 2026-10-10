@@ -60,6 +60,7 @@ internal class SimpleLiveRecordManager2
     List<Regex> AdKeywordRegexList = []; // 广告关键字正则（直播刷新时复用）
 
     private readonly Lock lockObj = new();
+    private LiveCatchupWindow? catchupWindow;
     TimeSpan? audioStart = null;
     private readonly TaskCompletionSource<TimeSpan?> audioClockReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly HashSet<StreamSpec> pendingAudioClocks = [];
@@ -969,7 +970,11 @@ internal class SimpleLiveRecordManager2
                     SamePathDic[task.Id] = allSamePath;
                 }
                 NotFoundPolicies[task.Id].Update(segments, refreshDelaySeconds);
-                // 过滤不需要下载的片段：在完整窗口中定位上一片，只保留尚未入队的分片。
+                // 回看只保留指定节目时间范围内已完整发布的分片。
+                var catchupEnded = false;
+                if (catchupWindow != null)
+                    segments = catchupWindow.Filter(streamSpec, out catchupEnded);
+                // 过滤不需要下载的片段：在候选窗口中定位上一片，只保留尚未入队的分片。
                 var newList = FilterMediaSegments(segments, task);
                 // 过滤广告分片（在更新去重边界/时长记录之前剔除，避免污染统计）
                 if (AdKeywordRegexList.Count > 0)
@@ -978,6 +983,7 @@ internal class SimpleLiveRecordManager2
                 }
                 if (newList.Count > 0)
                 {
+                    catchupWindow?.Record(streamSpec, newList);
                     Interlocked.Exchange(ref lastNewSegmentTimestamp, Stopwatch.GetTimestamp());
                     task.MaxValue += newList.Count;
                     // 保留源序号，单独分配录制顺序用于文件名和合并排序。
@@ -994,7 +1000,8 @@ internal class SimpleLiveRecordManager2
                     RefreshedDurDic[task.Id] += TimeSpan.FromTicks(newList.Sum(s => (long)Math.Round(s.Duration * TimeSpan.TicksPerSecond)));
                 }
 
-                if (!STOP_FLAG && DownloaderConfig.MyOptions.LiveRecordLimit is { } limit && RefreshedDurDic[task.Id] >= limit)
+                if (!STOP_FLAG && (catchupWindow != null ? catchupEnded :
+                    DownloaderConfig.MyOptions.LiveRecordLimit is { } limit && RefreshedDurDic[task.Id] >= limit))
                 {
                     RecordLimitReachedDic[task.Id] = true;
                 }
@@ -1007,11 +1014,21 @@ internal class SimpleLiveRecordManager2
                 }
             });
 
+            // 回看时字幕可能没有末尾 cue；音视频已到固定终点后，本轮字幕也已入队，可以一起收尾。
+            if (catchupWindow?.End != null)
+            {
+                var mediaTasks = dic.Where(kp => kp.Key.MediaType != MediaType.SUBTITLES).Select(kp => kp.Value.Id).ToList();
+                if (mediaTasks.Count > 0 && mediaTasks.All(id => RecordLimitReachedDic[id] || LiveEndDic[id]))
+                    foreach (var kp in dic.Where(kp => kp.Key.MediaType == MediaType.SUBTITLES))
+                        RecordLimitReachedDic[kp.Value.Id] = true;
+            }
+
             // 所有轨道都已推送本轮分片后再判断停止，保证消费者能收尾混流。
-            // 检测时长限制
+            // 检测回看终点或录制时长限制；停止刷新后仍完成已入队分片的下载。
             if (!STOP_FLAG && RecordLimitReachedDic.Values.All(x => x))
             {
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.liveLimitReached}[/]");
+                var message = catchupWindow != null ? ResString.liveCatchupRangeReached : ResString.liveLimitReached;
+                Logger.WarnMarkUp($"[darkorange3_1]{message}[/]");
                 StopRecording(cancelDownloads: false);
             }
 
@@ -1088,8 +1105,16 @@ internal class SimpleLiveRecordManager2
         var takeLastCount = DownloaderConfig.MyOptions.LiveTakeCount;
         ConcurrentDictionary<int, SpeedContainer> SpeedContainerDic = new(); // 速度计算
         ConcurrentDictionary<StreamSpec, bool?> Results = new();
-        // 同步流
-        FilterUtil.SyncStreams(SelectedSteams, takeLastCount);
+        // 同步流：回看使用固定节目时间，不能再裁成最新的 live-take-count 个分片。
+        if (DownloaderConfig.MyOptions.LiveCatchup is { } catchup)
+        {
+            var now = DateTimeOffset.Now;
+            var start = DownloaderConfig.MyOptions.LiveCatchupStart ?? catchup.Resolve(now);
+            catchupWindow = new LiveCatchupWindow(start, DownloaderConfig.MyOptions.LiveRecordLimit);
+            catchupWindow.Validate(SelectedSteams, now);
+        }
+        else
+            FilterUtil.SyncStreams(SelectedSteams, takeLastCount);
         // 初始化广告关键字正则，仅在启动时记录一次（直播刷新时复用，避免每次刷新刷屏）
         AdKeywordRegexList = FilterUtil.ParseAdKeywords(DownloaderConfig.MyOptions.AdKeywords);
         foreach (var reg in AdKeywordRegexList)
@@ -1268,13 +1293,17 @@ internal class SimpleLiveRecordManager2
             var outName = OtherUtil.GetSafeFileName(dirName, ".MUX" + ext);
             var outPath = Path.Combine(saveDir, Path.GetFileNameWithoutExtension(outName));
             Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}[/]");
+            // 回看保留媒体的源 PTS，复用已有混流时间轴处理，共同归零媒体与广播字幕。
+            using var timeline = catchupWindow != null && DownloaderConfig.MyOptions.AutoSubtitleFix
+                ? await MuxSubtitleTimeline.CreateAsync(OutputFiles.Select(f => f.FilePath).ToArray(),
+                    DownloaderConfig.MyOptions.FFmpegBinaryPath, CancellationToken.None) : null;
             var muxSuccess = await MediaProcessingProgress.RunAsync(ResString.processingMux, async processing =>
             {
                 processing.Begin(ResString.processingMux, logStart: false);
                 var exitCode = await MergeUtil.MuxInputsAsync(
                     DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge ? DownloaderConfig.MyOptions.MkvmergeBinaryPath! : DownloaderConfig.MyOptions.FFmpegBinaryPath!,
                     OutputFiles.ToArray(), outPath + ext, useMkvmerge: DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge,
-                    downloadDefaults: true, dateinfo: !DownloaderConfig.MyOptions.NoDateInfo, progress: processing.Report);
+                    downloadDefaults: true, dateinfo: !DownloaderConfig.MyOptions.NoDateInfo, timeline: timeline, progress: processing.Report);
                 var result = exitCode == 0 || DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge && exitCode == 1;
                 if (result)
                 {
@@ -1303,6 +1332,9 @@ internal class SimpleLiveRecordManager2
             success &= muxSuccess;
         }
 
+        if (success && catchupWindow is { ActualStart: { } actualStart, ActualEnd: { } actualEnd })
+            Logger.Info(ResString.liveCatchupActualRange, actualStart.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff zzz"),
+                actualEnd.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff zzz"));
         CleanupRecording(success);
         return success;
     }

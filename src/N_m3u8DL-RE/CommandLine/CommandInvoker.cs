@@ -57,7 +57,7 @@ internal static partial class CommandInvoker
     private static readonly Option<bool> AutoSelect = new Option<bool>("--auto-select").WithDefault(false).WithDescription(() => ResString.cmd_autoSelect);
     private static readonly Option<bool> SubOnly = new Option<bool>("--sub-only").WithDefault(false).WithDescription(() => ResString.cmd_subOnly);
     private static readonly Option<int> ThreadCount = new Option<int>("--thread-count") { HelpName = "number", DefaultValueFactory = _ => Environment.ProcessorCount }.WithDescription(() => ResString.cmd_threadCount);
-    private static readonly Option<int> DownloadRetryCount = new Option<int>("--download-retry-count") { HelpName = "number", DefaultValueFactory = _ => 3 }.WithDescription(() => ResString.cmd_downloadRetryCount);
+    private static readonly Option<int> DownloadRetryCount = new Option<int>("--download-retry-count") { HelpName = "number", DefaultValueFactory = _ => 7 }.WithDescription(() => ResString.cmd_downloadRetryCount);
     private static readonly Option<double> HttpRequestTimeout = new Option<double>("--http-request-timeout") { HelpName = "seconds", DefaultValueFactory = _ => 100 }.WithDescription(() => ResString.cmd_httpRequestTimeout);
     private static readonly Option<bool> SkipMerge = new Option<bool>("--skip-merge").WithDefault(false).WithDescription(() => ResString.cmd_skipMerge);
     private static readonly Option<bool> SkipDownload = new Option<bool>("--skip-download").WithDefault(false).WithDescription(() => ResString.cmd_skipDownload);
@@ -126,6 +126,7 @@ internal static partial class CommandInvoker
     private static readonly Option<TimeSpan?> LiveRecordLimit = new Option<TimeSpan?>("--live-record-limit") { HelpName = "HH:mm:ss", CustomParser = ParseLiveLimit }.WithDescription(() => ResString.cmd_liveRecordLimit);
     private static readonly Option<int?> LiveWaitTime = new Option<int?>("--live-wait-time") { HelpName = "SEC" }.WithDescription(() => ResString.cmd_liveWaitTime);
     private static readonly Option<int?> LiveIdleTimeout = new Option<int?>("--live-idle-timeout") { HelpName = "SEC", CustomParser = ParseLiveIdleTimeout }.WithDescription(() => ResString.cmd_liveIdleTimeout);
+    private static readonly Option<LiveCatchup?> LiveCatchupOption = new Option<LiveCatchup?>("--live-catchup") { HelpName = "TIME", CustomParser = ParseLiveCatchup }.WithDescription(() => ResString.cmd_liveCatchup);
     private static readonly Option<int> LiveTakeCount = new Option<int>("--live-take-count") { HelpName = "NUM", DefaultValueFactory = _ => 16 }.WithDescription(() => ResString.cmd_liveTakeCount);
     private static readonly Option<bool> LiveFixVttByAudio = new Option<bool>("--live-fix-vtt-by-audio").WithDefault(false).WithDescription(() => ResString.cmd_liveFixVttByAudio);
 
@@ -140,6 +141,19 @@ internal static partial class CommandInvoker
     private static readonly Option<StreamFilter?> DropVideoFilter = new Option<StreamFilter?>("-dv", "--drop-video") { HelpName = "OPTIONS", CustomParser = ParseStreamFilter }.WithDescription(() => ResString.cmd_dropVideo);
     private static readonly Option<StreamFilter?> DropAudioFilter = new Option<StreamFilter?>("-da", "--drop-audio") { HelpName = "OPTIONS", CustomParser = ParseStreamFilter }.WithDescription(() => ResString.cmd_dropAudio);
     private static readonly Option<StreamFilter?> DropSubtitleFilter = new Option<StreamFilter?>("-ds", "--drop-subtitle") { HelpName = "OPTIONS", CustomParser = ParseStreamFilter }.WithDescription(() => ResString.cmd_dropSubtitle);
+
+    private static LiveCatchup? ParseLiveCatchup(ArgumentResult result)
+    {
+        try
+        {
+            return LiveCatchup.Parse(result.Tokens[0].Value);
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException)
+        {
+            result.AddError(ResString.liveCatchupInvalid);
+            return null;
+        }
+    }
 
     /// <summary>
     /// 解析下载速度限制
@@ -714,6 +728,7 @@ internal static partial class CommandInvoker
             LiveWaitTime = result.GetValue(LiveWaitTime),
             LiveIdleTimeout = result.GetValue(LiveIdleTimeout),
             LiveTakeCount = result.GetValue(LiveTakeCount),
+            LiveCatchup = result.GetValue(LiveCatchupOption),
             NoDateInfo = result.GetValue(NoDateInfo),
             NoLog = result.GetValue(NoLog),
             AllowHlsMultiExtMap = result.GetValue(AllowHlsMultiExtMap),
@@ -787,7 +802,7 @@ internal static partial class CommandInvoker
             MaxSpeed,
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, NetworkInterface, CustomRange, TaskStartAt,
-            LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount,
+            LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount, LiveCatchupOption,
             MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp, GenerateCompletion
         };
         // 根命令仍可直接下载；参数边界解析时不能强制要求子命令。

@@ -127,7 +127,7 @@ Options:
   --log-file-path <log-file-path>                         Set log file path, Example: C:\Logs\log.txt
   --base-url <base-url>                                   Set BaseURL
   --thread-count <number>                                 Set download thread count [default: 10]
-  --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 3]
+  --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 7]
   --http-request-timeout <seconds>                        HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time [default: 100]
   --force-ansi-console                                    Force assuming the terminal is ANSI-compatible and interactive
   --no-ansi-color                                         Remove ANSI colors
@@ -181,6 +181,7 @@ Options:
   --live-wait-time <SEC>                                  Manually set the live playlist refresh interval
   --live-idle-timeout <SEC>                               Stop recording when a live playlist has no new segments for this many seconds (disabled by default)
   --live-take-count <NUM>                                 Manually set the number of segments downloaded for the first time when recording live [default: 16]
+  --live-catchup <TIME>                                   Download live history from a lookback duration or date/time; overrides --live-take-count
   --mux-import <OPTIONS>                                  When MuxAfterDone enabled, allow to import local media files. Use "--morehelp mux-import" for more details
   -sv, --select-video <OPTIONS>                           Select video streams by regular expressions. Use "--morehelp select-video" for more details
   -sa, --select-audio <OPTIONS>                           Select audio streams by regular expressions. Use "--morehelp select-audio" for more details
@@ -396,6 +397,19 @@ The default, `--ffmpeg-concat-mode LOCAL_HTTP`, serves a seekable byte stream th
 - `DEMUXER`: use a concat file list, processing each file's media timeline; results can differ from byte concatenation.
 
 The existing `--use-ffmpeg-concat-demuxer` remains supported. Command-line choices override configuration defaults; when both forms are supplied at the same level, the enabled legacy option takes precedence. The mode only affects FFmpeg segment merging; binary merging, independently initialized sections, and live pipe muxing keep their respective processing flows.
+
+## Live catch-up
+
+```bash
+# Start one hour ago, download 30 minutes and mux to MKV
+N_m3u8DL-RE "URL" --live-catchup "01:00:00" --live-record-limit "00:30:00" --live-real-time-merge -M mkv
+
+# Start at a specific date/time; uses the local timezone when none is specified
+N_m3u8DL-RE "URL" --live-catchup "2026-10-10T21:00:00+08:00" --live-record-limit "00:30:00" --live-real-time-merge -M mkv
+
+# Requires reliable manifest timing and a start within the server's catch-up window.
+# Downloads whole segments, so boundaries may differ slightly; without a recording limit, continues until stopped.
+```
 
 ## Others
 From v0.1.5, you can try to enable `live-pipe-mux` instead of the above command
