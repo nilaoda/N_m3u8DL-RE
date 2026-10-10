@@ -492,7 +492,7 @@ internal class Program
         Console.ReadKey();
 #endif
 
-        Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue1]{option.SaveName.EscapeMarkup()}[/]");
+        Logger.InfoMarkUp(ResString.saveName + $"[deepskyblue3]{option.SaveName.EscapeMarkup()}[/]");
 
         // 开始MuxAfterDone后自动使用二进制版
         if (option is { BinaryMerge: false, MuxAfterDone: true })
@@ -626,7 +626,7 @@ internal class Program
             if (!latestVer.StartsWith(nowVer) && !latestVer.StartsWith("https"))
             {
                 Console.Title = $"{ResString.newVersionFound} {latestVer}";
-                Logger.InfoMarkUp($"[cyan]{ResString.newVersionFound}[/] [red]{latestVer}[/]");
+                Logger.InfoMarkUp($"[turquoise4]{ResString.newVersionFound}[/] [red]{latestVer}[/]");
             }
         }
         catch (Exception)

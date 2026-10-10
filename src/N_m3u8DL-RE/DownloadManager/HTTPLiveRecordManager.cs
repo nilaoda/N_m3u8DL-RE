@@ -182,9 +182,9 @@ internal class HTTPLiveRecordManager
 
             if (!string.IsNullOrEmpty(programId))
             {
-                Logger.InfoMarkUp($"Program Id: [cyan]{programId.EscapeMarkup()}[/]");
-                if (!string.IsNullOrEmpty(serviceName)) Logger.InfoMarkUp($"Service Name: [cyan]{serviceName.EscapeMarkup()}[/]");
-                if (!string.IsNullOrEmpty(serviceProvider)) Logger.InfoMarkUp($"Service Provider: [cyan]{serviceProvider.EscapeMarkup()}[/]");
+                Logger.InfoMarkUp($"Program Id: [turquoise4]{programId.EscapeMarkup()}[/]");
+                if (!string.IsNullOrEmpty(serviceName)) Logger.InfoMarkUp($"Service Name: [turquoise4]{serviceName.EscapeMarkup()}[/]");
+                if (!string.IsNullOrEmpty(serviceProvider)) Logger.InfoMarkUp($"Service Provider: [turquoise4]{serviceProvider.EscapeMarkup()}[/]");
                 READ_IFO = true;
             }
         }

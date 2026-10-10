@@ -108,7 +108,7 @@ public class StreamSpec
         }
         else
         {
-            prefixStr = $"[aqua]Vid[/] {encStr}";
+            prefixStr = $"[turquoise4]Vid[/] {encStr}";
             var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {RoleDisplay}";
             returnStr = d.EscapeMarkup();
         }
@@ -142,7 +142,7 @@ public class StreamSpec
         }
         else
         {
-            prefixStr = $"[aqua]Vid[/] {encStr}";
+            prefixStr = $"[turquoise4]Vid[/] {encStr}";
             var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange} | {RoleDisplay}";
             returnStr = d.EscapeMarkup();
         }
@@ -184,7 +184,7 @@ public class StreamSpec
         }
         else
         {
-            prefixStr = $"[aqua]Vid[/] {encStr}";
+            prefixStr = $"[turquoise4]Vid[/] {encStr}";
             var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {RoleDisplay}";
             returnStr = d.EscapeMarkup();
         }

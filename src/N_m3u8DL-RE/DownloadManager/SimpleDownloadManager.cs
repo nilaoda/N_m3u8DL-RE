@@ -881,7 +881,12 @@ internal partial class SimpleDownloadManager
         var progressColumns = new ProgressColumn[]
         {
             new TaskDescriptionColumn() { Alignment = Justify.Left },
-            new ProgressBarColumn(){ Width = 30 },
+            new ProgressBarColumn()
+            {
+                Width = 30,
+                CompletedStyle = new Style(Color.DarkOrange3_1),
+                IndeterminateStyle = new Style(Color.DarkOrange3_1)
+            },
             new MyPercentageColumn(),
             new DownloadStatusColumn(SpeedContainerDic),
             new DownloadSpeedColumn(SpeedContainerDic), // 速度计算

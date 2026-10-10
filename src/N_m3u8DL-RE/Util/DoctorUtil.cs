@@ -129,7 +129,7 @@ internal static class DoctorUtil
 
     internal static void WriteEnvironment(DoctorReport report, IAnsiConsole? console = null)
     {
-        WriteLine(report.Application, "bold deepskyblue1", console);
+        WriteLine(report.Application, "bold deepskyblue3", console);
         WriteField(ResString.doctorOS, report.OS, console);
         WriteField(ResString.doctorArchitecture, $"OS={report.OSArchitecture}, process={report.ProcessArchitecture}", console);
         WriteField(ResString.doctorRuntime, $"{report.Runtime}, dynamic code={report.DynamicCodeSupported}", console);
@@ -146,7 +146,7 @@ internal static class DoctorUtil
         var color = tool.Status switch
         {
             "ok" => "green",
-            "missing" when !tool.Required && !tool.Configured => "yellow",
+            "missing" when !tool.Required && !tool.Configured => "darkorange3_1",
             _ => "red1"
         };
         if (console == null)
@@ -168,7 +168,7 @@ internal static class DoctorUtil
         if (console == null)
             Console.WriteLine($"{indent}{label}: {value}");
         else
-            console.MarkupLine($"{indent}[deepskyblue1]{label.EscapeMarkup()}:[/] {value.EscapeMarkup()}");
+            console.MarkupLine($"{indent}[deepskyblue3]{label.EscapeMarkup()}:[/] {value.EscapeMarkup()}");
     }
 
     private static void WriteLine(string text, string style, IAnsiConsole? console)

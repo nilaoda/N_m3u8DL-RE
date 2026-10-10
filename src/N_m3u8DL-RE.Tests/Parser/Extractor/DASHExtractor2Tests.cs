@@ -24,7 +24,7 @@ public class DASHExtractor2Tests
         results.Count.ShouldBe(23);
 
         var first = results.First();
-        first.ToString().ShouldBe("[aqua]Vid[/] 512x288 | 386 Kbps | 1 | avc1.64001f | 184 Segments | Main | ~12m16s");
+        first.ToString().ShouldBe("[turquoise4]Vid[/] 512x288 | 386 Kbps | 1 | avc1.64001f | 184 Segments | Main | ~12m16s");
         first.AudioId.ShouldBe("15");
         first.Bandwidth.ShouldBe(386437);
         first.Extension.ShouldBe("m4s");
