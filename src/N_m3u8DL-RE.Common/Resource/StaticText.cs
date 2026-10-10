@@ -58,6 +58,84 @@ internal static class StaticText
             zhTW: "{0}：開始處理 {1} 個輸入檔案",
             enUS: "{0}: processing {1} input files"
         ),
+        ["processingDownload"] = new TextContainer
+        (
+            zhCN: "下载",
+            zhTW: "下載",
+            enUS: "Downloading"
+        ),
+        ["processingDownloaded"] = new TextContainer
+        (
+            zhCN: "下载完成（未合并）",
+            zhTW: "下載完成（未合併）",
+            enUS: "Downloaded (not merged)"
+        ),
+        ["processingElapsed"] = new TextContainer
+        (
+            zhCN: "耗时 {0}",
+            zhTW: "耗時 {0}",
+            enUS: "elapsed {0}"
+        ),
+        ["processingMediaTime"] = new TextContainer
+        (
+            zhCN: "媒体时间 {0}",
+            zhTW: "媒體時間 {0}",
+            enUS: "media time {0}"
+        ),
+        ["processingPreparing"] = new TextContainer
+        (
+            zhCN: "准备处理",
+            zhTW: "準備處理",
+            enUS: "Preparing"
+        ),
+        ["processingMerge"] = new TextContainer
+        (
+            zhCN: "合并",
+            zhTW: "合併",
+            enUS: "Merging"
+        ),
+        ["processingMuxNoInputs"] = new TextContainer
+        (
+            zhCN: "没有可混流的轨道，跳过混流",
+            zhTW: "沒有可混流的軌道，跳過混流",
+            enUS: "No tracks to mux; skipping muxing"
+        ),
+        ["processingMux"] = new TextContainer
+        (
+            zhCN: "混流",
+            zhTW: "混流",
+            enUS: "Muxing"
+        ),
+        ["processingDecrypt"] = new TextContainer
+        (
+            zhCN: "解密",
+            zhTW: "解密",
+            enUS: "Decrypting"
+        ),
+        ["processingSubtitles"] = new TextContainer
+        (
+            zhCN: "整理字幕",
+            zhTW: "整理字幕",
+            enUS: "Processing subtitles"
+        ),
+        ["processingFailed"] = new TextContainer
+        (
+            zhCN: "处理失败",
+            zhTW: "處理失敗",
+            enUS: "Processing failed"
+        ),
+        ["processingFinishing"] = new TextContainer
+        (
+            zhCN: "保存文件",
+            zhTW: "儲存檔案",
+            enUS: "Finalizing"
+        ),
+        ["processingNormalize"] = new TextContainer
+        (
+            zhCN: "统一媒体时间基",
+            zhTW: "統一媒體時間基",
+            enUS: "Normalizing media time bases"
+        ),
         ["toolsCompleted"] = new TextContainer
         (
             zhCN: "处理完成",
@@ -555,6 +633,12 @@ internal static class StaticText
             zhCN: "FFmpeg 合并输入方式：LOCAL_HTTP 本机虚拟输入(默认)，PROTOCOL 直接打开全部分片，DEMUXER 使用文件列表",
             zhTW: "FFmpeg 合併輸入方式：LOCAL_HTTP 本機虛擬輸入(預設)，PROTOCOL 直接開啟全部分片，DEMUXER 使用檔案清單",
             enUS: "FFmpeg merge input: LOCAL_HTTP local virtual input (default), PROTOCOL opens all segments directly, DEMUXER uses a file list"
+        ),
+        ["muxTimestampRetry"] = new TextContainer
+        (
+            zhCN: "混流遇到缺失时间戳，尝试补齐视频包的输出时间戳后重试",
+            zhTW: "混流遇到缺失時間戳，嘗試補齊視訊封包的輸出時間戳後重試",
+            enUS: "Muxing encountered missing timestamps; retrying with inferred video packet output timestamps"
         ),
         ["ffmpegConcatInputFailed"] = new TextContainer
         (

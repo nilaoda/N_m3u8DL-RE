@@ -14,6 +14,19 @@ public static class ResString
     public static string cmd_toolsTitle => GetText("cmd_toolsTitle");
     public static string toolsTrackInfoFailed => GetText("toolsTrackInfoFailed");
     public static string toolsProcessing => GetText("toolsProcessing");
+    public static string processingDownload => GetText("processingDownload");
+    public static string processingDownloaded => GetText("processingDownloaded");
+    public static string processingElapsed => GetText("processingElapsed");
+    public static string processingMediaTime => GetText("processingMediaTime");
+    public static string processingPreparing => GetText("processingPreparing");
+    public static string processingMerge => GetText("processingMerge");
+    public static string processingMuxNoInputs => GetText("processingMuxNoInputs");
+    public static string processingMux => GetText("processingMux");
+    public static string processingDecrypt => GetText("processingDecrypt");
+    public static string processingSubtitles => GetText("processingSubtitles");
+    public static string processingFailed => GetText("processingFailed");
+    public static string processingFinishing => GetText("processingFinishing");
+    public static string processingNormalize => GetText("processingNormalize");
     public static string toolsCompleted => GetText("toolsCompleted");
     public static string toolsProcessFailed => GetText("toolsProcessFailed");
     public static string toolsDryRun => GetText("toolsDryRun");
@@ -86,6 +99,7 @@ public static class ResString
     public static string cmd_disableUpdateCheck => GetText("cmd_disableUpdateCheck");
     public static string cmd_binaryMerge => GetText("cmd_binaryMerge");
     public static string cmd_ffmpegConcatMode => GetText("cmd_ffmpegConcatMode");
+    public static string muxTimestampRetry => GetText("muxTimestampRetry");
     public static string ffmpegConcatInputFailed => GetText("ffmpegConcatInputFailed");
     public static string concatInputLengthChanged => GetText("concatInputLengthChanged");
     public static string cmd_useFFmpegConcatDemuxer => GetText("cmd_useFFmpegConcatDemuxer");

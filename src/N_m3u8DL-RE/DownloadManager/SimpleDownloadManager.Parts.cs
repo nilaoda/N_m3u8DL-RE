@@ -16,6 +16,7 @@ internal partial class SimpleDownloadManager
 {
     private async Task<bool> DownloadPartsAsync(StreamSpec stream, ProgressTask task, SpeedContainer speed)
     {
+        var processing = task.Tag as MediaProcessingProgress;
         var parts = stream.Playlist!.MediaParts.Where(p => p.MediaSegments.Count > 0).ToList();
         if (parts.Count == 0)
             return false;
@@ -32,6 +33,11 @@ internal partial class SimpleDownloadManager
         for (var i = 0; i < parts.Count; i++)
         {
             var part = parts[i];
+            if (processing != null)
+            {
+                processing.Part = $"({i + 1}/{parts.Count}) ";
+                processing.Download();
+            }
             speed.SingleSegment = false;
             speed.ResponseLength = null;
             // 每段使用自己的 init、KID、媒体探测结果和临时目录。
@@ -77,6 +83,11 @@ internal partial class SimpleDownloadManager
 
         if (DownloaderConfig.MyOptions.SkipMerge)
             return true;
+        if (processing != null)
+        {
+            processing.Part = null;
+            processing.Begin(ResString.processingPreparing);
+        }
         // 清单可能省略 codecs/channels，下载后再用实际探测结果兜底。
         // 音频采样率、声道布局和 AAC profile 变化无法无损归并为一条固定配置的轨道。
         var signatures = outputs.Select(o => string.Join("|", o.Mediainfos
@@ -107,21 +118,24 @@ internal partial class SimpleDownloadManager
         bool success;
         if (subtitle)
         {
+            processing?.Begin(ResString.processingSubtitles);
             success = await MergeSubtitlesAsync(parts, outputs, outputPath);
         }
         else if (copySingle)
         {
+            processing?.Begin(ResString.processingFinishing);
             if (DownloaderConfig.MyOptions.DelAfterDone)
                 File.Move(first.FilePath, outputPath);
             else
-                File.Copy(first.FilePath, outputPath);
+                await MergeUtil.CombineMultipleFilesIntoSingleFileAsync([first.FilePath], outputPath,
+                    overwrite: false, progress: processing == null ? null : processing.Report);
             success = true;
         }
         else
         {
             Logger.InfoMarkUp($"[grey]{(parts.Count > 1 ? string.Format(ResString.vodPartsConcat, parts.Count) : ResString.ffmpegMerge)}[/]");
             success = MergeUtil.ConcatMediaParts(DownloaderConfig.MyOptions.FFmpegBinaryPath!,
-                outputs.Select(o => o.FilePath).ToArray(), parts, outputPath);
+                outputs.Select(o => o.FilePath).ToArray(), parts, outputPath, processing);
         }
         if (!success)
         {
@@ -130,7 +144,9 @@ internal partial class SimpleDownloadManager
             File.Delete(outputPath);
             return false;
         }
+        processing?.Begin(ResString.processingFinishing);
         first.FilePath = outputPath;
+        first.Duration = parts.Sum(part => part.OutputDuration ?? part.MediaSegments.Sum(segment => segment.Duration));
         first.PreserveTimestamp = !subtitle && !copySingle && parts.Any(p => p.OutputStart != null);
         lock (OutputFiles)
             OutputFiles.Add(first);
@@ -142,6 +158,7 @@ internal partial class SimpleDownloadManager
                     File.Delete(file);
             OtherUtil.SafeDeleteDir(partsDir);
         }
+        processing?.Report(new(Bytes: new FileInfo(outputPath).Length));
         return true;
     }
 

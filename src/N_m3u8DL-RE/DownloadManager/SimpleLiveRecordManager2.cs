@@ -1225,6 +1225,11 @@ internal class SimpleLiveRecordManager2
             {
                 OutputFiles.AddRange(DownloaderConfig.MyOptions.MuxImports);
             }
+            if (OutputFiles.Count == 0)
+            {
+                Logger.Warn(ResString.processingMuxNoInputs);
+                return success;
+            }
             OutputFiles.ForEach(f => Logger.WarnMarkUp($"[grey]{Path.GetFileName(f.FilePath).EscapeMarkup()}[/]"));
             var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
             var ext = OtherUtil.GetMuxExtension(DownloaderConfig.MyOptions.MuxOptions.MuxFormat);
@@ -1233,32 +1238,40 @@ internal class SimpleLiveRecordManager2
             var outName = OtherUtil.GetSafeFileName(dirName, ".MUX" + ext);
             var outPath = Path.Combine(saveDir, Path.GetFileNameWithoutExtension(outName));
             Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}[/]");
-            var result = false;
-            if (DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge) result = MergeUtil.MuxInputsByMkvmerge(DownloaderConfig.MyOptions.MkvmergeBinaryPath!, OutputFiles.ToArray(), outPath);
-            else result = MergeUtil.MuxInputsByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, OutputFiles.ToArray(), outPath, DownloaderConfig.MyOptions.MuxOptions.MuxFormat, !DownloaderConfig.MyOptions.NoDateInfo);
-            // 完成后删除各轨道文件
-            if (result)
+            var muxSuccess = await MediaProcessingProgress.RunAsync(ResString.processingMux, async processing =>
             {
-                if (!DownloaderConfig.MyOptions.MuxOptions.KeepFiles)
+                processing.Begin(ResString.processingMux, logStart: false);
+                var exitCode = await MergeUtil.MuxInputsAsync(
+                    DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge ? DownloaderConfig.MyOptions.MkvmergeBinaryPath! : DownloaderConfig.MyOptions.FFmpegBinaryPath!,
+                    OutputFiles.ToArray(), outPath + ext, useMkvmerge: DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge,
+                    downloadDefaults: true, dateinfo: !DownloaderConfig.MyOptions.NoDateInfo, progress: processing.Report);
+                var result = exitCode == 0 || DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge && exitCode == 1;
+                if (result)
                 {
-                    Logger.WarnMarkUp("[grey]Cleaning files...[/]");
-                    OutputFiles.ForEach(f => File.Delete(f.FilePath));
-                    var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
-                    OtherUtil.SafeDeleteDir(tmpDir);
+                    processing.Begin(ResString.processingFinishing);
+                    processing.Report(new(Bytes: new FileInfo(outPath + ext).Length));
                 }
-            }
-            else
-            {
-                success = false;
-                Logger.ErrorMarkUp($"Mux failed");
-            }
-            // 判断是否要改名
-            var newPath = Path.ChangeExtension(outPath, ext);
-            if (result && !File.Exists(newPath))
-            {
-                Logger.WarnMarkUp($"Rename to [grey]{Path.GetFileName(newPath).EscapeMarkup()}[/]");
-                File.Move(outPath + ext, newPath);
-            }
+                // 完成后删除各轨道文件
+                if (result)
+                {
+                    if (!DownloaderConfig.MyOptions.MuxOptions.KeepFiles)
+                    {
+                        Logger.WarnMarkUp("[grey]Cleaning files...[/]");
+                        OutputFiles.ForEach(f => File.Delete(f.FilePath));
+                        var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
+                        OtherUtil.SafeDeleteDir(tmpDir);
+                    }
+                }
+                // 判断是否要改名
+                var newPath = Path.ChangeExtension(outPath, ext);
+                if (result && !File.Exists(newPath))
+                {
+                    Logger.WarnMarkUp($"Rename to [grey]{Path.GetFileName(newPath).EscapeMarkup()}[/]");
+                    File.Move(outPath + ext, newPath);
+                }
+                return result;
+            });
+            success &= muxSuccess;
         }
 
         return success;
