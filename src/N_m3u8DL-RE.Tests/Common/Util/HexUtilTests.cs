@@ -11,6 +11,29 @@ public class HexUtilTests
         Assert.Equal("ABCDEF", result);
     }
 
+    [Theory]
+    [InlineData("AQ==", "01")]
+    [InlineData("AQ", "01")]
+    [InlineData("AQI=", "0102")]
+    [InlineData("AQI", "0102")]
+    [InlineData(" A Q\t\r\n", "01")]
+    public void TryParseBase64_AcceptsPaddedAndUnpaddedInput(string input, string expected)
+    {
+        Assert.True(HexUtil.TryParseBase64(input, out var hex));
+        Assert.Equal(expected, hex);
+    }
+
+    [Theory]
+    [InlineData("A")]
+    [InlineData("A!")]
+    [InlineData("AQ=")]
+    [InlineData("AQ===")]
+    public void TryParseBase64_RejectsInvalidInput(string input)
+    {
+        Assert.False(HexUtil.TryParseBase64(input, out var hex));
+        Assert.Null(hex);
+    }
+
     [Fact]
     public void BytesToHex_MultipleBytesWithCustomSplit_ReturnsHexChars()
     {
