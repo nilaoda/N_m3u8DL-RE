@@ -209,63 +209,25 @@ internal sealed class ConcatInputServer : IDisposable
 
     private async Task CopyRangeAsync(NetworkStream output, byte[] buffer, long position, long end)
     {
-        // 累计结束位置可能重复（空分片）；查找第一个结束位置大于 position 的文件。
-        var low = 0;
-        var high = _ends.Length;
-        while (low < high)
+        using var source = new ConcatInputStream(_files, _ends);
+        source.Position = position;
+        while (position <= end)
         {
-            var mid = low + (high - low) / 2;
-            if (_ends[mid] <= position)
-                low = mid + 1;
-            else
-                high = mid;
-        }
-        for (var i = low; i < _files.Length && position <= end; i++)
-        {
-            var fileStart = i == 0 ? 0 : _ends[i - 1];
-            if (_ends[i] == fileStart)
-                continue;
-            FileStream? sourceStream = null;
+            int read;
             try
             {
-                // 已使用上面的传输缓冲；关闭 FileStream 内部缓冲，避免每个分片尾部
-                // 的小块读取再分配一份缓冲并复制数据。
-                sourceStream = new FileStream(_files[i], FileMode.Open, FileAccess.Read, FileShare.Read,
-                    bufferSize: 1, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                if (sourceStream.Length != _ends[i] - fileStart)
-                {
-                    throw new IOException(ResString.concatInputLengthChanged);
-                }
-                sourceStream.Position = position - fileStart;
+                // 复用传输缓冲和连续输入流；源文件长度检查与句柄管理由流统一处理。
+                read = await source.ReadAsync(buffer.AsMemory(0, (int)Math.Min(buffer.Length, end + 1 - position)), _stop.Token).ConfigureAwait(false);
+                if (read == 0)
+                    throw new EndOfStreamException();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                sourceStream?.Dispose();
                 Interlocked.CompareExchange(ref _error, ex, null);
                 throw;
             }
-            using (sourceStream)
-            {
-                var remaining = Math.Min(end + 1, _ends[i]) - position;
-                while (remaining > 0)
-                {
-                    int read;
-                    try
-                    {
-                        read = await sourceStream.ReadAsync(buffer.AsMemory(0, (int)Math.Min(buffer.Length, remaining)), _stop.Token).ConfigureAwait(false);
-                        if (read == 0)
-                            throw new EndOfStreamException();
-                    }
-                    catch (IOException ex)
-                    {
-                        Interlocked.CompareExchange(ref _error, ex, null);
-                        throw;
-                    }
-                    await output.WriteAsync(buffer.AsMemory(0, read), _stop.Token).ConfigureAwait(false);
-                    position += read;
-                    remaining -= read;
-                }
-            }
+            await output.WriteAsync(buffer.AsMemory(0, read), _stop.Token).ConfigureAwait(false);
+            position += read;
         }
     }
 

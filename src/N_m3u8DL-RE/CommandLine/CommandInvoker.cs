@@ -576,7 +576,7 @@ internal static partial class CommandInvoker
     {
         // 已有普通路径原样保留，复合参数复用现有 path/lang/name 格式。
         var p = new ComplexParamParser(value);
-        var options = !File.Exists(value) && p.GetValue("path") != null;
+        var options = !File.Exists(value) && !Directory.Exists(value) && p.GetValue("path") != null;
         return new OutputFile
         {
             Index = 999,

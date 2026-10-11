@@ -265,9 +265,10 @@ internal static class MergeUtil
 
     internal static async Task<int> MergeByFFmpegAsync(string binary, string[] files, string output,
         FFmpegConcatMode mode, IReadOnlyList<string>? outputOptions = null, bool overwrite = false,
-        bool log = false, CancellationToken token = default, Action<MediaProgress>? progress = null, double? duration = null)
+        bool log = false, CancellationToken token = default, Action<MediaProgress>? progress = null, double? duration = null,
+        string[]? inputPaths = null, bool loopbackInput = false)
     {
-        files = files.Select(Path.GetFullPath).ToArray();
+        files = inputPaths ?? files.Select(Path.GetFullPath).ToArray();
         ConcatInputServer? server = null;
         string? list = null;
         try
@@ -292,6 +293,8 @@ internal static class MergeUtil
                         throw new ArgumentException(ResString.concatInputPathInvalid);
                     list = Path.GetTempFileName();
                     await File.WriteAllLinesAsync(list, files.Select(path => $"file '{path.Replace("'", "'\\''")}'"), token).ConfigureAwait(false);
+                    if (loopbackInput)
+                        arguments.AddRange(["-protocol_whitelist", "file,http,tcp"]);
                     arguments.AddRange(["-f", "concat", "-safe", "0", "-i", list]);
                     break;
                 default:
@@ -309,7 +312,7 @@ internal static class MergeUtil
                     arguments.AddRange(["-vn", "-sn"]);
             }
             arguments.Add(Path.GetFullPath(output));
-            var result = await RunMediaToolAsync(binary, arguments, token, log, server != null, progress: progress, duration: duration).ConfigureAwait(false);
+            var result = await RunMediaToolAsync(binary, arguments, token, log, server != null || loopbackInput, progress: progress, duration: duration).ConfigureAwait(false);
             if (server?.Error is { } error)
                 throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
             // 直接 concat 协议仍可能耗尽句柄；失败时不改变时间轴处理方式，也不删除分片。
@@ -341,13 +344,13 @@ internal static class MergeUtil
     internal static async Task<int> MuxInputsAsync(string binary, OutputFile[] files, string output,
         bool useMkvmerge = false, bool downloadDefaults = false, bool dateinfo = false,
         MuxSubtitleTimeline? timeline = null, string? title = null, CancellationToken token = default,
-        Action<MediaProgress>? progress = null)
+        Action<MediaProgress>? progress = null, string[]? inputPaths = null, bool loopbackInput = false)
     {
         // LANG and NAME
         // 转换语言代码
         foreach (var file in files)
             LanguageCodeUtil.ConvertLangCodeAndDisplayName(file);
-        var inputs = timeline?.Inputs ?? files.Select(file => Path.GetFullPath(file.FilePath)).ToArray();
+        var inputs = inputPaths ?? timeline?.Inputs ?? files.Select(file => Path.GetFullPath(file.FilePath)).ToArray();
         var format = Path.GetExtension(output).ToLowerInvariant();
         List<string> arguments = useMkvmerge ? ["--output", Path.GetFullPath(output)]
             : ["-hide_banner", "-loglevel", "warning", "-nostdin", downloadDefaults ? "-y" : "-n"];
@@ -387,6 +390,8 @@ internal static class MergeUtil
             // INPUT
             for (var i = 0; i < inputs.Length; i++)
             {
+                if (loopbackInput)
+                    arguments.AddRange(["-protocol_whitelist", "file,concat,http,tcp"]);
                 // 媒体共用原点，修复后的独立字幕已经位于播放时间轴。
                 if (timeline?.Origin != null && timeline.MediaStarts[i] != null)
                     arguments.AddRange(["-itsoffset", (-timeline.Origin.Value).ToString("0.######", CultureInfo.InvariantCulture)]);
@@ -480,7 +485,7 @@ internal static class MergeUtil
         var duration = progress == null || useMkvmerge || files.Any(file => file.PreserveTimestamp) || timeline?.Origin != null
             ? null : GetDuration(files);
         var result = await RunMediaToolAsync(binary, arguments, token, downloadDefaults,
-            printOutput: useMkvmerge && !downloadDefaults, progress: progress, useMkvmerge: useMkvmerge,
+            loopbackInput: loopbackInput, printOutput: useMkvmerge && !downloadDefaults, progress: progress, useMkvmerge: useMkvmerge,
             duration: duration).ConfigureAwait(false);
         if (!useMkvmerge && format == ".mkv" && result.ExitCode != 0 &&
             result.Error.Contains("Can't write packet with unknown timestamp", StringComparison.OrdinalIgnoreCase))
@@ -495,7 +500,7 @@ internal static class MergeUtil
                 @"setts=pts=if(eq(PTS\,NOPTS)\,if(eq(DTS\,NOPTS)\,PREV_OUTPTS\,DTS)\,PTS):dts=if(eq(DTS\,NOPTS)\,PREV_OUTDTS\,DTS)"]);
             progress?.Invoke(new());
             result = await RunMediaToolAsync(binary, arguments, token, downloadDefaults,
-                progress: progress, duration: duration).ConfigureAwait(false);
+                loopbackInput: loopbackInput, progress: progress, duration: duration).ConfigureAwait(false);
         }
         return result.ExitCode;
     }

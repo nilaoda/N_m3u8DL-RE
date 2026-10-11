@@ -7,6 +7,10 @@ internal class OutputFile
     public MediaType? MediaType { get; set; }
     public required int Index { get; set; }
     public required string FilePath { get; set; }
+    // 目录轨道可直接读取 init 和分片，避免写出整条音视频中间文件。
+    public string[]? Segments { get; set; }
+    // 从 VTT 分片转换的字幕保留首片映射，供混流时对齐公共媒体时间轴。
+    public string? SubtitleTimestampMap { get; set; }
     public double? Duration { get; set; }
     public string? LangCode { get; set; }
     public string? Description { get; set; }

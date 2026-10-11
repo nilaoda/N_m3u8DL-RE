@@ -59,10 +59,11 @@ internal static partial class MediainfoUtil
         return types;
     }
 
-    internal static async Task<(double Start, double Duration)?> ReadTimingAsync(string binary, string file, CancellationToken token)
+    internal static async Task<(double Start, double Duration)?> ReadTimingAsync(string binary, string file, CancellationToken token,
+        bool loopbackInput = false)
     {
         // 非 MP4 文件沿用下载流程的 FFmpeg 输入信息读取媒体时钟。
-        var result = await ProcessUtil.RunAsync(binary, ["-nostdin", "-hide_banner", "-i", file], token);
+        var result = await ProcessUtil.RunAsync(binary, ["-nostdin", "-hide_banner", "-i", file], token, loopbackInput: loopbackInput);
         var start = StartRegex().Match(result.Error);
         var duration = DurationRegex().Match(result.Error);
         var hasMedia = TextRegex().Matches(result.Error).Any(stream =>

@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Globalization;
 using N_m3u8DL_RE.CommandLine;
+using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
 using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
@@ -101,11 +102,13 @@ public sealed class MuxSubtitleTimelineIntegrationTests : IDisposable
         var media = await Video("video.mp4", 1000);
         var subtitle = Path.Combine(directory, "subtitles.srt");
         File.WriteAllText(subtitle, "1\n00:16:40,500 --> 00:16:41,000\nHello\n\n");
+        OutputFile[] files = [new() { Index = 0, FilePath = media }, new() { Index = 1, FilePath = subtitle }];
         string repaired;
-        using (var timeline = await MuxSubtitleTimeline.CreateAsync([media, subtitle], "/missing/ffmpeg", default))
+        using (var timeline = await MuxSubtitleTimeline.CreateAsync(files, "/missing/ffmpeg", default, temporaryDirectory: directory))
         {
             repaired = timeline.Inputs[1];
             Assert.NotEqual(subtitle, repaired);
+            Assert.Equal(directory, Path.GetDirectoryName(repaired));
             Assert.True(File.Exists(repaired));
         }
         Assert.False(File.Exists(repaired));

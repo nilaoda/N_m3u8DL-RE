@@ -82,7 +82,7 @@ For Docker, mount the file read-only at `/config/config.conf` and pass `--config
 # Concatenate file bytes without FFmpeg
 N_m3u8DL-RE concat -i 1.ts -i 2.ts -o combined.ts
 
-# Read a directory in natural filename order; matches *.ts by default, configurable with --pattern
+# Read matching files from a directory in natural filename order; matches *.ts by default, configurable with --pattern
 # --input-dir cannot be combined with -i
 N_m3u8DL-RE concat --input-dir segments --pattern "*.ts" -o combined.ts
 
@@ -92,6 +92,17 @@ N_m3u8DL-RE merge --input-dir segments -o merged.mp4
 # Mux video, audio and subtitles
 # Subtitle timing is adjusted automatically, preserving source files; disable with --auto-subtitle-fix false
 N_m3u8DL-RE mux -i video.mp4 -i audio.m4a -i subtitle.srt -o output.mp4
+
+# Merge tracks and mux a single-part VOD download or live recording; original segments are preserved
+N_m3u8DL-RE mux -i index_2026-10-10_23-56-12 -o recording.mkv
+
+# Track directories also accept language and title metadata
+N_m3u8DL-RE mux -i video_segments -i "path=audio_segments:lang=eng:name=English" -i "path=subtitle_segments:lang=chi:name=Chinese" -o recording.mkv
+
+# Merge one track (automatically selecting matching init and decrypted segments)
+N_m3u8DL-RE merge -i video_segments -o video.mp4
+# Binary concatenation also supports encrypted segments for later decryption or processing
+N_m3u8DL-RE concat -i video_segments -o video.mp4
 
 # Set track language (lang), track title (name) and movie title (--title)
 # --mux-import appends external audio or subtitles; lang and name are optional

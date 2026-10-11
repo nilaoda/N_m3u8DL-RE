@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Net.Sockets;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using N_m3u8DL_RE.Common.Log;
@@ -89,12 +90,26 @@ internal static class ToolCommands
         return 0;
     }
 
+    private static IEnumerable<OutputFile> ExpandMuxInput(OutputFile file)
+    {
+        if (!Directory.Exists(file.FilePath))
+            return [file];
+        // -i 统一接受文件、单轨道目录和任务目录，目录中的轨道按自然顺序展开。
+        var tracks = RecordingTrack.FindTracks(file.FilePath);
+        foreach (var track in tracks)
+        {
+            track.LangCode = file.LangCode;
+            track.Description = file.Description;
+        }
+        return tracks;
+    }
+
     private static Command CreateFileCommand(string name, string description)
     {
         var command = new Command(name, description);
         var input = new Option<string[]>("-i", "--input")
         {
-            HelpName = "FILE", Description = ResString.cmd_toolsInput,
+            HelpName = "FILE|DIR", Description = ResString.cmd_toolsInput,
             Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false
         };
         var output = new Option<string>("-o", "--output")
@@ -131,7 +146,7 @@ internal static class ToolCommands
             command.Options.Add(mode);
         if (name == "mux")
         {
-            input.HelpName = "FILE|OPTIONS";
+            input.HelpName = "FILE|DIR|OPTIONS";
             input.Description = ResString.cmd_toolsMuxInput;
             command.Options.Add(muxer);
             command.Options.Add(mkvmerge);
@@ -163,7 +178,7 @@ internal static class ToolCommands
                 Logger.Info(CommandInvoker.VERSION_INFO);
                 var inputs = result.GetValue(input) ?? [];
                 var files = name == "mux" ? inputs.Select(CommandInvoker.ParseMuxInput)
-                    .Concat(result.GetValue(imports) ?? []).ToArray() : null;
+                    .Concat(result.GetValue(imports) ?? []).SelectMany(ExpandMuxInput).ToArray() : null;
                 return await FileToolUtil.ExecuteAsync(name, files?.Select(file => file.FilePath).ToArray() ?? inputs, result.GetValue(output)!,
                     name == "mux" ? null : result.GetValue(directory), name == "mux" ? "*.ts" : result.GetValue(pattern)!,
                     result.GetValue(overwrite), result.GetValue(dryRun),
@@ -174,7 +189,7 @@ internal static class ToolCommands
                     name == "mux" ? result.GetValue(title) : null);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or
-                Win32Exception or OperationCanceledException or FormatException or OverflowException)
+                Win32Exception or SocketException or OperationCanceledException or FormatException or OverflowException)
             {
                 Logger.Error(ex.Message);
                 return 1;

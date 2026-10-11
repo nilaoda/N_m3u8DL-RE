@@ -22,7 +22,12 @@ public static class MP4MediaInfoUtil
     public static (double Start, double Duration)? ReadTiming(string file, CancellationToken token = default)
     {
         using var stream = File.OpenRead(file);
-        using var reader = new BinaryReader2(stream);
+        return ReadTiming(stream, token);
+    }
+
+    public static (double Start, double Duration)? ReadTiming(Stream stream, CancellationToken token = default)
+    {
+        using var reader = new BinaryReader2(stream, leaveOpen: true);
         var fragments = new List<long>();
         var moov = ReadMovie(reader, token, fragments);
         if (moov == null)
@@ -103,35 +108,55 @@ public static class MP4MediaInfoUtil
         return endTime > origin ? (origin, endTime - origin) : null;
     }
 
-    public static string[]? ReadTrackTypes(string file, CancellationToken token = default)
+    public static string[]? ReadTrackTypes(string file, CancellationToken token = default) =>
+        ReadTrackInfo(file, token)?.Select(track => track.Type).ToArray();
+
+    public static (string Type, string? Language)[]? ReadTrackInfo(string file, CancellationToken token = default)
     {
         using var stream = File.OpenRead(file);
         using var reader = new BinaryReader2(stream);
         var moov = ReadMovie(reader, token);
         if (moov == null)
             return null;
-        var types = new List<string>();
+        var tracks = new List<(string Type, string? Language)>();
         new MP4Parser()
             .Box("moov", MP4Parser.Children)
-            .Box("trak", MP4Parser.Children)
-            .Box("mdia", MP4Parser.Children)
-            .FullBox("hdlr", box =>
+            .Box("trak", box =>
             {
-                token.ThrowIfCancellationRequested();
-                box.Reader.ReadUInt32();
-                var handler = MP4Parser.TypeToString(box.Reader.ReadUInt32());
-                var type = handler switch
-                {
-                    "vide" => "Video",
-                    "soun" => "Audio",
-                    "subt" or "sbtl" or "text" or "clcp" => "Subtitle",
-                    _ => null
-                };
+                string? type = null;
+                string? language = null;
+                new MP4Parser()
+                    .Box("mdia", MP4Parser.Children)
+                    .FullBox("mdhd", header =>
+                    {
+                        if (header.Version is not (0 or 1) || header.Reader.GetLength() < (header.Version == 1 ? 32 : 20))
+                            return;
+                        MP4Parser.ParseMDHD(header.Reader, header.Version);
+                        header.Reader.ReadBytes(header.Version == 1 ? 8 : 4); // duration
+                        var code = header.Reader.ReadInt16();
+                        var chars = new[] { (char)(((code >> 10) & 31) + 96), (char)(((code >> 5) & 31) + 96), (char)((code & 31) + 96) };
+                        if (chars.All(c => c is >= 'a' and <= 'z'))
+                            language = new string(chars);
+                    })
+                    .FullBox("hdlr", header =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        header.Reader.ReadUInt32();
+                        var handler = MP4Parser.TypeToString(header.Reader.ReadUInt32());
+                        type = handler switch
+                        {
+                            "vide" => "Video",
+                            "soun" => "Audio",
+                            "subt" or "sbtl" or "text" or "clcp" => "Subtitle",
+                            _ => null
+                        };
+                    })
+                    .Parse(box.Reader.ReadBytes((int)box.Reader.GetLength()));
                 if (type != null)
-                    types.Add(type);
+                    tracks.Add((type, language == "und" ? null : language));
             })
             .Parse(moov);
-        return types.ToArray();
+        return tracks.ToArray();
     }
 
     private static byte[]? ReadMovie(BinaryReader2 reader, CancellationToken token, List<long>? fragments = null)

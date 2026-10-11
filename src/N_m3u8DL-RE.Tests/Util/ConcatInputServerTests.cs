@@ -26,6 +26,23 @@ public class ConcatInputServerTests : IDisposable
         return files;
     }
 
+    [Fact]
+    public async Task ContinuousStreamSupportsSeekingAndReadsAcrossEmptySegments()
+    {
+        using var stream = new ConcatInputStream(Files());
+        var bytes = new byte[4];
+        Assert.Equal(6, stream.Length);
+        stream.Position = 1;
+        Assert.Equal(4, stream.Read(bytes));
+        Assert.Equal(new byte[] { 1, 2, 3, 4 }, bytes);
+        stream.Seek(-3, SeekOrigin.End);
+        Assert.Equal(3, await stream.ReadAsync(bytes));
+        Assert.Equal(new byte[] { 3, 4, 5 }, bytes.Take(3));
+        Assert.Equal(0, stream.Read(bytes));
+        stream.Seek(0, SeekOrigin.Begin);
+        Assert.Equal(0, stream.ReadByte());
+    }
+
     [Theory]
     [InlineData(null, 0, 6)]
     [InlineData("bytes=0-", 0, 6)]
@@ -172,6 +189,11 @@ public class ConcatInputServerTests : IDisposable
         await second.ConnectAsync(uri.Host, uri.Port);
         await Task.Run(server.Dispose).WaitAsync(TimeSpan.FromSeconds(5));
         var listener = new TcpListener(IPAddress.Loopback, uri.Port);
+        // Unix 已关闭的连接可能仍处于 TIME_WAIT；重绑检查只验证监听端口已释放。
+        if (!OperatingSystem.IsWindows())
+            listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        else
+            listener.ExclusiveAddressUse = true;
         try
         {
             listener.Start();

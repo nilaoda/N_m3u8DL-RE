@@ -24,21 +24,69 @@ internal static class StaticText
         ),
         ["cmd_toolsInput"] = new TextContainer
         (
-            zhCN: "输入文件，可重复 -i；按指定顺序处理",
-            zhTW: "輸入檔案，可重複 -i；依指定順序處理",
-            enUS: "Input file; repeat -i to specify files in order"
+            zhCN: "输入文件或单轨道分片目录，可重复 -i；按指定顺序处理",
+            zhTW: "輸入檔案或單軌道分片目錄，可重複 -i；依指定順序處理",
+            enUS: "Input file or track segment directory; repeat -i to specify inputs in order"
         ),
         ["cmd_toolsMuxInput"] = new TextContainer
         (
-            zhCN: "输入文件，可重复 -i；也可使用 path=文件:lang=语言:name=轨道标题",
-            zhTW: "輸入檔案，可重複 -i；也可使用 path=檔案:lang=語言:name=軌道標題",
-            enUS: "Input file; repeat -i, or use path=FILE:lang=CODE:name=TRACK_TITLE"
+            zhCN: "输入文件、任务目录或单轨道目录，可重复 -i；目录自动合并分片；也可使用 path=输入:lang=语言:name=轨道标题",
+            zhTW: "輸入檔案、任務目錄或單軌道目錄，可重複 -i；目錄自動合併分片；也可使用 path=輸入:lang=語言:name=軌道標題",
+            enUS: "Input file, task directory or track directory; repeat -i; directory segments are merged; also accepts path=INPUT:lang=CODE:name=TRACK_TITLE"
         ),
         ["cmd_toolsMuxImport"] = new TextContainer
         (
-            zhCN: "追加外部媒体文件，可重复；格式：path=文件:lang=语言:name=轨道标题",
-            zhTW: "附加外部媒體檔案，可重複；格式：path=檔案:lang=語言:name=軌道標題",
-            enUS: "Append external media files; repeat with path=FILE:lang=CODE:name=TRACK_TITLE"
+            zhCN: "追加外部文件或目录，可重复；格式：path=输入:lang=语言:name=轨道标题",
+            zhTW: "附加外部檔案或目錄，可重複；格式：path=輸入:lang=語言:name=軌道標題",
+            enUS: "Append external files or directories; repeat with path=INPUT:lang=CODE:name=TRACK_TITLE"
+        ),
+        ["toolsRecordingSubtitleEmpty"] = new TextContainer
+        (
+            zhCN: "字幕分片中没有对白，跳过空字幕轨道",
+            zhTW: "字幕分片中沒有對白，略過空字幕軌道",
+            enUS: "No cues in subtitle segments; skipping empty subtitle track"
+        ),
+        ["toolsRecordingEmpty"] = new TextContainer
+        (
+            zhCN: "目录内没有可识别的录制分片",
+            zhTW: "目錄內沒有可辨識的錄製分片",
+            enUS: "No recognized recording segments in directory"
+        ),
+        ["toolsRecordingPartsUnsupported"] = new TextContainer
+        (
+            zhCN: "暂不支持多段点播目录，请提供单段轨道目录或已合并媒体文件",
+            zhTW: "暫不支援多段點播目錄，請提供單段軌道目錄或已合併媒體檔案",
+            enUS: "Multi-part VOD directories are not supported; provide a single-part track directory or merged media file"
+        ),
+        ["toolsRecordingMixed"] = new TextContainer
+        (
+            zhCN: "同一轨道目录内存在不同格式的分片，请分别指定输入",
+            zhTW: "同一軌道目錄內存在不同格式的分片，請分別指定輸入",
+            enUS: "Mixed segment formats in a track directory; specify them separately"
+        ),
+        ["toolsRecordingMultiInit"] = new TextContainer
+        (
+            zhCN: "轨道存在多份初始化信息，无法可靠确定分片所属，请分别合并后混流",
+            zhTW: "軌道存在多份初始化資訊，無法可靠確定分片所屬，請分別合併後混流",
+            enUS: "Multiple initializations in track directory; merge each section separately before muxing"
+        ),
+        ["toolsRecordingInitMissing"] = new TextContainer
+        (
+            zhCN: "缺少与分片对应的初始化文件",
+            zhTW: "缺少與分片對應的初始化檔案",
+            enUS: "Missing initialization file matching the segments"
+        ),
+        ["toolsRecordingEncrypted"] = new TextContainer
+        (
+            zhCN: "录制目录含未解密的分片或缺少完整的解密结果",
+            zhTW: "錄製目錄含未解密的分片或缺少完整的解密結果",
+            enUS: "Recording contains encrypted segments or incomplete decryption results"
+        ),
+        ["toolsRecordingSubtitleUnsupported"] = new TextContainer
+        (
+            zhCN: "录制目录中的字幕格式暂不支持转换，请提供独立字幕文件",
+            zhTW: "錄製目錄中的字幕格式暫不支援轉換，請提供獨立字幕檔案",
+            enUS: "Unsupported recording subtitle format; provide a separate subtitle file"
         ),
         ["cmd_toolsTitle"] = new TextContainer
         (
@@ -174,9 +222,9 @@ internal static class StaticText
         ),
         ["cmd_toolsInputDir"] = new TextContainer
         (
-            zhCN: "输入目录，按文件名自然排序；不能与 -i 同时使用",
-            zhTW: "輸入目錄，依檔名自然排序；不能與 -i 同時使用",
-            enUS: "Input directory, naturally sorted by filename; cannot be combined with -i"
+            zhCN: "按 --pattern 读取目录内的文件（不递归），自然排序；不能与 -i 同时使用",
+            zhTW: "依 --pattern 讀取目錄內的檔案（不遞迴），自然排序；不能與 -i 同時使用",
+            enUS: "Read files matching --pattern from a directory (non-recursive), naturally sorted; cannot be combined with -i"
         ),
         ["cmd_toolsPattern"] = new TextContainer
         (
@@ -258,9 +306,9 @@ internal static class StaticText
         ),
         ["toolsInputRequired"] = new TextContainer
         (
-            zhCN: "请使用 -i 或 --input-dir 指定至少一个输入文件",
-            zhTW: "請使用 -i 或 --input-dir 指定至少一個輸入檔案",
-            enUS: "Specify at least one input file with -i or --input-dir"
+            zhCN: "请指定至少一个输入文件或目录",
+            zhTW: "請指定至少一個輸入檔案或目錄",
+            enUS: "Specify at least one input file or directory"
         ),
         ["toolsInputMissing"] = new TextContainer
         (
@@ -390,9 +438,9 @@ internal static class StaticText
         ),
         ["toolsSubtitleFixed"] = new TextContainer
         (
-            zhCN: "混流时调整字幕时间轴：{0}（偏移 {1} 秒，原文件未修改）",
-            zhTW: "混流時調整字幕時間軸：{0}（偏移 {1} 秒，原檔案未修改）",
-            enUS: "Adjusting subtitle timing for muxing: {0} (offset {1} seconds; original file unchanged)"
+            zhCN: "混流时调整字幕时间轴：偏移 {0} 秒",
+            zhTW: "混流時調整字幕時間軸：偏移 {0} 秒",
+            enUS: "Adjusting subtitle timing for muxing: offset {0} seconds"
         ),
         ["inputInvalid"] = new TextContainer
         (
