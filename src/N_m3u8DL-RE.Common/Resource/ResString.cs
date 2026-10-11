@@ -6,6 +6,12 @@ public static class ResString
 
     public static readonly string ReLiveTs = "<RE_LIVE_TS>";
     public static readonly string ReBinaryData = "<RE_BINARY_DATA>";
+    public static string matchIPTV => GetText("matchIPTV");
+    public static string iptvChannels => GetText("iptvChannels");
+    public static string iptvHttpRequired => GetText("iptvHttpRequired");
+    public static string iptvTsRequired => GetText("iptvTsRequired");
+    public static string iptvEntryInvalid => GetText("iptvEntryInvalid");
+    public static string iptvVideoFilterRequired => GetText("iptvVideoFilterRequired");
     public static string cmd_toolsConcat => GetText("cmd_toolsConcat");
     public static string cmd_toolsMerge => GetText("cmd_toolsMerge");
     public static string cmd_toolsMux => GetText("cmd_toolsMux");

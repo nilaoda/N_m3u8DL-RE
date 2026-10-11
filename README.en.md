@@ -76,6 +76,17 @@ Help uses the configured UI language. Completion script generation and Tab compl
 
 For Docker, mount the file read-only at `/config/config.conf` and pass `--config /config/config.conf`, independently of the container's HOME or runtime user.
 
+## IPTV channel lists
+
+```text
+# Select HTTP TS live channels interactively and record for 3 minutes
+N_m3u8DL-RE channels.m3u --live-record-limit 00:03:00
+
+# Select by channel name; for=all records all matching channels in separate files
+N_m3u8DL-RE channels.m3u -sv "name=^Channel A$:for=best" --live-record-limit 00:03:00
+N_m3u8DL-RE channels.m3u -sv "name=^Channel:for=all" --live-record-limit 00:03:00
+```
+
 ## Utility commands
 
 ```text
@@ -383,6 +394,7 @@ Set each track's output filename stem using variables. The output extension is a
 * <FrameRate>: video frame rate
 * <VideoRange>: video dynamic range (e.g. SDR, HDR10)
 * <GroupId>: stream group identifier
+* <Name>: stream name or IPTV channel name
 
 Variables are case-sensitive. Missing values become empty strings. Do not include the output extension in the pattern.
 

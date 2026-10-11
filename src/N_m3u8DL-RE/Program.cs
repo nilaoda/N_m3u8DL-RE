@@ -220,14 +220,35 @@ internal class Program
             await BinaryDownloadRunner.RunAsync(option, binarySource, headers);
             return;
         }
-        if (extractor.ExtractorType == ExtractorType.HTTP_LIVE)
+        if (extractor.ExtractorType is ExtractorType.HTTP_LIVE or ExtractorType.IPTV_M3U)
         {
+            var liveStreams = await extractor.ExtractStreamsAsync();
+            if (extractor.ExtractorType == ExtractorType.IPTV_M3U)
+            {
+                Logger.Info(ResString.iptvChannels, liveStreams.Count);
+                liveStreams = FilterUtil.DoFilterDrop(liveStreams, option.DropVideoFilter);
+                if (option.SubOnly || option.AudioFilter != null || option.SubtitleFilter != null)
+                    throw new ArgumentException(ResString.iptvVideoFilterRequired);
+                if (option.AutoSelect)
+                    liveStreams = liveStreams.Take(1).ToList();
+                else if (option.VideoFilter != null)
+                    liveStreams = FilterUtil.DoFilterKeep(liveStreams, option.VideoFilter);
+                else if (liveStreams.Count > 0)
+                    liveStreams = FilterUtil.SelectStreams(liveStreams);
+                if (liveStreams.Count == 0)
+                    throw new ArgumentException(ResString.noStreamsToDownload);
+                Logger.Info(ResString.selectedStream);
+                foreach (var stream in liveStreams)
+                    Logger.InfoMarkUp(stream.ToString());
+            }
+            else
+            {
+                option.SaveName ??= OtherUtil.GetFileNameFromInput(option.Input);
+            }
             if (option.SkipDownload)
             {
                 return;
             }
-            option.SaveName ??= OtherUtil.GetFileNameFromInput(option.Input);
-            var liveStreams = await extractor.ExtractStreamsAsync();
             var liveConfig = new DownloaderConfig
             {
                 MyOptions = option,

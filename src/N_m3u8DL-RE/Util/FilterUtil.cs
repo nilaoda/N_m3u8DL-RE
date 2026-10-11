@@ -100,7 +100,8 @@ public static class FilterUtil
         var inputs = lists.Where(_ => true);
         var selected = DoFilterKeep(lists, filter);
 
-        inputs = inputs.Where(i => selected.All(s => s.ToString() != i.ToString()));
+        // 显示信息相同的流也可能指向不同地址，只排除实际匹配的流。
+        inputs = inputs.Where(i => !selected.Contains(i));
 
         return inputs.ToList();
     }
@@ -122,8 +123,8 @@ public static class FilterUtil
                 .Title(ResString.promptTitle)
                 .UseConverter(x =>
                 {
-                    if (x.Name != null && x.Name.StartsWith("__"))
-                        return $"[darkslategray1]{x.Name[2..]}[/]";
+                    if (string.IsNullOrEmpty(x.Url) && x.Name != null && x.Name.StartsWith("__"))
+                        return $"[darkslategray1]{x.Name[2..].EscapeMarkup()}[/]";
                     return x.ToString().EscapeMarkup().RemoveMarkup();
                 })
                 .Required()
@@ -138,7 +139,15 @@ public static class FilterUtil
 
         if (basicStreams.Count != 0)
         {
-            prompt.AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
+            if (basicStreams.Any(stream => !string.IsNullOrEmpty(stream.GroupTitle)))
+            {
+                foreach (var group in basicStreams.GroupBy(stream => stream.GroupTitle ?? "Basic"))
+                    prompt.AddChoiceGroup(new StreamSpec() { Name = "__" + group.Key }, group);
+            }
+            else
+            {
+                prompt.AddChoiceGroup(new StreamSpec() { Name = "__Basic" }, basicStreams);
+            }
         }
 
         if (audios.Count != 0)
