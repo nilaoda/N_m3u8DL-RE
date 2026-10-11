@@ -8,6 +8,18 @@ namespace N_m3u8DL_RE.Tests.Util;
 
 public class FilterUtilTests
 {
+    [Fact]
+    public void DropByUrlPreservesAnotherStreamWithTheSameName()
+    {
+        var first = new StreamSpec { Name = "Channel A", Url = "https://example.test/first" };
+        var second = new StreamSpec { Name = "Channel A", Url = "https://example.test/second" };
+        var remaining = FilterUtil.DoFilterDrop([first, second], new StreamFilter
+        {
+            UrlReg = new Regex("/first$"), For = "all"
+        });
+        Assert.Same(second, Assert.Single(remaining));
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

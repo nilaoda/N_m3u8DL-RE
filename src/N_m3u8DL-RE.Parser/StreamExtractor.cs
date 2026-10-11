@@ -80,7 +80,13 @@ public class StreamExtractor : IDisposable
         var rawType = "txt";
         rawText = rawText.Trim();
         this.rawText = rawText;
-        if (rawText.StartsWith(HLSTags.ext_m3u))
+        if (rawText.StartsWith(HLSTags.ext_m3u) && IPTVExtractor.IsPlaylist(rawText))
+        {
+            Logger.InfoMarkUp(ResString.matchIPTV);
+            extractor = new IPTVExtractor(parserConfig);
+            rawType = "m3u";
+        }
+        else if (rawText.StartsWith(HLSTags.ext_m3u))
         {
             Logger.InfoMarkUp(ResString.matchHLS);
             extractor = new HLSExtractor(parserConfig);
@@ -116,6 +122,20 @@ public class StreamExtractor : IDisposable
         }
 
         RawFiles[$"raw.{rawType}"] = rawText;
+    }
+
+    /// <summary>
+    /// 仅连接选中的 IPTV 频道，保留识别时读取的前缀；调用者负责释放独立的响应流。
+    /// </summary>
+    public async Task<WebSourceResult> LoadLiveSourceAsync(StreamSpec stream, CancellationToken cancellationToken = default)
+    {
+        if (!Uri.TryCreate(stream.Url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https"))
+            throw new NotSupportedException($"{ResString.iptvHttpRequired}: {stream.Url}");
+        var source = await HTTPUtil.GetWebSourceResultAsync(stream.Url, parserConfig.Headers, cancellationToken);
+        if (source.Source == ResString.ReLiveTs && source.Stream != null)
+            return source;
+        source.Dispose();
+        throw new NotSupportedException($"{ResString.iptvTsRequired}: {stream.Url}");
     }
 
     public void Dispose() => DirectSource?.Dispose();

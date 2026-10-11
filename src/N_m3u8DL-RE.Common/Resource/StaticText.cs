@@ -851,7 +851,8 @@ internal static class StaticText
                   "* <Channels>: 音频声道信息\r\n" +
                   "* <FrameRate>: 视频帧率\r\n" +
                   "* <VideoRange>: 视频动态范围 (如 SDR, HDR10)\r\n" +
-                  "* <GroupId>: 流组标识符\r\n\r\n" +
+                  "* <GroupId>: 流组标识符\r\n" +
+                  "* <Name>: 流名称或 IPTV 频道名称\r\n\r\n" +
                   "变量区分大小写，缺失的信息替换为空字符串. 模板不需要包含扩展名.\r\n\r\n" +
                   "例如:\r\n" +
                   "# 按分辨率命名视频\r\n" +
@@ -873,7 +874,8 @@ internal static class StaticText
                   "* <Channels>: 音訊聲道資訊\r\n" +
                   "* <FrameRate>: 影片影格率\r\n" +
                   "* <VideoRange>: 影片動態範圍 (如 SDR, HDR10)\r\n" +
-                  "* <GroupId>: 串流群組識別碼\r\n\r\n" +
+                  "* <GroupId>: 串流群組識別碼\r\n" +
+                  "* <Name>: 串流名稱或 IPTV 頻道名稱\r\n\r\n" +
                   "變數區分大小寫，缺失的資訊替換為空字串. 模板不需要包含副檔名.\r\n\r\n" +
                   "例如:\r\n" +
                   "# 按解析度命名影片\r\n" +
@@ -895,7 +897,8 @@ internal static class StaticText
                   "* <Channels>: audio channel information\r\n" +
                   "* <FrameRate>: video frame rate\r\n" +
                   "* <VideoRange>: video dynamic range (e.g. SDR, HDR10)\r\n" +
-                  "* <GroupId>: stream group identifier\r\n\r\n" +
+                  "* <GroupId>: stream group identifier\r\n" +
+                  "* <Name>: stream name or IPTV channel name\r\n\r\n" +
                   "Variables are case-sensitive. Missing values become empty strings. Do not include the output extension in the pattern.\r\n\r\n" +
                   "Examples:\r\n" +
                   "# Name video tracks by resolution\r\n" +
@@ -1886,6 +1889,42 @@ internal static class StaticText
             zhCN: "已经允许识别多个#EXT-X-MAP标签, 本软件可能无法正确处理, 请手动确认内容完整性",
             zhTW: "已經允許識別多個#EXT-X-MAP標籤, 本軟件可能無法正確處理, 請手動確認內容完整性",
             enUS: "Multiple #EXT-X-MAP tags are now allowed for detection. However, this software may not handle them correctly. Please manually verify the content's integrity"
+        ),
+        ["matchIPTV"] = new TextContainer
+        (
+            zhCN: "内容匹配: [white on deepskyblue3]IPTV M3U[/]",
+            zhTW: "內容匹配: [white on deepskyblue3]IPTV M3U[/]",
+            enUS: "Content Matched: [white on deepskyblue3]IPTV M3U[/]"
+        ),
+        ["iptvChannels"] = new TextContainer
+        (
+            zhCN: "已解析 {} 个 IPTV 频道",
+            zhTW: "已解析 {} 個 IPTV 頻道",
+            enUS: "Parsed {} IPTV channels"
+        ),
+        ["iptvHttpRequired"] = new TextContainer
+        (
+            zhCN: "IPTV 频道仅支持 HTTP/HTTPS 地址",
+            zhTW: "IPTV 頻道僅支援 HTTP/HTTPS 位址",
+            enUS: "IPTV channels require HTTP/HTTPS URLs"
+        ),
+        ["iptvTsRequired"] = new TextContainer
+        (
+            zhCN: "IPTV 频道未返回 HTTP 直播 TS 流",
+            zhTW: "IPTV 頻道未返回 HTTP 直播 TS 串流",
+            enUS: "IPTV channel did not return an HTTP live TS stream"
+        ),
+        ["iptvEntryInvalid"] = new TextContainer
+        (
+            zhCN: "IPTV 频道条目缺少名称分隔符或地址",
+            zhTW: "IPTV 頻道項目缺少名稱分隔符或位址",
+            enUS: "IPTV channel entry has no title separator or URL"
+        ),
+        ["iptvVideoFilterRequired"] = new TextContainer
+        (
+            zhCN: "请使用 -sv 筛选 IPTV 频道，频道列表不提供独立音轨或字幕轨道",
+            zhTW: "請使用 -sv 篩選 IPTV 頻道，頻道列表不提供獨立音軌或字幕軌道",
+            enUS: "Use -sv to select IPTV channels; channel lists do not provide separate audio or subtitle tracks"
         ),
         ["matchTS"] = new TextContainer
         (

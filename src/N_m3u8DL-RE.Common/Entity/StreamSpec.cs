@@ -10,6 +10,11 @@ public class StreamSpec
     public string? GroupId { get; set; }
     public string? Language { get; set; }
     public string? Name { get; set; }
+
+    /// <summary>
+    /// IPTV 列表中的频道分组，用于选择界面和流信息展示；不代表音视频轨道关联。
+    /// </summary>
+    public string? GroupTitle { get; set; }
     public Choise? Default { get; set; }
 
     // 由于用户选择 被跳过的分片总时长
@@ -109,7 +114,7 @@ public class StreamSpec
         else
         {
             prefixStr = $"[turquoise4]Vid[/] {encStr}";
-            var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {RoleDisplay}";
+            var d = $"{Name} | {GroupTitle} | {Resolution} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {RoleDisplay}";
             returnStr = d.EscapeMarkup();
         }
 
@@ -143,7 +148,7 @@ public class StreamSpec
         else
         {
             prefixStr = $"[turquoise4]Vid[/] {encStr}";
-            var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {FrameRate} | {VideoRange} | {RoleDisplay}";
+            var d = $"{Name} | {GroupTitle} | {Resolution} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {FrameRate} | {VideoRange} | {RoleDisplay}";
             returnStr = d.EscapeMarkup();
         }
 
@@ -185,7 +190,7 @@ public class StreamSpec
         else
         {
             prefixStr = $"[turquoise4]Vid[/] {encStr}";
-            var d = $"{Resolution} | {Bandwidth / 1000} Kbps | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {RoleDisplay}";
+            var d = $"{Name} | {GroupTitle} | {Resolution} | {(Bandwidth != null ? (Bandwidth / 1000) + " Kbps" : "")} | {GroupId} | {FrameRate} | {Codecs} | {VideoRange} | {segmentsCountStr} | {RoleDisplay}";
             returnStr = d.EscapeMarkup();
         }
 

@@ -252,6 +252,7 @@ internal static partial class OtherUtil
         result = result.Replace("<VideoRange>", streamSpec.VideoRange ?? "");
         result = result.Replace("<MediaType>", streamSpec.MediaType?.ToString() ?? "");
         result = result.Replace("<GroupId>", streamSpec.GroupId ?? "");
+        result = result.Replace("<Name>", streamSpec.Name ?? "");
 
         // 清理多余的分隔符
         result = result.Replace("__", "_").Replace("..", ".").Trim('_').Trim('.');

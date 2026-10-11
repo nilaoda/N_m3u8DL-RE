@@ -6,5 +6,6 @@ public enum ExtractorType
     HLS,
     HTTP_LIVE,
     MSS,
-    BINARY
+    BINARY,
+    IPTV_M3U
 }

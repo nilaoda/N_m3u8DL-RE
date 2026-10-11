@@ -78,6 +78,17 @@ N_m3u8DL-RE "https://example.com/video.m3u8" --no-config
 
 Docker 部署建议将配置只读挂载到 `/config/config.conf`，并传入 `--config /config/config.conf`，不依赖容器的 HOME 或运行用户。
 
+## IPTV 频道列表
+
+```text
+# 交互选择 HTTP TS 直播频道，录制 3 分钟
+N_m3u8DL-RE channels.m3u --live-record-limit 00:03:00
+
+# 按频道名称筛选；for=all 可同时录制多个匹配频道，分别保存
+N_m3u8DL-RE channels.m3u -sv "name=^Channel A$:for=best" --live-record-limit 00:03:00
+N_m3u8DL-RE channels.m3u -sv "name=^Channel:for=all" --live-record-limit 00:03:00
+```
+
 ## 工具命令
 
 ```text
@@ -385,6 +396,7 @@ More Help:
 * <FrameRate>: 视频帧率
 * <VideoRange>: 视频动态范围 (如 SDR, HDR10)
 * <GroupId>: 流组标识符
+* <Name>: 流名称或 IPTV 频道名称
 
 变量区分大小写，缺失的信息替换为空字符串. 模板不需要包含扩展名.
 
