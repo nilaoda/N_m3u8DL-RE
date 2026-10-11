@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Entity;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -31,14 +32,19 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
     private sealed record MediaTiming(double Start, double End);
     internal sealed record SubtitleResult(string Text, bool Changed, bool Unresolved, double Offset);
 
-    internal static async Task<MuxSubtitleTimeline> CreateAsync(string[] inputs, string? ffmpegPath, CancellationToken token)
+    internal static Task<MuxSubtitleTimeline> CreateAsync(string[] inputs, string? ffmpegPath, CancellationToken token) =>
+        CreateAsync(inputs.Select(path => new OutputFile { Index = 999, FilePath = path }).ToArray(), ffmpegPath, token);
+
+    internal static async Task<MuxSubtitleTimeline> CreateAsync(OutputFile[] files, string? ffmpegPath, CancellationToken token,
+        bool alignMedia = false, string? temporaryDirectory = null)
     {
+        var inputs = files.Select(file => file.FilePath).ToArray();
         var result = new MuxSubtitleTimeline(inputs);
         try
         {
             var subtitles = Enumerable.Range(0, inputs.Length).Where(i =>
                 Path.GetExtension(inputs[i]).ToLowerInvariant() is ".srt" or ".vtt").ToArray();
-            if (subtitles.Length == 0)
+            if (subtitles.Length == 0 && !alignMedia)
                 return result;
             var media = new List<MediaTiming>();
             for (var i = 0; i < inputs.Length; i++)
@@ -47,7 +53,7 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
                     continue;
                 if (Path.GetExtension(inputs[i]).ToLowerInvariant() is ".ass" or ".ssa" or ".sup" or ".sub" or ".idx")
                     continue;
-                var timing = await ProbeAsync(ffmpegPath, inputs[i], token);
+                var timing = await ProbeAsync(ffmpegPath, files[i], token);
                 if (timing == null)
                 {
                     Array.Clear(result.MediaStarts);
@@ -70,17 +76,17 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
             foreach (var i in subtitles)
             {
                 var text = await File.ReadAllTextAsync(inputs[i], token);
-                var repaired = Repair(text, origin, duration);
+                var repaired = Repair(text, origin, duration, files[i].SubtitleTimestampMap);
                 if (repaired.Unresolved)
                     Logger.Warn($"{ResString.toolsSubtitleClockUnknown}: {inputs[i]}");
                 if (!repaired.Changed)
                     continue;
-                var temporary = Path.Combine(Path.GetTempPath(), $"re-sub-{Guid.NewGuid():N}{Path.GetExtension(inputs[i])}");
+                var temporary = Path.Combine(temporaryDirectory ?? Path.GetTempPath(), $"re-sub-{Guid.NewGuid():N}{Path.GetExtension(inputs[i])}");
                 result._temporaryFiles.Add(temporary);
                 await File.WriteAllTextAsync(temporary, repaired.Text, token);
                 result.Inputs[i] = temporary;
                 Logger.Info(string.Format(CultureInfo.CurrentCulture, ResString.toolsSubtitleFixed,
-                    inputs[i], repaired.Offset.ToString("0.######", CultureInfo.InvariantCulture)));
+                    repaired.Offset.ToString("0.######", CultureInfo.InvariantCulture)));
             }
             return result;
         }
@@ -91,8 +97,9 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
         }
     }
 
-    private static async Task<MediaTiming?> ProbeAsync(string? ffmpegPath, string input, CancellationToken token)
+    private static async Task<MediaTiming?> ProbeAsync(string? ffmpegPath, OutputFile file, CancellationToken token)
     {
+        var input = file.FilePath;
         using var limit = CancellationTokenSource.CreateLinkedTokenSource(token);
         limit.CancelAfter(TimeSpan.FromSeconds(5));
         try
@@ -100,7 +107,8 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
             var extension = Path.GetExtension(input).ToLowerInvariant();
             if (extension is ".mp4" or ".m4a" or ".m4v" or ".mov" or ".m4s")
             {
-                var mp4 = MP4MediaInfoUtil.ReadTiming(input, token);
+                using var stream = file.Segments == null ? File.OpenRead(input) : (Stream)new ConcatInputStream(file.Segments);
+                var mp4 = MP4MediaInfoUtil.ReadTiming(stream, token);
                 return mp4 == null ? null : new MediaTiming(mp4.Value.Start, mp4.Value.Start + mp4.Value.Duration);
             }
             // 非 MP4 输入沿用现有 FFmpeg 媒体探测。
@@ -110,7 +118,10 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
                 Logger.Warn(ResString.toolsSubtitleProbeMissing);
                 return null;
             }
-            var timing = await MediainfoUtil.ReadTimingAsync(binary, input, limit.Token);
+            using var server = file.Segments == null ? null : new ConcatInputServer(file.Segments);
+            var timing = await MediainfoUtil.ReadTimingAsync(binary, server?.Url ?? input, limit.Token, loopbackInput: server != null);
+            if (server?.Error is { } error)
+                throw new IOException(error.Message, error);
             return timing == null ? null : new MediaTiming(timing.Value.Start, timing.Value.Start + timing.Value.Duration);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or Win32Exception or ArgumentException or OverflowException ||
@@ -121,7 +132,7 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
         }
     }
 
-    internal static SubtitleResult Repair(string text, double origin, double duration)
+    internal static SubtitleResult Repair(string text, double origin, double duration, string? timestampMap = null)
     {
         var normalized = text.TrimStart('\uFEFF').ReplaceLineEndings("\n");
         var matches = TimingRegex().Matches(normalized);
@@ -139,8 +150,8 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
         }
         var relativeOverlap = Overlap(sub, duration);
         var firstStart = sub.Cues[0].StartTime;
-        var hasMap = HlsSubtitleTimeline.HasTimestampMap(normalized);
-        HlsSubtitleTimeline.Normalize(sub, normalized, origin);
+        var hasMap = timestampMap != null || HlsSubtitleTimeline.HasTimestampMap(normalized);
+        HlsSubtitleTimeline.Normalize(sub, timestampMap ?? normalized, origin);
         var mappedOverlap = Overlap(sub, duration);
         var offset = (sub.Cues[0].StartTime - firstStart).TotalSeconds;
         // 无映射的 SRT/VTT 可能已经归零。只有原时间不落在媒体区间、

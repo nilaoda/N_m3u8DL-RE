@@ -16,6 +16,19 @@ internal static partial class HlsSubtitleTimeline
 
     public static bool HasTimestampMap(string text) => MapRegex().IsMatch(text);
 
+    internal static (string Header, double Local, double Mpegts)? ReadTimestampMap(string text)
+    {
+        var map = MapRegex().Match(text).Value;
+        if (map.Length == 0)
+            return null;
+        var local = LocalRegex().Match(map);
+        var mpegts = MpegtsRegex().Match(map);
+        if (!local.Success || !mpegts.Success)
+            throw new FormatException(ResString.hlsTimestampMapInvalid);
+        return (map, WebVttSub.ParseTimestamp(local.Groups[1].Value).TotalSeconds,
+            long.Parse(mpegts.Groups[1].Value, CultureInfo.InvariantCulture) / 90000d);
+    }
+
     public static void NormalizeSubtitleOnly(WebVttSub sub, string text, MediaSegment segment)
     {
         var localStart = segment.HlsTime ?? 0;
@@ -56,15 +69,10 @@ internal static partial class HlsSubtitleTimeline
     {
         var offset = -mediaOrigin;
         double timestamp = 0;
-        var map = MapRegex().Match(text).Value;
-        if (map.Length > 0)
+        if (ReadTimestampMap(text) is { } map)
         {
-            var local = LocalRegex().Match(map);
-            var mpegts = MpegtsRegex().Match(map);
-            if (!local.Success || !mpegts.Success)
-                throw new FormatException(ResString.hlsTimestampMapInvalid);
-            timestamp = long.Parse(mpegts.Groups[1].Value, CultureInfo.InvariantCulture) / 90000d;
-            var localTime = WebVttSub.ParseTimestamp(local.Groups[1].Value).TotalSeconds;
+            timestamp = map.Mpegts;
+            var localTime = map.Local;
             // MPEGTS 是 33 位时钟。映射锚点可能比当前字幕早一天以上，
             // 必须以当前 cue 映射后的时间选择回绕周期，而不是只看锚点。
             // 分片位置用于长节目后半段，保留原点到首句对白之间的空白。

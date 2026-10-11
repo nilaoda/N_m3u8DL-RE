@@ -1,6 +1,7 @@
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Enum;
 using Spectre.Console;
 using Microsoft.Win32.SafeHandles;
@@ -34,20 +35,28 @@ internal static class FileToolUtil
                 files[i].FilePath = inputs[i];
             }
         }
+        // 目录输入先规划分片，输出保护必须覆盖源目录中的全部文件，包括未选用的原始 init。
+        var tracks = new RecordingTrack?[inputs.Length];
+        for (var i = 0; i < inputs.Length; i++)
+        {
+            token.ThrowIfCancellationRequested();
+            if (Directory.Exists(inputs[i]))
+                tracks[i] = RecordingTrack.Read(files?[i] ?? new OutputFile { Index = i, FilePath = inputs[i] }, token, binaryConcat: operation == "concat");
+            else if (!File.Exists(inputs[i]))
+                throw new FileNotFoundException($"{ResString.toolsInputMissing}: {inputs[i]}", inputs[i]);
+        }
+        var sources = inputs.SelectMany((input, i) => tracks[i]?.Sources ?? [input]).ToArray();
         output = Path.GetFullPath(output);
-        foreach (var input in inputs)
-            if (!File.Exists(input))
-                throw new FileNotFoundException($"{ResString.toolsInputMissing}: {input}", input);
         var comparer = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
             ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         var resolvedOutput = ResolvePath(output);
-        if (inputs.Any(input => comparer.Equals(ResolvePath(input), resolvedOutput)))
+        if (sources.Any(input => comparer.Equals(ResolvePath(input), resolvedOutput)))
             throw new ArgumentException(ResString.toolsOutputIsInput);
         if (OperatingSystem.IsWindows() && File.Exists(output))
         {
             // 本机盘符与 UNC 共享可以访问同一个文件，路径文本无法确认其身份。
             var outputId = ReadWindowsFileId(output);
-            if (inputs.Any(input => ReadWindowsFileId(input) == outputId))
+            if (sources.Any(input => ReadWindowsFileId(input) == outputId))
                 throw new ArgumentException(ResString.toolsOutputIsInput);
         }
         if (File.Exists(output) && !overwrite)
@@ -67,8 +76,15 @@ internal static class FileToolUtil
             for (var i = 0; i < inputs.Length; i++)
             {
                 Logger.InfoMarkUp($"[grey][[{i}]][/] {inputs[i].EscapeMarkup()}");
-                if (files != null && (files[i].LangCode != null || files[i].Description != null))
-                    Logger.Info($"    lang={files[i].LangCode} name={files[i].Description}");
+                if (tracks[i] is { } track)
+                {
+                    foreach (var segment in track.Inputs)
+                        Logger.Info($"    {Path.GetFileName(segment)}");
+                    LanguageCodeUtil.ConvertLangCodeAndDisplayName(track.Info);
+                }
+                var info = tracks[i]?.Info ?? files?[i];
+                if (info != null && (info.LangCode != null || info.Description != null))
+                    Logger.Info($"    lang={info.LangCode} name={info.Description}");
             }
             if (title != null)
                 Logger.Info($"title={title}");
@@ -88,10 +104,64 @@ internal static class FileToolUtil
         var temporary = Path.Combine(Path.GetDirectoryName(output)!, $".re-{Guid.NewGuid():N}{format}");
         var success = await MediaProcessingProgress.RunAsync(operation, async processing =>
         {
+            string? trackDirectory = null;
+            var servers = new List<ConcatInputServer>();
             try
             {
+                var muxFiles = files ?? inputs.Select(path => new OutputFile { Index = 999, FilePath = path }).ToArray();
+                if (operation == "mux" && tracks.Any(track => track != null))
+                {
+                    // 字幕转换及 mkvmerge 中间轨道写到输出目录，源录制目录始终只读。
+                    trackDirectory = Directory.CreateDirectory(Path.Combine(Path.GetDirectoryName(output)!,
+                        $".re-tracks-{Guid.NewGuid():N}")).FullName;
+                    var prepared = new List<OutputFile>();
+                    for (var i = 0; i < tracks.Length; i++)
+                    {
+                        if (tracks[i] is not { } track)
+                        {
+                            prepared.Add(muxFiles[i]);
+                            continue;
+                        }
+                        processing.Begin(muxer == "ffmpeg" && track.Info.MediaType != MediaType.SUBTITLES
+                            ? ResString.processingPreparing : $"{ResString.processingMerge}: {Path.GetFileName(track.Info.FilePath)}");
+                        var file = await track.PrepareAsync(trackDirectory, i, token, processing.Report, virtualInput: muxer == "ffmpeg");
+                        if (file != null)
+                            prepared.Add(file);
+                    }
+                    muxFiles = prepared.ToArray();
+                    if (muxFiles.Length == 0)
+                        throw new ArgumentException(ResString.toolsRecordingEmpty);
+                    inputs = muxFiles.Select(file => file.FilePath).ToArray();
+                }
+                else if (operation != "mux")
+                {
+                    inputs = inputs.SelectMany((input, i) =>
+                    {
+                        if (operation == "merge" && mode == FFmpegConcatMode.DEMUXER && tracks[i] is { HasInitialization: true } track)
+                        {
+                            // init 和裸分片必须作为完整轨道读取；demuxer 仍逐个处理不同输入。
+                            var server = new ConcatInputServer(track.Inputs);
+                            servers.Add(server);
+                            return new[] { server.Url };
+                        }
+                        return tracks[i]?.Inputs ?? [input];
+                    }).ToArray();
+                }
                 using var timeline = operation == "mux" && autoSubtitleFix
-                    ? await MuxSubtitleTimeline.CreateAsync(inputs, ffmpegPath, token) : null;
+                    ? await MuxSubtitleTimeline.CreateAsync(muxFiles, ffmpegPath, token,
+                        alignMedia: tracks.Any(track => track != null), temporaryDirectory: trackDirectory) : null;
+                var muxInputs = timeline?.Inputs.ToArray() ?? inputs.ToArray();
+                if (operation == "mux" && muxer == "ffmpeg")
+                {
+                    for (var i = 0; i < muxFiles.Length; i++)
+                    {
+                        if (muxFiles[i].Segments is not { } segments)
+                            continue;
+                        var server = new ConcatInputServer(segments);
+                        servers.Add(server);
+                        muxInputs[i] = "concat:" + server.Url;
+                    }
+                }
                 if (operation == "concat")
                 {
                     processing.Begin(ResString.processingMerge);
@@ -101,9 +171,14 @@ internal static class FileToolUtil
                 {
                     processing.Begin(operation == "mux" ? ResString.processingMux : ResString.processingMerge);
                     var exitCode = operation == "mux"
-                        ? await MergeUtil.MuxInputsAsync(binary!, files ?? inputs.Select(path => new OutputFile { Index = 999, FilePath = path }).ToArray(),
-                            temporary, useMkvmerge: muxer == "mkvmerge", timeline: timeline, title: title, token: token, progress: processing.Report)
-                        : await MergeUtil.MergeByFFmpegAsync(binary!, inputs, temporary, mode, token: token, progress: processing.Report);
+                        ? await MergeUtil.MuxInputsAsync(binary!, muxFiles,
+                            temporary, useMkvmerge: muxer == "mkvmerge", timeline: timeline, title: title, token: token, progress: processing.Report,
+                            inputPaths: muxInputs, loopbackInput: servers.Count > 0)
+                        : await MergeUtil.MergeByFFmpegAsync(binary!, inputs, temporary, mode, token: token, progress: processing.Report,
+                            inputPaths: servers.Count > 0 ? inputs : null, loopbackInput: servers.Count > 0);
+                    foreach (var server in servers)
+                        if (server.Error is { } error)
+                            throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
                     // mkvmerge 的 1 表示成功但有警告，2 才是错误。
                     if (exitCode != 0 && !(muxer == "mkvmerge" && exitCode == 1))
                     {
@@ -119,7 +194,17 @@ internal static class FileToolUtil
             }
             finally
             {
-                File.Delete(temporary);
+                try
+                {
+                    File.Delete(temporary);
+                }
+                finally
+                {
+                    foreach (var server in servers)
+                        server.Dispose();
+                    if (trackDirectory != null)
+                        Directory.Delete(trackDirectory, recursive: true);
+                }
             }
         });
         if (success)

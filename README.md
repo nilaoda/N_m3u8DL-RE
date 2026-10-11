@@ -84,7 +84,7 @@ Docker 部署建议将配置只读挂载到 `/config/config.conf`，并传入 `-
 # 字节拼接，无需 FFmpeg
 N_m3u8DL-RE concat -i 1.ts -i 2.ts -o combined.ts
 
-# 也可从目录读取，按文件名自然排序；默认匹配 *.ts，可用 --pattern 修改
+# 按通配符批量读取目录内的文件，按文件名自然排序；默认匹配 *.ts，可用 --pattern 修改
 # --input-dir 不能与 -i 混用
 N_m3u8DL-RE concat --input-dir segments --pattern "*.ts" -o combined.ts
 
@@ -94,6 +94,17 @@ N_m3u8DL-RE merge --input-dir segments -o merged.mp4
 # 混流视频、音频和字幕
 # 默认自动调整字幕时间轴，原文件不变；添加 --auto-subtitle-fix false 可关闭
 N_m3u8DL-RE mux -i video.mp4 -i audio.m4a -i subtitle.srt -o output.mp4
+
+# 单段点播或直播录制的分片未合并时，直接从任务目录合并各轨道并混流；原分片保留
+N_m3u8DL-RE mux -i index_2026-10-10_23-56-12 -o recording.mkv
+
+# 也可指定各轨道目录，并设置语言或标题
+N_m3u8DL-RE mux -i video_segments -i "path=audio_segments:lang=eng:name=English" -i "path=subtitle_segments:lang=chi:name=中文" -o recording.mkv
+
+# 单独合并一条轨道（自动选择对应 init 和已解密分片）
+N_m3u8DL-RE merge -i video_segments -o video.mp4
+# 二进制合并也支持未解密分片，供后续解密或其他处理
+N_m3u8DL-RE concat -i video_segments -o video.mp4
 
 # 设置轨道语言（lang）、轨道标题（name）和影片标题（--title）
 # --mux-import 可追加外部音轨或字幕；lang、name 均可省略

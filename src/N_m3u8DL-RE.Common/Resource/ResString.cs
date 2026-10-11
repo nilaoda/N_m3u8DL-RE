@@ -11,6 +11,14 @@ public static class ResString
     public static string cmd_toolsMux => GetText("cmd_toolsMux");
     public static string cmd_toolsMuxInput => GetText("cmd_toolsMuxInput");
     public static string cmd_toolsMuxImport => GetText("cmd_toolsMuxImport");
+    public static string toolsRecordingSubtitleEmpty => GetText("toolsRecordingSubtitleEmpty");
+    public static string toolsRecordingEmpty => GetText("toolsRecordingEmpty");
+    public static string toolsRecordingPartsUnsupported => GetText("toolsRecordingPartsUnsupported");
+    public static string toolsRecordingMixed => GetText("toolsRecordingMixed");
+    public static string toolsRecordingMultiInit => GetText("toolsRecordingMultiInit");
+    public static string toolsRecordingInitMissing => GetText("toolsRecordingInitMissing");
+    public static string toolsRecordingEncrypted => GetText("toolsRecordingEncrypted");
+    public static string toolsRecordingSubtitleUnsupported => GetText("toolsRecordingSubtitleUnsupported");
     public static string cmd_toolsTitle => GetText("cmd_toolsTitle");
     public static string toolsTrackInfoFailed => GetText("toolsTrackInfoFailed");
     public static string toolsProcessing => GetText("toolsProcessing");
