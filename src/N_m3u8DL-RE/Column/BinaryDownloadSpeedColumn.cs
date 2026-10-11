@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using N_m3u8DL_RE.Common.Util;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -7,29 +6,24 @@ namespace N_m3u8DL_RE.Column;
 
 internal sealed class BinaryDownloadSpeedColumn(Func<long> receivedBytes) : ProgressColumn
 {
-    private readonly Stopwatch _watch = Stopwatch.StartNew();
-    private double _lastSampleSeconds;
+    private readonly ProgressSample<double> _speed = new();
     private long _lastReceived;
-    private double _speed;
 
     protected override bool NoWrap => true;
 
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
-        var elapsed = _watch.Elapsed.TotalSeconds - _lastSampleSeconds;
-        if (elapsed >= 1)
+        var stopped = task.IsFinished || task.StopTime != null || !task.IsStarted;
+        var speed = stopped ? 0 : _speed.GetValue(task, elapsed =>
         {
+            if (elapsed == TimeSpan.Zero) return 0;
             var received = receivedBytes();
-            _speed = Math.Max(0, received - _lastReceived) / elapsed;
+            var value = Math.Max(0, received - _lastReceived) / elapsed.TotalSeconds;
             _lastReceived = received;
-            _lastSampleSeconds = _watch.Elapsed.TotalSeconds;
-        }
-        else if (_lastSampleSeconds == 0 && elapsed > 0)
-        {
-            _speed = receivedBytes() / elapsed;
-        }
-        var style = task.IsFinished || !task.IsStarted ? Style.Plain : new Style(foreground: Color.Green);
-        var value = task.IsFinished || !task.IsStarted ? "-" : GlobalUtil.FormatFileSize(_speed) + "ps";
+            return value;
+        });
+        var style = stopped ? Style.Plain : new Style(foreground: Color.Green);
+        var value = stopped ? "-" : GlobalUtil.FormatFileSize(speed) + "ps";
         return new Text(value, style).Centered();
     }
 }

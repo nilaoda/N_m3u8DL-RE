@@ -36,7 +36,7 @@ internal static class BinaryDownloadRunner
 
         var downloader = new BinaryDownloadManager(readTimeout: TimeSpan.FromSeconds(option.HttpRequestTimeout));
         var length = source.Response?.Content.Headers.ContentLength;
-        if (Console.IsOutputRedirected || Console.IsErrorRedirected)
+        if (Console.IsOutputRedirected || Console.IsErrorRedirected || option.NoAnsiColor)
         {
             await DownloadWithLogAsync(downloader, option, source, savePath, headers, length);
         }
@@ -155,12 +155,20 @@ internal static class BinaryDownloadRunner
                 maxSpeed: option.MaxSpeed, onReceived: bytes => Interlocked.Add(ref receivedBytes, bytes),
                 onDownloaded: downloaded =>
                 {
+                    // 实时记录有效字节，大小显示由进度列每秒采样。
                     sizes[task.Id] = downloaded;
                     if (length is > 0)
                     {
-                        task.Value = downloaded;
+                        // 完成响应校验和文件保存后才显示 100%，重试时仍可回退。
+                        task.Value = Math.Min(downloaded, Math.Floor(task.MaxValue * 0.9999));
                     }
                 });
+            // 不足一秒的下载也必须显示最终大小，未知总长度时同样适用。
+            sizes[task.Id] = new FileInfo(savePath).Length;
+            if (length is > 0)
+            {
+                task.Value = sizes[task.Id];
+            }
             task.StopTask();
         });
     }
