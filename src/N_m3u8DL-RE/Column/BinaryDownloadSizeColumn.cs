@@ -7,16 +7,22 @@ namespace N_m3u8DL_RE.Column;
 
 internal sealed class BinaryDownloadSizeColumn(ConcurrentDictionary<int, long> sizes, long? totalSize) : ProgressColumn
 {
+    private readonly ProgressSample<string> _size = new();
+
     protected override bool NoWrap => true;
 
     public override IRenderable Render(RenderOptions options, ProgressTask task, TimeSpan deltaTime)
     {
-        sizes.TryGetValue(task.Id, out var written);
-        var size = GlobalUtil.FormatFileSize(written);
-        if (totalSize is >= 0)
+        var size = _size.GetValue(task, _ =>
         {
-            size += "/" + GlobalUtil.FormatFileSize(totalSize.Value);
-        }
+            sizes.TryGetValue(task.Id, out var written);
+            var value = GlobalUtil.FormatFileSize(written);
+            if (totalSize is >= 0)
+            {
+                value += "/" + GlobalUtil.FormatFileSize(totalSize.Value);
+            }
+            return value;
+        });
         return new Text(size, new Style(foreground: Color.DarkCyan)).RightJustified();
     }
 }

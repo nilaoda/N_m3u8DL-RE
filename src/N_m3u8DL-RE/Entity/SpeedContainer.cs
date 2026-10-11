@@ -38,9 +38,10 @@ internal class SpeedContainer
 
     public long AddDownloaded(long size) => Interlocked.Add(ref _Rdownloaded, size);
 
-    public void Reset()
+    // 原子读取并清空本次采样，避免丢失读取与清空之间收到的数据。
+    public long Reset()
     {
-        Interlocked.Exchange(ref _downloaded, 0);
+        return Interlocked.Exchange(ref _downloaded, 0);
     }
 
     public void ResetVars()

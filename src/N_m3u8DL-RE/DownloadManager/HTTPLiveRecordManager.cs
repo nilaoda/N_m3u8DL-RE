@@ -31,7 +31,6 @@ internal class HTTPLiveRecordManager
     {
         internal volatile bool Stopped;
         internal volatile bool ReadInfo;
-        internal long WrittenSize;
         internal CancellationTokenSource Cancellation { get; } = new();
         // 最多采样开头 10 MiB，首次收到数据时分配，解析后释放。
         internal object InfoLock { get; } = new();
@@ -46,7 +45,7 @@ internal class HTTPLiveRecordManager
     private readonly HashSet<string> ReservedPaths = new(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
         ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     ConcurrentDictionary<int, TimeSpan> RecordingDurDic = new(); // 已录制时长
-    ConcurrentDictionary<int, long> RecordingSizeDic = new(); // 已写入文件的大小，每秒刷新显示
+    ConcurrentDictionary<int, long> RecordingSizeDic = new(); // 实时记录已写入大小，进度列每秒刷新显示
 
     public HTTPLiveRecordManager(DownloaderConfig downloaderConfig, List<StreamSpec> selectedSteams, StreamExtractor streamExtractor)
     {
@@ -132,7 +131,7 @@ internal class HTTPLiveRecordManager
                 }
                 await stream.WriteAsync(data, state.Cancellation.Token);
                 speedContainer.Add(data.Length);
-                Interlocked.Add(ref state.WrittenSize, data.Length);
+                RecordingSizeDic.AddOrUpdate(taskId, data.Length, (_, current) => current + data.Length);
             }
 
             await WriteChunkAsync(source.Prefix);
@@ -150,7 +149,6 @@ internal class HTTPLiveRecordManager
         {
             state.Stopped = true;
             await counterTask;
-            RecordingSizeDic[taskId] = Interlocked.Read(ref state.WrittenSize);
             try
             {
                 await infoTask;
@@ -219,8 +217,7 @@ internal class HTTPLiveRecordManager
                 break;
             }
             RecordingDurDic[taskId] = timer.Elapsed;
-            var currentSize = Interlocked.Read(ref state.WrittenSize);
-            RecordingSizeDic[taskId] = currentSize;
+            RecordingSizeDic.TryGetValue(taskId, out var currentSize);
             if (logProgress)
             {
                 var name = SelectedSteams.Count > 1 ? $"{streamSpec.Name ?? streamSpec.GroupId} " : "";
