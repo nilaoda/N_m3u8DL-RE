@@ -36,13 +36,13 @@ public static class FilterUtil
         if (filter.PeriodIdReg != null)
             inputs = inputs.Where(i => i.PeriodId != null && filter.PeriodIdReg.IsMatch(i.PeriodId));
         if (filter.SegmentsMaxCount != null && inputs.All(i => i.SegmentsCount > 0)) 
-            inputs = inputs.Where(i => i.SegmentsCount < filter.SegmentsMaxCount);
+            inputs = inputs.Where(i => i.SegmentsCount <= filter.SegmentsMaxCount);
         if (filter.SegmentsMinCount != null && inputs.All(i => i.SegmentsCount > 0))
-            inputs = inputs.Where(i => i.SegmentsCount > filter.SegmentsMinCount);
+            inputs = inputs.Where(i => i.SegmentsCount >= filter.SegmentsMinCount);
         if (filter.PlaylistMinDur != null)
-            inputs = inputs.Where(i => i.Playlist?.TotalDuration > filter.PlaylistMinDur);
+            inputs = inputs.Where(i => i.Playlist?.TotalDuration >= filter.PlaylistMinDur);
         if (filter.PlaylistMaxDur != null)
-            inputs = inputs.Where(i => i.Playlist?.TotalDuration < filter.PlaylistMaxDur);
+            inputs = inputs.Where(i => i.Playlist?.TotalDuration <= filter.PlaylistMaxDur);
         if (filter.BandwidthMin != null)
             inputs = inputs.Where(i => i.Bandwidth >= filter.BandwidthMin);
         if (filter.BandwidthMax != null)

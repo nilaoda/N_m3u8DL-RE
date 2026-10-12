@@ -114,7 +114,7 @@ internal static class ToolCommands
         };
         var output = new Option<string>("-o", "--output")
         {
-            HelpName = "FILE", Description = ResString.cmd_toolsOutput,
+            HelpName = "FILE", Description = name == "concat" ? ResString.cmd_toolsConcatOutput : ResString.cmd_toolsOutput,
             Required = true, Arity = ArgumentArity.ExactlyOne
         };
         var overwrite = new Option<bool>("--overwrite") { Description = ResString.cmd_toolsOverwrite };

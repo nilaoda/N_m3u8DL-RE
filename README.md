@@ -153,7 +153,7 @@ Options:
   --thread-count <number>                                 设置下载线程数 [default: 10]
   --download-retry-count <number>                         每个分片下载异常时的重试次数；分片直播临时网络故障在重试耗尽后仍会等待恢复 [default: 7]
   --http-request-timeout <seconds>                        HTTP请求超时(秒)；分片直播未指定时自动调整，指定后也用于分片连续无数据超时，不限制总下载时长 [default: 100]
-  --force-ansi-console                                    强制认定终端为支持ANSI且可交互的终端
+  --force-ansi-console                                    强制认定终端支持 ANSI 输出
   --no-ansi-color                                         去除ANSI颜色
   --auto-select                                           自动选择所有类型的最佳轨道 [default: False]
   --skip-merge                                            跳过合并分片 [default: False]
@@ -174,16 +174,16 @@ Options:
   --sub-only                                              只选取字幕轨道 [default: False]
   --sub-format <SRT|VTT>                                  字幕输出类型 [default: SRT]
   --auto-subtitle-fix                                     自动修正字幕 [default: True]
-  --ffmpeg-binary-path <PATH>                             ffmpeg可执行程序全路径, 例如 C:\Tools\ffmpeg.exe
+  --ffmpeg-binary-path <PATH>                             ffmpeg可执行程序路径, 例如 C:\Tools\ffmpeg.exe
   --log-level <DEBUG|ERROR|INFO|OFF|WARN>                 设置日志级别 [default: INFO]
   --ui-language <en-US|zh-CN|zh-TW>                       设置UI语言
   --urlprocessor-args <urlprocessor-args>                 此字符串将直接传递给URL Processor
-  --key <key>                                             设置解密密钥, 程序调用mp4decrpyt/shaka-packager/ffmpeg进行解密. 格式:
+  --key <key>                                             设置解密密钥, 程序调用mp4decrypt/shaka-packager/ffmpeg进行解密. 格式:
                                                           --key KID1:KEY1 --key KID2:KEY2
                                                           对于KEY相同的情况可以直接输入 --key KEY
   --key-text-file <key-text-file>                         设置密钥文件,程序将从文件中按KID搜寻KEY以解密.(不建议使用特大文件)
   --decryption-engine <FFMPEG|MP4DECRYPT|SHAKA_PACKAGER>  设置解密时使用的第三方程序 [default: MP4DECRYPT]
-  --decryption-binary-path <PATH>                         MP4解密所用工具的全路径, 例如 C:\Tools\mp4decrypt.exe
+  --decryption-binary-path <PATH>                         MP4解密所用工具的路径, 例如 C:\Tools\mp4decrypt.exe
   --mp4-real-time-decryption                              实时解密MP4分片 [default: False]
   -R, --max-speed <SPEED>                                 设置限速，单位支持 Mbps 或 Kbps，如：15M 100K
   -M, --mux-after-done <OPTIONS>                          所有工作完成时尝试混流分离的音视频. 输入 "--morehelp mux-after-done" 以查看详细信息
@@ -216,7 +216,7 @@ Options:
   --ad-keyword <REG>                                      设置广告分片的URL关键字(正则表达式)
   --vod-select-parts                                      控制点播选段交互：不传则自动判断，true 强制显示，false 关闭（空格勾选，回车确认）
   --vod-list-parts                                        按媒体配置归组列出点播段的编号和总时长后退出 [default: False]
-  --vod-drop-parts <IDS>                                  按 --vod-list-parts 的编号删除整个点播段及对应音频/字幕，例如 0,2-4
+  --vod-drop-parts <IDS>                                  按 --vod-list-parts 的编号排除点播段及对应音频/字幕，例如 0,2-4
   --disable-update-check                                  禁用版本更新检测 [default: False]
   --allow-hls-multi-ext-map                               允许直播HLS中的多个#EXT-X-MAP(实验性；点播默认支持) [default: False]
   --morehelp <OPTION>                                     查看某个选项的详细帮助信息
@@ -232,7 +232,7 @@ Options:
 
 交互下载多段点播时，会按实际媒体配置归组，用空格勾选要保留的组、回车确认；默认全部保留。相同配置的重复段只显示一次，时长存在明显间隔时再按段时长分组，不自动判定广告。HLS 会读取各类 init 的实际编码、分辨率及音频配置，界面不显示 init URL。不传 `--vod-select-parts` 时自动判断是否显示；使用 `--auto-select` 或选流过滤器时不自动弹出。`--vod-select-parts`（或 `--vod-select-parts true`）强制显示，`--vod-select-parts false` 明确关闭选段交互；相同配置且时长接近的广告仍需用 URL 规则或编号排除。
 
-脚本可用 `--vod-list-parts` 查看归组后的原始编号，再用 `--vod-drop-parts 0,2-4` 删除指定段。DASH 编号为原 Period 顺序（从 0 开始），HLS 为原不连续序号（起点可能不同）；同一不连续段的 MAP 一并处理，音视频和字幕同步删除。没有独立不连续标记的 HLS MAP 可用 `--ad-keyword` 匹配 init/媒体 URL。`--custom-range` 仍使用源分片编号，选择后不重排。
+脚本可用 `--vod-list-parts` 查看归组后的原始编号，再用 `--vod-drop-parts 0,2-4` 排除指定段。DASH 编号为原 Period 顺序（从 0 开始），HLS 为原不连续序号（起点可能不同）；同一不连续段的 MAP 一并处理，音视频和字幕同步排除。没有独立不连续标记的 HLS MAP 可用 `--ad-keyword` 匹配 init/媒体 URL。`--custom-range` 仍使用源分片编号，选择后不重排。
 
 <details>
 <summary>点击查看More Help</summary>
@@ -293,7 +293,7 @@ More Help:
 * frame=REGEX: 按帧率匹配
 * channel=REGEX: 按音频声道数匹配 (如 6, 2)
 * range=REGEX: 按视频动态范围匹配 (如 SDR, HDR, PQ)
-* url=REGEX: 按分片URL匹配
+* url=REGEX: 按流 URL 匹配
 * period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如广告/分段)
 * segsMin=number: 仅保留分片数 >= number 的流
 * segsMax=number: 仅保留分片数 <= number 的流
@@ -302,7 +302,7 @@ More Help:
 * bwMin=int: 仅保留码率 >= int Kbps 的流
 * bwMax=int: 仅保留码率 <= int Kbps 的流
 * role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)
-* for=FOR: 选择方式. best[number], worst[number], all (默认: best)
+* for=FOR: 每种语言选择 best[number] 或 worst[number]，all 保留全部匹配流 (默认: best)
 
 例如:
 # 选择最佳视频

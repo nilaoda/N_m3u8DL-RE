@@ -57,7 +57,7 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
                 if (timing == null)
                 {
                     Array.Clear(result.MediaStarts);
-                    Logger.Warn(ResString.toolsSubtitleClockUnknown);
+                    Logger.Warn(subtitles.Length == 0 ? ResString.toolsMediaClockUnknown : ResString.toolsSubtitleClockUnknown);
                     return result;
                 }
                 result.MediaStarts[i] = timing.Start;
@@ -67,7 +67,7 @@ internal sealed partial class MuxSubtitleTimeline : IDisposable
             if (media.Count == 0 || media.Max(m => m.Start) >= media.Min(m => m.End))
             {
                 Array.Clear(result.MediaStarts);
-                Logger.Warn(ResString.toolsSubtitleClockUnknown);
+                Logger.Warn(subtitles.Length == 0 ? ResString.toolsMediaClockUnknown : ResString.toolsSubtitleClockUnknown);
                 return result;
             }
             var origin = media.Min(m => m.Start);

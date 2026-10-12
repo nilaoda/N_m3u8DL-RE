@@ -556,7 +556,7 @@ internal class Program
         }
     }
 
-    private static void CheckMediaTools(MyOption option)
+    internal static void CheckMediaTools(MyOption option)
     {
         option.FFmpegBinaryPath ??= GlobalUtil.FindExecutable("ffmpeg");
         if (string.IsNullOrEmpty(option.FFmpegBinaryPath) || !File.Exists(option.FFmpegBinaryPath))
@@ -577,15 +577,20 @@ internal class Program
 
         if (option.Keys is { Length: > 0 } || option.KeyTextFile != null)
         {
-            if (!string.IsNullOrEmpty(option.DecryptionBinaryPath) && !File.Exists(option.DecryptionBinaryPath))
+            if (!string.IsNullOrEmpty(option.DecryptionBinaryPath))
             {
-                throw new FileNotFoundException(option.DecryptionBinaryPath);
+                if (!File.Exists(option.DecryptionBinaryPath))
+                    throw new FileNotFoundException(option.DecryptionBinaryPath);
+                // 解密时可能切换工作目录，手动指定的相对路径须先转为绝对路径。
+                option.DecryptionBinaryPath = Path.GetFullPath(option.DecryptionBinaryPath);
             }
             switch (option.DecryptionEngine)
             {
                 case DecryptEngine.SHAKA_PACKAGER:
                 {
-                    var file = BinaryToolUtil.FindShakaPackager();
+                    var file = option.DecryptionBinaryPath;
+                    if (string.IsNullOrEmpty(file))
+                        file = BinaryToolUtil.FindShakaPackager();
                     if (file == null)
                     {
                         throw new FileNotFoundException(ResString.shakaPackagerNotFound);
@@ -596,7 +601,9 @@ internal class Program
                 }
                 case DecryptEngine.MP4DECRYPT:
                 {
-                    var file = GlobalUtil.FindExecutable("mp4decrypt");
+                    var file = option.DecryptionBinaryPath;
+                    if (string.IsNullOrEmpty(file))
+                        file = GlobalUtil.FindExecutable("mp4decrypt");
                     if (file == null)
                     {
                         throw new FileNotFoundException(ResString.mp4decryptNotFound);
@@ -607,7 +614,8 @@ internal class Program
                 }
                 case DecryptEngine.FFMPEG:
                 default:
-                    option.DecryptionBinaryPath = option.FFmpegBinaryPath;
+                    if (string.IsNullOrEmpty(option.DecryptionBinaryPath))
+                        option.DecryptionBinaryPath = option.FFmpegBinaryPath;
                     break;
             }
         }

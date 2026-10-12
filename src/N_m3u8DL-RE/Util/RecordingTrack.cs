@@ -97,7 +97,7 @@ internal sealed partial class RecordingTrack
             var decrypted = segmentGroups.All(group => group.Any(IsDecrypted)) &&
                 (extensions[0] != ".m4s" || initFiles.Any(path => Path.GetFileName(path).Equals("_init_dec.mp4", StringComparison.OrdinalIgnoreCase)));
             if (!decrypted && !segmentGroups.All(group => group.Any(path => !IsDecrypted(path))))
-                throw new ArgumentException($"{ResString.toolsRecordingEncrypted}: {directory}");
+                throw new ArgumentException($"{ResString.toolsRecordingIncomplete}: {directory}");
             segments = segmentGroups.Select(group => group.First(path => IsDecrypted(path) == decrypted))
                 .OrderBy(path => Path.GetFileName(path), Comparer<string>.Create(FileToolUtil.CompareNatural)).ToArray();
         }
