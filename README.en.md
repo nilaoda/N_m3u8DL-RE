@@ -151,7 +151,7 @@ Options:
   --thread-count <number>                                 Set download thread count [default: 10]
   --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 7]
   --http-request-timeout <seconds>                        HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time [default: 100]
-  --force-ansi-console                                    Force assuming the terminal is ANSI-compatible and interactive
+  --force-ansi-console                                    Force assuming the terminal supports ANSI output
   --no-ansi-color                                         Remove ANSI colors
   --auto-select                                           Automatically selects the best tracks of all types [default: False]
   --skip-merge                                            Skip segments merge [default: False]
@@ -172,7 +172,7 @@ Options:
   --sub-only                                              Select only subtitle tracks [default: False]
   --sub-format <SRT|VTT>                                  Subtitle output format [default: SRT]
   --auto-subtitle-fix                                     Automatically fix subtitles [default: True]
-  --ffmpeg-binary-path <PATH>                             Full path to the ffmpeg binary, like C:\Tools\ffmpeg.exe
+  --ffmpeg-binary-path <PATH>                             Path to the ffmpeg binary, like C:\Tools\ffmpeg.exe
   --log-level <DEBUG|ERROR|INFO|OFF|WARN>                 Set log level [default: INFO]
   --ui-language <en-US|zh-CN|zh-TW>                       Set UI language
   --urlprocessor-args <urlprocessor-args>                 Give these arguments to the URL Processors.
@@ -181,7 +181,7 @@ Options:
                                                           or use --key KEY if all tracks share the same key.
   --key-text-file <key-text-file>                         Set the kid-key file, the program will search the KEY with KID from the file.(Very large file are not recommended)
   --decryption-engine <FFMPEG|MP4DECRYPT|SHAKA_PACKAGER>  Set the third-party program used for decryption [default: MP4DECRYPT]
-  --decryption-binary-path <PATH>                         Full path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe
+  --decryption-binary-path <PATH>                         Path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe
   --mp4-real-time-decryption                              Decrypt MP4 segments in real time [default: False]
   -R, --max-speed <SPEED>                                 Set speed limit, Mbps or Kbps, for example: 15M 100K.
   -M, --mux-after-done <OPTIONS>                          When all works is done, try to mux the downloaded streams. Use "--morehelp mux-after-done" for more details
@@ -214,7 +214,7 @@ Options:
   --ad-keyword <REG>                                      Set URL keywords (regular expressions) for AD segments
   --vod-select-parts                                      Control VOD section selection: omitted = automatic, true = always prompt, false = disable (Space/Enter)
   --vod-list-parts                                        List VOD sections grouped by media configuration, with IDs and total durations, then exit [default: False]
-  --vod-drop-parts <IDS>                                  Drop VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4
+  --vod-drop-parts <IDS>                                  Exclude VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4
   --disable-update-check                                  Disable version update check [default: False]
   --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in live HLS (experimental; enabled for VOD) [default: False]
   --morehelp <OPTION>                                     Set more help info about one option
@@ -291,7 +291,7 @@ The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and th
 * frame=REGEX: match by frame rate
 * channel=REGEX: match by audio channel count (e.g. 6, 2)
 * range=REGEX: match by video range (e.g. SDR, HDR, PQ)
-* url=REGEX: match by segment url
+* url=REGEX: match by stream URL
 * period=REGEX: match by DASH Period id (multi-Period MPD, e.g. ads/chapters)
 * segsMin=number: keep streams with at least number segments
 * segsMax=number: keep streams with at most number segments
@@ -300,7 +300,7 @@ The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and th
 * bwMin=int: keep streams with bandwidth >= int Kbps
 * bwMax=int: keep streams with bandwidth <= int Kbps
 * role=string: match by DASH role (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)
-* for=FOR: how many of the matched streams to keep. best[number], worst[number], all (Default: best)
+* for=FOR: keep best[number] or worst[number] per language, or all matched streams (Default: best)
 
 Examples:
 # select best video

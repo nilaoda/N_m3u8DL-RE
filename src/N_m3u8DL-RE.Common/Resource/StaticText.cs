@@ -18,9 +18,9 @@ internal static class StaticText
         ),
         ["cmd_toolsMux"] = new TextContainer
         (
-            zhCN: "混流已有视频、音频和字幕文件",
-            zhTW: "混流現有視訊、音訊和字幕檔案",
-            enUS: "Mux existing video, audio and subtitle files"
+            zhCN: "混流视频、音频和字幕文件或下载/录制目录",
+            zhTW: "混流視訊、音訊和字幕檔案或下載/錄製目錄",
+            enUS: "Mux video, audio and subtitle files or download/recording directories"
         ),
         ["cmd_toolsInput"] = new TextContainer
         (
@@ -48,9 +48,9 @@ internal static class StaticText
         ),
         ["toolsRecordingEmpty"] = new TextContainer
         (
-            zhCN: "目录内没有可识别的录制分片",
-            zhTW: "目錄內沒有可辨識的錄製分片",
-            enUS: "No recognized recording segments in directory"
+            zhCN: "目录内没有可识别的下载或录制分片",
+            zhTW: "目錄內沒有可辨識的下載或錄製分片",
+            enUS: "No recognized download or recording segments in directory"
         ),
         ["toolsRecordingPartsUnsupported"] = new TextContainer
         (
@@ -75,6 +75,12 @@ internal static class StaticText
             zhCN: "缺少与分片对应的初始化文件",
             zhTW: "缺少與分片對應的初始化檔案",
             enUS: "Missing initialization file matching the segments"
+        ),
+        ["toolsRecordingIncomplete"] = new TextContainer
+        (
+            zhCN: "目录内缺少完整的原始分片或解密结果，无法按同一版本拼接",
+            zhTW: "目錄內缺少完整的原始分片或解密結果，無法以同一版本串接",
+            enUS: "No complete set of original or decrypted segments is available for concatenation"
         ),
         ["toolsRecordingEncrypted"] = new TextContainer
         (
@@ -102,9 +108,9 @@ internal static class StaticText
         ),
         ["toolsProcessing"] = new TextContainer
         (
-            zhCN: "{0}：开始处理 {1} 个输入文件",
-            zhTW: "{0}：開始處理 {1} 個輸入檔案",
-            enUS: "{0}: processing {1} input files"
+            zhCN: "{0}：开始处理 {1} 个输入",
+            zhTW: "{0}：開始處理 {1} 個輸入",
+            enUS: "{0}: processing inputs ({1})"
         ),
         ["processingDownload"] = new TextContainer
         (
@@ -202,11 +208,17 @@ internal static class StaticText
             zhTW: "僅預覽，不執行檔案處理",
             enUS: "Preview only; no files will be processed"
         ),
+        ["cmd_toolsConcatOutput"] = new TextContainer
+        (
+            zhCN: "输出文件路径",
+            zhTW: "輸出檔案路徑",
+            enUS: "Output file path"
+        ),
         ["cmd_toolsOutput"] = new TextContainer
         (
-            zhCN: "完整输出路径，媒体容器由扩展名确定",
-            zhTW: "完整輸出路徑，媒體容器由副檔名決定",
-            enUS: "Full output path; the extension determines the media container"
+            zhCN: "输出文件路径，媒体容器由扩展名确定",
+            zhTW: "輸出檔案路徑，媒體容器由副檔名決定",
+            enUS: "Output file path; the extension determines the media container"
         ),
         ["cmd_toolsOverwrite"] = new TextContainer
         (
@@ -216,9 +228,9 @@ internal static class StaticText
         ),
         ["cmd_toolsDryRun"] = new TextContainer
         (
-            zhCN: "只显示输入顺序与输出路径",
-            zhTW: "只顯示輸入順序與輸出路徑",
-            enUS: "Show input order and output path without processing"
+            zhCN: "预览输入顺序、轨道信息与输出路径，不执行文件处理",
+            zhTW: "預覽輸入順序、軌道資訊與輸出路徑，不執行檔案處理",
+            enUS: "Preview input order, track information and output path without processing"
         ),
         ["cmd_toolsInputDir"] = new TextContainer
         (
@@ -312,9 +324,9 @@ internal static class StaticText
         ),
         ["toolsInputMissing"] = new TextContainer
         (
-            zhCN: "输入文件不存在",
-            zhTW: "輸入檔案不存在",
-            enUS: "Input file does not exist"
+            zhCN: "输入文件或目录不存在",
+            zhTW: "輸入檔案或目錄不存在",
+            enUS: "Input file or directory does not exist"
         ),
         ["toolsOutputIsInput"] = new TextContainer
         (
@@ -336,9 +348,9 @@ internal static class StaticText
         ),
         ["toolsMkvmergeFormat"] = new TextContainer
         (
-            zhCN: "mkvmerge 只支持 .mkv 输出",
-            zhTW: "mkvmerge 只支援 .mkv 輸出",
-            enUS: "mkvmerge requires a .mkv output"
+            zhCN: "使用 mkvmerge 时，输出扩展名必须为 .mkv",
+            zhTW: "使用 mkvmerge 時，輸出副檔名必須為 .mkv",
+            enUS: "The output extension must be .mkv when using mkvmerge"
         ),
         ["toolsProtocolPath"] = new TextContainer
         (
@@ -408,9 +420,9 @@ internal static class StaticText
         ),
         ["cmd_toolsAutoSubtitleFix"] = new TextContainer
         (
-            zhCN: "自动修复 SRT/VTT 字幕时间轴；传 false 关闭（默认开启）",
-            zhTW: "自動修復 SRT/VTT 字幕時間軸；傳 false 關閉（預設開啟）",
-            enUS: "Automatically repair SRT/VTT subtitle timing; pass false to disable (enabled by default)"
+            zhCN: "自动调整媒体及 SRT/VTT 字幕时间轴；传 false 关闭（默认开启）",
+            zhTW: "自動調整媒體及 SRT/VTT 字幕時間軸；傳 false 關閉（預設開啟）",
+            enUS: "Automatically adjust media and SRT/VTT subtitle timing; pass false to disable (enabled by default)"
         ),
         ["doctorChecking"] = new TextContainer
         (
@@ -420,15 +432,21 @@ internal static class StaticText
         ),
         ["toolsSubtitleProbeMissing"] = new TextContainer
         (
-            zhCN: "未找到 FFmpeg，跳过字幕时间轴修复；可用 --ffmpeg-binary-path 指定路径",
-            zhTW: "找不到 FFmpeg，略過字幕時間軸修復；可用 --ffmpeg-binary-path 指定路徑",
-            enUS: "FFmpeg was not found; skipping subtitle timing repair. Set --ffmpeg-binary-path to specify it"
+            zhCN: "未找到 FFmpeg，无法探测此媒体的时间轴；可用 --ffmpeg-binary-path 指定路径",
+            zhTW: "找不到 FFmpeg，無法探測此媒體的時間軸；可用 --ffmpeg-binary-path 指定路徑",
+            enUS: "FFmpeg was not found; cannot probe this media timeline. Set --ffmpeg-binary-path to specify it"
         ),
         ["toolsSubtitleProbeFailed"] = new TextContainer
         (
-            zhCN: "无法探测媒体时间轴，跳过自动修复",
-            zhTW: "無法探測媒體時間軸，略過自動修復",
-            enUS: "Cannot probe the media timeline; skipping automatic repair"
+            zhCN: "无法探测媒体时间轴，跳过时间轴自动调整",
+            zhTW: "無法探測媒體時間軸，略過時間軸自動調整",
+            enUS: "Cannot probe the media timeline; skipping automatic timing adjustment"
+        ),
+        ["toolsMediaClockUnknown"] = new TextContainer
+        (
+            zhCN: "无法可靠确定媒体的公共时间轴，保留媒体原时间",
+            zhTW: "無法可靠確定媒體的共同時間軸，保留媒體原時間",
+            enUS: "Cannot reliably determine a shared media timeline; keeping the original media timing"
         ),
         ["toolsSubtitleClockUnknown"] = new TextContainer
         (
@@ -498,9 +516,9 @@ internal static class StaticText
         ),
         ["cmd_forceAnsiConsole"] = new TextContainer
         (
-            zhCN: "强制认定终端为支持ANSI且可交互的终端",
-            zhTW: "強制認定終端為支援ANSI且可交往的終端",
-            enUS: "Force assuming the terminal is ANSI-compatible and interactive"
+            zhCN: "强制认定终端支持 ANSI 输出",
+            zhTW: "強制認定終端支援 ANSI 輸出",
+            enUS: "Force assuming the terminal supports ANSI output"
         ),
         ["cmd_noAnsiColor"] = new TextContainer
         (
@@ -726,9 +744,9 @@ internal static class StaticText
         ),
         ["cmd_decryptionBinaryPath"] = new TextContainer
         (
-            zhCN: @"MP4解密所用工具的全路径, 例如 C:\Tools\mp4decrypt.exe",
-            zhTW: @"MP4解密所用工具的全路徑, 例如 C:\Tools\mp4decrypt.exe",
-            enUS: @"Full path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe"
+            zhCN: @"MP4解密所用工具的路径, 例如 C:\Tools\mp4decrypt.exe",
+            zhTW: @"MP4解密所用工具的路徑, 例如 C:\Tools\mp4decrypt.exe",
+            enUS: @"Path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe"
         ),
         ["cmd_delAfterDone"] = new TextContainer
         (
@@ -738,15 +756,15 @@ internal static class StaticText
         ),
         ["cmd_ffmpegBinaryPath"] = new TextContainer
         (
-            zhCN: @"ffmpeg可执行程序全路径, 例如 C:\Tools\ffmpeg.exe",
-            zhTW: @"ffmpeg可執行程序全路徑, 例如 C:\Tools\ffmpeg.exe",
-            enUS: @"Full path to the ffmpeg binary, like C:\Tools\ffmpeg.exe"
+            zhCN: @"ffmpeg可执行程序路径, 例如 C:\Tools\ffmpeg.exe",
+            zhTW: @"ffmpeg可執行程式路徑, 例如 C:\Tools\ffmpeg.exe",
+            enUS: @"Path to the ffmpeg binary, like C:\Tools\ffmpeg.exe"
         ),
         ["cmd_mkvmergeBinaryPath"] = new TextContainer
         (
-            zhCN: @"mkvmerge可执行程序全路径, 例如 C:\Tools\mkvmerge.exe",
-            zhTW: @"mkvmerge可執行程序全路徑, 例如 C:\Tools\mkvmerge.exe",
-            enUS: @"Full path to the mkvmerge binary, like C:\Tools\mkvmerge.exe"
+            zhCN: @"mkvmerge可执行程序路径, 例如 C:\Tools\mkvmerge.exe",
+            zhTW: @"mkvmerge可執行程式路徑, 例如 C:\Tools\mkvmerge.exe",
+            enUS: @"Path to the mkvmerge binary, like C:\Tools\mkvmerge.exe"
         ),
         ["cmd_liveFixVttByAudio"] = new TextContainer
         (
@@ -792,8 +810,8 @@ internal static class StaticText
         ),
         ["cmd_keys"] = new TextContainer
         (
-            zhCN: "设置解密密钥, 程序调用mp4decrpyt/shaka-packager/ffmpeg进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n对于KEY相同的情况可以直接输入 --key KEY",
-            zhTW: "設置解密密鑰, 程序調用mp4decrpyt/shaka-packager/ffmpeg進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n對於KEY相同的情況可以直接輸入 --key KEY",
+            zhCN: "设置解密密钥, 程序调用mp4decrypt/shaka-packager/ffmpeg进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n对于KEY相同的情况可以直接输入 --key KEY",
+            zhTW: "設置解密密鑰, 程序調用mp4decrypt/shaka-packager/ffmpeg進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n對於KEY相同的情況可以直接輸入 --key KEY",
             enUS: "Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg. format:\r\n--key KID1:KEY1 --key KID2:KEY2\r\nor use --key KEY if all tracks share the same key."
         ),
         ["cmd_keyText"] = new TextContainer
@@ -1247,9 +1265,9 @@ internal static class StaticText
         ),
         ["cmd_vodDropParts"] = new TextContainer
         (
-            zhCN: "按 --vod-list-parts 的编号删除整个点播段及对应音频/字幕，例如 0,2-4",
-            zhTW: "按 --vod-list-parts 的編號刪除整個點播段及對應音訊/字幕，例如 0,2-4",
-            enUS: "Drop VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4"
+            zhCN: "按 --vod-list-parts 的编号排除点播段及对应音频/字幕，例如 0,2-4",
+            zhTW: "依 --vod-list-parts 的編號排除點播段及對應音訊/字幕，例如 0,2-4",
+            enUS: "Exclude VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4"
         ),
         ["cmd_liveCatchup"] = new TextContainer
         (
@@ -1407,7 +1425,7 @@ internal static class StaticText
                   "* frame=REGEX: 按帧率匹配\r\n" +
                   "* channel=REGEX: 按音频声道数匹配 (如 6, 2)\r\n" +
                   "* range=REGEX: 按视频动态范围匹配 (如 SDR, HDR, PQ)\r\n" +
-                  "* url=REGEX: 按分片URL匹配\r\n" +
+                  "* url=REGEX: 按流 URL 匹配\r\n" +
                   "* period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如广告/分段)\r\n" +
                   "* segsMin=number: 仅保留分片数 >= number 的流\r\n" +
                   "* segsMax=number: 仅保留分片数 <= number 的流\r\n" +
@@ -1416,7 +1434,7 @@ internal static class StaticText
                   "* bwMin=int: 仅保留码率 >= int Kbps 的流\r\n" +
                   "* bwMax=int: 仅保留码率 <= int Kbps 的流\r\n" +
                   "* role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
-                  "* for=FOR: 选择方式. best[number], worst[number], all (默认: best)\r\n\r\n" +
+                  "* for=FOR: 每种语言选择 best[number] 或 worst[number]，all 保留全部匹配流 (默认: best)\r\n\r\n" +
                   "例如: \r\n" +
                   "# 选择最佳视频\r\n" +
                   "-sv best\r\n" +
@@ -1443,7 +1461,7 @@ internal static class StaticText
                   "* frame=REGEX: 按影格率匹配\r\n" +
                   "* channel=REGEX: 按音訊聲道數匹配 (如 6, 2)\r\n" +
                   "* range=REGEX: 按影片動態範圍匹配 (如 SDR, HDR, PQ)\r\n" +
-                  "* url=REGEX: 按分片URL匹配\r\n" +
+                  "* url=REGEX: 按串流 URL 匹配\r\n" +
                   "* period=REGEX: 按 DASH Period id 匹配 (多Period MPD, 如廣告/分段)\r\n" +
                   "* segsMin=number: 僅保留分片數 >= number 的串流\r\n" +
                   "* segsMax=number: 僅保留分片數 <= number 的串流\r\n" +
@@ -1452,7 +1470,7 @@ internal static class StaticText
                   "* bwMin=int: 僅保留碼率 >= int Kbps 的串流\r\n" +
                   "* bwMax=int: 僅保留碼率 <= int Kbps 的串流\r\n" +
                   "* role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
-                  "* for=FOR: 選擇方式. best[number], worst[number], all (默認: best)\r\n\r\n" +
+                  "* for=FOR: 每種語言選擇 best[number] 或 worst[number]，all 保留全部匹配串流 (預設: best)\r\n\r\n" +
                   "例如: \r\n" +
                   "# 選擇最佳影片\r\n" +
                   "-sv best\r\n" +
@@ -1479,7 +1497,7 @@ internal static class StaticText
                   "* frame=REGEX: match by frame rate\r\n" +
                   "* channel=REGEX: match by audio channel count (e.g. 6, 2)\r\n" +
                   "* range=REGEX: match by video range (e.g. SDR, HDR, PQ)\r\n" +
-                  "* url=REGEX: match by segment url\r\n" +
+                  "* url=REGEX: match by stream URL\r\n" +
                   "* period=REGEX: match by DASH Period id (multi-Period MPD, e.g. ads/chapters)\r\n" +
                   "* segsMin=number: keep streams with at least number segments\r\n" +
                   "* segsMax=number: keep streams with at most number segments\r\n" +
@@ -1488,7 +1506,7 @@ internal static class StaticText
                   "* bwMin=int: keep streams with bandwidth >= int Kbps\r\n" +
                   "* bwMax=int: keep streams with bandwidth <= int Kbps\r\n" +
                   "* role=string: match by DASH role (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
-                  "* for=FOR: how many of the matched streams to keep. best[number], worst[number], all (Default: best)\r\n\r\n" +
+                  "* for=FOR: keep best[number] or worst[number] per language, or all matched streams (Default: best)\r\n\r\n" +
                   "Examples: \r\n" +
                   "# select best video\r\n" +
                   "-sv best\r\n" +
@@ -1958,9 +1976,9 @@ internal static class StaticText
         ),
         ["partMerge"] = new TextContainer
         (
-            zhCN: "分片数量大于1800个，开始分块合并...",
-            zhTW: "分片數量大於1800個，開始分塊合併...",
-            enUS: "Segments more than 1800, start partial merge..."
+            zhCN: "分片数量达到1800个，开始分块合并...",
+            zhTW: "分片數量達到1800個，開始分塊合併...",
+            enUS: "At least 1800 segments; starting partial merge..."
         ),
         ["notSupported"] = new TextContainer
         (
