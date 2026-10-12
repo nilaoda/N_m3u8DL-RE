@@ -12,6 +12,7 @@
     <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
     <Version>0.6.0</Version>
+    <BuildDate>20261012</BuildDate>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
@@ -25,6 +26,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="N_m3u8DL-RE.Tests" />
+    <AssemblyMetadata Include="BuildDate" Value="$(BuildDate)" />
   </ItemGroup>
 
   <ItemGroup>

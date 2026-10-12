@@ -131,7 +131,7 @@ Long automatic names, custom save names and expanded filename patterns are short
 
 ```
 Description:
-  N_m3u8DL-RE 0.6.0 20260628
+  N_m3u8DL-RE 0.6.0 20261012
 
 Usage:
   N_m3u8DL-RE <input> [options]

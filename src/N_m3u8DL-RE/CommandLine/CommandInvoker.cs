@@ -23,7 +23,9 @@ internal static partial class CommandInvoker
     private static readonly Assembly AppAssembly = typeof(CommandInvoker).Assembly;
     private static readonly string AppVersion = AppAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
         .InformationalVersion.Split('+', 2)[0] ?? AppAssembly.GetName().Version?.ToString(3) ?? "unknown";
-    public static readonly string VERSION_INFO = $"N_m3u8DL-RE {AppVersion} 20260628";
+    private static readonly string AppBuildDate = AppAssembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+        .FirstOrDefault(attribute => attribute.Key == "BuildDate")?.Value ?? "unknown";
+    public static readonly string VERSION_INFO = $"N_m3u8DL-RE {AppVersion} {AppBuildDate}";
 
     [GeneratedRegex("((best|worst)\\d*|all)")]
     private static partial Regex ForStrRegex();
