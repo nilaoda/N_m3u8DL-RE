@@ -13,6 +13,7 @@ using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
 using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Tests.TestSupport;
 using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.DownloadManager;
@@ -20,6 +21,80 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 [Collection("Download console")]
 public class VodMultiInitTests
 {
+    [Fact]
+    public async Task HlsEac3PartsAndConcurrentWebVttSubtitlesCompleteTogether()
+    {
+        if (!HasTool("ffmpeg") || !HasTool("ffprobe"))
+            return;
+        var root = Directory.CreateTempSubdirectory("vod-eac3-subtitles-").FullName;
+        try
+        {
+            var audio = "#EXTM3U\n#EXT-X-TARGETDURATION:2\n";
+            var subtitles = "#EXTM3U\n#EXT-X-TARGETDURATION:2\n";
+            for (var i = 0; i < 2; i++)
+            {
+                await Run("ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=channel_layout=5.1:sample_rate=48000",
+                    "-t", "1.024", "-c:a", "eac3", "-b:a", "192k", "-f", "hls", "-hls_time", "10",
+                    "-hls_segment_type", "fmp4", "-hls_fmp4_init_filename", $"init-{i}.mp4",
+                    "-hls_segment_filename", Path.Combine(root, $"audio-{i}-%d.m4s"), Path.Combine(root, $"part-{i}.m3u8"));
+                if (i > 0)
+                {
+                    audio += "#EXT-X-DISCONTINUITY\n";
+                    subtitles += "#EXT-X-DISCONTINUITY\n";
+                }
+                audio += $"#EXT-X-MAP:URI=\"init-{i}.mp4\"\n#EXTINF:1.024,\naudio-{i}-0.m4s\n";
+                subtitles += $"#EXTINF:1.024,\nsub-{i}.vtt\n";
+                await File.WriteAllTextAsync(Path.Combine(root, $"sub-{i}.vtt"),
+                    $"WEBVTT\nX-TIMESTAMP-MAP=LOCAL:00:00:00.000,MPEGTS:0\n\n00:00:00.250 --> 00:00:00.750\ncue-{i}\n");
+            }
+            await File.WriteAllTextAsync(Path.Combine(root, "audio.m3u8"), audio + "#EXT-X-ENDLIST\n");
+            foreach (var language in new[] { "en", "fr" })
+                await File.WriteAllTextAsync(Path.Combine(root, $"subtitles-{language}.m3u8"), subtitles + "#EXT-X-ENDLIST\n");
+            await File.WriteAllTextAsync(Path.Combine(root, "master.m3u8"), """
+                #EXTM3U
+                #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="s",NAME="Subtitle A",LANGUAGE="en",URI="subtitles-en.m3u8"
+                #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="s",NAME="Subtitle B",LANGUAGE="fr",URI="subtitles-fr.m3u8"
+                #EXT-X-STREAM-INF:BANDWIDTH=192000,CODECS="ec-3",SUBTITLES="s"
+                audio.m3u8
+                """);
+            await using var server = new MediaFixtureServer(root, (_, _) => null);
+            using var extractor = new StreamExtractor(new ParserConfig());
+            await extractor.LoadSourceFromUrlAsync(server.Url + "master.m3u8");
+            var streams = await extractor.ExtractStreamsAsync();
+            await extractor.FetchPlayListAsync(streams);
+            Assert.Equal(3, streams.Count);
+            streams.Single(stream => stream.MediaType != MediaType.SUBTITLES).MediaType = MediaType.AUDIO;
+            VodStreamPlanner.CaptureHlsTimeline(streams);
+            VodStreamPlanner.AlignHlsDiscontinuities(streams);
+            var options = CreateOptions(root);
+            options.BinaryMerge = true;
+            options.ConcurrentDownload = true;
+            options.SubtitleFormat = SubtitleFormat.VTT;
+            var manager = new SimpleDownloadManager(new DownloaderConfig
+                { MyOptions = options, DirPrefix = Path.Combine(root, "tmp") }, streams, extractor);
+
+            Assert.True(await manager.StartDownloadAsync().WaitAsync(TimeSpan.FromSeconds(15)));
+
+            var output = Assert.Single(Directory.GetFiles(options.SaveDir!, "*.m4a"));
+            using var probe = JsonDocument.Parse(await Run("ffprobe", "-v", "error", "-show_entries",
+                "format=duration:stream=codec_name,channels", "-of", "json", output));
+            var track = Assert.Single(probe.RootElement.GetProperty("streams").EnumerateArray());
+            Assert.Equal("eac3", track.GetProperty("codec_name").GetString());
+            Assert.Equal(6, track.GetProperty("channels").GetInt32());
+            Assert.InRange(double.Parse(probe.RootElement.GetProperty("format").GetProperty("duration").GetString()!,
+                CultureInfo.InvariantCulture), 2.04, 2.06);
+            await Run("ffmpeg", "-v", "error", "-xerror", "-i", output, "-f", "null", "-");
+            foreach (var language in new[] { "en", "fr" })
+            {
+                var subtitle = WebVttSub.Parse(await File.ReadAllTextAsync(Path.Combine(options.SaveDir!, $"result.{language}.vtt")));
+                Assert.Equal(["cue-0", "cue-1"], subtitle.Cues.Select(cue => cue.Payload));
+                Assert.Equal(TimeSpan.FromMilliseconds(250), subtitle.Cues[0].StartTime);
+                Assert.Equal(TimeSpan.FromMilliseconds(1274), subtitle.Cues[1].StartTime);
+            }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]

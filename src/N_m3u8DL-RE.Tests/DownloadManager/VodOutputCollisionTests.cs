@@ -107,6 +107,8 @@ public class VodOutputCollisionTests
 
     [Theory]
     [InlineData(true, false, "eac3")]
+    [InlineData(true, true, "eac3")]
+    [InlineData(false, true, "eac3")]
     [InlineData(false, false, "alac")]
     [InlineData(false, true, "alac")]
     public async Task ConcurrentAudioTracksKeepBothCodecs(bool binaryMerge, bool multiPeriod, string secondCodec)
@@ -116,7 +118,7 @@ public class VodOutputCollisionTests
         var root = Directory.CreateTempSubdirectory("vod-output-collision-").FullName;
         try
         {
-            // 二进制合并覆盖日志中的 AAC/E-AC-3；FFmpeg 的 M4A 容器使用 AAC/ALAC。
+            // 覆盖 AAC 与 E-AC-3/ALAC 并存，单段和多 Period 均应保留两种编码。
             string[] codecs = ["aac", secondCodec];
             foreach (var codec in codecs)
             {
