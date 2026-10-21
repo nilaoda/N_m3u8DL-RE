@@ -156,9 +156,11 @@ internal static class MergeUtil
             // MPEG-TS 默认额外延迟输出时钟，字幕公共时间轴已经归零，必须保留该时间轴。
             var tsOptions = copyTs.Length > 0 && Path.GetExtension(output).Equals(".ts", StringComparison.OrdinalIgnoreCase)
                 ? " -mpegts_copyts 1 -muxdelay 0" : "";
+            // M4A 扩展名默认选择 ipod muxer；与普通音频合并一致，显式使用 MP4 以支持 AC-3/E-AC-3。
+            var formatOptions = Path.GetExtension(output).Equals(".m4a", StringComparison.OrdinalIgnoreCase) ? " -f mp4" : "";
             progress?.Begin(ResString.processingMerge, logStart: false);
             return InvokeFFmpeg(binary,
-                $"-loglevel warning -nostdin -y{copyTs}{offset} -f concat -safe 0 -i \"{listPath}\" -map 0:v? -map 0:a? -map 0:s? -c copy{tsOptions} \"{Path.GetFullPath(output)}\"",
+                $"-loglevel warning -nostdin -y{copyTs}{offset} -f concat -safe 0 -i \"{listPath}\" -map 0:v? -map 0:a? -map 0:s? -c copy{tsOptions}{formatOptions} \"{Path.GetFullPath(output)}\"",
                 Path.GetDirectoryName(Path.GetFullPath(files[0]))!, progress == null ? null : progress.Report,
                 parts.Any(p => p.OutputStart != null) ? null : parts.Sum(p => p.OutputDuration ?? p.MediaSegments.Sum(s => s.Duration))) == 0;
         }
