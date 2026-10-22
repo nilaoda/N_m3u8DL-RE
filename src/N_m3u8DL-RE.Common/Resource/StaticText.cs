@@ -594,9 +594,9 @@ internal static class StaticText
         ),
         ["autoBinaryMerge2"] = new TextContainer
         (
-            zhCN: "检测到杜比视界内容，自动开启二进制合并",
-            zhTW: "檢測到杜比視界內容，自動開啟二進位制合併",
-            enUS: "Dolby Vision content is detected, binary merging is automatically enabled"
+            zhCN: "当前 FFmpeg 版本未确认支持完整保留杜比视界，自动开启二进制合并",
+            zhTW: "目前 FFmpeg 版本未確認支援完整保留杜比視界，自動開啟二進位制合併",
+            enUS: "Full Dolby Vision preservation is unconfirmed for this FFmpeg version; binary merging is automatically enabled"
         ),
         ["autoBinaryMerge3"] = new TextContainer
         (
@@ -612,9 +612,9 @@ internal static class StaticText
         ),
         ["autoBinaryMerge5"] = new TextContainer
         (
-            zhCN: "检测到杜比视界内容，混流功能已禁用",
-            zhTW: "檢測到杜比視界內容，混流功能已禁用",
-            enUS: "Dolby Vision content is detected, mux after done is automatically disabled"
+            zhCN: "当前 FFmpeg 版本未确认支持完整保留杜比视界，已禁用完成后混流",
+            zhTW: "目前 FFmpeg 版本未確認支援完整保留杜比視界，已停用完成後混流",
+            enUS: "Full Dolby Vision preservation is unconfirmed for this FFmpeg version; mux after done is automatically disabled"
         ),
         ["autoBinaryMerge6"] = new TextContainer
         (

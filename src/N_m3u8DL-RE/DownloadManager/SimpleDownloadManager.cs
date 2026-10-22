@@ -69,15 +69,18 @@ internal partial class SimpleDownloadManager
         }
     }
 
-    private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
+    internal async Task<bool> ChangeSpecInfoAsync(StreamSpec streamSpec, List<Mediainfo> mediainfos, bool useAACFilter)
     {
-        if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
+        var legacyDolbyVision = mediainfos.Any(m => m.DolbyVison) &&
+            !await BinaryToolUtil.FFmpegSupportsDolbyVisionAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath);
+        if (!DownloaderConfig.MyOptions.BinaryMerge && legacyDolbyVision)
         {
             DownloaderConfig.MyOptions.BinaryMerge = true;
             LogPartOnce("autoBinaryMerge2", () => Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]"));
         }
 
-        if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison))
+        if (DownloaderConfig.MyOptions.MuxAfterDone && legacyDolbyVision &&
+            DownloaderConfig.MyOptions.MuxOptions?.UseMkvmerge != true)
         {
             DownloaderConfig.MyOptions.MuxAfterDone = false;
             LogPartOnce("autoBinaryMerge5", () => Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]"));
@@ -98,6 +101,7 @@ internal partial class SimpleDownloadManager
             if (streamSpec.Extension is null or "ts")
                 streamSpec.Extension = "vtt";
         }
+        return useAACFilter;
     }
 
     private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, bool isPart = false)
@@ -293,7 +297,7 @@ internal partial class SimpleDownloadManager
                     LogPartOnce("probe", () => Logger.WarnMarkUp(ResString.readingInfo));
                     mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                     LogMediaInfo(mediaInfos);
-                    ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                    useAACFilter = await ChangeSpecInfoAsync(streamSpec, mediaInfos, useAACFilter);
                     readInfo = true;
                 }
             }
@@ -382,7 +386,7 @@ internal partial class SimpleDownloadManager
                     LogPartOnce("probe", () => Logger.WarnMarkUp(ResString.readingInfo));
                     mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                     LogMediaInfo(mediaInfos);
-                    ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                    useAACFilter = await ChangeSpecInfoAsync(streamSpec, mediaInfos, useAACFilter);
                     readInfo = true;
                 }
             }

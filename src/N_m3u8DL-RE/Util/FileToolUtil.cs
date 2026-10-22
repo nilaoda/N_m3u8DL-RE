@@ -175,7 +175,8 @@ internal static class FileToolUtil
                             temporary, useMkvmerge: muxer == "mkvmerge", timeline: timeline, title: title, token: token, progress: processing.Report,
                             inputPaths: muxInputs, loopbackInput: servers.Count > 0)
                         : await MergeUtil.MergeByFFmpegAsync(binary!, inputs, temporary, mode, token: token, progress: processing.Report,
-                            inputPaths: servers.Count > 0 ? inputs : null, loopbackInput: servers.Count > 0);
+                            inputPaths: servers.Count > 0 ? inputs : null, loopbackInput: servers.Count > 0,
+                            mediaInfos: tracks[0]?.Info.Mediainfos is { Count: > 0 } infos ? infos : null);
                     foreach (var server in servers)
                         if (server.Error is { } error)
                             throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);

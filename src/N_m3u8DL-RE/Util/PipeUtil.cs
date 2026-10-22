@@ -69,7 +69,7 @@ internal static class PipeUtil
             command.Append($" -map {i} ");
         }
 
-        command.Append(" -strict unofficial -c copy ");
+        command.Append($" {BinaryToolUtil.FFmpegStrictOptions} -c copy ");
         command.Append($" -metadata date=\"{dateString}\" ");
         command.Append($" -ignore_unknown -copy_unknown ");
 

@@ -413,6 +413,8 @@ Examples:
 
 ## FFmpeg segment merging
 
+With FFmpeg 9 or newer, Dolby Vision content can be merged and muxed normally. Older or unrecognized FFmpeg versions retain the compatibility safeguards: binary merging and disabled FFmpeg muxing. Explicit binary merging and mkvmerge muxing remain available.
+
 The default, `--ffmpeg-concat-mode LOCAL_HTTP`, serves a seekable byte stream through a temporary input listening only on `127.0.0.1`. Segments are opened one at a time without writing a full intermediate file or hitting file-handle and command-line limits caused by segment counts.
 
 - `LOCAL_HTTP`: the default local virtual input, preserving byte concatenation through the concat protocol.

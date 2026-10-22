@@ -135,7 +135,7 @@ internal partial class SimpleDownloadManager
         {
             Logger.InfoMarkUp($"[grey]{(parts.Count > 1 ? string.Format(ResString.vodPartsConcat, parts.Count) : ResString.ffmpegMerge)}[/]");
             success = MergeUtil.ConcatMediaParts(DownloaderConfig.MyOptions.FFmpegBinaryPath!,
-                outputs.Select(o => o.FilePath).ToArray(), parts, outputPath, processing);
+                outputs.Select(o => o.FilePath).ToArray(), parts, outputPath, processing, first.Mediainfos);
         }
         if (!success)
         {
