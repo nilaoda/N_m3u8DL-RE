@@ -118,11 +118,11 @@ public class StreamSpec
             returnStr = d.EscapeMarkup();
         }
 
-        returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
         while (returnStr.Contains("|  |"))
         {
             returnStr = returnStr.Replace("|  |", "|");
         }
+        returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
 
         return returnStr.TrimEnd().TrimEnd('|').TrimEnd();
     }
@@ -152,11 +152,11 @@ public class StreamSpec
             returnStr = d.EscapeMarkup();
         }
 
-        returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
         while (returnStr.Contains("|  |"))
         {
             returnStr = returnStr.Replace("|  |", "|");
         }
+        returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
 
         return returnStr.TrimEnd().TrimEnd('|').TrimEnd();
     }
@@ -194,11 +194,11 @@ public class StreamSpec
             returnStr = d.EscapeMarkup();
         }
 
-        returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
         while (returnStr.Contains("|  |"))
         {
             returnStr = returnStr.Replace("|  |", "|");
         }
+        returnStr = prefixStr + returnStr.Trim().Trim('|').Trim();
 
         // 计算时长
         if (Playlist != null)

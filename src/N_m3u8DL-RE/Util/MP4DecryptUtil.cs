@@ -114,7 +114,8 @@ internal static partial class MP4DecryptUtil
                 // frag_discont 使 tfdt 保留源 DTS；禁用每片的 edit list 偏移和局部索引，避免拼接后时钟归零或索引失效。
                 outputOptions += " -f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof+frag_discont+skip_trailer -use_editlist 0";
             }
-            cmd = $"-loglevel error -nostdin -y{timestampOptions} -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -c copy{outputOptions} \"{dest}\"";
+            // Profile 7 可能将基础层和增强层分为两条视频流，不能让 FFmpeg 默认只选择其中一条。
+            cmd = $"-loglevel error -nostdin -y{timestampOptions} -decryption_key {keyPair.Split(':')[1]} -i \"{enc}\" -map 0:v? -map 0:a? -map 0:s? -c copy {BinaryToolUtil.FFmpegStrictOptions}{outputOptions} \"{dest}\"";
         }
 
         var isSuccess = false;

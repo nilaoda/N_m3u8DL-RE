@@ -223,15 +223,18 @@ internal class SimpleLiveRecordManager2
         RecordingSizeDic.AddOrUpdate(taskId, fileSize, (_, current) => current + fileSize);
     }
 
-    private void ChangeSpecInfo(StreamSpec streamSpec, List<Mediainfo> mediainfos, ref bool useAACFilter)
+    internal async Task<bool> ChangeSpecInfoAsync(StreamSpec streamSpec, List<Mediainfo> mediainfos, bool useAACFilter)
     {
-        if (!DownloaderConfig.MyOptions.BinaryMerge && mediainfos.Any(m => m.DolbyVison))
+        var legacyDolbyVision = mediainfos.Any(m => m.DolbyVison) &&
+            !await BinaryToolUtil.FFmpegSupportsDolbyVisionAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath);
+        if (!DownloaderConfig.MyOptions.BinaryMerge && legacyDolbyVision)
         {
             DownloaderConfig.MyOptions.BinaryMerge = true;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge2}[/]");
         }
 
-        if (DownloaderConfig.MyOptions.MuxAfterDone && mediainfos.Any(m => m.DolbyVison))
+        if (DownloaderConfig.MyOptions.MuxAfterDone && legacyDolbyVision &&
+            DownloaderConfig.MyOptions.MuxOptions?.UseMkvmerge != true)
         {
             DownloaderConfig.MyOptions.MuxAfterDone = false;
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.autoBinaryMerge5}[/]");
@@ -253,6 +256,7 @@ internal class SimpleLiveRecordManager2
             if (streamSpec.Extension is null or "ts")
                 streamSpec.Extension = "vtt";
         }
+        return useAACFilter;
     }
 
     private static bool SameInit(MediaSegment? first, MediaSegment? second) =>
@@ -414,7 +418,7 @@ internal class SimpleLiveRecordManager2
                             Logger.WarnMarkUp(ResString.readingInfo);
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
-                            ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                            useAACFilter = await ChangeSpecInfoAsync(streamSpec, mediaInfos, useAACFilter);
                             readInfo = true;
                         }
                         initDownloaded = true;
@@ -526,7 +530,7 @@ internal class SimpleLiveRecordManager2
                             mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result!.ActualFilePath);
                             mediaInfos.ForEach(info => Logger.InfoMarkUp(info.ToStringMarkUp()));
                             ReportAudioClock(streamSpec, mediaInfos.FirstOrDefault(info => info.Type == "Audio")?.StartTime);
-                            ChangeSpecInfo(streamSpec, mediaInfos, ref useAACFilter);
+                            useAACFilter = await ChangeSpecInfoAsync(streamSpec, mediaInfos, useAACFilter);
                             readInfo = true;
                         }
                     }

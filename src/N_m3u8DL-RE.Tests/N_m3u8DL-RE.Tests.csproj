@@ -41,5 +41,6 @@
         <EmbeddedResource Include="Resources\**\*.mpd"/>
         <EmbeddedResource Include="Resources\**\*.m3u8"/>
         <EmbeddedResource Include="Resources\**\*.ism"/>
+        <EmbeddedResource Include="Resources\Media\DolbyVisionProfile7.mp4"/>
     </ItemGroup>
 </Project>

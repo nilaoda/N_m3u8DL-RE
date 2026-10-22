@@ -54,6 +54,19 @@ public sealed class MP4MediaInfoTests : IDisposable
     }
 
     [Fact]
+    public async Task QuickTimeDvVideoKeepsItsTrackTypeAndIsNotDolbyVision()
+    {
+        if (!HasTool("ffmpeg"))
+            return;
+        var path = Path.Combine(directory, "dv.mov");
+        await Run("ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc2=s=960x720:r=60000/1001",
+            "-t", "0.05", "-pix_fmt", "yuv422p", "-c:v", "dvvideo", path);
+        var track = Assert.Single(MP4MediaInfoUtil.ReadTrackInfo(path)!);
+        Assert.Equal("Video", track.Type);
+        Assert.False(track.DolbyVision);
+    }
+
+    [Fact]
     public async Task RepeatedIdenticalInitializationPreservesFragmentTiming()
     {
         if (!HasTool("ffmpeg"))
