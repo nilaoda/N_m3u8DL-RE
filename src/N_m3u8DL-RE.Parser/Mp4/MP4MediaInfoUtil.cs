@@ -111,19 +111,19 @@ public static class MP4MediaInfoUtil
     public static string[]? ReadTrackTypes(string file, CancellationToken token = default) =>
         ReadTrackInfo(file, token)?.Select(track => track.Type).ToArray();
 
-    public static (string Type, string? Language, string? CodecTag, bool DolbyVision)[]? ReadTrackInfo(string file, CancellationToken token = default)
+    public static (string Type, string? Language, string? CodecTag, bool DolbyVision, int? DolbyVisionProfile)[]? ReadTrackInfo(string file, CancellationToken token = default)
     {
         using var stream = File.OpenRead(file);
         return ReadTrackInfo(stream, token);
     }
 
-    public static (string Type, string? Language, string? CodecTag, bool DolbyVision)[]? ReadTrackInfo(Stream stream, CancellationToken token = default)
+    public static (string Type, string? Language, string? CodecTag, bool DolbyVision, int? DolbyVisionProfile)[]? ReadTrackInfo(Stream stream, CancellationToken token = default)
     {
         using var reader = new BinaryReader2(stream, leaveOpen: true);
         var moov = ReadMovie(reader, token);
         if (moov == null)
             return null;
-        var tracks = new List<(string Type, string? Language, string? CodecTag, bool DolbyVision)>();
+        var tracks = new List<(string Type, string? Language, string? CodecTag, bool DolbyVision, int? DolbyVisionProfile)>();
         new MP4Parser()
             .Box("moov", MP4Parser.Children)
             .Box("trak", box =>
@@ -132,6 +132,7 @@ public static class MP4MediaInfoUtil
                 string? language = null;
                 string? codecTag = null;
                 var dolbyVision = false;
+                int? dolbyVisionProfile = null;
                 new MP4Parser()
                     .Box("mdia", MP4Parser.Children)
                     .FullBox("mdhd", header =>
@@ -174,16 +175,24 @@ public static class MP4MediaInfoUtil
                         header.Reader.ReadBytes(78); // VisualSampleEntry fields
                         var hevc = false;
                         var dovi = false;
+                        void ReadDolbyVisionProfile(ParsedBox config)
+                        {
+                            dovi = true;
+                            if (config.Reader.GetLength() < 4)
+                                return;
+                            config.Reader.ReadBytes(2); // dv_version_major, dv_version_minor
+                            dolbyVisionProfile = config.Reader.ReadByte() >> 1;
+                        }
                         new MP4Parser()
                             .Box("hvcC", _ => hevc = true)
-                            .Box("dvcC", _ => dovi = true)
-                            .Box("dvvC", _ => dovi = true)
+                            .Box("dvcC", ReadDolbyVisionProfile)
+                            .Box("dvvC", ReadDolbyVisionProfile)
                             .Parse(header.Reader.ReadBytes((int)size - 86));
                         dolbyVision = hevc && (dovi || codecTag is "dvh1" or "dvhe");
                     })
                     .Parse(box.Reader.ReadBytes((int)box.Reader.GetLength()));
                 if (type != null)
-                    tracks.Add((type, language == "und" ? null : language, codecTag, dolbyVision));
+                    tracks.Add((type, language == "und" ? null : language, codecTag, dolbyVision, dolbyVision ? dolbyVisionProfile : null));
             })
             .Parse(moov);
         return tracks.ToArray();

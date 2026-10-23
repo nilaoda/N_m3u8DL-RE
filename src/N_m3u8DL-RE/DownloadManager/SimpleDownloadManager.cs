@@ -770,7 +770,7 @@ internal partial class SimpleDownloadManager
                 }
                 processing?.Begin(ResString.processingMerge, logStart: false);
                 mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, concatMode: concatMode,
-                    progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration);
+                    progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration, mediaInfos: mediaInfos);
                 if (mergeSuccess) output = ffOut;
             }
         }

@@ -140,6 +140,27 @@ public class DolbyVisionTests
     }
 
     [Fact]
+    public async Task ProfileMetadataBelongsToItsOwnVideoStream()
+    {
+        if (!HasTool("ffmpeg"))
+            return;
+        var root = Directory.CreateTempSubdirectory("dovi-track-info-").FullName;
+        try
+        {
+            var source = await WriteSampleAsync(root);
+            var file = new OutputFile { Index = 0, FilePath = source };
+            var fromBoxes = await MediainfoUtil.ReadTrackInfoAsync("ffmpeg", file, default);
+            var fromProbe = await MediainfoUtil.ReadInfoAsync("ffmpeg", source);
+            Assert.Equal(new int?[] { null, 7 }, fromBoxes.Select(info => info.DolbyVisionProfile));
+            Assert.Equal(fromBoxes.Select(info => info.DolbyVisionProfile), fromProbe.Select(info => info.DolbyVisionProfile));
+            Assert.False(fromProbe[0].DolbyVison);
+            Assert.True(fromProbe[1].DolbyVison);
+            Assert.Same(fromBoxes, await MediainfoUtil.ReadTrackInfoAsync("missing-ffmpeg", file, default));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public async Task MatroskaTagsFollowUniqueVideoStreamsAcrossProgramsAndInputs()
     {
         if (!HasTool("ffmpeg") || !HasTool("ffprobe"))
