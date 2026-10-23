@@ -179,12 +179,13 @@ Options:
   --key <key>                                             Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg. format:
                                                           --key KID1:KEY1 --key KID2:KEY2
                                                           or use --key KEY if all tracks share the same key.
+                                                          KID and KEY accept 16-byte HEX or Base64; trailing Base64 padding (=) is optional.
   --key-text-file <key-text-file>                         Set the kid-key file, the program will search the KEY with KID from the file.(Very large file are not recommended)
   --decryption-engine <FFMPEG|MP4DECRYPT|SHAKA_PACKAGER>  Set the third-party program used for decryption [default: MP4DECRYPT]
   --decryption-binary-path <PATH>                         Path to the tool used for MP4 decryption, like C:\Tools\mp4decrypt.exe
   --mp4-real-time-decryption                              Decrypt MP4 segments in real time [default: False]
   -R, --max-speed <SPEED>                                 Set speed limit, Mbps or Kbps, for example: 15M 100K.
-  -M, --mux-after-done <OPTIONS>                          When all works is done, try to mux the downloaded streams. Use "--morehelp mux-after-done" for more details
+  -M, --mux-after-done <OPTIONS>                          Mux the downloaded streams after all tasks finish. Use "--morehelp mux-after-done" for more details
   --custom-hls-method <METHOD>                            Set HLS encryption method (AES_128|AES_128_ECB|CENC|CHACHA20|NONE|SAMPLE_AES|SAMPLE_AES_CTR|UNKNOWN)
   --custom-hls-key <FILE|HEX|BASE64>                      Set the HLS decryption key. Can be file, HEX or Base64
   --custom-hls-iv <FILE|HEX|BASE64>                       Set the HLS decryption iv. Can be file, HEX or Base64
@@ -204,7 +205,7 @@ Options:
   --live-idle-timeout <SEC>                               Stop recording when a live playlist has no new segments for this many seconds (disabled by default)
   --live-take-count <NUM>                                 Manually set the number of segments downloaded for the first time when recording live [default: 16]
   --live-catchup <TIME>                                   Download live history from a lookback duration or date/time; overrides --live-take-count
-  --mux-import <OPTIONS>                                  When MuxAfterDone enabled, allow to import local media files. Use "--morehelp mux-import" for more details
+  --mux-import <OPTIONS>                                  Import external media files when muxing. Use "--morehelp mux-import" for more details
   -sv, --select-video <OPTIONS>                           Select video streams by regular expressions. Use "--morehelp select-video" for more details
   -sa, --select-audio <OPTIONS>                           Select audio streams by regular expressions. Use "--morehelp select-audio" for more details
   -ss, --select-subtitle <OPTIONS>                        Select subtitle streams by regular expressions. Use "--morehelp select-subtitle" for more details
@@ -217,7 +218,7 @@ Options:
   --vod-drop-parts <IDS>                                  Exclude VOD sections and matching audio/subtitles by --vod-list-parts IDs, e.g. 0,2-4
   --disable-update-check                                  Disable version update check [default: False]
   --allow-hls-multi-ext-map                               Allow multiple #EXT-X-MAP in live HLS (experimental; enabled for VOD) [default: False]
-  --morehelp <OPTION>                                     Set more help info about one option
+  --morehelp <OPTION>                                     Show detailed help for an option
   --generate-completion <SHELL>                           Print the embedded completion script (powershell)
   -?, -h, --help                                          Show help and usage information
   --version                                               Show version information
@@ -240,13 +241,15 @@ More Help:
 
   --mux-after-done
 
-When all works is done, try to mux the downloaded streams. OPTIONS is a colon separated list of:
+Mux the downloaded streams after all tasks finish. OPTIONS is a colon separated list of:
 
 * format=FORMAT: set container. mkv, mp4, ts
 * muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)
 * bin_path=PATH: set binary file path. (Default: auto)
-* skip_sub=BOOL: set whether or not skip subtitle files (Default: false)
-* keep=BOOL: set whether or not keep files. true, false (Default: false)
+* skip_sub=BOOL: skip downloaded subtitles; externally imported subtitles are still muxed (Default: false)
+* keep=BOOL: keep track files after successful muxing; external imports are always preserved (Default: false)
+
+The format= prefix is optional, e.g. -M mp4. Use mkvmerge for MKV output only. Escape colons in values as \: and quote the entire argument if it contains spaces.
 
 Examples:
 # mux to mp4
@@ -254,7 +257,7 @@ Examples:
 # use mkvmerge, auto detect bin path
 -M format=mkv:muxer=mkvmerge
 # use mkvmerge, set bin path
--M format=mkv:muxer=mkvmerge:bin_path="C\:\Program Files\MKVToolNix\mkvmerge.exe"
+-M "format=mkv:muxer=mkvmerge:bin_path=C\:\Program Files\MKVToolNix\mkvmerge.exe"
 ```
 
 ```
@@ -262,17 +265,22 @@ More Help:
 
   --mux-import
 
-When MuxAfterDone enabled, allow to import local media files. OPTIONS is a colon separated list of:
+Import local media files when muxing; repeat for multiple files. Requires -M in the main command; also available in the mux subcommand.
+Pass a file path directly, or use these colon-separated options (directories are not supported):
 
-* path=PATH: set file path
-* lang=CODE: set media language code (not required)
-* name=NAME: set description (not required)
+* path=PATH: media file path
+* lang=CODE: track language code, e.g. eng or zh-Hans (optional)
+* name=NAME: track title (optional)
+
+Escape colons in option values as \: (including Windows drive letters). Direct file paths do not need colon escaping. Quote the entire argument when it contains spaces.
 
 Examples:
-# import subtitle
---mux-import path=en-US.srt:lang=eng:name="English (Original)"
-# import audio and subtitle
---mux-import path="D\:\media\atmos.m4a":lang=eng:name="English Description Audio" --mux-import path="D\:\media\eng.vtt":lang=eng:name="English (Description)"
+# Import a subtitle file directly
+--mux-import "D:\media\subtitle.srt"
+# Set subtitle language and title
+--mux-import "path=en-US.srt:lang=en-US:name=English (Original)"
+# Import audio and subtitles
+--mux-import "path=D\:\media\audio.m4a:lang=eng:name=English Audio" --mux-import "path=D\:\media\subtitle.srt:lang=eng:name=English Subtitles"
 ```
 
 ```
@@ -287,7 +295,7 @@ The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and th
 * lang=REGEX: match by language code
 * name=REGEX: match by stream name
 * codecs=REGEX: match by codecs (e.g. hvc1, avc1, mp4a)
-* res=REGEX: match by resolution (e.g. 1920*, 3840*)
+* res=REGEX: match by resolution (e.g. ^1920x, ^3840x)
 * frame=REGEX: match by frame rate
 * channel=REGEX: match by audio channel count (e.g. 6, 2)
 * range=REGEX: match by video range (e.g. SDR, HDR, PQ)
@@ -300,14 +308,14 @@ The same sub-keys also work for --select-audio/-sa, --select-subtitle/-ss and th
 * bwMin=int: keep streams with bandwidth >= int Kbps
 * bwMax=int: keep streams with bandwidth <= int Kbps
 * role=string: match by DASH role (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)
-* for=FOR: keep best[number] or worst[number] per language, or all matched streams (Default: best)
+* for=FOR: keep best[number] or worst[number] by bandwidth per base language, or all matched streams (Default: best)
 
 Examples:
 # select best video
 -sv best
 # select 4K+HEVC video
--sv res="3840*":codecs=hvc1:for=best
-# Select best video with duration longer than 1 hour 20 minutes 30 seconds
+-sv res="^3840x":codecs=hvc1:for=best
+# Select best video with duration of at least 1 hour 20 minutes 30 seconds
 -sv plistDurMin="1h20m30s":for=best
 -sv role="main":for=best
 # Select video with bandwidth between 800Kbps and 1Mbps
@@ -325,14 +333,14 @@ More Help:
 
   --select-audio
 
-Select audio streams by regular expressions. ref --select-video
+Select audio streams by regular expressions. Use --morehelp select-video for all filter options.
 
 Examples:
 # select all
 -sa all
 # select best eng audio
 -sa lang=en:for=best
-# select best 2, and language is ja or en
+# select the best 2 audio tracks for each language, Japanese and English
 -sa lang="ja|en":for=best2
 -sa role="main":for=best
 ```
@@ -342,7 +350,7 @@ More Help:
 
   --select-subtitle
 
-Select subtitle streams by regular expressions. ref --select-video
+Select subtitle streams by regular expressions. Use --morehelp select-video for all filter options.
 
 Examples:
 # select all subs

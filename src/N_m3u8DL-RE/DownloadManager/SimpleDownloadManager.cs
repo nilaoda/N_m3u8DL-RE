@@ -1014,6 +1014,8 @@ internal partial class SimpleDownloadManager
             {
                 OutputFiles = OutputFiles.Where(o => o.MediaType != MediaType.SUBTITLES).ToList();
             }
+            // 清理列表只包含本次下载参与混流的轨道，外部导入源始终保留。
+            var downloadedFiles = OutputFiles.Select(f => f.FilePath).ToArray();
             if (DownloaderConfig.MyOptions.MuxImports != null)
             {
                 OutputFiles.AddRange(DownloaderConfig.MyOptions.MuxImports);
@@ -1044,13 +1046,14 @@ internal partial class SimpleDownloadManager
                     processing.Begin(ResString.processingFinishing);
                     processing.Report(new(Bytes: new FileInfo(outPath + ext).Length));
                 }
-                // 完成后删除各轨道文件
+                // 完成后删除本次下载的各轨道文件，保留外部导入源
                 if (result)
                 {
                     if (!DownloaderConfig.MyOptions.MuxOptions.KeepFiles)
                     {
                         Logger.WarnMarkUp("[grey]Cleaning files...[/]");
-                        OutputFiles.ForEach(f => File.Delete(f.FilePath));
+                        foreach (var file in downloadedFiles)
+                            File.Delete(file);
                         var tmpDir = DownloaderConfig.MyOptions.TmpDir ?? Environment.CurrentDirectory;
                         OtherUtil.SafeDeleteDir(tmpDir);
                     }

@@ -181,6 +181,7 @@ Options:
   --key <key>                                             设置解密密钥, 程序调用mp4decrypt/shaka-packager/ffmpeg进行解密. 格式:
                                                           --key KID1:KEY1 --key KID2:KEY2
                                                           对于KEY相同的情况可以直接输入 --key KEY
+                                                          KID 和 KEY 均支持 16 字节 HEX 或 Base64；Base64 可省略末尾的 =
   --key-text-file <key-text-file>                         设置密钥文件,程序将从文件中按KID搜寻KEY以解密.(不建议使用特大文件)
   --decryption-engine <FFMPEG|MP4DECRYPT|SHAKA_PACKAGER>  设置解密时使用的第三方程序 [default: MP4DECRYPT]
   --decryption-binary-path <PATH>                         MP4解密所用工具的路径, 例如 C:\Tools\mp4decrypt.exe
@@ -247,8 +248,10 @@ More Help:
 * format=FORMAT: 指定混流容器 mkv, mp4, ts
 * muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)
 * bin_path=PATH: 指定程序路径 (默认: 自动寻找)
-* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)
-* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)
+* skip_sub=BOOL: 是否忽略下载的字幕（外部导入字幕仍参与混流） (默认: false)
+* keep=BOOL: 混流成功后是否保留轨道文件；外部导入文件始终保留 (默认: false)
+
+format= 可省略，如 -M mp4；mkvmerge 仅用于 MKV。参数值中的冒号需写为 \:，包含空格时请用引号包住整个参数。
 
 例如:
 # 混流为mp4容器
@@ -256,7 +259,7 @@ More Help:
 # 使用mkvmerge, 自动寻找程序
 -M format=mkv:muxer=mkvmerge
 # 使用mkvmerge, 自定义程序路径
--M format=mkv:muxer=mkvmerge:bin_path="C\:\Program Files\MKVToolNix\mkvmerge.exe"
+-M "format=mkv:muxer=mkvmerge:bin_path=C\:\Program Files\MKVToolNix\mkvmerge.exe"
 ```
 
 ```
@@ -264,17 +267,22 @@ More Help:
 
   --mux-import
 
-混流时引入外部媒体文件. 你能够以:分隔形式指定如下参数:
+混流时引入本地媒体文件，可重复指定。主命令需同时启用 -M，mux 子命令也可使用。
+可直接传入文件路径，或以 : 分隔如下参数（不支持目录）：
 
 * path=PATH: 指定媒体文件路径
-* lang=CODE: 指定媒体文件语言代码 (非必须)
-* name=NAME: 指定媒体文件描述信息 (非必须)
+* lang=CODE: 指定轨道语言代码，如 eng、zh-Hans（可选）
+* name=NAME: 指定轨道标题（可选）
+
+复合参数值中的冒号需写为 \:（包括 Windows 盘符）；直接传入路径时无需转义冒号。包含空格时请用引号包住整个参数。
 
 例如:
-# 引入外部字幕
---mux-import path=zh-Hans.srt:lang=chi:name="中文 (简体)"
-# 引入外部音轨+字幕
---mux-import path="D\:\media\atmos.m4a":lang=eng:name="English Description Audio" --mux-import path="D\:\media\eng.vtt":lang=eng:name="English (Description)"
+# 直接引入外部字幕
+--mux-import "D:\media\subtitle.srt"
+# 指定字幕语言和标题
+--mux-import "path=zh-Hans.srt:lang=zh-Hans:name=中文 (简体)"
+# 引入外部音轨和字幕
+--mux-import "path=D\:\media\audio.m4a:lang=eng:name=English Audio" --mux-import "path=D\:\media\subtitle.srt:lang=eng:name=English Subtitles"
 ```
 
 ```
@@ -289,7 +297,7 @@ More Help:
 * lang=REGEX: 按语言代码匹配
 * name=REGEX: 按名称匹配
 * codecs=REGEX: 按编码匹配 (如 hvc1, avc1, mp4a)
-* res=REGEX: 按分辨率匹配 (如 1920*, 3840*)
+* res=REGEX: 按分辨率匹配 (如 ^1920x, ^3840x)
 * frame=REGEX: 按帧率匹配
 * channel=REGEX: 按音频声道数匹配 (如 6, 2)
 * range=REGEX: 按视频动态范围匹配 (如 SDR, HDR, PQ)
@@ -302,14 +310,14 @@ More Help:
 * bwMin=int: 仅保留码率 >= int Kbps 的流
 * bwMax=int: 仅保留码率 <= int Kbps 的流
 * role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)
-* for=FOR: 每种语言选择 best[number] 或 worst[number]，all 保留全部匹配流 (默认: best)
+* for=FOR: 每种基础语言按码率选择 best[number] 或 worst[number]，all 保留全部匹配流 (默认: best)
 
 例如:
 # 选择最佳视频
 -sv best
 # 选择4K+HEVC视频
--sv res="3840*":codecs=hvc1:for=best
-# 选择长度大于1小时20分钟30秒的视频
+-sv res="^3840x":codecs=hvc1:for=best
+# 选择长度至少为1小时20分钟30秒的视频
 -sv plistDurMin="1h20m30s":for=best
 -sv role="main":for=best
 # 选择码率在800Kbps至1Mbps之间的视频
@@ -327,14 +335,14 @@ More Help:
 
   --select-audio
 
-通过正则表达式选择符合要求的音频流. 参考 --select-video
+通过正则表达式选择符合要求的音频流. 完整筛选参数见 --morehelp select-video
 
 例如:
 # 选择所有音频
 -sa all
 # 选择最佳英语音轨
 -sa lang=en:for=best
-# 选择最佳的2条英语(或日语)音轨
+# 分别选择英语和日语中最佳的2条音轨
 -sa lang="ja|en":for=best2
 -sa role="main":for=best
 ```
@@ -344,7 +352,7 @@ More Help:
 
   --select-subtitle
 
-通过正则表达式选择符合要求的字幕流. 参考 --select-video
+通过正则表达式选择符合要求的字幕流. 完整筛选参数见 --morehelp select-video
 
 例如:
 # 选择所有字幕
