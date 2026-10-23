@@ -13,6 +13,9 @@ internal class Mediainfo
     public string? Type { get; set; }
     public TimeSpan? StartTime { get; set; }
     public bool DolbyVison { get; set; }
+    // 原始视频标记和杜比视界 Profile 用于选择转封装后的兼容标记。
+    public string? CodecTag { get; set; }
+    public int? DolbyVisionProfile { get; set; }
     public bool HDR { get; set; }
 
     public override string? ToString()

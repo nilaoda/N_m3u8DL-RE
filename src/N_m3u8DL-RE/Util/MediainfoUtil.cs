@@ -27,8 +27,10 @@ internal static partial class MediainfoUtil
     private static partial Regex BitrateRegex();
     [GeneratedRegex(@"(\d+(\.\d+)?) fps")]
     private static partial Regex FpsRegex();
-    [GeneratedRegex(@"DOVI configuration record.*profile: (\d).*compatibility id: (\d)")]
+    [GeneratedRegex(@"DOVI configuration record.*profile: (\d+).*compatibility id: (\d+)")]
     private static partial Regex DoViRegex();
+    [GeneratedRegex(@"\((\w{4}) / 0x[0-9a-fA-F]+\)")]
+    private static partial Regex CodecTagRegex();
     [GeneratedRegex(@"Duration.*?start: (-?\d+(?:\.\d+)?)")]
     private static partial Regex StartRegex();
     [GeneratedRegex(@"Duration:\s*(\d+:\d{2}:\d{2}\.\d+)")]
@@ -49,7 +51,9 @@ internal static partial class MediainfoUtil
             {
                 Type = track.Type,
                 BaseInfo = track.DolbyVision ? "hevc" : track.CodecTag,
-                DolbyVison = track.DolbyVision
+                DolbyVison = track.DolbyVision,
+                CodecTag = track.CodecTag,
+                DolbyVisionProfile = track.DolbyVisionProfile
             }).ToList();
         }
         else if (extension is ".srt" or ".vtt" or ".ass" or ".ssa" or ".sup" or ".idx")
@@ -100,7 +104,9 @@ internal static partial class MediainfoUtil
         var output = probe.Error;
 
         // TS 的多个 Program 可能共用同一条流，FFmpeg 会重复打印，轨道只能计入一次。
-        foreach (var stream in TextRegex().Matches(output).DistinctBy(stream => StreamIndexRegex().Match(stream.Value).Value))
+        var streams = TextRegex().Matches(output);
+        foreach (var (stream, index) in streams.Select((stream, index) => (stream, index))
+            .DistinctBy(item => StreamIndexRegex().Match(item.stream.Value).Value))
         {
             var info = new Mediainfo()
             {
@@ -116,13 +122,19 @@ internal static partial class MediainfoUtil
             info.BaseInfo = ReplaceRegex().Replace(info.BaseInfo, "");
             info.HDR = info.Text.Contains("/bt2020/");
 
+            info.CodecTag = CodecTagRegex().Match(stream.Value) is { Success: true } tag ? tag.Groups[1].Value : null;
+            // 配置附属于当前轨道，不能把一条杜比视界轨道的 Profile 套到其它视频上。
+            var details = output[stream.Index..(index + 1 < streams.Count ? streams[index + 1].Index : output.Length)];
+            var dovi = DoViRegex().Match(details);
             if (info.BaseInfo.Contains("dvhe")
                 || info.BaseInfo.Contains("dvh1")
                 || info.BaseInfo.Contains("DOVI")
                 || info.Type.Contains("dvvideo")
-                || (DoViRegex().IsMatch(output) && info.Type == "Video")
+                || (dovi.Success && info.Type == "Video")
                )
                 info.DolbyVison = true;
+            if (info.Type == "Video" && dovi.Success && int.TryParse(dovi.Groups[1].Value, out var profile))
+                info.DolbyVisionProfile = profile;
 
             if (StartRegex().IsMatch(output))
             {

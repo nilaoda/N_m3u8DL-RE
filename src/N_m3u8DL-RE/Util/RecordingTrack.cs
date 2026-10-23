@@ -142,7 +142,9 @@ internal sealed partial class RecordingTrack
                 {
                     Type = tracks[0].Type,
                     BaseInfo = tracks[0].DolbyVision ? "hevc" : tracks[0].CodecTag,
-                    DolbyVison = tracks[0].DolbyVision
+                    DolbyVison = tracks[0].DolbyVision,
+                    CodecTag = tracks[0].CodecTag,
+                    DolbyVisionProfile = tracks[0].DolbyVisionProfile
                 }];
                 ttml = MP4TtmlUtil.CheckInit(data);
                 var (vtt, timescale) = MP4VttUtil.CheckInit(data);
