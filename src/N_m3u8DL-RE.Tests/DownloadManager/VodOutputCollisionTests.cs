@@ -3,6 +3,7 @@ using System.Text.Json;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.DownloadManager;
 using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Util;
@@ -13,6 +14,40 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 [Collection("Download console")]
 public class VodOutputCollisionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MuxCleanupPreservesExternalInputs(bool keepFiles)
+    {
+        if (!HasTool("ffmpeg"))
+            return;
+        var root = Directory.CreateTempSubdirectory("vod-mux-import-").FullName;
+        try
+        {
+            await GenerateCutMedia(root);
+            var subtitle = Path.Combine(root, "external.srt");
+            const string text = "1\n00:00:00,000 --> 00:00:05,000\nExternal subtitle\n";
+            await File.WriteAllTextAsync(subtitle, text);
+            using var extractor = new StreamExtractor(new ParserConfig());
+            await extractor.LoadSourceFromUrlAsync(Path.Combine(root, "source.m3u8"));
+            var streams = await extractor.ExtractStreamsAsync();
+            var options = CreateOptions(root);
+            options.BinaryMerge = true;
+            options.MuxAfterDone = true;
+            options.MuxOptions = new MuxOptions { MuxFormat = MuxFormat.MKV, KeepFiles = keepFiles };
+            options.MuxImports = [new OutputFile { Index = 999, FilePath = subtitle }];
+            var manager = new SimpleDownloadManager(new DownloaderConfig
+                { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options }, streams, extractor);
+            Assert.True(await manager.StartDownloadAsync());
+            Assert.Equal(text, await File.ReadAllTextAsync(subtitle));
+            Assert.Equal(keepFiles, File.Exists(Path.Combine(options.SaveDir!, "result.mp4")));
+            var output = Path.Combine(options.SaveDir!, "tmp.mkv");
+            Assert.Contains("External subtitle", await Run("ffmpeg", "-v", "error", "-i", output,
+                "-map", "0:s:0", "-f", "srt", "-"));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Fact]
     public async Task ConcurrentTsTracksReserveTheirActualOutputExtensions()
     {

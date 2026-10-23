@@ -36,9 +36,9 @@ internal static class StaticText
         ),
         ["cmd_toolsMuxImport"] = new TextContainer
         (
-            zhCN: "追加外部文件或目录，可重复；格式：path=输入:lang=语言:name=轨道标题",
-            zhTW: "附加外部檔案或目錄，可重複；格式：path=輸入:lang=語言:name=軌道標題",
-            enUS: "Append external files or directories; repeat with path=INPUT:lang=CODE:name=TRACK_TITLE"
+            zhCN: "追加外部媒体文件，可重复；支持文件路径或 path=文件:lang=语言:name=轨道标题；目录请用 -i",
+            zhTW: "附加外部媒體檔案，可重複；支援檔案路徑或 path=檔案:lang=語言:name=軌道標題；目錄請用 -i",
+            enUS: "Append external media files; repeat with a file path or path=FILE:lang=CODE:name=TRACK_TITLE; use -i for directories"
         ),
         ["toolsRecordingSubtitleEmpty"] = new TextContainer
         (
@@ -216,9 +216,9 @@ internal static class StaticText
         ),
         ["cmd_toolsOutput"] = new TextContainer
         (
-            zhCN: "输出文件路径，媒体容器由扩展名确定",
-            zhTW: "輸出檔案路徑，媒體容器由副檔名決定",
-            enUS: "Output file path; the extension determines the media container"
+            zhCN: "输出文件路径，扩展名确定容器：.mp4、.mkv、.ts、.m4a",
+            zhTW: "輸出檔案路徑，副檔名決定容器：.mp4、.mkv、.ts、.m4a",
+            enUS: "Output file path; extension determines container: .mp4, .mkv, .ts or .m4a"
         ),
         ["cmd_toolsOverwrite"] = new TextContainer
         (
@@ -228,9 +228,9 @@ internal static class StaticText
         ),
         ["cmd_toolsDryRun"] = new TextContainer
         (
-            zhCN: "预览输入顺序、轨道信息与输出路径，不执行文件处理",
-            zhTW: "預覽輸入順序、軌道資訊與輸出路徑，不執行檔案處理",
-            enUS: "Preview input order, track information and output path without processing"
+            zhCN: "预览输入及输出路径，不执行文件处理",
+            zhTW: "預覽輸入及輸出路徑，不執行檔案處理",
+            enUS: "Preview inputs and output path without processing"
         ),
         ["cmd_toolsInputDir"] = new TextContainer
         (
@@ -240,15 +240,15 @@ internal static class StaticText
         ),
         ["cmd_toolsPattern"] = new TextContainer
         (
-            zhCN: "目录内的文件匹配模式（不递归）",
-            zhTW: "目錄內的檔案匹配模式（不遞迴）",
-            enUS: "Filename pattern within the input directory (non-recursive)"
+            zhCN: "--input-dir 内的文件匹配模式（不递归）",
+            zhTW: "--input-dir 內的檔案匹配模式（不遞迴）",
+            enUS: "Filename pattern for --input-dir (non-recursive)"
         ),
         ["cmd_toolsMuxer"] = new TextContainer
         (
-            zhCN: "混流工具：ffmpeg 或 mkvmerge",
-            zhTW: "混流工具：ffmpeg 或 mkvmerge",
-            enUS: "Muxer: ffmpeg or mkvmerge"
+            zhCN: "混流工具：ffmpeg 或 mkvmerge（仅支持 MKV）",
+            zhTW: "混流工具：ffmpeg 或 mkvmerge（僅支援 MKV）",
+            enUS: "Muxer: ffmpeg or mkvmerge (MKV only)"
         ),
         ["cmd_doctor"] = new TextContainer
         (
@@ -810,9 +810,18 @@ internal static class StaticText
         ),
         ["cmd_keys"] = new TextContainer
         (
-            zhCN: "设置解密密钥, 程序调用mp4decrypt/shaka-packager/ffmpeg进行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n对于KEY相同的情况可以直接输入 --key KEY",
-            zhTW: "設置解密密鑰, 程序調用mp4decrypt/shaka-packager/ffmpeg進行解密. 格式:\r\n--key KID1:KEY1 --key KID2:KEY2\r\n對於KEY相同的情況可以直接輸入 --key KEY",
-            enUS: "Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg. format:\r\n--key KID1:KEY1 --key KID2:KEY2\r\nor use --key KEY if all tracks share the same key."
+            zhCN: "设置解密密钥, 程序调用mp4decrypt/shaka-packager/ffmpeg进行解密. 格式:\r\n" +
+                  "--key KID1:KEY1 --key KID2:KEY2\r\n" +
+                  "对于KEY相同的情况可以直接输入 --key KEY\r\n" +
+                  "KID 和 KEY 均支持 16 字节 HEX 或 Base64；Base64 可省略末尾的 =",
+            zhTW: "設置解密密鑰, 程序調用mp4decrypt/shaka-packager/ffmpeg進行解密. 格式:\r\n" +
+                  "--key KID1:KEY1 --key KID2:KEY2\r\n" +
+                  "對於KEY相同的情況可以直接輸入 --key KEY\r\n" +
+                  "KID 和 KEY 均支援 16 位元組 HEX 或 Base64；Base64 可省略末尾的 =",
+            enUS: "Set decryption key(s) to mp4decrypt/shaka-packager/ffmpeg. format:\r\n" +
+                  "--key KID1:KEY1 --key KID2:KEY2\r\n" +
+                  "or use --key KEY if all tracks share the same key.\r\n" +
+                  "KID and KEY accept 16-byte HEX or Base64; trailing Base64 padding (=) is optional."
         ),
         ["cmd_keyText"] = new TextContainer
         (
@@ -986,7 +995,7 @@ internal static class StaticText
         (
             zhCN: "查看某个选项的详细帮助信息",
             zhTW: "查看某個選項的詳細幫助訊息",
-            enUS: "Set more help info about one option"
+            enUS: "Show detailed help for an option"
         ),
         ["cmd_generateCompletion"] = new TextContainer
         (
@@ -1421,7 +1430,7 @@ internal static class StaticText
                   "* lang=REGEX: 按语言代码匹配\r\n" +
                   "* name=REGEX: 按名称匹配\r\n" +
                   "* codecs=REGEX: 按编码匹配 (如 hvc1, avc1, mp4a)\r\n" +
-                  "* res=REGEX: 按分辨率匹配 (如 1920*, 3840*)\r\n" +
+                  "* res=REGEX: 按分辨率匹配 (如 ^1920x, ^3840x)\r\n" +
                   "* frame=REGEX: 按帧率匹配\r\n" +
                   "* channel=REGEX: 按音频声道数匹配 (如 6, 2)\r\n" +
                   "* range=REGEX: 按视频动态范围匹配 (如 SDR, HDR, PQ)\r\n" +
@@ -1434,13 +1443,13 @@ internal static class StaticText
                   "* bwMin=int: 仅保留码率 >= int Kbps 的流\r\n" +
                   "* bwMax=int: 仅保留码率 <= int Kbps 的流\r\n" +
                   "* role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
-                  "* for=FOR: 每种语言选择 best[number] 或 worst[number]，all 保留全部匹配流 (默认: best)\r\n\r\n" +
+                  "* for=FOR: 每种基础语言按码率选择 best[number] 或 worst[number]，all 保留全部匹配流 (默认: best)\r\n\r\n" +
                   "例如: \r\n" +
                   "# 选择最佳视频\r\n" +
                   "-sv best\r\n" +
                   "# 选择4K+HEVC视频\r\n" +
-                  "-sv res=\"3840*\":codecs=hvc1:for=best\r\n" +
-                  "# 选择长度大于1小时20分钟30秒的视频\r\n" +
+                  "-sv res=\"^3840x\":codecs=hvc1:for=best\r\n" +
+                  "# 选择长度至少为1小时20分钟30秒的视频\r\n" +
                   "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
                   "-sv role=\"main\":for=best\r\n" +
                   "# 选择码率在800Kbps至1Mbps之间的视频\r\n" +
@@ -1457,7 +1466,7 @@ internal static class StaticText
                   "* lang=REGEX: 按語言代碼匹配\r\n" +
                   "* name=REGEX: 按名稱匹配\r\n" +
                   "* codecs=REGEX: 按編碼匹配 (如 hvc1, avc1, mp4a)\r\n" +
-                  "* res=REGEX: 按解析度匹配 (如 1920*, 3840*)\r\n" +
+                  "* res=REGEX: 按解析度匹配 (如 ^1920x, ^3840x)\r\n" +
                   "* frame=REGEX: 按影格率匹配\r\n" +
                   "* channel=REGEX: 按音訊聲道數匹配 (如 6, 2)\r\n" +
                   "* range=REGEX: 按影片動態範圍匹配 (如 SDR, HDR, PQ)\r\n" +
@@ -1470,13 +1479,13 @@ internal static class StaticText
                   "* bwMin=int: 僅保留碼率 >= int Kbps 的串流\r\n" +
                   "* bwMax=int: 僅保留碼率 <= int Kbps 的串流\r\n" +
                   "* role=string: 按 DASH role 匹配 (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
-                  "* for=FOR: 每種語言選擇 best[number] 或 worst[number]，all 保留全部匹配串流 (預設: best)\r\n\r\n" +
+                  "* for=FOR: 每種基礎語言按碼率選擇 best[number] 或 worst[number]，all 保留全部匹配串流 (預設: best)\r\n\r\n" +
                   "例如: \r\n" +
                   "# 選擇最佳影片\r\n" +
                   "-sv best\r\n" +
                   "# 選擇4K+HEVC影片\r\n" +
-                  "-sv res=\"3840*\":codecs=hvc1:for=best\r\n" +
-                  "# 選擇長度大於1小時20分鐘30秒的影片\r\n" +
+                  "-sv res=\"^3840x\":codecs=hvc1:for=best\r\n" +
+                  "# 選擇長度至少為1小時20分鐘30秒的影片\r\n" +
                   "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
                   "-sv role=\"main\":for=best\r\n" +
                   "# 選擇碼率在800Kbps至1Mbps之間的影片\r\n" +
@@ -1493,7 +1502,7 @@ internal static class StaticText
                   "* lang=REGEX: match by language code\r\n" +
                   "* name=REGEX: match by stream name\r\n" +
                   "* codecs=REGEX: match by codecs (e.g. hvc1, avc1, mp4a)\r\n" +
-                  "* res=REGEX: match by resolution (e.g. 1920*, 3840*)\r\n" +
+                  "* res=REGEX: match by resolution (e.g. ^1920x, ^3840x)\r\n" +
                   "* frame=REGEX: match by frame rate\r\n" +
                   "* channel=REGEX: match by audio channel count (e.g. 6, 2)\r\n" +
                   "* range=REGEX: match by video range (e.g. SDR, HDR, PQ)\r\n" +
@@ -1506,13 +1515,13 @@ internal static class StaticText
                   "* bwMin=int: keep streams with bandwidth >= int Kbps\r\n" +
                   "* bwMax=int: keep streams with bandwidth <= int Kbps\r\n" +
                   "* role=string: match by DASH role (Subtitle, Main, Alternate, Supplementary, Commentary, Dub, Description, Sign, Metadata, ForcedSubtitle)\r\n" +
-                  "* for=FOR: keep best[number] or worst[number] per language, or all matched streams (Default: best)\r\n\r\n" +
+                  "* for=FOR: keep best[number] or worst[number] by bandwidth per base language, or all matched streams (Default: best)\r\n\r\n" +
                   "Examples: \r\n" +
                   "# select best video\r\n" +
                   "-sv best\r\n" +
                   "# select 4K+HEVC video\r\n" +
-                  "-sv res=\"3840*\":codecs=hvc1:for=best\r\n" +
-                  "# Select best video with duration longer than 1 hour 20 minutes 30 seconds\r\n" +
+                  "-sv res=\"^3840x\":codecs=hvc1:for=best\r\n" +
+                  "# Select best video with duration of at least 1 hour 20 minutes 30 seconds\r\n" +
                   "-sv plistDurMin=\"1h20m30s\":for=best\r\n" +
                   "-sv role=\"main\":for=best\r\n" +
                   "# Select video with bandwidth between 800Kbps and 1Mbps\r\n" +
@@ -1538,31 +1547,31 @@ internal static class StaticText
         ),
         ["cmd_selectAudio_more"] = new TextContainer
         (
-            zhCN: "通过正则表达式选择符合要求的音频流. 参考 --select-video\r\n\r\n" +
+            zhCN: "通过正则表达式选择符合要求的音频流. 完整筛选参数见 --morehelp select-video\r\n\r\n" +
                   "例如: \r\n" +
                   "# 选择所有音频\r\n" +
                   "-sa all\r\n" +
                   "# 选择最佳英语音轨\r\n" +
                   "-sa lang=en:for=best\r\n" +
-                  "# 选择最佳的2条英语(或日语)音轨\r\n" +
+                  "# 分别选择英语和日语中最佳的2条音轨\r\n" +
                   "-sa lang=\"ja|en\":for=best2\r\n" +
                   "-sa role=\"main\":for=best\r\n",
-            zhTW: "通過正則表達式選擇符合要求的音軌. 參考 --select-video\r\n\r\n" +
+            zhTW: "通過正則表達式選擇符合要求的音軌. 完整篩選參數見 --morehelp select-video\r\n\r\n" +
                   "例如: \r\n" +
                   "# 選擇所有音訊\r\n" +
                   "-sa all\r\n" +
                   "# 選擇最佳英語音軌\r\n" +
                   "-sa lang=en:for=best\r\n" +
-                  "# 選擇最佳的2條英語(或日語)音軌\r\n" +
+                  "# 分別選擇英語和日語中最佳的2條音軌\r\n" +
                   "-sa lang=\"ja|en\":for=best2\r\n" +
                   "-sa role=\"main\":for=best\r\n",
-            enUS: "Select audio streams by regular expressions. ref --select-video\r\n\r\n" +
+            enUS: "Select audio streams by regular expressions. Use --morehelp select-video for all filter options.\r\n\r\n" +
                   "Examples: \r\n" +
                   "# select all\r\n" +
                   "-sa all\r\n" +
                   "# select best eng audio\r\n" +
                   "-sa lang=en:for=best\r\n" +
-                  "# select best 2, and language is ja or en\r\n" +
+                  "# select the best 2 audio tracks for each language, Japanese and English\r\n" +
                   "-sa lang=\"ja|en\":for=best2\r\n" +
                   "-sa role=\"main\":for=best\r\n"
         ),
@@ -1631,19 +1640,19 @@ internal static class StaticText
         ),
         ["cmd_selectSubtitle_more"] = new TextContainer
         (
-            zhCN: "通过正则表达式选择符合要求的字幕流. 参考 --select-video\r\n\r\n" +
+            zhCN: "通过正则表达式选择符合要求的字幕流. 完整筛选参数见 --morehelp select-video\r\n\r\n" +
                   "例如: \r\n" +
                   "# 选择所有字幕\r\n" +
                   "-ss all\r\n" +
                   "# 选择所有带有\"中文\"的字幕\r\n" +
                   "-ss name=\"中文\":for=all\r\n",
-            zhTW: "通過正則表達式選擇符合要求的字幕流. 參考 --select-video\r\n\r\n" +
+            zhTW: "通過正則表達式選擇符合要求的字幕流. 完整篩選參數見 --morehelp select-video\r\n\r\n" +
                   "例如: \r\n" +
                   "# 選擇所有字幕\r\n" +
                   "-ss all\r\n" +
                   "# 選擇所有帶有\"中文\"的字幕\r\n" +
                   "-ss name=\"中文\":for=all\r\n",
-            enUS: "Select subtitle streams by regular expressions. ref --select-video\r\n\r\n" +
+            enUS: "Select subtitle streams by regular expressions. Use --morehelp select-video for all filter options.\r\n\r\n" +
                   "Examples: \r\n" +
                   "# select all subs\r\n" +
                   "-ss all\r\n" +
@@ -1656,83 +1665,98 @@ internal static class StaticText
                   "* format=FORMAT: 指定混流容器 mkv, mp4, ts\r\n" +
                   "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默认: ffmpeg)\r\n" +
                   "* bin_path=PATH: 指定程序路径 (默认: 自动寻找)\r\n" +
-                  "* skip_sub=BOOL: 是否忽略字幕文件 (默认: false)\r\n" +
-                  "* keep=BOOL: 混流完成是否保留文件 true, false (默认: false)\r\n\r\n" +
+                  "* skip_sub=BOOL: 是否忽略下载的字幕（外部导入字幕仍参与混流） (默认: false)\r\n" +
+                  "* keep=BOOL: 混流成功后是否保留轨道文件；外部导入文件始终保留 (默认: false)\r\n\r\n" +
+                  "format= 可省略，如 -M mp4；mkvmerge 仅用于 MKV。参数值中的冒号需写为 \\:，包含空格时请用引号包住整个参数。\r\n\r\n" +
                   "例如: \r\n" +
                   "# 混流为mp4容器\r\n" +
                   "-M format=mp4\r\n" +
                   "# 使用mkvmerge, 自动寻找程序\r\n" +
                   "-M format=mkv:muxer=mkvmerge\r\n" +
                   "# 使用mkvmerge, 自定义程序路径\r\n" +
-                  "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
+                  "-M \"format=mkv:muxer=mkvmerge:bin_path=C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
             zhTW: "所有工作完成時嘗試混流分離的影音. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
                   "* format=FORMAT: 指定混流容器 mkv, mp4, ts\r\n" +
                   "* muxer=MUXER: 指定混流程序 ffmpeg, mkvmerge (默認: ffmpeg)\r\n" +
                   "* bin_path=PATH: 指定程序路徑 (默認: 自動尋找)\r\n" +
-                  "* skip_sub=BOOL: 是否忽略字幕文件 (默認: false)\r\n" +
-                  "* keep=BOOL: 混流完成是否保留文件 true, false (默認: false)\r\n\r\n" +
+                  "* skip_sub=BOOL: 是否忽略下載的字幕（外部引入字幕仍參與混流） (默認: false)\r\n" +
+                  "* keep=BOOL: 混流成功後是否保留軌道檔案；外部引入檔案始終保留 (默認: false)\r\n\r\n" +
+                  "format= 可省略，如 -M mp4；mkvmerge 僅用於 MKV。參數值中的冒號需寫為 \\:，包含空格時請用引號包住整個參數。\r\n\r\n" +
                   "例如: \r\n" +
                   "# 混流為mp4容器\r\n" +
                   "-M format=mp4\r\n" +
                   "# 使用mkvmerge, 自動尋找程序\r\n" +
                   "-M format=mkv:muxer=mkvmerge\r\n" +
                   "# 使用mkvmerge, 自訂程序路徑\r\n" +
-                  "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
-            enUS: "When all works is done, try to mux the downloaded streams. OPTIONS is a colon separated list of:\r\n\r\n" +
+                  "-M \"format=mkv:muxer=mkvmerge:bin_path=C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n",
+            enUS: "Mux the downloaded streams after all tasks finish. OPTIONS is a colon separated list of:\r\n\r\n" +
                   "* format=FORMAT: set container. mkv, mp4, ts\r\n" +
                   "* muxer=MUXER: set muxer. ffmpeg, mkvmerge (Default: ffmpeg)\r\n" +
                   "* bin_path=PATH: set binary file path. (Default: auto)\r\n" +
-                  "* skip_sub=BOOL: set whether or not skip subtitle files (Default: false)\r\n" +
-                  "* keep=BOOL: set whether or not keep files. true, false (Default: false)\r\n\r\n" +
+                  "* skip_sub=BOOL: skip downloaded subtitles; externally imported subtitles are still muxed (Default: false)\r\n" +
+                  "* keep=BOOL: keep track files after successful muxing; external imports are always preserved (Default: false)\r\n\r\n" +
+                  "The format= prefix is optional, e.g. -M mp4. Use mkvmerge for MKV output only. Escape colons in values as \\: and quote the entire argument if it contains spaces.\r\n\r\n" +
                   "Examples: \r\n" +
                   "# mux to mp4\r\n" +
                   "-M format=mp4\r\n" +
                   "# use mkvmerge, auto detect bin path\r\n" +
                   "-M format=mkv:muxer=mkvmerge\r\n" +
                   "# use mkvmerge, set bin path\r\n" +
-                  "-M format=mkv:muxer=mkvmerge:bin_path=\"C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n"
+                  "-M \"format=mkv:muxer=mkvmerge:bin_path=C\\:\\Program Files\\MKVToolNix\\mkvmerge.exe\"\r\n"
         ),
         ["cmd_muxAfterDone"] = new TextContainer
         (
             zhCN: "所有工作完成时尝试混流分离的音视频. 输入 \"--morehelp mux-after-done\" 以查看详细信息",
             zhTW: "所有工作完成時嘗試混流分離的影音. 輸入 \"--morehelp mux-after-done\" 以查看詳細訊息",
-            enUS: "When all works is done, try to mux the downloaded streams. Use \"--morehelp mux-after-done\" for more details"
+            enUS: "Mux the downloaded streams after all tasks finish. Use \"--morehelp mux-after-done\" for more details"
         ),
         ["cmd_muxImport"] = new TextContainer
         (
             zhCN: "混流时引入外部媒体文件. 输入 \"--morehelp mux-import\" 以查看详细信息",
             zhTW: "混流時引入外部媒體檔案. 輸入 \"--morehelp mux-import\" 以查看詳細訊息",
-            enUS: "When MuxAfterDone enabled, allow to import local media files. Use \"--morehelp mux-import\" for more details"
+            enUS: "Import external media files when muxing. Use \"--morehelp mux-import\" for more details"
         ),
         ["cmd_muxImport_more"] = new TextContainer
         (
-            zhCN: "混流时引入外部媒体文件. 你能够以:分隔形式指定如下参数:\r\n\r\n" +
+            zhCN: "混流时引入本地媒体文件，可重复指定。主命令需同时启用 -M，mux 子命令也可使用。\r\n" +
+                  "可直接传入文件路径，或以 : 分隔如下参数（不支持目录）：\r\n\r\n" +
                   "* path=PATH: 指定媒体文件路径\r\n" +
-                  "* lang=CODE: 指定媒体文件语言代码 (非必须)\r\n" +
-                  "* name=NAME: 指定媒体文件描述信息 (非必须)\r\n\r\n" +
-                  "例如: \r\n" +
-                  "# 引入外部字幕\r\n" +
-                  "--mux-import path=zh-Hans.srt:lang=chi:name=\"中文 (简体)\"\r\n" +
-                  "# 引入外部音轨+字幕\r\n" +
-                  "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\"",
-            zhTW: "混流時引入外部媒體檔案. 你能夠以:分隔形式指定如下參數:\r\n\r\n" +
+                  "* lang=CODE: 指定轨道语言代码，如 eng、zh-Hans（可选）\r\n" +
+                  "* name=NAME: 指定轨道标题（可选）\r\n\r\n" +
+                  "复合参数值中的冒号需写为 \\:（包括 Windows 盘符）；直接传入路径时无需转义冒号。包含空格时请用引号包住整个参数。\r\n\r\n" +
+                  "例如:\r\n" +
+                  "# 直接引入外部字幕\r\n" +
+                  "--mux-import \"D:\\media\\subtitle.srt\"\r\n" +
+                  "# 指定字幕语言和标题\r\n" +
+                  "--mux-import \"path=zh-Hans.srt:lang=zh-Hans:name=中文 (简体)\"\r\n" +
+                  "# 引入外部音轨和字幕\r\n" +
+                  "--mux-import \"path=D\\:\\media\\audio.m4a:lang=eng:name=English Audio\" --mux-import \"path=D\\:\\media\\subtitle.srt:lang=eng:name=English Subtitles\"",
+            zhTW: "混流時引入本地媒體檔案，可重複指定。主命令需同時啟用 -M，mux 子命令也可使用。\r\n" +
+                  "可直接傳入檔案路徑，或以 : 分隔如下參數（不支援目錄）：\r\n\r\n" +
                   "* path=PATH: 指定媒體檔案路徑\r\n" +
-                  "* lang=CODE: 指定媒體檔案語言代碼 (非必須)\r\n" +
-                  "* name=NAME: 指定媒體檔案描述訊息 (非必須)\r\n\r\n" +
-                  "例如: \r\n" +
-                  "# 引入外部字幕\r\n" +
-                  "--mux-import path=zh-Hant.srt:lang=chi:name=\"中文 (繁體)\"\r\n" +
-                  "# 引入外部音軌+字幕\r\n" +
-                  "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\"",
-            enUS: "When MuxAfterDone enabled, allow to import local media files. OPTIONS is a colon separated list of:\r\n\r\n" +
-                  "* path=PATH: set file path\r\n" +
-                  "* lang=CODE: set media language code (not required)\r\n" +
-                  "* name=NAME: set description (not required)\r\n\r\n" +
-                  "Examples: \r\n" +
-                  "# import subtitle\r\n" +
-                  "--mux-import path=en-US.srt:lang=eng:name=\"English (Original)\"\r\n" +
-                  "# import audio and subtitle\r\n" +
-                  "--mux-import path=\"D\\:\\media\\atmos.m4a\":lang=eng:name=\"English Description Audio\" --mux-import path=\"D\\:\\media\\eng.vtt\":lang=eng:name=\"English (Description)\""
+                  "* lang=CODE: 指定軌道語言代碼，如 eng、zh-Hant（可選）\r\n" +
+                  "* name=NAME: 指定軌道標題（可選）\r\n\r\n" +
+                  "複合參數值中的冒號需寫為 \\:（包括 Windows 磁碟機代號）；直接傳入路徑時無需跳脫冒號。包含空格時請用引號包住整個參數。\r\n\r\n" +
+                  "例如:\r\n" +
+                  "# 直接引入外部字幕\r\n" +
+                  "--mux-import \"D:\\media\\subtitle.srt\"\r\n" +
+                  "# 指定字幕語言和標題\r\n" +
+                  "--mux-import \"path=zh-Hant.srt:lang=zh-Hant:name=中文 (繁體)\"\r\n" +
+                  "# 引入外部音軌和字幕\r\n" +
+                  "--mux-import \"path=D\\:\\media\\audio.m4a:lang=eng:name=English Audio\" --mux-import \"path=D\\:\\media\\subtitle.srt:lang=eng:name=English Subtitles\"",
+            enUS: "Import local media files when muxing; repeat for multiple files. Requires -M in the main command; also available in the mux subcommand.\r\n" +
+                  "Pass a file path directly, or use these colon-separated options (directories are not supported):\r\n\r\n" +
+                  "* path=PATH: media file path\r\n" +
+                  "* lang=CODE: track language code, e.g. eng or zh-Hans (optional)\r\n" +
+                  "* name=NAME: track title (optional)\r\n\r\n" +
+                  "Escape colons in option values as \\: (including Windows drive letters). Direct file paths do not need colon escaping. Quote the entire argument when it contains spaces.\r\n\r\n" +
+                  "Examples:\r\n" +
+                  "# Import a subtitle file directly\r\n" +
+                  "--mux-import \"D:\\media\\subtitle.srt\"\r\n" +
+                  "# Set subtitle language and title\r\n" +
+                  "--mux-import \"path=en-US.srt:lang=en-US:name=English (Original)\"\r\n" +
+                  "# Import audio and subtitles\r\n" +
+                  "--mux-import \"path=D\\:\\media\\audio.m4a:lang=eng:name=English Audio\" --mux-import \"path=D\\:\\media\\subtitle.srt:lang=eng:name=English Subtitles\""
         ),
         ["cmd_writeMetaJson"] = new TextContainer
         (
