@@ -88,14 +88,21 @@ internal partial class SimpleDownloadManager
             processing.Part = null;
             processing.Begin(ResString.processingPreparing);
         }
-        // 清单可能省略 codecs/channels，下载后再用实际探测结果兜底。
+        // 无 init 的 HLS TS 按用户选项直接拼接，保留源字节和时间戳。
+        // 同任务含带 init 的媒体时，沿用共同时间轴处理。
+        var binaryMerge = DownloaderConfig.MyOptions.BinaryMerge && StreamExtractor.ExtractorType == ExtractorType.HLS &&
+            stream.MediaType != MediaType.SUBTITLES &&
+            outputs.All(output => Path.GetExtension(output.FilePath).Equals(".ts", StringComparison.OrdinalIgnoreCase)) &&
+            SelectedSteams.Where(s => s.MediaType != MediaType.SUBTITLES)
+                .All(s => s.Playlist!.MediaParts.All(part => part.MediaInit == null));
+        // 转封装拼接需要兼容的媒体配置；清单可能省略 codecs/channels，下载后再用实际探测结果兜底。
         // 音频采样率、声道布局和 AAC profile 变化无法无损归并为一条固定配置的轨道。
         var signatures = outputs.Select(o => string.Join("|", o.Mediainfos
             .Where(info => info.Type is "Video" or "Audio")
             .Select(info => info.Type + ":" + (info.BaseInfo ?? "").Split(' ')[0] +
                 (info.Type == "Audio" ? ":" + Regex.Match(info.Text ?? "", @"\b\d+ Hz,\s*[^,]+").Value +
                     ":" + Regex.Match(info.BaseInfo ?? "", @"^aac \([^)]*\)").Value : "")))).Distinct().ToList();
-        if (signatures.Count > 1)
+        if (!binaryMerge && signatures.Count > 1)
             throw new NotSupportedException(ResString.vodPartsIncompatible);
         var first = outputs[0];
         var saveName = !string.IsNullOrWhiteSpace(DownloaderConfig.MyOptions.SavePattern)
@@ -112,7 +119,7 @@ internal partial class SimpleDownloadManager
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         // 单段且没有裁剪/输出偏移时，子下载器的合并结果就是最终文件。
-        // 若其它媒体轨道需要保留公共时间轴，则本轨道也必须完成时间轴归一化。
+        // 转封装时，若其它媒体轨道需要保留公共时间轴，本轨道也需要完成时间轴归一化。
         var copySingle = outputs.Count == 1 && SelectedSteams.Where(s => s.MediaType != MediaType.SUBTITLES)
             .All(CanUseSinglePartOutput);
         bool success;
@@ -120,6 +127,13 @@ internal partial class SimpleDownloadManager
         {
             processing?.Begin(ResString.processingSubtitles);
             success = await MergeSubtitlesAsync(parts, outputs, outputPath);
+        }
+        else if (binaryMerge)
+        {
+            processing?.Begin(ResString.processingMerge, logStart: false);
+            await MergeUtil.CombineMultipleFilesIntoSingleFileAsync(outputs.Select(output => output.FilePath).ToArray(),
+                outputPath, overwrite: false, progress: processing == null ? null : processing.Report);
+            success = true;
         }
         else if (copySingle)
         {
@@ -147,7 +161,9 @@ internal partial class SimpleDownloadManager
         processing?.Begin(ResString.processingFinishing);
         first.FilePath = outputPath;
         first.Duration = parts.Sum(part => part.OutputDuration ?? part.MediaSegments.Sum(segment => segment.Duration));
-        first.PreserveTimestamp = !subtitle && !copySingle && parts.Any(p => p.OutputStart != null);
+        // 只有完成时间轴归一化的媒体才要求混流保留该时间轴。
+        // 原始 TS 可能在 discontinuity 处重置时钟，混流器仍需处理不连续时间戳。
+        first.PreserveTimestamp = !subtitle && !binaryMerge && !copySingle && parts.Any(p => p.OutputStart != null);
         lock (OutputFiles)
             OutputFiles.Add(first);
         if (DownloaderConfig.MyOptions.DelAfterDone)

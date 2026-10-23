@@ -17,6 +17,52 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 public class VodLegacyInitTests
 {
     [Theory]
+    [InlineData("none", false)]
+    [InlineData("ffmpeg", false)]
+    [InlineData("ffmpeg", true)]
+    [InlineData("mkvmerge", false)]
+    public async Task BinaryMergeKeepsTsPartsUnchangedBeforeMuxing(string muxer, bool resetClock)
+    {
+        if (!HasTool("ffmpeg") || muxer != "none" && !HasTool("ffprobe") ||
+            muxer == "mkvmerge" && !OnPath("mkvmerge"))
+            return;
+        var root = Directory.CreateTempSubdirectory("vod-binary-parts-").FullName;
+        try
+        {
+            var manifest = Path.Combine(root, "source.m3u8");
+            await Run("ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=160x90:r=25",
+                "-t", "6", "-c:v", "libx264", "-g", "50", "-bf", "0", "-f", "hls", "-hls_time", "2",
+                "-hls_segment_filename", Path.Combine(root, "media-%d.ts"), manifest);
+            if (resetClock)
+                await Run("ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=160x90:r=25",
+                    "-t", "2", "-c:v", "libx264", "-g", "50", "-bf", "0", "-f", "mpegts", Path.Combine(root, "media-2.ts"));
+            var content = await File.ReadAllTextAsync(manifest);
+            await File.WriteAllTextAsync(manifest, content.Replace("#EXTINF:2.000000,\nmedia-2",
+                "#EXT-X-DISCONTINUITY\n#EXTINF:2.000000,\nmedia-2"));
+            var expected = Enumerable.Range(0, 3).SelectMany(i =>
+                File.ReadAllBytes(Path.Combine(root, $"media-{i}.ts"))).ToArray();
+            using var extractor = new StreamExtractor(new ParserConfig());
+            await extractor.LoadSourceFromUrlAsync(manifest);
+            var streams = await extractor.ExtractStreamsAsync();
+            Assert.Equal(2, streams[0].Playlist!.MediaParts.Count);
+            VodStreamPlanner.CaptureHlsTimeline(streams);
+            VodStreamPlanner.AlignHlsDiscontinuities(streams);
+            var options = CreateOptions(root);
+            options.BinaryMerge = true;
+            options.MuxAfterDone = muxer != "none";
+            options.MuxOptions = new MuxOptions { MuxFormat = MuxFormat.MKV, KeepFiles = true, UseMkvmerge = muxer == "mkvmerge" };
+            options.MkvmergeBinaryPath = "mkvmerge";
+            var manager = new SimpleDownloadManager(new DownloaderConfig
+                { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options }, streams, extractor);
+            Assert.True(await manager.StartDownloadAsync());
+            Assert.Equal(expected, await File.ReadAllBytesAsync(Path.Combine(options.SaveDir!, "result.ts")));
+            if (options.MuxAfterDone)
+                await AssertVideo(Path.Combine(options.SaveDir!, "tmp.mkv"), 6, 150);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Theory]
     [InlineData("hls-ts", "all", false)]
     [InlineData("hls-ts", "range", false)]
     [InlineData("hls-ts", "ad", false)]
