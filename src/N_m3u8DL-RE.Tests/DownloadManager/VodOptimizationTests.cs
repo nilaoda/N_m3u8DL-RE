@@ -212,8 +212,13 @@ public class VodOptimizationTests
             if (ts)
             {
                 var startTime = await Run("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=start_time", "-of", "default=noprint_wrappers=1:nokey=1", output);
+                // 二进制合并保留被选分片的源字节和起始时间；转封装才将媒体归零。
+                var expectedStart = scenario == "ts-binary-range" ? 3.4 : 0;
                 Assert.All(startTime.Split('\n', StringSplitOptions.RemoveEmptyEntries), time =>
-                    Assert.InRange(double.Parse(time, CultureInfo.InvariantCulture), -0.001, 0.001));
+                    Assert.InRange(double.Parse(time, CultureInfo.InvariantCulture), expectedStart - 0.001, expectedStart + 0.001));
+                if (scenario == "ts-binary-range")
+                    Assert.Equal(File.ReadAllBytes(Path.Combine(root, "ad-media-1.ts"))
+                        .Concat(File.ReadAllBytes(Path.Combine(root, "media-2.ts"))).ToArray(), await File.ReadAllBytesAsync(output));
             }
             var sub = WebVttSub.Parse(await File.ReadAllTextAsync(Path.Combine(root, "out", "result.en.vtt")));
             Assert.Equal(2, sub.Cues.Count);
