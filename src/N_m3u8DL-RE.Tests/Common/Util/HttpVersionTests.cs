@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Security;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging;
+using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Util;
 using N_m3u8DL_RE.DownloadManager;
@@ -21,10 +23,12 @@ namespace N_m3u8DL_RE.Tests.Common.Util;
 public class HttpVersionTests
 {
     [Theory]
-    [InlineData(HttpProtocols.Http2, "HTTP/2")]
-    [InlineData(HttpProtocols.Http1AndHttp2, "HTTP/2")]
-    [InlineData(HttpProtocols.Http1, "HTTP/1.1")]
-    public async Task MediaRequestsNegotiateHttp2AndFallBackToHttp1(HttpProtocols protocols, string expectedProtocol)
+    [InlineData(null, HttpProtocols.Http1AndHttp2, "HTTP/1.1")]
+    [InlineData("1.1", HttpProtocols.Http1AndHttp2, "HTTP/1.1")]
+    [InlineData("2", HttpProtocols.Http2, "HTTP/2")]
+    [InlineData("2", HttpProtocols.Http1AndHttp2, "HTTP/2")]
+    [InlineData("2", HttpProtocols.Http1, "HTTP/1.1")]
+    public async Task MediaRequestsUseHttp1ByDefaultAndAllowOptingIntoHttp2(string? httpVersion, HttpProtocols protocols, string expectedProtocol)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
         using var key = RSA.Create(2048);
@@ -89,53 +93,104 @@ public class HttpVersionTests
         await app.StartAsync(timeout.Token);
         var url = app.Urls.Single();
         Dictionary<string, string> headers = new() { ["X-Fixture"] = "fixture" };
-        using var source = await HTTPUtil.GetWebSourceResultAsync(url + "/redirect-manifest", headers,
-            cancellationToken: timeout.Token);
-        Assert.Equal(manifest, source.Source);
-        Assert.Equal(data[..16], await HTTPUtil.GetBytesAsync(url + "/redirect-key", headers, timeout.Token));
-        Assert.Equal("ok", await HTTPUtil.GetPostResponseAsync(url + "/post", "body"u8.ToArray()));
-        Assert.True(await LargeSingleFileSplitUtil.CanSplitAsync(url + "/file", headers));
-        Assert.NotNull(await LargeSingleFileSplitUtil.SplitUrlAsync(new MediaSegment { Url = url + "/file" }, headers));
+        if (httpVersion == null)
+        {
+            using var source = await HTTPUtil.GetWebSourceResultAsync(url + "/redirect-manifest", headers,
+                cancellationToken: timeout.Token);
+            Assert.Equal(manifest, source.Source);
+            Assert.Equal(data[..16], await HTTPUtil.GetBytesAsync(url + "/redirect-key", headers, timeout.Token));
+            Assert.Equal("ok", await HTTPUtil.GetPostResponseAsync(url + "/post", "body"u8.ToArray()));
+            Assert.True(await LargeSingleFileSplitUtil.CanSplitAsync(url + "/file", headers));
+            Assert.NotNull(await LargeSingleFileSplitUtil.SplitUrlAsync(new MediaSegment { Url = url + "/file" }, headers));
 
-        var directory = Directory.CreateTempSubdirectory("re-http2-").FullName;
+            var directory = Directory.CreateTempSubdirectory("re-http2-").FullName;
+            try
+            {
+                var segmentPath = Path.Combine(directory, "segment.bin");
+                await DownloadUtil.DownloadToFileAsync(url + "/redirect-file", segmentPath, new SpeedContainer(), timeout, headers);
+                Assert.Equal(data, await File.ReadAllBytesAsync(segmentPath, timeout.Token));
+
+                using var handler = new SocketsHttpHandler
+                {
+                    UseProxy = false,
+                    AllowAutoRedirect = false,
+                    ConnectCallback = NetworkInterfaceBinding.Create("127.0.0.1").ConnectAsync,
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        RemoteCertificateValidationCallback = (_, cert, _, _) =>
+                            cert != null && cert.GetRawCertData().AsSpan().SequenceEqual(certificate.RawData),
+                    },
+                };
+                using var client = new HttpClient(handler)
+                {
+                    DefaultRequestVersion = HttpVersion.Version11,
+                    DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
+                };
+                var binaryPath = Path.Combine(directory, "binary.bin");
+                var manager = new BinaryDownloadManager(client, blockSize: 512);
+                await manager.DownloadAsync(url + "/redirect-file", binaryPath, headers, threadCount: 2, retryCount: 0,
+                    onLength: length => Assert.Equal(data.Length, length), onReceived: _ => { }, onDownloaded: _ => { },
+                    cancellationToken: timeout.Token);
+                Assert.Equal(data, await File.ReadAllBytesAsync(binaryPath, timeout.Token));
+            }
+            finally
+            {
+                Directory.Delete(directory, true);
+            }
+
+            Assert.Contains(requests, request => request.Method == "HEAD");
+        }
+        else
+        {
+            await DownloadWithCliAsync(url, data, httpVersion, expectedProtocol, timeout.Token);
+        }
+
+        Assert.All(requests, request => Assert.Equal(expectedProtocol, request.Protocol));
+        Assert.All(requests.Where(request => request.Path != "/post"), request => Assert.Equal("fixture", request.Header));
+        Assert.Contains(requests, request => request.Range.Length > 0);
+        await app.StopAsync(timeout.Token);
+    }
+
+    private static async Task DownloadWithCliAsync(string url, byte[] data, string httpVersion, string expectedProtocol,
+        CancellationToken cancellationToken)
+    {
+        var directory = Directory.CreateTempSubdirectory("re-http-version-cli-").FullName;
         try
         {
-            var segmentPath = Path.Combine(directory, "segment.bin");
-            await DownloadUtil.DownloadToFileAsync(url + "/redirect-file", segmentPath, new SpeedContainer(), timeout, headers);
-            Assert.Equal(data, await File.ReadAllBytesAsync(segmentPath, timeout.Token));
-
-            using var handler = new SocketsHttpHandler
+            var info = new ProcessStartInfo("dotnet")
             {
-                UseProxy = false,
-                AllowAutoRedirect = false,
-                ConnectCallback = NetworkInterfaceBinding.Create("127.0.0.1").ConnectAsync,
-                SslOptions = new SslClientAuthenticationOptions
-                {
-                    RemoteCertificateValidationCallback = (_, cert, _, _) =>
-                        cert != null && cert.GetRawCertData().AsSpan().SequenceEqual(certificate.RawData),
-                },
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                WorkingDirectory = directory,
             };
-            using var client = new HttpClient(handler)
+            foreach (var arg in new[] { typeof(CommandInvoker).Assembly.Location, url + "/redirect-file",
+                "--http-version", httpVersion, "--interface", "127.0.0.1", "--use-system-proxy", "false",
+                "-H", "X-Fixture: fixture", "--save-dir", directory, "--save-name", "result.bin",
+                "--thread-count", "2", "--download-retry-count", "0", "--no-log", "--no-ansi-color",
+                "--disable-update-check", "--log-level", "DEBUG" })
+                info.ArgumentList.Add(arg);
+            using var process = Process.Start(info)!;
+            try
             {
-                DefaultRequestVersion = HttpVersion.Version20,
-                DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
-            };
-            var binaryPath = Path.Combine(directory, "binary.bin");
-            var manager = new BinaryDownloadManager(client, blockSize: 512);
-            await manager.DownloadAsync(url + "/redirect-file", binaryPath, headers, threadCount: 2, retryCount: 0,
-                onLength: length => Assert.Equal(data.Length, length), onReceived: _ => { }, onDownloaded: _ => { },
-                cancellationToken: timeout.Token);
-            Assert.Equal(data, await File.ReadAllBytesAsync(binaryPath, timeout.Token));
+                var stdout = process.StandardOutput.ReadToEndAsync(cancellationToken);
+                var stderr = process.StandardError.ReadToEndAsync(cancellationToken);
+                await process.WaitForExitAsync(cancellationToken);
+                var output = await stdout + await stderr;
+                Assert.True(process.ExitCode == 0, output);
+                // 响应日志须反映真实协商结果，包括 HTTP/2 回退为 HTTP/1.1 的情况。
+                Assert.Contains(expectedProtocol == "HTTP/2" ? "HTTP/2.0 200" : "HTTP/1.1 200", output);
+                Assert.Equal(data, await File.ReadAllBytesAsync(Path.Combine(directory, "result.bin"), cancellationToken));
+            }
+            finally
+            {
+                if (!process.HasExited)
+                    process.Kill(entireProcessTree: true);
+            }
         }
         finally
         {
             Directory.Delete(directory, true);
         }
-
-        Assert.All(requests, request => Assert.Equal(expectedProtocol, request.Protocol));
-        Assert.All(requests.Where(request => request.Path != "/post"), request => Assert.Equal("fixture", request.Header));
-        Assert.Contains(requests, request => request.Method == "HEAD");
-        Assert.Contains(requests, request => request.Range.Length > 0);
-        await app.StopAsync(timeout.Token);
     }
 }

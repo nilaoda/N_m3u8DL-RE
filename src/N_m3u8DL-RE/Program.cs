@@ -87,6 +87,7 @@ internal class Program
         ServicePointManager.DefaultConnectionLimit = 1024;
         try { Console.CursorVisible = true; } catch { }
         HTTPUtil.AppHttpClient.Timeout = TimeSpan.FromSeconds(option.HttpRequestTimeout);
+        HTTPUtil.AppHttpClient.DefaultRequestVersion = option.HttpVersion;
         if (Console.IsOutputRedirected || Console.IsErrorRedirected)
         {
             option.ForceAnsiConsole = true;

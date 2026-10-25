@@ -61,6 +61,7 @@ internal static partial class CommandInvoker
     private static readonly Option<int> ThreadCount = new Option<int>("--thread-count") { HelpName = "number", DefaultValueFactory = _ => Environment.ProcessorCount }.WithDescription(() => ResString.cmd_threadCount);
     private static readonly Option<int> DownloadRetryCount = new Option<int>("--download-retry-count") { HelpName = "number", DefaultValueFactory = _ => 7 }.WithDescription(() => ResString.cmd_downloadRetryCount);
     private static readonly Option<double> HttpRequestTimeout = new Option<double>("--http-request-timeout") { HelpName = "seconds", DefaultValueFactory = _ => 100 }.WithDescription(() => ResString.cmd_httpRequestTimeout);
+    private static readonly Option<string> HttpVersion = new Option<string>("--http-version") { DefaultValueFactory = _ => "1.1" }.AcceptOnlyFromAmong("1.1", "2").WithDescription(() => ResString.cmd_httpVersion);
     private static readonly Option<bool> SkipMerge = new Option<bool>("--skip-merge").WithDefault(false).WithDescription(() => ResString.cmd_skipMerge);
     private static readonly Option<bool> SkipDownload = new Option<bool>("--skip-download").WithDefault(false).WithDescription(() => ResString.cmd_skipDownload);
     private static readonly Option<bool> NoDateInfo = new Option<bool>("--no-date-info").WithDefault(false).WithDescription(() => ResString.cmd_noDateInfo);
@@ -706,6 +707,7 @@ internal static partial class CommandInvoker
             Cookies = result.GetValue(Cookies),
             DownloadRetryCount = result.GetValue(DownloadRetryCount),
             HttpRequestTimeout = result.GetValue(HttpRequestTimeout),
+            HttpVersion = result.GetValue(HttpVersion) == "2" ? System.Net.HttpVersion.Version20 : System.Net.HttpVersion.Version11,
             HttpRequestTimeoutSpecified = result.GetResult(HttpRequestTimeout) is { Implicit: false },
             BaseUrl = result.GetValue(BaseUrl),
             MuxImports = result.GetValue(MuxImports),
@@ -797,7 +799,7 @@ internal static partial class CommandInvoker
             symbol.Description = text();
         var root = new RootCommand(VERSION_INFO)
         {
-            Input, Config, NoConfig, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
+            Input, Config, NoConfig, TmpDir, SaveDir, SaveName, SavePattern, LogFilePath, BaseUrl, ThreadCount, DownloadRetryCount, HttpRequestTimeout, HttpVersion, ForceAnsiConsole, NoAnsiColor,AutoSelect, SkipMerge, SkipDownload, CheckSegmentsCount,
             BinaryMerge, FFmpegConcatMode, UseFFmpegConcatDemuxer, DelAfterDone, NoDateInfo, NoLog, WriteMetaJson, AppendUrlParams, ConcurrentDownload, Headers, Cookies, SubOnly, SubtitleFormat, AutoSubtitleFix,
             FFmpegBinaryPath,
             LogLevel, UILanguage, UrlProcessorArgs, Keys, KeyTextFile, DecryptionEngine, DecryptionBinaryPath, UseShakaPackager, MP4RealTimeDecryption,
