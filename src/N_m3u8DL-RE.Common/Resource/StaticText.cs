@@ -1201,6 +1201,30 @@ internal static class StaticText
             zhTW: "HLS BYTERANGE 省略偏移時，必須存在前一個位元組範圍。",
             enUS: "Implicit HLS BYTERANGE requires a preceding byte range."
         ),
+        ["hlsInvalidVariable"] = new TextContainer
+        (
+            zhCN: "HLS 变量定义无效、重复或无法获取值",
+            zhTW: "HLS 變數定義無效、重複或無法取得值",
+            enUS: "Invalid, duplicate or unavailable HLS variable definition"
+        ),
+        ["hlsUndefinedVariable"] = new TextContainer
+        (
+            zhCN: "引用了未定义的 HLS 变量",
+            zhTW: "引用了未定義的 HLS 變數",
+            enUS: "Undefined HLS variable reference"
+        ),
+        ["hlsExpectedMediaPlaylist"] = new TextContainer
+        (
+            zhCN: "预期为 HLS 媒体清单，但返回了主清单",
+            zhTW: "預期為 HLS 媒體清單，但傳回了主清單",
+            enUS: "Expected an HLS media playlist but received a multivariant playlist"
+        ),
+        ["hlsRefreshFromMaster"] = new TextContainer
+        (
+            zhCN: "子清单请求失败，尝试从主清单刷新地址：",
+            zhTW: "子清單請求失敗，嘗試從主清單重新取得位址：",
+            enUS: "Media playlist request failed; refreshing its URL from the multivariant playlist:"
+        ),
         ["hlsInvalidDuration"] = new TextContainer
         (
             zhCN: "HLS 分片时长无效，清单中也没有可用于估算的有效时长。",

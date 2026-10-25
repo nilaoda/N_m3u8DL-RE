@@ -5,6 +5,7 @@ using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Parser.Util;
 using N_m3u8DL_RE.Parser.Constants;
+using N_m3u8DL_RE.Parser.Processor.HLS;
 using N_m3u8DL_RE.Common.Util;
 using System.Globalization;
 
@@ -25,6 +26,7 @@ internal class HLSExtractor : IExtractor
     private string M3u8Content = string.Empty;
     private bool MasterM3u8Flag = false;
     private bool durationWarningShown;
+    private readonly HLSVariableContentProcessor variableProcessor;
 
     public ParserConfig ParserConfig { get; set; }
 
@@ -32,6 +34,7 @@ internal class HLSExtractor : IExtractor
     {
         this.ParserConfig = parserConfig;
         this.M3u8Url = parserConfig.Url ?? string.Empty;
+        this.variableProcessor = new HLSVariableContentProcessor(() => M3u8Url);
         this.SetBaseUrl();
     }
 
@@ -51,7 +54,8 @@ internal class HLSExtractor : IExtractor
             throw new Exception(ResString.badM3u8);
         }
 
-        foreach (var p in ParserConfig.ContentProcessors)
+        // 内容修正完成后再展开变量，且每个提取器独立维护 master 变量作用域。
+        foreach (var p in ParserConfig.ContentProcessors.Append(variableProcessor))
         {
             if (p.CanProcess(ExtractorType, M3u8Content, ParserConfig))
             {
@@ -222,6 +226,10 @@ internal class HLSExtractor : IExtractor
 
     private Task<Playlist> ParseListAsync(StreamSpec? stream = null, CancellationToken cancellationToken = default, bool liveRefresh = false, TimeSpan? requestTimeout = null)
     {
+        // 主清单不能作为媒体清单解析，否则会把请求异常误判为尚无分片的直播。
+        if (variableProcessor.IsMasterPlaylist)
+            throw new FormatException($"{ResString.hlsExpectedMediaPlaylist}: {M3u8Url}");
+
         // 独立媒体播放列表没有轨道类型；无法识别的主变体沿用视频范围。
         var applyCustomHLS = stream == null || (ParserConfig.CustomHLSScope switch
         {
@@ -548,9 +556,14 @@ internal class HLSExtractor : IExtractor
 
     public async Task<List<StreamSpec>> ExtractStreamsAsync(string rawText)
     {
+        MasterM3u8Flag = false;
+        variableProcessor.Reset();
+        // 重新解析入口内容时恢复其 URL，避免沿用上一次加载的子清单上下文。
+        this.M3u8Url = ParserConfig.Url;
+        this.SetBaseUrl();
         this.M3u8Content = rawText;
         this.PreProcessContent();
-        if (M3u8Content.Contains(HLSTags.ext_x_stream_inf))
+        if (variableProcessor.IsMasterPlaylist)
         {
             Logger.Warn(ResString.masterM3u8Found);
             var lists = await ParseMasterListAsync();
@@ -570,7 +583,7 @@ internal class HLSExtractor : IExtractor
         ];
     }
 
-    private async Task LoadM3u8FromUrlAsync(string url, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null)
+    private async Task LoadM3u8FromUrlAsync(string url, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null, bool loadingMaster = false)
     {
         // Logger.Info(ResString.loadingUrl + url);
         if (url.StartsWith("file:"))
@@ -584,9 +597,9 @@ internal class HLSExtractor : IExtractor
             {
                 (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(url, ParserConfig.Headers, cancellationToken, requestTimeout);
             }
-            catch (HttpRequestException) when (ParserConfig.OriginalUrl.StartsWith("http") && url != ParserConfig.OriginalUrl)
+            catch (HttpRequestException) when ((!MasterM3u8Flag || loadingMaster) && ParserConfig.OriginalUrl.StartsWith("http") && url != ParserConfig.OriginalUrl)
             {
-                // 当URL无法访问时，再请求原始URL
+                // master 或独立媒体清单的跳转地址失效时重新请求原始URL；子清单由外层刷新。
                 (this.M3u8Content, url) = await HTTPUtil.GetWebSourceAndNewUrlAsync(ParserConfig.OriginalUrl, ParserConfig.Headers, cancellationToken, requestTimeout);
             }
         }
@@ -604,7 +617,7 @@ internal class HLSExtractor : IExtractor
     private async Task RefreshUrlFromMaster(List<StreamSpec> lists, CancellationToken cancellationToken, TimeSpan? requestTimeout)
     {
         // 重新加载master m3u8, 刷新选中流的URL
-        await LoadM3u8FromUrlAsync(ParserConfig.Url, cancellationToken, requestTimeout);
+        await LoadM3u8FromUrlAsync(ParserConfig.Url, cancellationToken, requestTimeout, loadingMaster: true);
         var newStreams = await ParseMasterListAsync();
         newStreams = newStreams.DistinctBy(p => p.Url).ToList();
         foreach (var l in lists)
@@ -628,9 +641,9 @@ internal class HLSExtractor : IExtractor
                 // 直接重新加载m3u8
                 await LoadM3u8FromUrlAsync(lists[i].Url!, cancellationToken, requestTimeout);
             }
-            catch (HttpRequestException) when (MasterM3u8Flag)
+            catch (HttpRequestException ex) when (MasterM3u8Flag)
             {
-                Logger.WarnMarkUp("Can not load m3u8. Try refreshing url from master url...");
+                Logger.Warn($"{ResString.hlsRefreshFromMaster} {lists[i].Url} ({ex.Message})");
                 // 当前URL无法加载 尝试从Master链接中刷新URL
                 await RefreshUrlFromMaster(lists, cancellationToken, requestTimeout);
                 await LoadM3u8FromUrlAsync(lists[i].Url!, cancellationToken, requestTimeout);

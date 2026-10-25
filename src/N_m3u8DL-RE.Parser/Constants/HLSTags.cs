@@ -3,6 +3,7 @@
 internal static class HLSTags
 {
     public const string ext_m3u = "#EXTM3U";
+    public const string ext_x_define = "#EXT-X-DEFINE";
     public const string ext_x_targetduration = "#EXT-X-TARGETDURATION";
     public const string ext_x_media_sequence = "#EXT-X-MEDIA-SEQUENCE";
     public const string ext_x_discontinuity_sequence = "#EXT-X-DISCONTINUITY-SEQUENCE";
