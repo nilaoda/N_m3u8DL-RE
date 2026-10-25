@@ -286,6 +286,10 @@ public static class ResString
     public static string hlsSubtitleOriginMissing => GetText("hlsSubtitleOriginMissing");
     public static string hlsTimestampMapInvalid => GetText("hlsTimestampMapInvalid");
     public static string hlsByteRangeMissingPrevious => GetText("hlsByteRangeMissingPrevious");
+    public static string hlsInvalidVariable => GetText("hlsInvalidVariable");
+    public static string hlsUndefinedVariable => GetText("hlsUndefinedVariable");
+    public static string hlsExpectedMediaPlaylist => GetText("hlsExpectedMediaPlaylist");
+    public static string hlsRefreshFromMaster => GetText("hlsRefreshFromMaster");
     public static string hlsInvalidDuration => GetText("hlsInvalidDuration");
     public static string hlsInvalidDurationFallback => GetText("hlsInvalidDurationFallback");
     public static string mediaPartInputMismatch => GetText("mediaPartInputMismatch");
