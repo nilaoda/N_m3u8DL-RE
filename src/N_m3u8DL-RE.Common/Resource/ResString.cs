@@ -176,6 +176,7 @@ public static class ResString
     public static string cmd_threadCount => GetText("cmd_threadCount");
     public static string cmd_downloadRetryCount => GetText("cmd_downloadRetryCount");
     public static string cmd_httpRequestTimeout => GetText("cmd_httpRequestTimeout");
+    public static string cmd_httpVersion => GetText("cmd_httpVersion");
     public static string cmd_tmpDir => GetText("cmd_tmpDir");
     public static string cmd_uiLanguage => GetText("cmd_uiLanguage");
     public static string cmd_urlProcessorArgs => GetText("cmd_urlProcessorArgs");

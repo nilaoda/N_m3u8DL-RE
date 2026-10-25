@@ -742,6 +742,12 @@ internal static class StaticText
             zhTW: "HTTP請求逾時(秒)；分片直播未指定時自動調整，指定後也用於分片連續無資料逾時，不限制總下載時長",
             enUS: "HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time"
         ),
+        ["cmd_httpVersion"] = new TextContainer
+        (
+            zhCN: "HTTP协议版本；默认使用1.1，选择2时优先HTTP/2并允许回退HTTP/1.1",
+            zhTW: "HTTP協定版本；預設使用1.1，選擇2時優先HTTP/2並允許退回HTTP/1.1",
+            enUS: "HTTP version; defaults to 1.1; selecting 2 prefers HTTP/2 and allows fallback to HTTP/1.1"
+        ),
         ["cmd_decryptionBinaryPath"] = new TextContainer
         (
             zhCN: @"MP4解密所用工具的路径, 例如 C:\Tools\mp4decrypt.exe",

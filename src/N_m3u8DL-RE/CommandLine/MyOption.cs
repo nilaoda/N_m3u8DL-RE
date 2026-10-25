@@ -88,6 +88,10 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.HttpRequestTimeout"/>.
     /// </summary>
     public double HttpRequestTimeout { get; set; }
+    /// <summary>
+    /// See: <see cref="CommandInvoker.HttpVersion"/>.
+    /// </summary>
+    public Version HttpVersion { get; set; } = System.Net.HttpVersion.Version11;
     // 保留参数来源，直播录制仅在未手动设置时启用自动超时。
     public bool HttpRequestTimeoutSpecified { get; set; }
     /// <summary>

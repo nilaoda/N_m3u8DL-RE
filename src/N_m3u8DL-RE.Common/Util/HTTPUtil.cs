@@ -23,10 +23,10 @@ public static class HTTPUtil
 
     private static readonly CookieFileHandler CookieHandler = new(HttpHandler);
 
-    public static readonly HttpClient AppHttpClient = new(CookieHandler)
+    public static readonly HttpClient AppHttpClient = new(new HttpResponseLoggingHandler(CookieHandler))
     {
         Timeout = TimeSpan.FromSeconds(100),
-        DefaultRequestVersion = HttpVersion.Version20,
+        DefaultRequestVersion = HttpVersion.Version11,
         DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower,
     };
 
@@ -34,7 +34,7 @@ public static class HTTPUtil
     {
         client ??= AppHttpClient;
         // SendAsync 不会把 HttpClient 的默认版本复制到手动创建的请求，必须显式设置。
-        // 默认在 HTTPS 上优先协商 HTTP/2，服务端不支持时回退 HTTP/1.1。
+        // 默认使用 HTTP/1.1；显式启用 HTTP/2 时允许回退 HTTP/1.1。
         return new HttpRequestMessage(method, url)
         {
             Version = client.DefaultRequestVersion,
