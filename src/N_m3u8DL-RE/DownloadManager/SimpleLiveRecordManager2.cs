@@ -53,6 +53,7 @@ internal class SimpleLiveRecordManager2
     ConcurrentDictionary<int, bool> RecordLimitReachedDic = new(); // 各流是否达到上限
     ConcurrentDictionary<int, bool> LiveEndDic = new(); // 各流是否已结束直播(出现ENDLIST)
     ConcurrentDictionary<int, LiveSegmentTracker> SegmentTrackers = new(); // 各流的去重边界与录制顺序
+    ConcurrentDictionary<int, LiveSegmentDownloadQueue> DownloadQueues = new();
     ConcurrentDictionary<int, LiveSegmentNotFoundPolicy> NotFoundPolicies = new(); // 各流最新窗口与尾部 404 等待策略
     ConcurrentDictionary<int, (TimeSpan Request, TimeSpan Read)> RequestTimeouts = new(); // 各轨道的请求和无数据超时
     CancellationTokenSource CancellationTokenSource = new(); // 取消Wait
@@ -116,10 +117,18 @@ internal class SimpleLiveRecordManager2
     private async Task<DownloadResult?> DownloadLiveSegmentAsync(MediaSegment segment, string path,
         SpeedContainer speedContainer, Dictionary<string, string> headers, TimeSpan networkTimeout, int taskId, bool isInit = false)
     {
+        if (!isInit)
+        {
+            var result = await DownloadQueues[taskId].TakeAsync(segment);
+            var destination = Path.ChangeExtension(path, null);
+            if (result is { Success: true } && result.ActualFilePath != destination)
+            {
+                File.Move(result.ActualFilePath, destination);
+                result.ActualFilePath = destination;
+            }
+            return result;
+        }
         var reconnecting = false;
-        var notFoundFailures = 0;
-        var notFoundStart = 0L;
-        var publicationWait = TimeSpan.Zero;
         while (true)
         {
             try
@@ -129,31 +138,6 @@ internal class SimpleLiveRecordManager2
                 if (reconnecting)
                     Logger.Info(ResString.liveNetworkRecovered);
                 return result;
-            }
-            catch (HttpRequestException ex) when (!isInit && ex.StatusCode == HttpStatusCode.NotFound)
-            {
-                var policy = NotFoundPolicies[taskId];
-                if (++notFoundFailures == 1)
-                {
-                    notFoundStart = Stopwatch.GetTimestamp();
-                    publicationWait = policy.GetPublicationWait(segment);
-                }
-                if (!policy.ShouldRetry(segment, notFoundFailures, DownloaderConfig.MyOptions.DownloadRetryCount,
-                    Stopwatch.GetElapsedTime(notFoundStart), publicationWait))
-                {
-                    Logger.Warn(ResString.liveSegmentUnavailable);
-                    return null;
-                }
-                if (!reconnecting)
-                    Logger.Warn(ResString.liveSegmentNotReady);
-                reconnecting = true;
-                await Task.Delay(TimeSpan.FromSeconds(NetworkRetryDelaySeconds), DownloadCancellationTokenSource.Token);
-            }
-            catch (HttpRequestException ex) when (!isInit && ex.StatusCode == HttpStatusCode.Gone)
-            {
-                // 410 表示服务端已移除媒体，保留后续分片并在录制结果中标记缺片。
-                Logger.Warn(ResString.liveSegmentUnavailable);
-                return null;
             }
             catch (Exception ex) when (!DownloadCancellationTokenSource.IsCancellationRequested && RetryUtil.IsTransientNetworkError(ex))
             {
@@ -330,9 +314,29 @@ internal class SimpleLiveRecordManager2
         if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
         if (!Directory.Exists(saveDir)) Directory.CreateDirectory(saveDir);
 
+        // 下载生产者持续接收新批次，按序合并不再决定下一批何时开始请求。
+        var incoming = source;
+        source = new BufferBlock<LiveSegmentBatch>();
+        var attemptOptions = DownloaderConfig.MyOptions.Clone();
+        attemptOptions.DownloadRetryCount = 0;
+        var attemptDownloader = new SimpleDownloader(new DownloaderConfig
+        {
+            DirPrefix = DownloaderConfig.DirPrefix, MyOptions = attemptOptions,
+            Headers = headers, CheckContentLength = DownloaderConfig.CheckContentLength,
+        });
+        await using var downloads = new LiveSegmentDownloadQueue(DownloaderConfig.MyOptions.ThreadCount,
+            DownloaderConfig.MyOptions.DownloadRetryCount, NotFoundPolicies[task.Id],
+            (segment, path, token) => attemptDownloader.DownloadSegmentAsync(segment, path, speedContainer, headers,
+                cancellationToken: token, throwOnFailure: true,
+                networkTimeout: LiveRequestTimeoutPolicy.GetSegmentTimeout(segment, RequestTimeouts[task.Id].Read)),
+            () => { fatalError = true; StopRecording(); }, DownloadCancellationTokenSource.Token);
+        DownloadQueues[task.Id] = downloads;
+        using var prefetchStop = CancellationTokenSource.CreateLinkedTokenSource(DownloadCancellationTokenSource.Token);
+        var prefetch = PrefetchSegmentsAsync(incoming, source, downloads, streamSpec, task.Id, tmpDir, prefetchStop.Token);
+
         try
         {
-            while (true && await source.OutputAvailableAsync())
+            while (await source.OutputAvailableAsync())
             {
                 // 接收新片段，尽量合并使用相同 init 的待处理批次。
                 // 有时每次只有很少的片段，但是之前的片段下载慢，导致后面还没下载的片段都失效了
@@ -871,9 +875,6 @@ internal class SimpleLiveRecordManager2
                         RecordingSizeDic[task.Id] = mergedBytesWritten;
                     }
                 }
-
-                if (STOP_FLAG && source.Count == 0)
-                    break;
             }
 
             return CompleteRecording();
@@ -885,7 +886,41 @@ internal class SimpleLiveRecordManager2
         }
         finally
         {
+            prefetchStop.Cancel();
+            await prefetch;
+            DownloadQueues.TryRemove(task.Id, out _);
             fileOutputStream?.Dispose();
+        }
+    }
+
+    private async Task PrefetchSegmentsAsync(BufferBlock<LiveSegmentBatch> incoming, BufferBlock<LiveSegmentBatch> ready,
+        LiveSegmentDownloadQueue downloads, StreamSpec stream, int taskId, string directory, CancellationToken token)
+    {
+        try
+        {
+            while (await incoming.OutputAvailableAsync(token))
+            {
+                var batch = await incoming.ReceiveAsync(token);
+                var allHasDatetime = batch.Segments.All(segment => segment.DateTime != null);
+                foreach (var segment in batch.Segments)
+                {
+                    var filename = LiveSegmentTracker.GetFileName(segment,
+                        GetSegmentName(segment, allHasDatetime, SamePathDic.GetValueOrDefault(taskId)));
+                    downloads.Enqueue(segment, Path.Combine(directory, filename + $".{stream.Extension ?? "clip"}.tmp"));
+                }
+                await ready.SendAsync(batch, token);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception error)
+        {
+            Logger.ErrorMarkUp(error);
+            fatalError = true;
+            StopRecording();
+        }
+        finally
+        {
+            ready.Complete();
         }
     }
 
@@ -974,6 +1009,12 @@ internal class SimpleLiveRecordManager2
                     SamePathDic[task.Id] = allSamePath;
                 }
                 NotFoundPolicies[task.Id].Update(segments, refreshDelaySeconds);
+                if (StreamExtractor.ExtractorType == ExtractorType.HLS &&
+                    SegmentTrackers[task.Id].ObserveHlsSequence(segments) is { } sequenceChange)
+                {
+                    Logger.Warn(string.Format(ResString.liveHlsSequenceChanged, streamSpec.ToShortString().RemoveMarkup(),
+                        sequenceChange.Previous, sequenceChange.Current));
+                }
                 // 回看只保留指定节目时间范围内已完整发布的分片。
                 var catchupEnded = false;
                 if (catchupWindow != null)

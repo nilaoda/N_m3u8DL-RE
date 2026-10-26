@@ -43,7 +43,7 @@ public class HttpRequestTimeoutOptionTests
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(false, true)]
-    public async Task VodOrManualLiveTimeoutAllowsSlowSegmentResponse(bool asVod, bool manualLive)
+    public async Task VodAllowsSlowResponsesWhileLiveCapsManualTimeoutBySegmentDuration(bool asVod, bool manualLive)
     {
         if (!HasTool("ffmpeg"))
             return;
@@ -54,12 +54,13 @@ public class HttpRequestTimeoutOptionTests
             var manifest = await File.ReadAllTextAsync(Path.Combine(root, "source.m3u8"));
             if (asVod)
                 manifest = manifest.Replace("#EXT-X-ENDLIST", "");
+            var mediaRequests = 0;
             await using var server = new MediaFixtureServer(root, (path, version) => path != "source.m3u8" ? null :
                 manualLive && version == 0 ? manifest.Replace("#EXT-X-ENDLIST", "") : manifest,
                 async path =>
                 {
-                    // 超过短分片直播的自动超时，点播和手动指定的较长超时仍须一次成功。
-                    if (path == "media-1.m4s")
+                    // 点播可等待慢响应；直播即使指定 10 秒也须在两倍片长后转入补片。
+                    if (path == "media-1.m4s" && (!manualLive || Interlocked.Increment(ref mediaRequests) == 1))
                         await Task.Delay(TimeSpan.FromSeconds(6));
                 });
             var info = new ProcessStartInfo("dotnet")
@@ -85,7 +86,7 @@ public class HttpRequestTimeoutOptionTests
                 await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(20));
                 var output = await stdout + await stderr;
                 Assert.True(process.ExitCode == 0, output);
-                Assert.Equal(1, server.RequestCount("media-1.m4s"));
+                Assert.Equal(manualLive ? 2 : 1, server.RequestCount("media-1.m4s"));
                 var retained = Directory.GetFiles(Path.Combine(root, "tmp"), "*", SearchOption.AllDirectories)
                     .Select(File.ReadAllBytes).ToArray();
                 for (var i = 0; i < 3; i++)

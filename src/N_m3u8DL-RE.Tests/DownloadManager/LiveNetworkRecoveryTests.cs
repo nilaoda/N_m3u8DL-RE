@@ -19,6 +19,83 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 public class LiveNetworkRecoveryTests
 {
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task FailedFirstSegmentDoesNotBlockLaterBatchesWithOneDownloadThread(bool permanent, bool tricklingRetry)
+    {
+        if (!HasTool("ffmpeg") || !HasTool("ffprobe"))
+            return;
+        var root = Directory.CreateTempSubdirectory("live-independent-retry-").FullName;
+        using var stop = new CancellationTokenSource();
+        Task<bool>? recording = null;
+        try
+        {
+            await GenerateCutMedia(root);
+            await using var server = new MediaFixtureServer(root, Manifest,
+                responseWriter: async (path, count, stream, token) =>
+                {
+                    if (path != "media-0.m4s" || !permanent && count > 1)
+                        return false;
+                    await stream.WriteAsync(Encoding.ASCII.GetBytes(
+                        "HTTP/1.1 200 OK\r\nContent-Length: 1024\r\nConnection: close\r\n\r\n"), token);
+                    if (tricklingRetry && count > 1)
+                    {
+                        // 有持续数据的补片不会触发无数据超时，仍须遵守补片窗口。
+                        for (var i = 0; i < 1024; i++)
+                        {
+                            await stream.WriteAsync(new byte[1], token);
+                            await Task.Delay(100, token);
+                        }
+                    }
+                    await Task.Delay(Timeout.InfiniteTimeSpan, token);
+                    return true;
+                });
+            using var extractor = await Load(server);
+            var options = CreateOptions(root);
+            options.ThreadCount = 1;
+            options.LiveRealTimeMerge = true;
+            options.LiveWaitTime = 1;
+            options.LiveTakeCount = 16;
+            options.HttpRequestTimeout = 100;
+            options.HttpRequestTimeoutSpecified = true;
+            var tmp = Path.Combine(root, "tmp");
+            var manager = new SimpleLiveRecordManager2(new DownloaderConfig { DirPrefix = tmp, MyOptions = options },
+                await extractor.ExtractStreamsAsync(), extractor);
+            recording = manager.StartRecordAsync(stop.Token);
+
+            // 首片超时转入补片后，后一批必须先于首片重试完成下载。
+            var expectedLast = await File.ReadAllBytesAsync(Path.Combine(root, "media-2.m4s"));
+            var timer = Stopwatch.StartNew();
+            var saved = false;
+            while (timer.Elapsed < TimeSpan.FromSeconds(5))
+            {
+                saved = Directory.Exists(tmp) && Directory.GetFiles(tmp, "*.m4s", SearchOption.AllDirectories)
+                    .Any(path => File.ReadAllBytes(path).AsSpan().SequenceEqual(expectedLast));
+                if (saved) break;
+                await Task.Delay(20);
+            }
+            Assert.True(saved);
+            Assert.Equal(1, server.RequestCount("media-0.m4s"));
+            Assert.False(recording.IsCompleted);
+            Assert.Equal(!permanent, await recording.WaitAsync(TimeSpan.FromSeconds(18)));
+            Assert.InRange(server.RequestCount("media-0.m4s"), 2, 4);
+            Assert.Equal(1, server.RequestCount("media-1.m4s"));
+            Assert.Equal(1, server.RequestCount("media-2.m4s"));
+            var output = Assert.Single(Directory.GetFiles(Path.Combine(root, "out")));
+            var reference = await FrameHashes(Path.Combine(root, "source.m3u8"));
+            Assert.Equal(permanent ? reference.Skip(50) : reference, await FrameHashes(output));
+        }
+        finally
+        {
+            stop.Cancel();
+            if (recording != null)
+                await recording.WaitAsync(TimeSpan.FromSeconds(5));
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
     [InlineData(HttpStatusCode.Forbidden, 1, 2, true)]
     [InlineData(HttpStatusCode.Forbidden, 3, 2, false)]
     [InlineData(HttpStatusCode.Forbidden, 1, 0, false)]

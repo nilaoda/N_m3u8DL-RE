@@ -36,6 +36,10 @@ public class LiveRequestTimeoutTests
         var manual = LiveRequestTimeoutPolicy.GetTimeouts(stream, options);
         Assert.Equal(TimeSpan.FromSeconds(100), manual.Request);
         Assert.Equal(TimeSpan.FromSeconds(100), manual.Read);
+        Assert.Equal(TimeSpan.FromSeconds(12), LiveRequestTimeoutPolicy.GetSegmentTimeout(
+            stream.Playlist.MediaParts[0].MediaSegments[0], manual.Read));
+        Assert.Equal(TimeSpan.FromSeconds(0.2), LiveRequestTimeoutPolicy.GetSegmentTimeout(
+            stream.Playlist.MediaParts[0].MediaSegments[2], manual.Read));
     }
 
     [Theory]

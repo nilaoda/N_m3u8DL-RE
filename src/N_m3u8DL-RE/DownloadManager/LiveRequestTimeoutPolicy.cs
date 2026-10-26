@@ -5,9 +5,18 @@ namespace N_m3u8DL_RE.DownloadManager;
 
 internal static class LiveRequestTimeoutPolicy
 {
+    public static TimeSpan GetSegmentTimeout(MediaSegment segment, TimeSpan requestedTimeout)
+    {
+        if (!double.IsFinite(segment.Duration) || segment.Duration <= 0)
+            return requestedTimeout;
+        if (segment.Duration >= requestedTimeout.TotalSeconds / 2)
+            return requestedTimeout;
+        return TimeSpan.FromTicks(Math.Max(1, (long)(segment.Duration * 2 * TimeSpan.TicksPerSecond)));
+    }
+
     public static (TimeSpan Request, TimeSpan Read) GetTimeouts(StreamSpec stream, MyOption options)
     {
-        // 显式指定的 100 秒和默认 100 秒含义不同，手动设置不能被自动策略覆盖。
+        // 保留手动设置的轨道超时；媒体分片还须按自身片长收紧，清单刷新使用原值。
         if (options.HttpRequestTimeoutSpecified)
         {
             var timeout = TimeSpan.FromSeconds(options.HttpRequestTimeout);

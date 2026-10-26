@@ -179,7 +179,7 @@ public class ConcatInputServerTests : IDisposable
     }
 
     [Fact]
-    public async Task DisposeCancelsClientsWaitingForHeadersAndReleasesPort()
+    public async Task DisposeCancelsClientsWaitingForHeadersAndClosesListener()
     {
         using var server = new ConcatInputServer(Files());
         var uri = new Uri(server.Url);
@@ -188,20 +188,11 @@ public class ConcatInputServerTests : IDisposable
         await first.ConnectAsync(uri.Host, uri.Port);
         await second.ConnectAsync(uri.Host, uri.Port);
         await Task.Run(server.Dispose).WaitAsync(TimeSpan.FromSeconds(5));
-        var listener = new TcpListener(IPAddress.Loopback, uri.Port);
-        // Unix 已关闭的连接可能仍处于 TIME_WAIT；重绑检查只验证监听端口已释放。
-        if (!OperatingSystem.IsWindows())
-            listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        else
-            listener.ExclusiveAddressUse = true;
-        try
-        {
-            listener.Start();
-        }
-        finally
-        {
-            listener.Stop();
-        }
+        // 直接验证监听已关闭；立即重绑会受到 TIME_WAIT 和并行连接复用端口的影响。
+        using var probe = new TcpClient();
+        var error = await Assert.ThrowsAsync<SocketException>(() =>
+            probe.ConnectAsync(uri.Host, uri.Port).WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.Equal(SocketError.ConnectionRefused, error.SocketErrorCode);
     }
 
     [Theory]

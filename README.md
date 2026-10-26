@@ -151,8 +151,8 @@ Options:
   --log-file-path <log-file-path>                         设置日志文件路径, 例如 C:\Logs\log.txt
   --base-url <base-url>                                   设置BaseURL
   --thread-count <number>                                 设置下载线程数 [default: 10]
-  --download-retry-count <number>                         每个分片下载异常时的重试次数；分片直播临时网络故障在重试耗尽后仍会等待恢复 [default: 7]
-  --http-request-timeout <seconds>                        HTTP请求超时(秒)；分片直播未指定时自动调整，指定后也用于分片连续无数据超时，不限制总下载时长 [default: 100]
+  --download-retry-count <number>                         每个分片下载异常时的重试次数；直播失败分片独立补片，超过补片窗口后标记缺片 [default: 7]
+  --http-request-timeout <seconds>                        HTTP请求超时(秒)；直播分片自动调整且手动设置也不超过两倍片长，限制连续无数据等待，不限制总下载时长 [default: 100]
   --http-version <1.1|2>                                 HTTP协议版本；默认使用1.1，选择2时优先HTTP/2并允许回退HTTP/1.1 [default: 1.1]
   --force-ansi-console                                    强制认定终端支持 ANSI 输出
   --no-ansi-color                                         去除ANSI颜色

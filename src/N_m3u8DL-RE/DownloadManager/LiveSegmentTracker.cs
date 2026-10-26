@@ -6,7 +6,39 @@ namespace N_m3u8DL_RE.DownloadManager;
 internal sealed class LiveSegmentTracker
 {
     private MediaSegment? lastSegment;
+    private MediaSegment? lastObservedHlsSegment;
     private long nextRecordingIndex;
+
+    public (long Previous, long Current)? ObserveHlsSequence(List<MediaSegment> segments)
+    {
+        if (segments.Count == 0)
+            return null;
+
+        var previous = lastObservedHlsSegment;
+        var tail = segments[^1];
+        // 与录制去重状态分开，广告过滤和回看范围裁剪不应制造源序号警告。
+        lastObservedHlsSegment = new MediaSegment
+        {
+            Index = tail.Index, Url = tail.Url, DateTime = tail.DateTime,
+            StartRange = tail.StartRange, ExpectLength = tail.ExpectLength,
+        };
+        if (previous == null)
+            return null;
+
+        var overlap = FindMatchingIndex(segments, previous, true);
+        long current;
+        if (overlap < 0)
+            current = segments[0].Index;
+        else if (segments[overlap].Index != previous.Index)
+            current = segments[overlap].Index;
+        else if (overlap + 1 < segments.Count)
+            current = segments[overlap + 1].Index;
+        else
+            return null; // 重复清单和只有签名变化的重叠窗口无需提示。
+
+        return previous.Index < long.MaxValue && current == previous.Index + 1
+            ? null : (previous.Index, current);
+    }
 
     public List<MediaSegment> Filter(List<MediaSegment> segments, bool isHls)
     {
