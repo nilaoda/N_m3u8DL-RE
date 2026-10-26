@@ -80,6 +80,7 @@ public class HlsSubtitleTimelineTests
                 #EXT-X-STREAM-INF:BANDWIDTH=100000,CODECS="mp4a.40.2",SUBTITLES="s"
                 audio.m3u8
                 """);
+            var delayedRequests = 0;
             await using var server = new MediaFixtureServer(root, (path, version) =>
             {
                 if (path is not ("audio.m3u8" or "subs.m3u8"))
@@ -95,6 +96,7 @@ public class HlsSubtitleTimelineTests
             },
                 // 分别覆盖首片和后续音频慢请求，首批字幕都必须等待正确的源时钟。
                 beforeResponse: path => encryption is "none" or "cancel" && timestampMap && path == (slowFirst ? "audio-0.m4s" : "audio-1.m4s")
+                    && (encryption == "cancel" || Interlocked.Increment(ref delayedRequests) == 1)
                     ? Task.Delay(6000) : Task.CompletedTask,
                 responseStatus: (path, _) => encryption == "missing" && path.StartsWith("audio-") ? HttpStatusCode.Gone : null);
             using var extractor = new StreamExtractor(new ParserConfig());

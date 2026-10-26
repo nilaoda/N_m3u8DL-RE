@@ -732,15 +732,15 @@ internal static class StaticText
         ),
         ["cmd_downloadRetryCount"] = new TextContainer
         (
-            zhCN: "每个分片下载异常时的重试次数；分片直播临时网络故障在重试耗尽后仍会等待恢复",
-            zhTW: "每個分片下載異常時的重試次數；分片直播暫時網路故障在重試耗盡後仍會等待恢復",
-            enUS: "Retries per segment; segmented live recording keeps waiting for recovery after transient network failures"
+            zhCN: "每个分片下载异常时的重试次数；直播失败分片独立补片，超过补片窗口后标记缺片",
+            zhTW: "每個分片下載異常時的重試次數；直播失敗分片獨立補片，超過補片視窗後標記缺片",
+            enUS: "Retries per segment; live segments retry separately within a bounded recovery window"
         ),
         ["cmd_httpRequestTimeout"] = new TextContainer
         (
-            zhCN: "HTTP请求超时(秒)；分片直播未指定时自动调整，指定后也用于分片连续无数据超时，不限制总下载时长",
-            zhTW: "HTTP請求逾時(秒)；分片直播未指定時自動調整，指定後也用於分片連續無資料逾時，不限制總下載時長",
-            enUS: "HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time"
+            zhCN: "HTTP请求超时(秒)；直播分片自动调整且手动设置也不超过两倍片长，限制连续无数据等待，不限制总下载时长",
+            zhTW: "HTTP請求逾時(秒)；直播分片自動調整且手動設定也不超過兩倍片長，限制連續無資料等待，不限制總下載時長",
+            enUS: "HTTP timeout in seconds; live segment waits are capped at twice the segment duration, including manual settings; bounds read stalls, not total download time"
         ),
         ["cmd_httpVersion"] = new TextContainer
         (
@@ -1841,6 +1841,12 @@ internal static class StaticText
             zhCN: "直播请求等待超时",
             zhTW: "直播請求等待逾時",
             enUS: "Live request timed out"
+        ),
+        ["liveHlsSequenceChanged"] = new TextContainer
+        (
+            zhCN: "HLS 分片源序号发生跳变（{0}）：{1} → {2}。可能是源重置、切换或清单窗口跳过，请检查录制连续性。",
+            zhTW: "HLS 分片來源序號發生跳變（{0}）：{1} → {2}。可能是來源重設、切換或略過播放清單視窗，請檢查錄製連續性。",
+            enUS: "HLS segment sequence changed unexpectedly ({0}): {1} -> {2}. The source may have reset or switched, or a playlist window may have been missed. Check recording continuity."
         ),
         ["liveSegmentUnavailable"] = new TextContainer
         (

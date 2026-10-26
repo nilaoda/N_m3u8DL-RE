@@ -9,6 +9,27 @@ namespace N_m3u8DL_RE.Tests.DownloadManager;
 public class LiveSegmentTrackerTests
 {
     [Fact]
+    public void HlsSequenceChangesWarnOnceAndIgnoreNormalWindowsAndRecordingFilters()
+    {
+        var tracker = new LiveSegmentTracker();
+        var initial = new[] { Segment(742195, "old/195?token=a"), Segment(742196, "old/196?token=a") }.ToList();
+        Assert.Null(tracker.ObserveHlsSequence(initial));
+        tracker.Record([initial[0]]); // 模拟广告或范围过滤，与观测到的源窗口分开。
+        Assert.Null(tracker.ObserveHlsSequence(
+            [Segment(742196, "old/196?token=b"), Segment(742197, "old/197?token=b")]));
+        Assert.Null(tracker.ObserveHlsSequence([Segment(742198, "old/198")]));
+
+        var reset = Enumerable.Range(0, 8).Select(i => Segment(i, $"reset/{i}")).ToList();
+        Assert.Equal((742198L, 0L), tracker.ObserveHlsSequence(reset));
+        Assert.Null(tracker.ObserveHlsSequence(reset));
+        Assert.Null(tracker.ObserveHlsSequence([Segment(6, "reset/6"), Segment(7, "reset/7"), Segment(8, "reset/8")]));
+        Assert.Null(tracker.ObserveHlsSequence([]));
+        var resumed = new[] { Segment(742203, "resumed/203"), Segment(742204, "resumed/204") }.ToList();
+        Assert.Equal((8L, 742203L), tracker.ObserveHlsSequence(resumed));
+        Assert.Null(tracker.ObserveHlsSequence(resumed));
+    }
+
+    [Fact]
     public void DashQueryTemplateStillMatchesWhenSignatureChanges()
     {
         var tracker = new LiveSegmentTracker();

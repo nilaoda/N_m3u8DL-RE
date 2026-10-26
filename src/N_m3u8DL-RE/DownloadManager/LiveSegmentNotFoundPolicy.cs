@@ -15,7 +15,7 @@ internal sealed class LiveSegmentNotFoundPolicy(bool isHls)
             return;
         window = new Window(segments.Select(segment => new MediaSegment
         {
-            Url = segment.Url, Index = segment.Index, DateTime = segment.DateTime,
+            Url = segment.Url, Index = segment.Index, DateTime = segment.DateTime, Duration = segment.Duration,
             NameFromVar = segment.NameFromVar, StartRange = segment.StartRange, ExpectLength = segment.ExpectLength
         }).ToList(), refreshSeconds);
     }
@@ -32,6 +32,15 @@ internal sealed class LiveSegmentNotFoundPolicy(bool isHls)
         // 尾部 404 可能是提前推算或 CDN 尚未同步，最多等待两片时长加一次刷新。
         // 固定清单、错误 URL 和异常长分片也必须有上限，不能无限拖住后续下载。
         return TimeSpan.FromSeconds(Math.Clamp(duration * 2 + current.RefreshSeconds, 3, 30));
+    }
+
+    public TimeSpan GetRetryWindow(MediaSegment segment)
+    {
+        var duration = double.IsFinite(segment.Duration) && segment.Duration > 0 ? segment.Duration : 5;
+        var windowDuration = window?.Segments.Where(s => double.IsFinite(s.Duration) && s.Duration > 0)
+            .Sum(s => s.Duration) ?? duration;
+        // 补片不能无限拖住按序合并；预算从首次失败起算，不随清单刷新续期。
+        return TimeSpan.FromSeconds(Math.Clamp(windowDuration + duration * 2, 6, 30));
     }
 
     public bool ShouldRetry(MediaSegment segment, int failures, int retryCount, TimeSpan elapsed, TimeSpan publicationWait)

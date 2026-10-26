@@ -149,8 +149,8 @@ Options:
   --log-file-path <log-file-path>                         Set log file path, Example: C:\Logs\log.txt
   --base-url <base-url>                                   Set BaseURL
   --thread-count <number>                                 Set download thread count [default: 10]
-  --download-retry-count <number>                         Retries per segment; segmented live recording keeps waiting for recovery after transient network failures [default: 7]
-  --http-request-timeout <seconds>                        HTTP timeout in seconds; segmented live recording adjusts automatically unless specified, also bounds segment read stalls, not total download time [default: 100]
+  --download-retry-count <number>                         Retries per segment; live segments retry separately within a bounded recovery window [default: 7]
+  --http-request-timeout <seconds>                        HTTP timeout in seconds; live segment waits are capped at twice the segment duration, including manual settings; bounds read stalls, not total download time [default: 100]
   --http-version <1.1|2>                                 HTTP version; defaults to 1.1; selecting 2 prefers HTTP/2 and allows fallback to HTTP/1.1 [default: 1.1]
   --force-ansi-console                                    Force assuming the terminal supports ANSI output
   --no-ansi-color                                         Remove ANSI colors
