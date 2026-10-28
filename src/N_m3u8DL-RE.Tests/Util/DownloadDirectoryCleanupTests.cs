@@ -74,6 +74,37 @@ public class DownloadDirectoryCleanupTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ConcurrentCleanupToleratesRemovedDirectories(bool cleanMetadata)
+    {
+        var root = Directory.CreateTempSubdirectory("download-cleanup-race-").FullName;
+        try
+        {
+            var sentinel = Path.Combine(root, "keep.txt");
+            File.WriteAllText(sentinel, "keep");
+            for (var round = 0; round < 32; round++)
+            {
+                var task = Path.Combine(root, "task");
+                var tracks = Enumerable.Range(0, 16).Select(index => Path.Combine(task, index.ToString())).ToArray();
+                foreach (var track in tracks)
+                {
+                    Directory.CreateDirectory(track);
+                    if (cleanMetadata)
+                        File.WriteAllText(Path.Combine(track, ".DS_Store"), "metadata");
+                }
+
+                Parallel.ForEach(tracks, track =>
+                    OtherUtil.SafeDeleteDir(cleanMetadata ? task : track, cleanMetadata));
+
+                Assert.False(Directory.Exists(task));
+                Assert.Equal("keep", File.ReadAllText(sentinel));
+            }
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
     [Fact]
     public void DefaultCleanupDeletesEmptyParentsAndStopsAtMetadata()
     {

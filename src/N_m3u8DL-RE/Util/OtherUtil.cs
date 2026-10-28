@@ -165,22 +165,30 @@ internal static partial class OtherUtil
     // 此模式不向父目录递归；两种模式都不跟随目录符号链接，保留 PNG 等实际文件。
     public static void SafeDeleteDir(string dirPath, bool cleanMetadata = false)
     {
-        if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath) ||
-            (File.GetAttributes(dirPath) & FileAttributes.ReparsePoint) != 0)
-            return;
-
-        if (cleanMetadata)
+        try
         {
-            foreach (var child in Directory.EnumerateDirectories(dirPath))
-                SafeDeleteDir(child, cleanMetadata: true);
-            var metadata = Path.Combine(dirPath, ".DS_Store");
-            if (File.Exists(metadata))
-                File.Delete(metadata);
-        }
+            if (string.IsNullOrEmpty(dirPath) || !Directory.Exists(dirPath) ||
+                (File.GetAttributes(dirPath) & FileAttributes.ReparsePoint) != 0)
+                return;
 
-        if (Directory.EnumerateFileSystemEntries(dirPath).Any())
+            if (cleanMetadata)
+            {
+                foreach (var child in Directory.EnumerateDirectories(dirPath))
+                    SafeDeleteDir(child, cleanMetadata: true);
+                var metadata = Path.Combine(dirPath, ".DS_Store");
+                if (File.Exists(metadata))
+                    File.Delete(metadata);
+            }
+
+            if (Directory.EnumerateFileSystemEntries(dirPath).Any())
+                return;
+            Directory.Delete(dirPath);
+        }
+        catch (IOException)
+        {
+            // 并发清理可能已删除目录，或有新文件写入；停止本次清理即可。
             return;
-        Directory.Delete(dirPath);
+        }
         if (!cleanMetadata)
             SafeDeleteDir(Path.GetDirectoryName(dirPath)!);
     }
