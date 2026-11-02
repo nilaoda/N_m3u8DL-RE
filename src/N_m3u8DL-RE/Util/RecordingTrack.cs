@@ -14,7 +14,8 @@ internal sealed partial class RecordingTrack
     internal required OutputFile Info { get; init; }
     internal required string[] Sources { get; init; }
     internal required string[] Inputs { get; init; }
-    internal bool HasInitialization => InitRegex().IsMatch(Path.GetFileName(Inputs[0]));
+    internal bool HasInitialization => IsInitializationFile(Inputs[0]);
+    internal static bool IsInitializationFile(string path) => InitRegex().IsMatch(Path.GetFileName(path));
     private bool Ttml { get; init; }
     private uint? VttTimescale { get; init; }
 
@@ -34,23 +35,46 @@ internal sealed partial class RecordingTrack
         Directory.EnumerateFiles(directory).Any(file => SegmentRegex().IsMatch(Path.GetFileName(file)) ||
             FixedSubtitleRegex().IsMatch(Path.GetFileName(file)));
 
-    internal static OutputFile[] FindTracks(string directory)
+    internal static OutputFile[] FindTracks(string directory, bool allowMediaDirectory = false)
     {
         directory = Path.GetFullPath(directory);
         if (!Directory.Exists(directory))
             throw new DirectoryNotFoundException($"{ResString.toolsInputMissing}: {directory}");
         // 录制目录下只查找直接的轨道目录，不递归处理其他录像或任意子目录。
         var tracks = Directory.GetDirectories(directory)
-            .Where(path => Path.GetFileName(path).Contains('_') && int.TryParse(Path.GetFileName(path).Split('_')[0], out _))
+            .Where(IsTrackDirectoryName)
             .Where(HasInputs)
             .OrderBy(path => Path.GetFileName(path), Comparer<string>.Create(FileToolUtil.CompareNatural))
             .Select((path, index) => new OutputFile { Index = index, FilePath = path }).ToArray();
         if (tracks.Length > 0)
             return tracks;
         // 优先选择轨道子目录，不能把录像根目录内的旧输出当成单条轨道。
-        if (HasInputs(directory))
+        if (HasInputs(directory) && !(allowMediaDirectory && IsStandaloneMediaDirectory(directory)))
             return [new OutputFile { Index = 0, FilePath = directory }];
+        if (allowMediaDirectory)
+            return [];
         throw new ArgumentException($"{ResString.toolsRecordingEmpty}: {directory}");
+    }
+
+    private static bool IsTrackDirectoryName(string path)
+    {
+        var name = Path.GetFileName(Path.TrimEndingDirectorySeparator(path));
+        return name.Contains('_') && int.TryParse(name.Split('_')[0], out _);
+    }
+
+    private static bool IsStandaloneMediaDirectory(string directory)
+    {
+        // 普通媒体目录中的 1.mp4 / 1.m4a 不能仅凭数字文件名就被当成 RE 轨道，
+        // 否则其他命名的影片、音轨和字幕会被静默过滤。明确的 RE 布局仍优先。
+        if (IsTrackDirectoryName(directory) || Directory.Exists(Path.Combine(directory, "parts")))
+            return false;
+        var files = Directory.GetFiles(directory);
+        if (files.Any(path => IsInitializationFile(path) || FixedSubtitleRegex().IsMatch(Path.GetFileName(path))))
+            return false;
+        var segments = files.Where(path => SegmentRegex().IsMatch(Path.GetFileName(path))).ToArray();
+        return segments.Any(path => Path.GetExtension(path).ToLowerInvariant() is ".mp4" or ".m4a") &&
+            !segments.Any(path => Path.GetExtension(path).ToLowerInvariant() is ".m4s" or ".ttml" ||
+                Path.GetFileNameWithoutExtension(path).Contains('_'));
     }
 
     internal static RecordingTrack Read(OutputFile file, CancellationToken token, bool binaryConcat = false)

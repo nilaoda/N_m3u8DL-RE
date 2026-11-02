@@ -90,20 +90,6 @@ internal static class ToolCommands
         return 0;
     }
 
-    private static IEnumerable<OutputFile> ExpandMuxInput(OutputFile file)
-    {
-        if (!Directory.Exists(file.FilePath))
-            return [file];
-        // -i 统一接受文件、单轨道目录和任务目录，目录中的轨道按自然顺序展开。
-        var tracks = RecordingTrack.FindTracks(file.FilePath);
-        foreach (var track in tracks)
-        {
-            track.LangCode = file.LangCode;
-            track.Description = file.Description;
-        }
-        return tracks;
-    }
-
     private static Command CreateFileCommand(string name, string description)
     {
         var command = new Command(name, description);
@@ -121,8 +107,8 @@ internal static class ToolCommands
         var dryRun = new Option<bool>("--dry-run") { Description = ResString.cmd_toolsDryRun };
         var forceAnsi = CommandInvoker.ForceAnsiConsole;
         var noAnsiColor = CommandInvoker.NoAnsiColor;
-        var directory = new Option<string?>("--input-dir") { Description = ResString.cmd_toolsInputDir };
-        var pattern = new Option<string>("--pattern") { Description = ResString.cmd_toolsPattern, DefaultValueFactory = _ => "*.ts" };
+        var directory = new Option<string?>("--input-dir") { HelpName = "DIR", Description = ResString.cmd_toolsInputDir, Arity = ArgumentArity.ExactlyOne };
+        var pattern = new Option<string?>("--pattern") { HelpName = "GLOB", Description = ResString.cmd_toolsPattern, Arity = ArgumentArity.ExactlyOne };
         var ffmpeg = CommandInvoker.FFmpegBinaryPath;
         var autoSubtitleFix = CommandInvoker.CreateAutoSubtitleFixOption();
         autoSubtitleFix.Description = ResString.cmd_toolsAutoSubtitleFix;
@@ -132,14 +118,12 @@ internal static class ToolCommands
         var imports = CommandInvoker.CreateMuxImportsOption();
         imports.Description = ResString.cmd_toolsMuxImport;
         var title = new Option<string?>("--title") { Description = ResString.cmd_toolsTitle };
-        var mode = CommandInvoker.FFmpegConcatMode;
+        var mode = new Option<FFmpegConcatMode>("--ffmpeg-concat-mode")
+        { Description = ResString.cmd_toolsMergeMode, Arity = ArgumentArity.ExactlyOne };
         foreach (var option in new Option[] { input, output, overwrite, dryRun, forceAnsi, noAnsiColor })
             command.Options.Add(option);
-        if (name != "mux")
-        {
-            command.Options.Add(directory);
-            command.Options.Add(pattern);
-        }
+        command.Options.Add(directory);
+        command.Options.Add(pattern);
         if (name != "concat")
             command.Options.Add(ffmpeg);
         if (name == "merge")
@@ -177,15 +161,24 @@ internal static class ToolCommands
                 Logger.IsWriteFile = false;
                 Logger.Info(CommandInvoker.VERSION_INFO);
                 var inputs = result.GetValue(input) ?? [];
+                if (result.GetValue(directory) is { } inputDirectory)
+                {
+                    if (inputs.Length > 0)
+                        throw new ArgumentException(ResString.toolsInputConflict);
+                    if (!Directory.Exists(inputDirectory))
+                        throw new DirectoryNotFoundException($"{ResString.toolsInputMissing}: {inputDirectory}");
+                    inputs = [inputDirectory];
+                }
                 var files = name == "mux" ? inputs.Select(CommandInvoker.ParseMuxInput)
-                    .Concat(result.GetValue(imports) ?? []).SelectMany(ExpandMuxInput).ToArray() : null;
-                return await FileToolUtil.ExecuteAsync(name, files?.Select(file => file.FilePath).ToArray() ?? inputs, result.GetValue(output)!,
-                    name == "mux" ? null : result.GetValue(directory), name == "mux" ? "*.ts" : result.GetValue(pattern)!,
+                    .Concat(result.GetValue(imports) ?? []).ToArray() : inputs.Select((path, index) =>
+                        new OutputFile { Index = index, FilePath = path }).ToArray();
+                return await FileToolUtil.ExecuteAsync(name, files, result.GetValue(output)!,
+                    result.GetValue(pattern),
                     result.GetValue(overwrite), result.GetValue(dryRun),
                     name == "concat" ? null : result.GetValue(ffmpeg), name == "mux" ? result.GetValue(mkvmerge) : null,
                     name == "mux" ? result.GetValue(muxer)! : "ffmpeg",
-                    name == "merge" ? result.GetValue(mode) : FFmpegConcatMode.LOCAL_HTTP,
-                    name == "mux" && result.GetValue(autoSubtitleFix), token, files,
+                    name == "merge" && result.GetResult(mode) is { Implicit: false } ? result.GetValue(mode) : null,
+                    name == "mux" && result.GetValue(autoSubtitleFix), token,
                     name == "mux" ? result.GetValue(title) : null);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or

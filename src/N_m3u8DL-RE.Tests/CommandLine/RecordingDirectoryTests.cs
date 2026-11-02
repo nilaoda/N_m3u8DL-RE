@@ -170,7 +170,7 @@ public sealed class RecordingDirectoryTests : IDisposable
         var extra = Path.Combine(directory, "extra.srt");
         File.WriteAllText(extra, "1\n00:00:00,500 --> 00:00:01,000\nExternal\n\n");
         Assert.Equal(0, await Invoke("mux", "-i", directory, "-i", extra, "-o", output, "--dry-run"));
-        Assert.NotEmpty(CommandInvoker.CreateRootCommand().Parse(["mux", "--input-dir", directory, "-o", output]).Errors);
+        Assert.Equal(0, await Invoke("mux", "--input-dir", directory, "-o", output, "--dry-run"));
     }
 
     [Fact]
