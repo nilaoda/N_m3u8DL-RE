@@ -1,15 +1,3 @@
-// MediaDecryptor.cs — corrected/reverse-engineered port of the native decryptor
-// (native entry: sub_140019CC0, 474 bytes).
-//
-// Verified against the binary with Unicorn emulation:
-//   * V3 (outer) cipher and V2 (inner) cipher block functions
-//   * keystream <-> block alignment (counter == byteOffset >> 6)
-//   * per-NAL sample decryption (EPB strip, 32/48 + 192 stride, zero padded tail)
-//
-// The two cipher variants are NOT RFC 8439 ChaCha20.  They are ChaCha-shaped
-// with different constants, different key/nonce placement, a modified quarter
-// round and (for V3 only) a permuted output word order.
-
 namespace N_m3u8DL_RE.Crypto.TXVDRM;
 
 public static class MediaDecryptor
