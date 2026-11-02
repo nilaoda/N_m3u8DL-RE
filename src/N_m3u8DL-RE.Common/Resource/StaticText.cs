@@ -4,6 +4,60 @@ internal static class StaticText
 {
     public static readonly Dictionary<string, TextContainer> LANG_DIC = new()
     {
+        ["cmd_toolsMergeMode"] = new TextContainer
+        (
+            zhCN: "输入模式：LOCAL_HTTP、PROTOCOL 或 DEMUXER；省略时完整 MP4 等容器使用 DEMUXER，TS/带 init 分片使用 LOCAL_HTTP；不转码",
+            zhTW: "輸入模式：LOCAL_HTTP、PROTOCOL 或 DEMUXER；省略時完整 MP4 等容器使用 DEMUXER，TS/帶 init 分片使用 LOCAL_HTTP；不轉碼",
+            enUS: "Input mode: LOCAL_HTTP, PROTOCOL or DEMUXER; defaults to DEMUXER for complete containers such as MP4, LOCAL_HTTP for TS/init-based segments; no transcoding"
+        ),
+        ["toolsMergeMode"] = new TextContainer
+        (
+            zhCN: "合并输入模式：{0}",
+            zhTW: "合併輸入模式：{0}",
+            enUS: "Merge input mode: {0}"
+        ),
+        ["toolsDirectoryRecording"] = new TextContainer
+        (
+            zhCN: "{0}：识别到 {1} 条 RE 分片轨道",
+            zhTW: "{0}：辨識到 {1} 條 RE 分片軌道",
+            enUS: "{0}: discovered {1} RE segment track(s)"
+        ),
+        ["toolsDirectoryFiles"] = new TextContainer
+        (
+            zhCN: "{0}：按文件名自然排序读取 {1} 个文件",
+            zhTW: "{0}：依檔名自然排序讀取 {1} 個檔案",
+            enUS: "{0}: reading {1} file(s) in natural filename order"
+        ),
+        ["toolsDirectoryEmpty"] = new TextContainer
+        (
+            zhCN: "目录 {0} 中没有匹配的文件（筛选：{1}，不递归）；请检查路径、文件名，或使用 --pattern 指定匹配模式",
+            zhTW: "目錄 {0} 中沒有相符的檔案（篩選：{1}，不遞迴）；請檢查路徑、檔名，或使用 --pattern 指定模式",
+            enUS: "No matching files in directory {0} (filter: {1}, non-recursive); check the path and filenames or specify --pattern"
+        ),
+        ["toolsAutomaticPattern"] = new TextContainer
+        (
+            zhCN: "自动识别常见媒体格式",
+            zhTW: "自動辨識常見媒體格式",
+            enUS: "automatic discovery of common media formats"
+        ),
+        ["toolsPatternRequiresDirectory"] = new TextContainer
+        (
+            zhCN: "--pattern 需要至少一个目录输入，请使用 -i 目录或 --input-dir 目录",
+            zhTW: "--pattern 需要至少一個目錄輸入，請使用 -i 目錄或 --input-dir 目錄",
+            enUS: "--pattern requires a directory input; use -i DIR or --input-dir DIR"
+        ),
+        ["toolsPatternInvalid"] = new TextContainer
+        (
+            zhCN: "--pattern 必须是非空的文件名匹配模式，不能包含目录分隔符；目录通过 -i 或 --input-dir 指定",
+            zhTW: "--pattern 必須是非空的檔名模式，不能包含目錄分隔符；目錄透過 -i 或 --input-dir 指定",
+            enUS: "--pattern must be a non-empty filename pattern without directory separators; specify directories with -i or --input-dir"
+        ),
+        ["toolsMultipleTracks"] = new TextContainer
+        (
+            zhCN: "目录包含多条 RE 轨道，请用 mux -i 任务目录混流，或分别指定单轨道目录进行合并",
+            zhTW: "目錄包含多條 RE 軌道，請用 mux -i 任務目錄混流，或分別指定單軌道目錄進行合併",
+            enUS: "Directory contains multiple RE tracks; use mux -i TASK_DIR or merge individual track directories"
+        ),
         ["cmd_toolsConcat"] = new TextContainer
         (
             zhCN: "按顺序二进制拼接文件，无需 FFmpeg",
@@ -12,9 +66,9 @@ internal static class StaticText
         ),
         ["cmd_toolsMerge"] = new TextContainer
         (
-            zhCN: "合并分片并转封装，默认使用 LOCAL_HTTP",
-            zhTW: "合併分片並重新封裝，預設使用 LOCAL_HTTP",
-            enUS: "Merge segments and remux using LOCAL_HTTP by default"
+            zhCN: "按顺序合并媒体文件或分片并转封装，自动选择输入模式",
+            zhTW: "依序合併媒體檔案或分片並重新封裝，自動選擇輸入模式",
+            enUS: "Merge media files or segments in order and remux; input mode is selected automatically"
         ),
         ["cmd_toolsMux"] = new TextContainer
         (
@@ -24,15 +78,15 @@ internal static class StaticText
         ),
         ["cmd_toolsInput"] = new TextContainer
         (
-            zhCN: "输入文件或单轨道分片目录，可重复 -i；按指定顺序处理",
-            zhTW: "輸入檔案或單軌道分片目錄，可重複 -i；依指定順序處理",
-            enUS: "Input file or track segment directory; repeat -i to specify inputs in order"
+            zhCN: "输入文件、普通媒体目录或单轨道分片目录；可重复 -i，目录内自然排序且不递归",
+            zhTW: "輸入檔案、一般媒體目錄或單軌道分片目錄；可重複 -i，目錄內自然排序且不遞迴",
+            enUS: "Input file, media directory or track segment directory; repeat -i; directories use natural order without recursion"
         ),
         ["cmd_toolsMuxInput"] = new TextContainer
         (
-            zhCN: "输入文件、任务目录或单轨道目录，可重复 -i；目录自动合并分片；也可使用 path=输入:lang=语言:name=轨道标题",
-            zhTW: "輸入檔案、任務目錄或單軌道目錄，可重複 -i；目錄自動合併分片；也可使用 path=輸入:lang=語言:name=軌道標題",
-            enUS: "Input file, task directory or track directory; repeat -i; directory segments are merged; also accepts path=INPUT:lang=CODE:name=TRACK_TITLE"
+            zhCN: "输入文件、媒体目录或 RE 任务/轨道目录；可重复 -i；各文件作为独立输入轨道，RE 分片自动合并；支持 path=输入:lang=语言:name=轨道标题",
+            zhTW: "輸入檔案、媒體目錄或 RE 任務/軌道目錄；可重複 -i；各檔案作為獨立輸入軌道，RE 分片自動合併；支援 path=輸入:lang=語言:name=軌道標題",
+            enUS: "Input file, media directory or RE task/track directory; repeat -i; files are separate mux inputs, RE segments are merged; accepts path=INPUT:lang=CODE:name=TRACK_TITLE"
         ),
         ["cmd_toolsMuxImport"] = new TextContainer
         (
@@ -234,15 +288,15 @@ internal static class StaticText
         ),
         ["cmd_toolsInputDir"] = new TextContainer
         (
-            zhCN: "按 --pattern 读取目录内的文件（不递归），自然排序；不能与 -i 同时使用",
-            zhTW: "依 --pattern 讀取目錄內的檔案（不遞迴），自然排序；不能與 -i 同時使用",
-            enUS: "Read files matching --pattern from a directory (non-recursive), naturally sorted; cannot be combined with -i"
+            zhCN: "输入目录，与 -i 目录采用相同识别规则；不能与 -i 同时使用",
+            zhTW: "輸入目錄，與 -i 目錄採用相同辨識規則；不能與 -i 同時使用",
+            enUS: "Input directory, using the same discovery rules as -i DIR; cannot be combined with -i"
         ),
         ["cmd_toolsPattern"] = new TextContainer
         (
-            zhCN: "--input-dir 内的文件匹配模式（不递归）",
-            zhTW: "--input-dir 內的檔案匹配模式（不遞迴）",
-            enUS: "Filename pattern for --input-dir (non-recursive)"
+            zhCN: "显式按文件名筛选目录内的文件（不递归），替代 RE 轨道识别；省略时自动识别 RE 分片或常见媒体文件",
+            zhTW: "明確依檔名篩選目錄內的檔案（不遞迴），取代 RE 軌道辨識；省略時自動辨識 RE 分片或常見媒體檔案",
+            enUS: "Select directory files by filename pattern (non-recursive), bypassing RE track discovery; otherwise discover RE tracks or common media files"
         ),
         ["cmd_toolsMuxer"] = new TextContainer
         (
@@ -330,9 +384,9 @@ internal static class StaticText
         ),
         ["toolsOutputIsInput"] = new TextContainer
         (
-            zhCN: "输出路径不能与输入路径相同",
-            zhTW: "輸出路徑不能與輸入路徑相同",
-            enUS: "Output path must differ from every input path"
+            zhCN: "输出文件与输入文件冲突。为避免覆盖源文件，请用 -o 指定其他文件名或目录。{2}输出文件：{0}{2}输入文件：{1}",
+            zhTW: "輸出檔案與輸入檔案衝突。為避免覆寫來源檔案，請用 -o 指定其他檔名或目錄。{2}輸出檔案：{0}{2}輸入檔案：{1}",
+            enUS: "The output and an input refer to the same file. Choose a different output path with -o to preserve the source.{2}Output file: {0}{2}Input file: {1}"
         ),
         ["toolsOutputExists"] = new TextContainer
         (

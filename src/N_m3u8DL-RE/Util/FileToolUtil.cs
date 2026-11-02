@@ -13,52 +13,38 @@ namespace N_m3u8DL_RE.Util;
 
 internal static class FileToolUtil
 {
-    internal static async Task<int> ExecuteAsync(string operation, string[] inputs, string output,
-        string? directory, string pattern, bool overwrite, bool dryRun, string? ffmpegPath,
-        string? mkvmergePath, string muxer, FFmpegConcatMode mode, bool autoSubtitleFix, CancellationToken token,
-        OutputFile[]? files = null, string? title = null)
+    internal static async Task<int> ExecuteAsync(string operation, OutputFile[] files, string output,
+        string? pattern, bool overwrite, bool dryRun, string? ffmpegPath,
+        string? mkvmergePath, string muxer, FFmpegConcatMode? requestedMode, bool autoSubtitleFix, CancellationToken token,
+        string? title = null)
     {
-        if (directory != null)
-        {
-            if (inputs.Length > 0)
-                throw new ArgumentException(ResString.toolsInputConflict);
-            inputs = Directory.GetFiles(Path.GetFullPath(directory), pattern)
-                .OrderBy(path => Path.GetFileName(path)!, Comparer<string>.Create(CompareNatural)).ToArray();
-        }
-        if (inputs.Length == 0)
-            throw new ArgumentException(ResString.toolsInputRequired);
-        inputs = inputs.Select(Path.GetFullPath).ToArray();
-        if (files != null)
-        {
-            for (var i = 0; i < files.Length; i++)
-            {
-                files[i].FilePath = inputs[i];
-            }
-        }
+        files = ToolInputResolver.Expand(operation, files, pattern, token);
+        var inputs = files.Select(file => file.FilePath).ToArray();
         // 目录输入先规划分片，输出保护必须覆盖源目录中的全部文件，包括未选用的原始 init。
         var tracks = new RecordingTrack?[inputs.Length];
         for (var i = 0; i < inputs.Length; i++)
         {
             token.ThrowIfCancellationRequested();
             if (Directory.Exists(inputs[i]))
-                tracks[i] = RecordingTrack.Read(files?[i] ?? new OutputFile { Index = i, FilePath = inputs[i] }, token, binaryConcat: operation == "concat");
+                tracks[i] = RecordingTrack.Read(files[i], token, binaryConcat: operation == "concat");
             else if (!File.Exists(inputs[i]))
                 throw new FileNotFoundException($"{ResString.toolsInputMissing}: {inputs[i]}", inputs[i]);
         }
+        var mode = requestedMode ?? ToolInputResolver.SelectMergeMode(inputs, tracks);
         var sources = inputs.SelectMany((input, i) => tracks[i]?.Sources ?? [input]).ToArray();
         output = Path.GetFullPath(output);
         var comparer = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
             ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         var resolvedOutput = ResolvePath(output);
-        if (sources.Any(input => comparer.Equals(ResolvePath(input), resolvedOutput)))
-            throw new ArgumentException(ResString.toolsOutputIsInput);
-        if (OperatingSystem.IsWindows() && File.Exists(output))
+        var conflictingInput = sources.FirstOrDefault(input => comparer.Equals(ResolvePath(input), resolvedOutput));
+        if (conflictingInput == null && OperatingSystem.IsWindows() && File.Exists(output))
         {
             // 本机盘符与 UNC 共享可以访问同一个文件，路径文本无法确认其身份。
             var outputId = ReadWindowsFileId(output);
-            if (sources.Any(input => ReadWindowsFileId(input) == outputId))
-                throw new ArgumentException(ResString.toolsOutputIsInput);
+            conflictingInput = sources.FirstOrDefault(input => ReadWindowsFileId(input) == outputId);
         }
+        if (conflictingInput != null)
+            throw new ArgumentException(string.Format(ResString.toolsOutputIsInput, output, conflictingInput, Environment.NewLine));
         if (File.Exists(output) && !overwrite)
             throw new IOException(ResString.toolsOutputExists);
         var format = Path.GetExtension(output).ToLowerInvariant();
@@ -68,11 +54,12 @@ internal static class FileToolUtil
             throw new ArgumentException(ResString.toolsMkvmergeFormat);
         Logger.Info(string.Format(ResString.toolsProcessing, operation, inputs.Length));
         Logger.InfoMarkUp($"[deepskyblue3]{output.EscapeMarkup()}[/]");
+        if (operation == "merge")
+            Logger.Info(string.Format(ResString.toolsMergeMode, mode));
         if (dryRun)
         {
-            if (files != null)
-                foreach (var file in files)
-                    LanguageCodeUtil.ConvertLangCodeAndDisplayName(file);
+            foreach (var file in files)
+                LanguageCodeUtil.ConvertLangCodeAndDisplayName(file);
             for (var i = 0; i < inputs.Length; i++)
             {
                 Logger.InfoMarkUp($"[grey][[{i}]][/] {inputs[i].EscapeMarkup()}");
@@ -82,8 +69,8 @@ internal static class FileToolUtil
                         Logger.Info($"    {Path.GetFileName(segment)}");
                     LanguageCodeUtil.ConvertLangCodeAndDisplayName(track.Info);
                 }
-                var info = tracks[i]?.Info ?? files?[i];
-                if (info != null && (info.LangCode != null || info.Description != null))
+                var info = tracks[i]?.Info ?? files[i];
+                if (info.LangCode != null || info.Description != null)
                     Logger.Info($"    lang={info.LangCode} name={info.Description}");
             }
             if (title != null)
@@ -108,7 +95,7 @@ internal static class FileToolUtil
             var servers = new List<ConcatInputServer>();
             try
             {
-                var muxFiles = files ?? inputs.Select(path => new OutputFile { Index = 999, FilePath = path }).ToArray();
+                var muxFiles = files;
                 if (operation == "mux" && tracks.Any(track => track != null))
                 {
                     // 字幕转换及 mkvmerge 中间轨道写到输出目录，源录制目录始终只读。

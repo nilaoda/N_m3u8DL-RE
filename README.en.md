@@ -89,20 +89,39 @@ N_m3u8DL-RE channels.m3u -sv "name=^Channel:for=all" --live-record-limit 00:03:0
 
 ## Utility commands
 
+| Command | Purpose |
+| --- | --- |
+| `concat` | Append file bytes in order without parsing containers or requiring FFmpeg; use `merge` for complete MP4 files |
+| `merge` | Join media in sequence using FFmpeg stream copy without transcoding; codecs and track layouts must be compatible |
+| `mux` | Put video, audio and subtitles into separate tracks in one file, without joining inputs in sequence |
+| `doctor` | Check external tool paths, versions and the system environment; `--json` produces a diagnostic report |
+
+All three file tools accept `-i FILE`, `-i DIR`, or `--input-dir DIR`. Repeat `-i` to set input order; `--input-dir` cannot be combined with `-i`.
+
+- Automatic directory discovery prioritizes directories with RE track names, init files or parts layouts, selecting matching init and decrypted segments. Use `mux` for multi-track task directories. Single-part `parts` layouts are supported; multi-part VOD still needs separate handling.
+- Ordinary directories accept common audio/video formats such as TS, MP4, MKV, M4A, AAC and MP3; `mux` also accepts subtitles such as SRT, VTT and ASS. Discovery is non-recursive and uses natural filename order: `clip1.mp4`, `clip2.mp4`, `clip10.mp4`.
+- Use `--pattern "*.mp4"` with either directory syntax to select files explicitly, bypassing RE track discovery. This can override automatic track discovery and treat each file as a separate mux input. Use automatic discovery for RE init/media segments.
+- `merge` automatically uses `DEMUXER` for complete containers such as MP4, MKV and M4A, and `LOCAL_HTTP` for TS and init-based segment tracks. Explicit or configured `--ffmpeg-concat-mode` values take precedence.
+- Add `--dry-run` to preview the final input order, selected segments and merge mode without writing files or requiring FFmpeg. Outputs cannot overwrite input files; keep outputs outside input directories so later scans do not include old outputs.
+
 ```text
 # Concatenate file bytes without FFmpeg
 N_m3u8DL-RE concat -i 1.ts -i 2.ts -o combined.ts
 
-# Read matching files from a directory in natural filename order; matches *.ts by default, configurable with --pattern
+# Select files explicitly in natural filename order; --pattern also works with -i DIR
 # --input-dir cannot be combined with -i
 N_m3u8DL-RE concat --input-dir segments --pattern "*.ts" -o combined.ts
 
-# Use FFmpeg to merge TS segments from a directory
-N_m3u8DL-RE merge --input-dir segments -o merged.mp4
+# Discover and merge MP4 or other media files in sequence, selecting the input mode automatically
+N_m3u8DL-RE merge -i clips -o merged.mp4
+# Select only MP4 files and preview their order and merge mode
+N_m3u8DL-RE merge --input-dir clips --pattern "*.mp4" -o merged.mp4 --dry-run
 
 # Mux video, audio and subtitles
 # Subtitle timing is adjusted automatically, preserving source files; disable with --auto-subtitle-fix false
 N_m3u8DL-RE mux -i video.mp4 -i audio.m4a -i subtitle.srt -o output.mp4
+# Discover media and subtitles in an ordinary directory, treating each file as a separate input
+N_m3u8DL-RE mux --input-dir tracks -o output.mkv
 
 # Merge tracks and mux a single-part VOD download or live recording; original segments are preserved
 N_m3u8DL-RE mux -i index_2026-10-10_23-56-12 -o recording.mkv
