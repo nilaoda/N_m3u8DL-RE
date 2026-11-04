@@ -141,6 +141,31 @@ internal static class MergeUtil
                     ? "dvh1" : "hvc1" }).ToArray();
     }
 
+    internal static bool CanSkipPartsNormalization(IReadOnlyList<string> files)
+    {
+        // MP4 的 mdhd timescale 对应 FFmpeg 的轨道 time_base。只读 moov，跳过 mdat，
+        // 不额外启动探测进程；轨道顺序、类型和时钟全部一致时，无需再次转封装。
+        (string Handler, uint Timescale)[]? reference = null;
+        foreach (var file in files)
+        {
+            if (Path.GetExtension(file).ToLowerInvariant() is not (".mp4" or ".m4a" or ".m4s"))
+                return false;
+            try
+            {
+                var tracks = MP4MediaInfoUtil.ReadTrackTimescales(file);
+                if (tracks == null || reference != null && !reference.SequenceEqual(tracks))
+                    return false;
+                reference ??= tracks;
+            }
+            catch (Exception ex) when (ex is IOException or ArgumentException or OverflowException)
+            {
+                // 不能确认时间基时沿用原有转封装流程，不据扩展名或编解码器推测。
+                return false;
+            }
+        }
+        return reference != null;
+    }
+
     public static bool ConcatMediaParts(string binary, string[] files, IReadOnlyList<MediaPart> parts, string output, MediaProcessingProgress? progress = null, IReadOnlyList<Mediainfo>? mediaInfos = null)
     {
         // init+媒体先形成各自可读取的文件；concat demuxer 重新读取每份配置，
@@ -150,13 +175,15 @@ internal static class MergeUtil
         try
         {
             var inputs = files.ToArray();
+            var skipNormalization = CanSkipPartsNormalization(inputs);
             for (var i = 0; i < inputs.Length; i++)
             {
-                if (Path.GetExtension(inputs[i]).ToLowerInvariant() is not (".mp4" or ".m4a" or ".m4s"))
+                if (skipNormalization || Path.GetExtension(inputs[i]).ToLowerInvariant() is not (".mp4" or ".m4a" or ".m4s"))
                     continue;
                 // concat demuxer 要求各输入轨道 time_base 一致。init 的 timescale 可以
                 // 不同，FFmpeg 解密也会改写它，因此先无损 remux 到共同的视频 timescale。
                 // copyts 保留 PTO 对应的源时间，不能在此把每份输入单独归零。
+                // 中间文件的起始非关键帧可能依赖前一 part，归一化时也不能丢弃。
                 var path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(inputs[i]))!, $"{Guid.NewGuid():N}.normalized.mp4");
                 normalized.Add(path);
                 progress?.Begin($"{ResString.processingNormalize} ({i + 1}/{inputs.Length})");
@@ -166,7 +193,7 @@ internal static class MergeUtil
                     mediaInfos ??= infos;
                 var tags = string.Join(" ", VideoTags(".mp4", infos));
                 if (InvokeFFmpeg(binary,
-                    $"-loglevel warning -nostdin -y -copyts -avoid_negative_ts disabled -i \"{Path.GetFullPath(inputs[i])}\" -map 0:v? -map 0:a? -map 0:s? -c copy {BinaryToolUtil.FFmpegStrictOptions} -video_track_timescale 90000 {tags} \"{path}\"",
+                    $"-loglevel warning -nostdin -y -copyts -avoid_negative_ts disabled -i \"{Path.GetFullPath(inputs[i])}\" -map 0:v? -map 0:a? -map 0:s? -c copy -copyinkf {BinaryToolUtil.FFmpegStrictOptions} -video_track_timescale 90000 {tags} \"{path}\"",
                     Path.GetDirectoryName(path)!, progress == null ? null : progress.Report) != 0)
                     return false;
                 inputs[i] = path;
@@ -237,7 +264,7 @@ internal static class MergeUtil
     public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
         bool fastStart = false,
         bool writeDate = true, FFmpegConcatMode concatMode = FFmpegConcatMode.LOCAL_HTTP, string poster = "", string audioName = "", string title = "",
-        string copyright = "", string comment = "", string encodingTool = "", string recTime = "", Action<MediaProgress>? progress = null, double? duration = null, IReadOnlyList<Mediainfo>? mediaInfos = null)
+        string copyright = "", string comment = "", string encodingTool = "", string recTime = "", Action<MediaProgress>? progress = null, double? duration = null, IReadOnlyList<Mediainfo>? mediaInfos = null, bool preserveInitialNonKeyFrames = false)
     {
         // 改为绝对路径
         outputPath = Path.GetFullPath(outputPath);
@@ -276,6 +303,9 @@ internal static class MergeUtil
             options.AddRange(["-map", format is "EAC3" or "AAC" or "AC3" ? "0:a" : "0"]);
         }
         options.AddRange(["-c", "copy"]);
+        // part 开头可能仍引用前一 part 的画面，保留起始非关键帧供最终拼接恢复解码上下文。
+        if (preserveInitialNonKeyFrames)
+            options.Add("-copyinkf");
         if (format == "M4A")
             options.AddRange(["-f", "mp4"]);
         if (format == "TS")
