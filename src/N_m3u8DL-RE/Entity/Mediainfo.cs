@@ -18,6 +18,13 @@ internal class Mediainfo
     public int? DolbyVisionProfile { get; set; }
     public bool HDR { get; set; }
 
+    internal Mediainfo CopyWithoutTiming()
+    {
+        var copy = (Mediainfo)MemberwiseClone();
+        copy.StartTime = null;
+        return copy;
+    }
+
     public override string? ToString()
     {
         return $"{(string.IsNullOrEmpty(Id) ? "NaN" : Id)}: " + string.Join(", ", new List<string?> { Type, BaseInfo, Resolution, Fps, Bitrate }.Where(i => !string.IsNullOrEmpty(i)));

@@ -28,12 +28,14 @@ internal partial class SimpleDownloadManager
     private readonly HashSet<string> reservedOutputPaths = new(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
         ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private VodInitCache? initCache;
+    // 多 part 的父流程传入共用缓存；普通单段下载直接探测。
+    private VodInitInfoCache? initInfoCache;
     private ConcurrentDictionary<long, double>? hlsMediaOrigins;
     private Task<bool>? hlsMediaReady;
     private bool hlsSubtitleOnlyCuts;
     private HashSet<string>? partLogMessages;
 
-    // 同一逻辑轨道的各 part 共用日志集合；仍逐段探测和处理，只合并重复的界面提示。
+    // 同一逻辑轨道的各 part 共用日志集合；各段仍检查实际配置，只合并重复的界面提示。
     // 不同轨道各有自己的集合，新的编码/分辨率/声道等信息仍会显示。
     private void LogPartOnce(string key, Action write)
     {
@@ -104,6 +106,39 @@ internal partial class SimpleDownloadManager
         return useAACFilter;
     }
 
+    private Task<List<Mediainfo>> ReadInitInfoAsync(string file)
+    {
+        if (initInfoCache != null)
+            return initInfoCache.ReadInitAsync(file);
+        return MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, file);
+    }
+
+    private bool CanDownloadHlsTsTogether(StreamSpec stream)
+    {
+        if (StreamExtractor.ExtractorType != ExtractorType.HLS || stream.MediaType == MediaType.SUBTITLES ||
+            stream.Extension is not (null or "ts") || SelectedSteams.Count != 1 || hlsMediaOrigins != null ||
+            stream.Playlist!.MediaParts.Any(part => part.MediaInit != null || part.PeriodIndex != null))
+            return false;
+        // 连续范围选择只改变首尾分片，不应触发逐 part 转封装；起始源时间可以不为零。
+        // 真正删除中间内容时仍保留原有时间轴重排，分片序号也不能互相覆盖。
+        long? previousIndex = null;
+        double? expectedSourceTime = null;
+        foreach (var segment in stream.Playlist.MediaParts.SelectMany(part => part.MediaSegments))
+        {
+            // 调用方可能未捕获 SourceTime，原始分片序号仍可识别中间被删除的片段。
+            if (previousIndex is { } previous && segment.Index != previous + 1)
+                return false;
+            previousIndex = segment.Index;
+            if (segment.SourceTime is { } source)
+            {
+                if (expectedSourceTime is { } expected && Math.Abs(source - expected) > 0.001)
+                    return false;
+                expectedSourceTime = source + segment.Duration;
+            }
+        }
+        return true;
+    }
+
     private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, bool isPart = false)
     {
         // HLS 文本字幕可能使用连续 PTS，也可能在 discontinuity 重启。
@@ -121,7 +156,8 @@ internal partial class SimpleDownloadManager
             (DownloaderConfig.MyOptions.Keys is { Length: > 0 } || !string.IsNullOrEmpty(DownloaderConfig.MyOptions.KeyTextFile)) &&
             streamSpec.Playlist!.MediaParts.Any(p => p.MediaSegments.Any(s => s.IsEncrypted)));
         if (!isPart && streamSpec.Playlist is { } playlist &&
-            (!rawHlsSubtitle || hlsMediaOrigins != null || hlsSubtitleOnlyCuts) && (needsPartProcessing || playlist.MediaParts.Count > 1 || playlist.MediaParts.Any(p => p.OutputDuration != null)))
+            (!rawHlsSubtitle || hlsMediaOrigins != null || hlsSubtitleOnlyCuts) && !CanDownloadHlsTsTogether(streamSpec) &&
+            (needsPartProcessing || playlist.MediaParts.Count > 1 || playlist.MediaParts.Any(p => p.OutputDuration != null)))
             return await DownloadPartsAsync(streamSpec, task, speedContainer);
         if (!isPart)
             speedContainer.ResetVars();
@@ -151,7 +187,8 @@ internal partial class SimpleDownloadManager
             if (splitSegments != null)
             {
                 segments = splitSegments;
-                Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileSplitWarn}[/]");
+                if (!isPart)
+                    Logger.WarnMarkUp($"[darkorange3_1]{ResString.singleFileSplitWarn}[/]");
                 if (DownloaderConfig.MyOptions.MP4RealTimeDecryption)
                 {
                     DownloaderConfig.MyOptions.MP4RealTimeDecryption = false;
@@ -295,7 +332,7 @@ internal partial class SimpleDownloadManager
                 if (!readInfo)
                 {
                     LogPartOnce("probe", () => Logger.WarnMarkUp(ResString.readingInfo));
-                    mediaInfos = await MediainfoUtil.ReadInfoAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, result.ActualFilePath);
+                    mediaInfos = await ReadInitInfoAsync(result.ActualFilePath);
                     LogMediaInfo(mediaInfos);
                     useAACFilter = await ChangeSpecInfoAsync(streamSpec, mediaInfos, useAACFilter);
                     readInfo = true;
@@ -770,7 +807,7 @@ internal partial class SimpleDownloadManager
                 }
                 processing?.Begin(ResString.processingMerge, logStart: false);
                 mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, concatMode: concatMode,
-                    progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration, mediaInfos: mediaInfos);
+                    progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration, mediaInfos: mediaInfos, preserveInitialNonKeyFrames: isPart);
                 if (mergeSuccess) output = ffOut;
             }
         }
