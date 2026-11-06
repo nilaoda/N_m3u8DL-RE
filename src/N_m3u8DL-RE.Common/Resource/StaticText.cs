@@ -1446,6 +1446,18 @@ internal static class StaticText
             zhTW: "指定HLS解密IV. 可以是文件, HEX或Base64",
             enUS: "Set the HLS decryption iv. Can be file, HEX or Base64"
         ),
+        ["cmd_customTXVDRMKey"] = new TextContainer
+        (
+            zhCN: "指定TXVDRM解密KEY (v2Key). 可以是文件, HEX或Base64",
+            zhTW: "指定TXVDRM解密KEY (v2Key). 可以是檔案, HEX或Base64",
+            enUS: "Set the TXVDRM decryption key (v2Key). Can be file, HEX or Base64"
+        ),
+        ["cmd_customTXVDRMIv"] = new TextContainer
+        (
+            zhCN: "指定TXVDRM解密IV (v2Nonce). 可以是文件, HEX或Base64",
+            zhTW: "指定TXVDRM解密IV (v2Nonce). 可以是檔案, HEX或Base64",
+            enUS: "Set the TXVDRM decryption iv (v2Nonce). Can be file, HEX or Base64"
+        ),
         ["cmd_customHLSScope"] = new TextContainer
         (
             zhCN: "指定自定义HLS加密方式、KEY和IV的适用范围 (ALL|VIDEO|AUDIO)",
