@@ -3,6 +3,7 @@ using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Entity;
 using N_m3u8DL_RE.Util;
+using static N_m3u8DL_RE.Tests.TestSupport.DownloadTestHelper;
 
 namespace N_m3u8DL_RE.Tests.Util;
 
@@ -71,6 +72,35 @@ public class VodOptimizationTests
             var distinct = await cache.DownloadAsync(second, Path.Combine(root, "distinct.mp4.tmp"), new SpeedContainer(), Download);
             Assert.Equal(2, downloads);
             Assert.Equal([2], await File.ReadAllBytesAsync(distinct!.ActualFilePath));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task IdenticalInitReusesInfoWithoutSharingPartTimingOrMutableResults()
+    {
+        if (!HasTool("ffmpeg")) return;
+        var root = Directory.CreateTempSubdirectory("vod-info-cache-").FullName;
+        try
+        {
+            var first = Path.Combine(root, "first.mp4");
+            var second = Path.Combine(root, "second.mp4");
+            await Run("ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=s=96x64:r=25",
+                "-t", "0.2", "-c:v", "libx264", "-bf", "0", first);
+            File.Copy(first, second);
+            var cache = new VodInitInfoCache("ffmpeg");
+            var original = Assert.Single(await cache.ReadInitAsync(first));
+            Assert.NotNull(original.StartTime);
+            original.BaseInfo = "changed";
+            var reused = Assert.Single(await cache.ReadInitAsync(second));
+            Assert.Equal("Video", reused.Type);
+            Assert.StartsWith("h264", reused.BaseInfo);
+            Assert.Null(reused.StartTime);
+            // 同一路径的实际内容变化后必须重新探测。
+            await Run("ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "sine=duration=0.2", "-c:a", "aac", second);
+            var changed = Assert.Single(await cache.ReadInitAsync(second));
+            Assert.Equal("Audio", changed.Type);
+            Assert.NotNull(changed.StartTime);
         }
         finally { Directory.Delete(root, true); }
     }

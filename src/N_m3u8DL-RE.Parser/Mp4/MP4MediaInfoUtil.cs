@@ -198,6 +198,41 @@ public static class MP4MediaInfoUtil
         return tracks.ToArray();
     }
 
+    public static (string Handler, uint Timescale)[]? ReadTrackTimescales(string file, CancellationToken token = default)
+    {
+        using var stream = File.OpenRead(file);
+        using var reader = new BinaryReader2(stream, leaveOpen: true);
+        var moov = ReadMovie(reader, token);
+        if (moov == null)
+            return null;
+        var tracks = new List<(string Handler, uint Timescale)>();
+        new MP4Parser()
+            .Box("moov", MP4Parser.Children)
+            .Box("trak", box =>
+            {
+                string handler = "";
+                uint timescale = 0;
+                new MP4Parser()
+                    .Box("mdia", MP4Parser.Children)
+                    .FullBox("mdhd", header =>
+                    {
+                        token.ThrowIfCancellationRequested();
+                        if (header.Version is 0 or 1)
+                            timescale = MP4Parser.ParseMDHD(header.Reader, header.Version);
+                    })
+                    .FullBox("hdlr", header =>
+                    {
+                        header.Reader.ReadUInt32();
+                        handler = MP4Parser.TypeToString(header.Reader.ReadUInt32());
+                    })
+                    .Parse(box.Reader.ReadBytes((int)box.Reader.GetLength()));
+                tracks.Add((handler, timescale));
+            })
+            .Parse(moov);
+        return tracks.Count == 0 || tracks.Any(track => track.Handler.Length == 0 || track.Timescale == 0)
+            ? null : tracks.ToArray();
+    }
+
     private static byte[]? ReadMovie(BinaryReader2 reader, CancellationToken token, List<long>? fragments = null)
     {
         var stream = reader.BaseStream;

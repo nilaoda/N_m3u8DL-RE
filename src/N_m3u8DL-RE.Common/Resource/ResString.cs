@@ -45,6 +45,15 @@ public static class ResString
     public static string toolsCompleted => GetText("toolsCompleted");
     public static string toolsProcessFailed => GetText("toolsProcessFailed");
     public static string toolsDryRun => GetText("toolsDryRun");
+    public static string cmd_toolsMergeMode => GetText("cmd_toolsMergeMode");
+    public static string toolsMergeMode => GetText("toolsMergeMode");
+    public static string toolsDirectoryRecording => GetText("toolsDirectoryRecording");
+    public static string toolsDirectoryFiles => GetText("toolsDirectoryFiles");
+    public static string toolsDirectoryEmpty => GetText("toolsDirectoryEmpty");
+    public static string toolsAutomaticPattern => GetText("toolsAutomaticPattern");
+    public static string toolsPatternRequiresDirectory => GetText("toolsPatternRequiresDirectory");
+    public static string toolsPatternInvalid => GetText("toolsPatternInvalid");
+    public static string toolsMultipleTracks => GetText("toolsMultipleTracks");
     public static string cmd_toolsInput => GetText("cmd_toolsInput");
     public static string cmd_toolsConcatOutput => GetText("cmd_toolsConcatOutput");
     public static string cmd_toolsOutput => GetText("cmd_toolsOutput");

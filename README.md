@@ -91,20 +91,39 @@ N_m3u8DL-RE channels.m3u -sv "name=^Channel:for=all" --live-record-limit 00:03:0
 
 ## 工具命令
 
+| 命令 | 用途 |
+| --- | --- |
+| `concat` | 按顺序拼接文件字节，不解析容器，也不需要 FFmpeg；完整 MP4 等文件通常应使用 `merge` |
+| `merge` | 将多段媒体按时间顺序连接，使用 FFmpeg 流复制，不转码；各段编码及轨道结构需兼容 |
+| `mux` | 把视频、音频和字幕作为不同轨道放入同一文件，不将各输入首尾连接 |
+| `doctor` | 检查外部工具的路径、版本及系统环境；`--json` 可输出诊断报告 |
+
+三个文件工具都接受 `-i 文件`、`-i 目录`，也可用 `--input-dir 目录` 指定一个目录。`-i` 可重复，输入之间保持指定顺序；`--input-dir` 不能与 `-i` 混用。
+
+- 目录自动识别优先处理有 RE 轨道命名、init 或 parts 等布局的目录，选择匹配的 init 和解密分片；多轨道任务目录请使用 `mux`。单段 `parts` 目录可恢复，多段点播仍需分别处理。
+- 普通目录自动读取常见音视频文件（如 TS、MP4、MKV、M4A、AAC、MP3），`mux` 还读取 SRT、VTT、ASS 等字幕。普通目录不递归，文件按自然顺序排列，例如 `clip1.mp4`、`clip2.mp4`、`clip10.mp4`。
+- `--pattern "*.mp4"` 可用于任一种目录输入，明确按文件名筛选，替代 RE 轨道识别；适合从混合目录选文件，或覆盖自动识别结果，将各文件作为独立混流输入。处理 RE 的 init/裸分片时应使用自动识别。
+- `merge` 自动对完整 MP4、MKV、M4A 等容器使用 `DEMUXER`，对 TS 和带 init 的分片轨道使用 `LOCAL_HTTP`。显式指定或配置的 `--ffmpeg-concat-mode` 优先。
+- 添加 `--dry-run` 可预览最终输入顺序、所选分片和合并模式，不写文件，也不要求 FFmpeg。输出不能覆盖输入；建议将输出放在输入目录外，避免下次扫描时选入旧输出。
+
 ```text
 # 字节拼接，无需 FFmpeg
 N_m3u8DL-RE concat -i 1.ts -i 2.ts -o combined.ts
 
-# 按通配符批量读取目录内的文件，按文件名自然排序；默认匹配 *.ts，可用 --pattern 修改
+# 显式筛选文件，按文件名自然排序；-i 目录也支持 --pattern
 # --input-dir 不能与 -i 混用
 N_m3u8DL-RE concat --input-dir segments --pattern "*.ts" -o combined.ts
 
-# 使用 FFmpeg 合并目录中的 TS 分片
-N_m3u8DL-RE merge --input-dir segments -o merged.mp4
+# 自动识别目录内的 MP4 等媒体文件并按顺序合并，无需手动选择输入模式
+N_m3u8DL-RE merge -i clips -o merged.mp4
+# 只选 MP4，并预览输入顺序和合并模式
+N_m3u8DL-RE merge --input-dir clips --pattern "*.mp4" -o merged.mp4 --dry-run
 
 # 混流视频、音频和字幕
 # 默认自动调整字幕时间轴，原文件不变；添加 --auto-subtitle-fix false 可关闭
 N_m3u8DL-RE mux -i video.mp4 -i audio.m4a -i subtitle.srt -o output.mp4
+# 也可自动发现普通目录内的媒体和字幕，每个文件作为独立输入
+N_m3u8DL-RE mux --input-dir tracks -o output.mkv
 
 # 单段点播或直播录制的分片未合并时，直接从任务目录合并各轨道并混流；原分片保留
 N_m3u8DL-RE mux -i index_2026-10-10_23-56-12 -o recording.mkv

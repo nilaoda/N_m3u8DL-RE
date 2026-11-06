@@ -29,6 +29,7 @@ internal partial class SimpleDownloadManager
         // 集合只在当前轨道顺序下载期间使用，不跨轨道或跨次下载去重。
         var logMessages = new HashSet<string>();
         var cache = new VodInitCache(Path.Combine(partsDir, "_init-cache"));
+        var sharedInitInfoCache = new VodInitInfoCache(DownloaderConfig.MyOptions.FFmpegBinaryPath!);
 
         for (var i = 0; i < parts.Count; i++)
         {
@@ -67,6 +68,7 @@ internal partial class SimpleDownloadManager
                 CheckContentLength = DownloaderConfig.CheckContentLength,
             }, [partStream], StreamExtractor);
             manager.initCache = cache;
+            manager.initInfoCache = sharedInitInfoCache;
             manager.partLogMessages = logMessages;
             manager.hlsMediaOrigins = hlsMediaOrigins;
             manager.hlsMediaReady = hlsMediaReady;
