@@ -15,8 +15,9 @@ internal static class PipeUtil
         {
             return new NamedPipeServerStream(pipeName, PipeDirection.InOut);
         }
-
-        var path = Path.Combine(Path.GetTempPath(), pipeName);
+        
+        var prepath = OtherUtil.GetEnvironmentVariable("RE_LIVE_PIPE_TMP_DIR", Path.GetTempPath());
+        var path = Path.Combine(prepath, pipeName);
         using var p = new Process();
         p.StartInfo = new ProcessStartInfo()
         {
