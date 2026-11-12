@@ -41,6 +41,10 @@ public static class ResString
     public static string processingSubtitles => GetText("processingSubtitles");
     public static string processingFailed => GetText("processingFailed");
     public static string processingFinishing => GetText("processingFinishing");
+    public static string hlsAacClockScan => GetText("hlsAacClockScan");
+    public static string hlsAacScanUnavailable => GetText("hlsAacScanUnavailable");
+    public static string hlsAacGapsFilled => GetText("hlsAacGapsFilled");
+    public static string hlsAacRepairFailed => GetText("hlsAacRepairFailed");
     public static string processingNormalize => GetText("processingNormalize");
     public static string toolsCompleted => GetText("toolsCompleted");
     public static string toolsProcessFailed => GetText("toolsProcessFailed");

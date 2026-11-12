@@ -166,7 +166,133 @@ internal static class MergeUtil
         return reference != null;
     }
 
-    public static bool ConcatMediaParts(string binary, string[] files, IReadOnlyList<MediaPart> parts, string output, MediaProcessingProgress? progress = null, IReadOnlyList<Mediainfo>? mediaInfos = null)
+    // Raw ADTS contains no per-stream tags or disposition. Copy source metadata when
+    // mapping a repaired stream, including tags of the untouched streams: any explicit
+    // per-stream metadata map disables FFmpeg's automatic copying for all streams.
+    private static readonly string[] DispositionNames = [
+        "default", "dub", "original", "comment", "lyrics", "karaoke", "forced", "hearing_impaired",
+        "visual_impaired", "clean_effects", "attached_pic", "timed_thumbnails", "non_diegetic", "captions",
+        "descriptions", "metadata", "dependent", "still_image", "multilayer"
+    ];
+
+    private static List<string> Dispositions(Mediainfo info) => DispositionNames.Where(flag =>
+        info.Text?.Contains($"({flag.Replace('_', ' ')})", StringComparison.Ordinal) == true).ToList();
+
+    private static async Task<ProcessUtil.Result> RunMergeAsync(string binary, List<string> input,
+        List<string> options, string output, IReadOnlyList<Mediainfo>? infos, bool checkAacClock,
+        CancellationToken token, bool log, bool loopbackInput, Action<MediaProgress>? progress, double? duration,
+        ConcatInputServer? server = null)
+    {
+        // 仅处理下载轨道的标准映射；自定义输入、封面和外部混音仍由原有命令处理。
+        var audioMap = options.FindIndex(value => value is "0:a?" or "0:a");
+        if (audioMap == -1 && infos is { Count: > 0 } && infos.All(info => info.Type == "Audio"))
+            audioMap = options.IndexOf("0");
+        var eligible = checkAacClock && Path.GetExtension(output).ToLowerInvariant() is ".mp4" or ".m4a" &&
+            infos != null && audioMap > 0 && options[audioMap - 1] == "-map" && !options.Contains("-i") &&
+            infos.Count(info => info.Type == "Video") <= 1 &&
+            !infos.Any(info => info.DolbyVison || info.Text?.Contains("(attached pic)", StringComparison.Ordinal) == true) &&
+            infos.Any(info => info.Type == "Audio" &&
+                info.BaseInfo?.StartsWith("aac (LC)", StringComparison.OrdinalIgnoreCase) == true);
+        string? temporary = null;
+        try
+        {
+            List<HlsAacGapRepair.PreparedTrack> repaired = [];
+            if (eligible)
+            {
+                if (log)
+                    Logger.Info(ResString.hlsAacClockScan);
+                temporary = Path.Combine(Path.GetDirectoryName(output)!, $".aac-{Guid.NewGuid():N}");
+                try
+                {
+                    repaired = await HlsAacGapRepair.PrepareAsync(binary, input, infos!, temporary,
+                        loopbackInput, token).ConfigureAwait(false);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or InvalidOperationException)
+                {
+                    Logger.Error(string.Format(ResString.hlsAacRepairFailed, ex.Message));
+                    return new(1, "", ex.Message);
+                }
+            }
+            if (repaired.Count > 0)
+            {
+                List<string> maps = [];
+                var byAudioIndex = repaired.ToDictionary(track => track.AudioIndex);
+                var audio = infos!.Where(info => info.Type == "Audio").ToList();
+                var filter = options.IndexOf("-bsf:a");
+                bool adtsToAsc = filter >= 0 && options[filter + 1] == "aac_adtstoasc";
+                if (adtsToAsc)
+                {
+                    options.RemoveRange(filter, 2);
+                    if (filter < audioMap) audioMap -= 2;
+                }
+                var nextInput = 1;
+                for (var index = 0; index < audio.Count; index++)
+                {
+                    if (byAudioIndex.TryGetValue(index, out var track))
+                    {
+                        input.AddRange(["-itsoffset", track.StartSeconds.ToString("R", CultureInfo.InvariantCulture),
+                            "-f", "aac", "-i", track.Path]);
+                        maps.AddRange(["-map", $"{nextInput++}:a:0"]);
+                        // Raw ADTS has an artificial 28.224 MHz clock. Restore the source
+                        // time base before MOV selects its movie timescale for ALL tracks.
+                        options.AddRange([$"-bsf:a:{index}", $"aac_adtstoasc,setts=time_base={track.TimeBase}"]);
+                    }
+                    else
+                    {
+                        maps.AddRange(["-map", $"0:a:{index}"]);
+                        if (adtsToAsc)
+                            options.AddRange([$"-bsf:a:{index}", "aac_adtstoasc"]);
+                    }
+                }
+                var copyDisposition = repaired.Any(track => Dispositions(audio[track.AudioIndex]).Count != 0);
+                options.RemoveRange(audioMap - 1, 2);
+                options.InsertRange(audioMap - 1, maps);
+                foreach (var (kind, selector) in new[] { ("Video", "v"), ("Audio", "a"), ("Subtitle", "s") })
+                {
+                    if (kind != "Audio" && !options.Contains($"0:{selector}?"))
+                        continue;
+                    var streams = infos!.Where(info => info.Type == kind).ToList();
+                    var dispositions = streams.Select(Dispositions).ToList();
+                    // 显式设置 disposition 会禁用 FFmpeg 自动选择各类型默认轨的行为。
+                    // 若原先没有默认轨，仍沿用它在多轨输出中选中第一轨的规则。
+                    if (copyDisposition && streams.Count > 1 && dispositions.All(flags => !flags.Contains("default")))
+                        dispositions[0].Add("default");
+                    for (var i = 0; i < streams.Count; i++)
+                    {
+                        options.AddRange([$"-map_metadata:s:{selector}:{i}", $"0:s:{selector}:{i}"]);
+                        if (copyDisposition && dispositions[i].Count > 0)
+                            options.AddRange([$"-disposition:{selector}:{i}", string.Join('+', dispositions[i])]);
+                    }
+                }
+            }
+            input.AddRange(options);
+            var resultPath = repaired.Count > 0 ? Path.Combine(temporary!, "result" + Path.GetExtension(output)) : output;
+            input.Add(resultPath);
+            if (repaired.Count > 0)
+                // FFmpeg 用被映射的源流选择输入起点。保留原音轨参与时钟计算，否则
+                // 替换最早的音轨会让原视频被单独归零。null 输出不写入分片或成品。
+                input.AddRange(["-map", "0:a", "-c", "copy", "-f", "null", "-"]);
+            var result = await RunMediaToolAsync(binary, input, token, log, loopbackInput, progress: progress,
+                duration: duration).ConfigureAwait(false);
+            if (server?.Error is { } error)
+                throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
+            if (result.ExitCode == 0 && repaired.Count > 0)
+            {
+                token.ThrowIfCancellationRequested();
+                File.Move(resultPath, output, overwrite: input.Contains("-y"));
+                Logger.Info(string.Format(ResString.hlsAacGapsFilled, repaired.Sum(track => track.Inserted)));
+            }
+            return result;
+        }
+        finally
+        {
+            try { if (Directory.Exists(temporary)) Directory.Delete(temporary, recursive: true); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Logger.Warn(ex.Message); }
+        }
+    }
+
+    public static bool ConcatMediaParts(string binary, string[] files, IReadOnlyList<MediaPart> parts, string output,
+        MediaProcessingProgress? progress = null, IReadOnlyList<Mediainfo>? mediaInfos = null, bool checkAacClock = false)
     {
         // init+媒体先形成各自可读取的文件；concat demuxer 重新读取每份配置，
         // 避免直接按字节拼接多个 moov 和发生回退的 tfdt。
@@ -200,26 +326,32 @@ internal static class MergeUtil
             }
             File.WriteAllText(listPath, BuildPartsConcatList(inputs, parts), new UTF8Encoding(false));
             var start = parts.FirstOrDefault()?.OutputStart ?? 0;
-            var offset = start == 0 ? "" : $" -itsoffset {start.ToString("R", CultureInfo.InvariantCulture)}";
-            var copyTs = parts.Any(p => p.OutputStart != null) ? " -copyts -avoid_negative_ts disabled" : "";
+            var copyTs = parts.Any(p => p.OutputStart != null);
+            List<string> arguments = ["-loglevel", "warning", "-nostdin", "-y"];
+            if (copyTs)
+                arguments.AddRange(["-copyts", "-avoid_negative_ts", "disabled"]);
+            if (start != 0)
+                arguments.AddRange(["-itsoffset", start.ToString("R", CultureInfo.InvariantCulture)]);
+            arguments.AddRange(["-f", "concat", "-safe", "0", "-i", listPath]);
+            List<string> options = ["-map", "0:v?", "-map", "0:a?", "-map", "0:s?", "-c", "copy"];
+            options.AddRange(BinaryToolUtil.FFmpegStrictArguments);
             // MPEG-TS 默认额外延迟输出时钟，字幕公共时间轴已经归零，必须保留该时间轴。
-            var tsOptions = copyTs.Length > 0 && Path.GetExtension(output).Equals(".ts", StringComparison.OrdinalIgnoreCase)
-                ? " -mpegts_copyts 1 -muxdelay 0" : "";
-            // M4A 扩展名默认选择 ipod muxer；与普通音频合并一致，显式使用 MP4 以支持 AC-3/E-AC-3。
-            var formatOptions = Path.GetExtension(output).Equals(".m4a", StringComparison.OrdinalIgnoreCase) ? " -f mp4" : "";
-            var videoTags = "";
             var format = Path.GetExtension(output).ToLowerInvariant();
+            if (copyTs && format == ".ts")
+                options.AddRange(["-mpegts_copyts", "1", "-muxdelay", "0"]);
+            // M4A 扩展名默认选择 ipod muxer；与普通音频合并一致，显式使用 MP4 以支持 AC-3/E-AC-3。
+            if (format == ".m4a")
+                options.AddRange(["-f", "mp4"]);
             if (format is ".mp4" or ".mkv")
             {
                 mediaInfos ??= MediainfoUtil.ReadTrackInfoAsync(binary,
                     new OutputFile { Index = 0, FilePath = files[0] }, default).GetAwaiter().GetResult();
-                videoTags = " " + string.Join(" ", VideoTags(format, mediaInfos));
+                options.AddRange(VideoTags(format, mediaInfos));
             }
             progress?.Begin(ResString.processingMerge, logStart: false);
-            return InvokeFFmpeg(binary,
-                $"-loglevel warning -nostdin -y{copyTs}{offset} -f concat -safe 0 -i \"{listPath}\" -map 0:v? -map 0:a? -map 0:s? -c copy {BinaryToolUtil.FFmpegStrictOptions}{tsOptions}{formatOptions}{videoTags} \"{Path.GetFullPath(output)}\"",
-                Path.GetDirectoryName(Path.GetFullPath(files[0]))!, progress == null ? null : progress.Report,
-                parts.Any(p => p.OutputStart != null) ? null : parts.Sum(p => p.OutputDuration ?? p.MediaSegments.Sum(s => s.Duration))) == 0;
+            return RunMergeAsync(binary, arguments, options, Path.GetFullPath(output), mediaInfos, checkAacClock,
+                default, true, false, progress == null ? null : progress.Report, copyTs ? null : parts.Sum(p => p.OutputDuration ?? p.MediaSegments.Sum(s => s.Duration)))
+                .GetAwaiter().GetResult().ExitCode == 0;
         }
         finally
         {
@@ -264,7 +396,7 @@ internal static class MergeUtil
     public static bool MergeByFFmpeg(string binary, string[] files, string outputPath, string muxFormat, bool useAACFilter,
         bool fastStart = false,
         bool writeDate = true, FFmpegConcatMode concatMode = FFmpegConcatMode.LOCAL_HTTP, string poster = "", string audioName = "", string title = "",
-        string copyright = "", string comment = "", string encodingTool = "", string recTime = "", Action<MediaProgress>? progress = null, double? duration = null, IReadOnlyList<Mediainfo>? mediaInfos = null, bool preserveInitialNonKeyFrames = false)
+        string copyright = "", string comment = "", string encodingTool = "", string recTime = "", Action<MediaProgress>? progress = null, double? duration = null, IReadOnlyList<Mediainfo>? mediaInfos = null, bool preserveInitialNonKeyFrames = false, bool checkAacClock = false)
     {
         // 改为绝对路径
         outputPath = Path.GetFullPath(outputPath);
@@ -316,7 +448,8 @@ internal static class MergeUtil
         try
         {
             return MergeByFFmpegAsync(binary, files, outputPath + extension, concatMode, options,
-                overwrite: true, log: true, progress: progress, duration: duration, mediaInfos: mediaInfos).GetAwaiter().GetResult() == 0;
+                overwrite: true, log: true, progress: progress, duration: duration, mediaInfos: mediaInfos,
+                checkAacClock: checkAacClock).GetAwaiter().GetResult() == 0;
         }
         catch (Exception ex) when (ex is IOException or SocketException or UnauthorizedAccessException)
         {
@@ -328,7 +461,7 @@ internal static class MergeUtil
     internal static async Task<int> MergeByFFmpegAsync(string binary, string[] files, string output,
         FFmpegConcatMode mode, IReadOnlyList<string>? outputOptions = null, bool overwrite = false,
         bool log = false, CancellationToken token = default, Action<MediaProgress>? progress = null, double? duration = null,
-        string[]? inputPaths = null, bool loopbackInput = false, IReadOnlyList<Mediainfo>? mediaInfos = null)
+        string[]? inputPaths = null, bool loopbackInput = false, IReadOnlyList<Mediainfo>? mediaInfos = null, bool checkAacClock = false)
     {
         var firstInput = files[0];
         files = inputPaths ?? files.Select(Path.GetFullPath).ToArray();
@@ -363,30 +496,29 @@ internal static class MergeUtil
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode));
             }
+            var options = new List<string>();
             if (outputOptions != null)
-                arguments.AddRange(outputOptions);
+                options.AddRange(outputOptions);
             else
             {
-                arguments.AddRange(["-map", "0:v?", "-map", "0:a?", "-map", "0:s?", "-c", "copy"]);
+                options.AddRange(["-map", "0:v?", "-map", "0:a?", "-map", "0:s?", "-c", "copy"]);
                 var format = Path.GetExtension(output).ToLowerInvariant();
                 if (format == ".mp4")
-                    arguments.AddRange(["-c:s", "mov_text"]);
+                    options.AddRange(["-c:s", "mov_text"]);
                 if (format == ".m4a")
-                    arguments.AddRange(["-vn", "-sn"]);
+                    options.AddRange(["-vn", "-sn"]);
             }
-            arguments.AddRange(BinaryToolUtil.FFmpegStrictArguments);
+            options.AddRange(BinaryToolUtil.FFmpegStrictArguments);
             var outputFormat = Path.GetExtension(output).ToLowerInvariant();
             if (outputFormat is ".mp4" or ".mkv")
             {
                 mediaInfos ??= await MediainfoUtil.ReadTrackInfoAsync(binary,
                     new OutputFile { Index = 0, FilePath = firstInput, Segments = mode == FFmpegConcatMode.DEMUXER ? null : files },
                     token).ConfigureAwait(false);
-                arguments.AddRange(VideoTags(outputFormat, mediaInfos));
+                options.AddRange(VideoTags(outputFormat, mediaInfos));
             }
-            arguments.Add(Path.GetFullPath(output));
-            var result = await RunMediaToolAsync(binary, arguments, token, log, server != null || loopbackInput, progress: progress, duration: duration).ConfigureAwait(false);
-            if (server?.Error is { } error)
-                throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
+            var result = await RunMergeAsync(binary, arguments, options, Path.GetFullPath(output), mediaInfos,
+                checkAacClock, token, log, server != null || loopbackInput, progress, duration, server).ConfigureAwait(false);
             // 直接 concat 协议仍可能耗尽句柄；失败时不改变时间轴处理方式，也不删除分片。
             if (log && result.ExitCode != 0 && IsTooManyOpenFilesError(result.Error))
                 Logger.WarnMarkUp(ResString.ffmpegMergeReachLimit);
