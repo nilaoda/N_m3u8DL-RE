@@ -365,12 +365,18 @@ internal class Program
 
         if (option.AutoSelect)
         {
-            if (basicStreams.Count != 0)
-                selectedStreams.Add(basicStreams.First());
+            var video = basicStreams.FirstOrDefault();
+            if (video != null)
+                selectedStreams.Add(video);
+            // HLS 的 EXT-X-MEDIA 音轨通常没有码率，码率相同时优先选择视频关联的音频组，与交互选择的默认音轨一致。
+            // 仅限 HLS：DASH/MSS 的 AudioId 只是解析时按码率推断的，不能覆盖声道数排序。
+            var linkedAudioId = extractor.ExtractorType == ExtractorType.HLS ? video?.AudioId : null;
             var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
             foreach (var lang in langs)
             {
-                selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
+                selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth)
+                    .ThenByDescending(a => linkedAudioId != null && a.GroupId == linkedAudioId)
+                    .ThenByDescending(GetOrder).First());
             }
             selectedStreams.AddRange(subs);
         }
