@@ -2136,6 +2136,12 @@ internal static class StaticText
             zhTW: "正在嘗試從文本文件搜尋KEY...",
             enUS: "Trying to search for KEY from text file..."
         ),
+        ["hlsKeyInvalidLength"] = new TextContainer
+        (
+            zhCN: "AES-128 密钥应为 16 字节，实际为 {0} 字节，密钥可能经过二次加密，可使用 --custom-hls-key 指定",
+            zhTW: "AES-128 金鑰應為 16 位元組，實際為 {0} 位元組，金鑰可能經過二次加密，可使用 --custom-hls-key 指定",
+            enUS: "AES-128 key must be 16 bytes but got {0} bytes; the key may be wrapped or encrypted, use --custom-hls-key to supply it"
+        ),
         ["decryptionFailed"] = new TextContainer
         (
             zhCN: "解密失败",

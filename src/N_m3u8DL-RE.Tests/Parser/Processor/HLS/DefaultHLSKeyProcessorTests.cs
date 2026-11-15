@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Parser.Config;
 using N_m3u8DL_RE.Parser.Processor.HLS;
 using Shouldly;
@@ -31,6 +32,80 @@ public class DefaultHLSKeyProcessorTests
             // 新的解析任务应重新读取当前密钥。
             Process(new DefaultHLSKeyProcessor(), new ParserConfig(), keyUri, "AES-128", "0x02")
                 .Key.ShouldBe(secondKey);
+        }
+        finally
+        {
+            File.Delete(keyPath);
+        }
+    }
+
+    private static readonly byte[] Aes128Key = Enumerable.Range(0xA0, 16).Select(i => (byte)i).ToArray();
+
+    public static TheoryData<string> TextKeyResponses => new()
+    {
+        "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+        "A0A1A2A3A4A5A6A7A8A9AAABACADAEAF\n",
+        "0xa0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+        "oKGio6SlpqeoqaqrrK2urw==",
+        "oKGio6SlpqeoqaqrrK2urw\r\n",
+    };
+
+    [Theory]
+    [MemberData(nameof(TextKeyResponses))]
+    public void Process_DecodesAes128KeyReturnedAsText(string response)
+    {
+        WithKeyFile(System.Text.Encoding.ASCII.GetBytes(response), keyUri =>
+        {
+            var info = Process(new DefaultHLSKeyProcessor(), new ParserConfig(), keyUri, "AES-128", "0x01");
+            info.Method.ShouldBe(EncryptMethod.AES_128);
+            info.Key.ShouldBe(Aes128Key);
+        });
+    }
+
+    [Fact]
+    public void Process_KeepsRaw16ByteKeyEvenWhenPrintable()
+    {
+        // 16 字节即为原始密钥，即使恰好全是可打印字符也不能再按文本解码。
+        var key = System.Text.Encoding.ASCII.GetBytes("0123456789abcdef");
+        WithKeyFile(key, keyUri =>
+            Process(new DefaultHLSKeyProcessor(), new ParserConfig(), keyUri, "AES-128", "0x01").Key.ShouldBe(key));
+    }
+
+    [Theory]
+    [InlineData(86)]
+    [InlineData(32)]
+    [InlineData(15)]
+    public void Process_RejectsAes128KeyWithInvalidLength(int length)
+    {
+        var key = Enumerable.Range(0, length).Select(i => (byte)(i * 37 % 256)).ToArray();
+        WithKeyFile(key, keyUri =>
+        {
+            var info = Process(new DefaultHLSKeyProcessor(), new ParserConfig(), keyUri, "AES-128", "0x01");
+            info.Method.ShouldBe(EncryptMethod.UNKNOWN);
+        });
+    }
+
+    [Fact]
+    public void Process_DoesNotNormalizeNonAesKeys()
+    {
+        // ChaCha20 等算法使用 32 字节密钥，不能套用 AES-128 的长度校验。
+        var key = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
+        WithKeyFile(key, keyUri =>
+        {
+            var config = new ParserConfig { CustomMethod = EncryptMethod.CHACHA20 };
+            var info = Process(new DefaultHLSKeyProcessor(), config, keyUri, "AES-128", "0x01");
+            info.Method.ShouldBe(EncryptMethod.CHACHA20);
+            info.Key.ShouldBe(key);
+        });
+    }
+
+    private static void WithKeyFile(byte[] content, Action<string> action)
+    {
+        var keyPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllBytes(keyPath, content);
+            action(new Uri(keyPath).AbsoluteUri);
         }
         finally
         {
