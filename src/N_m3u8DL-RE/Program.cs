@@ -365,12 +365,16 @@ internal class Program
 
         if (option.AutoSelect)
         {
-            if (basicStreams.Count != 0)
-                selectedStreams.Add(basicStreams.First());
+            var video = basicStreams.FirstOrDefault();
+            if (video != null)
+                selectedStreams.Add(video);
             var langs = audios.DistinctBy(a => a.Language).Select(a => a.Language);
             foreach (var lang in langs)
             {
-                selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth).ThenByDescending(GetOrder).First());
+                // HLS 的 EXT-X-MEDIA 音轨通常没有码率，码率相同时优先选择视频关联的音频组，与交互选择的默认音轨一致。
+                selectedStreams.Add(audios.Where(a => a.Language == lang).OrderByDescending(a => a.Bandwidth)
+                    .ThenByDescending(a => video?.AudioId != null && a.GroupId == video.AudioId)
+                    .ThenByDescending(GetOrder).First());
             }
             selectedStreams.AddRange(subs);
         }
