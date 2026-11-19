@@ -77,13 +77,45 @@ public class DefaultHLSKeyProcessorTests
     [InlineData(15)]
     public void Process_RejectsAes128KeyWithInvalidLength(int length)
     {
-        var key = Enumerable.Range(0, length).Select(i => (byte)(i * 37 % 256)).ToArray();
-        WithKeyFile(key, keyUri =>
-        {
-            var info = Process(new DefaultHLSKeyProcessor(), new ParserConfig(), keyUri, "AES-128", "0x01");
-            info.Method.ShouldBe(EncryptMethod.UNKNOWN);
-        });
+        // 无效 key 必须在解析清单时终止，不能当作未知加密继续下载。
+        WithKeyFile(InvalidKey(length), keyUri =>
+            Should.Throw<InvalidHLSKeyException>(() =>
+                Process(new DefaultHLSKeyProcessor(), new ParserConfig(), keyUri, "AES-128", "0x01")));
     }
+
+    [Fact]
+    public void Process_RejectsInvalidKeyWithCustomAes128Method()
+    {
+        WithKeyFile(InvalidKey(86), keyUri =>
+            Should.Throw<InvalidHLSKeyException>(() =>
+                Process(new DefaultHLSKeyProcessor(), new ParserConfig { CustomMethod = EncryptMethod.AES_128 },
+                    keyUri, "SAMPLE-AES", "0x01")));
+    }
+
+    [Fact]
+    public void Process_DoesNotCacheInvalidKey()
+    {
+        var keyPath = Path.GetTempFileName();
+        try
+        {
+            var keyUri = new Uri(keyPath).AbsoluteUri;
+            var processor = new DefaultHLSKeyProcessor();
+            var config = new ParserConfig();
+            File.WriteAllBytes(keyPath, InvalidKey(86));
+            Should.Throw<InvalidHLSKeyException>(() => Process(processor, config, keyUri, "AES-128", "0x01"));
+
+            // 同一处理器再次请求时应重新获取，而不是复用被拒绝的 key。
+            File.WriteAllBytes(keyPath, Aes128Key);
+            Process(processor, config, keyUri, "AES-128", "0x01").Key.ShouldBe(Aes128Key);
+        }
+        finally
+        {
+            File.Delete(keyPath);
+        }
+    }
+
+    private static byte[] InvalidKey(int length) =>
+        Enumerable.Range(0, length).Select(i => (byte)(i * 37 % 256)).ToArray();
 
     [Fact]
     public void Process_DoesNotNormalizeNonAesKeys()
