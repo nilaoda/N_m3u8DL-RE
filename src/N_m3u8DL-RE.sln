@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "N_m3u8DL-RE.Parser", "N_m3u
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "N_m3u8DL-RE.Tests", "N_m3u8DL-RE.Tests\N_m3u8DL-RE.Tests.csproj", "{CF51B8FF-E4EF-49D6-8595-AFAFD96D9253}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "N_m3u8DL-RE.Protocol", "N_m3u8DL-RE.Protocol\N_m3u8DL-RE.Protocol.csproj", "{2A3651B2-EA05-4F12-A858-86FDC7EBBEF4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{CF51B8FF-E4EF-49D6-8595-AFAFD96D9253}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF51B8FF-E4EF-49D6-8595-AFAFD96D9253}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF51B8FF-E4EF-49D6-8595-AFAFD96D9253}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A3651B2-EA05-4F12-A858-86FDC7EBBEF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A3651B2-EA05-4F12-A858-86FDC7EBBEF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A3651B2-EA05-4F12-A858-86FDC7EBBEF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A3651B2-EA05-4F12-A858-86FDC7EBBEF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

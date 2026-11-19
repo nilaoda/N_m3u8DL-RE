@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -26,17 +27,54 @@ internal static class BinaryDownloadRunner
         ValidateOptions(option);
 
         var fileName = GetFileName(option, source);
+        TaskExecutionContext.Current?.Observer.Tracks([new TrackInfo("0", fileName, "binary")]);
         var savePath = Path.Combine(option.SaveDir ?? Environment.CurrentDirectory, fileName);
         Logger.Info(ResString.saveName + savePath);
         if (File.Exists(savePath))
         {
+            TaskExecutionContext.Current?.AddOutput(savePath);
             Logger.Warn($"File already exists, skipping download: {savePath}");
             return;
         }
 
         var downloader = new BinaryDownloadManager(readTimeout: TimeSpan.FromSeconds(option.HttpRequestTimeout));
         var length = source.Response?.Content.Headers.ContentLength;
-        if (Console.IsOutputRedirected || Console.IsErrorRedirected || option.NoAnsiColor)
+        if (TaskExecutionContext.Current?.IsWorker == true)
+        {
+            var context = TaskExecutionContext.Current;
+            long received = 0, downloaded = 0, previous = 0;
+            var watch = Stopwatch.StartNew();
+            var lastReport = TimeSpan.Zero;
+            void Report(bool final = false)
+            {
+                lock (watch)
+                {
+                    var elapsed = watch.Elapsed;
+                    if (!final && elapsed - lastReport < TimeSpan.FromMilliseconds(500))
+                        return;
+                    var current = Interlocked.Read(ref received);
+                    var speed = (current - previous) / Math.Max(0.001, (elapsed - lastReport).TotalSeconds);
+                    previous = current;
+                    lastReport = elapsed;
+                    context.Observer.Progress(new TrackSnapshot("0", "downloading", Interlocked.Read(ref downloaded),
+                        current, length, speed, Fraction: final ? 1 : length > 0 ? Math.Min(0.9999, (double)Interlocked.Read(ref downloaded) / length.Value) : null));
+                }
+            }
+            await downloader.DownloadAsync(source, savePath, headers, option.ThreadCount, option.DownloadRetryCount,
+                cancellationToken: context.Control.CancellationToken, maxSpeed: option.MaxSpeed,
+                onReceived: bytes =>
+                {
+                    Interlocked.Add(ref received, bytes);
+                    Report();
+                },
+                onDownloaded: bytes =>
+                {
+                    Interlocked.Exchange(ref downloaded, bytes);
+                    Report();
+                });
+            Report(final: true);
+        }
+        else if (Console.IsOutputRedirected || Console.IsErrorRedirected || option.NoAnsiColor)
         {
             await DownloadWithLogAsync(downloader, option, source, savePath, headers, length);
         }
@@ -44,6 +82,7 @@ internal static class BinaryDownloadRunner
         {
             await DownloadWithProgressAsync(downloader, option, source, savePath, headers, length);
         }
+        TaskExecutionContext.Current?.AddOutput(savePath);
         Logger.InfoMarkUp("[white on green]Done[/]");
     }
 

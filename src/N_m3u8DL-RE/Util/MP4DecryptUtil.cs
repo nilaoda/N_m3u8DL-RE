@@ -1,9 +1,10 @@
 ﻿using Mp4SubtitleParser;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
+using N_m3u8DL_RE.Enum;
+using N_m3u8DL_RE.Runtime;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using N_m3u8DL_RE.Enum;
 
 namespace N_m3u8DL_RE.Util;
 
@@ -166,17 +167,20 @@ internal static partial class MP4DecryptUtil
     {
         Logger.DebugMarkUp($"FileName: {name}");
         Logger.DebugMarkUp($"Arguments: {arg}");
-        var process = Process.Start(new ProcessStartInfo()
+        if (TaskExecutionContext.Current?.IsWorker == true)
         {
-            FileName = name,
-            Arguments = arg,
-            // RedirectStandardOutput = true,
-            // RedirectStandardError = true,
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            WorkingDirectory = workDir
-        });
-        await process!.WaitForExitAsync();
+            var result = await ProcessUtil.RunCommandAsync(name, arg, workDir ?? Environment.CurrentDirectory,
+                line => Logger.Warn(line));
+            return result.ExitCode == 0;
+        }
+
+        // CLI 直接显示解密工具的输出，Worker 通过日志事件转发诊断。
+        using var process = Process.Start(new ProcessStartInfo
+        {
+            FileName = name, Arguments = arg, WorkingDirectory = workDir ?? Environment.CurrentDirectory,
+            CreateNoWindow = true, UseShellExecute = false
+        })!;
+        await process.WaitForExitAsync();
         return process.ExitCode == 0;
     }
 
@@ -308,22 +312,9 @@ internal static partial class MP4DecryptUtil
         try
         {
             File.Move(output, source);
-            using var p = new Process();
-            p.StartInfo = new ProcessStartInfo()
-            {
-                FileName = File.Exists(bin) ? Path.GetFullPath(bin) : bin,
-                Arguments = cmd,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                WorkingDirectory = workDir
-            };
-            p.Start();
-            var standardOutput = p.StandardOutput.ReadToEndAsync();
-            var errorOutput = p.StandardError.ReadToEnd();
-            p.WaitForExit();
-            standardOutput.GetAwaiter().GetResult();
-            return shakaKeyIdRegex.Match(errorOutput).Groups[1].Value;
+            var result = ProcessUtil.RunCommandAsync(File.Exists(bin) ? Path.GetFullPath(bin) : bin,
+                cmd, workDir, _ => { }).GetAwaiter().GetResult();
+            return shakaKeyIdRegex.Match(result.Error).Groups[1].Value;
         }
         finally
         {

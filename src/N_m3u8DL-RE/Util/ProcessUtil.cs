@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Common.Util;
 using System.Diagnostics;
 using System.Text;
 
@@ -29,6 +30,10 @@ internal static class ProcessUtil
         bool printError, string? workingDirectory, bool loopbackInput, Action<string>? errorLine, int captureLimit,
         Action<string>? outputLine)
     {
+        using var operation = OperationCancellation.Link(token);
+        token = operation.Token;
+        token.ThrowIfCancellationRequested();
+        startInfo.RedirectStandardInput = true;
         startInfo.UseShellExecute = false;
         startInfo.CreateNoWindow = true;
         startInfo.RedirectStandardOutput = true;
@@ -44,6 +49,7 @@ internal static class ProcessUtil
         }
         using var process = new Process { StartInfo = startInfo };
         process.Start();
+        process.StandardInput.Close();
         var output = outputLine == null ? ReadAsync(process.StandardOutput, false, captureLimit) : ReadLinesAsync(process.StandardOutput, outputLine, captureLimit);
         var error = errorLine == null ? ReadAsync(process.StandardError, printError, captureLimit) : ReadLinesAsync(process.StandardError, errorLine, captureLimit);
         try

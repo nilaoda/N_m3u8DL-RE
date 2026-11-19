@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using N_m3u8DL_RE.Downloader;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Entity;
@@ -88,7 +89,7 @@ internal partial class SimpleDownloadManager
         if (processing != null)
         {
             processing.Part = null;
-            processing.Begin(ResString.processingPreparing);
+            processing.Begin(MediaProcessingStage.Preparing);
         }
         // 无 init 的 HLS TS 按用户选项直接拼接，保留源字节和时间戳。
         // 同任务含带 init 的媒体时，沿用共同时间轴处理。
@@ -127,19 +128,19 @@ internal partial class SimpleDownloadManager
         bool success;
         if (subtitle)
         {
-            processing?.Begin(ResString.processingSubtitles);
+            processing?.Begin(MediaProcessingStage.Subtitles);
             success = await MergeSubtitlesAsync(parts, outputs, outputPath);
         }
         else if (binaryMerge)
         {
-            processing?.Begin(ResString.processingMerge, logStart: false);
+            processing?.Begin(MediaProcessingStage.Merging, logStart: false);
             await MergeUtil.CombineMultipleFilesIntoSingleFileAsync(outputs.Select(output => output.FilePath).ToArray(),
                 outputPath, overwrite: false, progress: processing == null ? null : processing.Report);
             success = true;
         }
         else if (copySingle)
         {
-            processing?.Begin(ResString.processingFinishing);
+            processing?.Begin(MediaProcessingStage.Finalizing);
             if (DownloaderConfig.MyOptions.DelAfterDone)
                 File.Move(first.FilePath, outputPath);
             else
@@ -160,7 +161,7 @@ internal partial class SimpleDownloadManager
             File.Delete(outputPath);
             return false;
         }
-        processing?.Begin(ResString.processingFinishing);
+        processing?.Begin(MediaProcessingStage.Finalizing);
         first.FilePath = outputPath;
         first.Duration = parts.Sum(part => part.OutputDuration ?? part.MediaSegments.Sum(segment => segment.Duration));
         // 只有完成时间轴归一化的媒体才要求混流保留该时间轴。
@@ -176,6 +177,7 @@ internal partial class SimpleDownloadManager
                     File.Delete(file);
             OtherUtil.SafeDeleteDir(partsDir);
         }
+        TaskExecutionContext.Current?.AddOutput(outputPath);
         processing?.Report(new(Bytes: new FileInfo(outputPath).Length));
         return true;
     }

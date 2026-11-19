@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Column;
+﻿using N_m3u8DL_RE.Runtime;
+using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
@@ -67,6 +68,9 @@ internal class HTTPLiveRecordManager
         }
 
         using var state = new RecordingState();
+        var context = TaskExecutionContext.Current;
+        using var cancelRegistration = context?.Control.CancellationToken.Register(state.Cancellation.Cancel) ?? default;
+        using var stopRegistration = context?.Control.StopToken.Register(state.Cancellation.Cancel) ?? default;
         var isChannel = StreamExtractor.ExtractorType == ExtractorType.IPTV_M3U;
         var dirName = $"{DownloaderConfig.MyOptions.SaveName ?? NowDateTime.ToString("yyyy-MM-dd_HH-mm-ss")}_{taskId}_{OtherUtil.GetValidFileName(streamSpec.GroupId ?? "", "-")}_{streamSpec.Codecs}_{streamSpec.Bandwidth}_{streamSpec.Language}";
         var saveDir = DownloaderConfig.MyOptions.SaveDir ?? Environment.CurrentDirectory;
@@ -93,6 +97,7 @@ internal class HTTPLiveRecordManager
             output = OtherUtil.HandleFileCollision(output, streamSpec, ReservedPaths);
         if (File.Exists(output))
         {
+            context?.AddOutput(output);
             Logger.Warn($"File already exists, skipping recording: {output}");
             return true;
         }
@@ -159,6 +164,7 @@ internal class HTTPLiveRecordManager
             }
         }
 
+        context?.AddOutput(output);
         Logger.InfoMarkUp("File Size: " + GlobalUtil.FormatFileSize(RecordingSizeDic[taskId]));
         return true;
     }
@@ -259,7 +265,7 @@ internal class HTTPLiveRecordManager
     public async Task<bool> StartRecordAsync()
     {
         DownloaderConfig.MyOptions.LiveRecordLimit ??= TimeSpan.MaxValue;
-        if (Console.IsOutputRedirected || Console.IsErrorRedirected || DownloaderConfig.MyOptions.NoAnsiColor)
+        if (TaskExecutionContext.Current?.IsWorker != true && (Console.IsOutputRedirected || Console.IsErrorRedirected || DownloaderConfig.MyOptions.NoAnsiColor))
         {
             var results = await Task.WhenAll(SelectedSteams.Select((stream, index) =>
             {
@@ -288,7 +294,7 @@ internal class HTTPLiveRecordManager
         };
         progress.Columns(progressColumns);
 
-        await progress.StartAsync(async ctx =>
+        await ProgressSession.RunAsync(progress, SpeedContainerDic, async ctx =>
         {
             // 创建任务
             var dic = SelectedSteams.Select(item =>
@@ -315,7 +321,7 @@ internal class HTTPLiveRecordManager
                 var consumerTask = TryRecordStreamAsync(kp.Key, task.Id, SpeedContainerDic[task.Id], task);
                 Results[kp.Key] = await consumerTask;
             });
-        });
+        }, RecordingDurDic);
 
         var success = Results.Values.All(v => v == true);
 

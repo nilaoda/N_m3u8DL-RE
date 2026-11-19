@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Entity;
@@ -13,12 +14,17 @@ namespace N_m3u8DL_RE.Util;
 
 internal static class FileToolUtil
 {
-    internal static async Task<int> ExecuteAsync(string operation, OutputFile[] files, string output,
-        string? pattern, bool overwrite, bool dryRun, string? ffmpegPath,
-        string? mkvmergePath, string muxer, FFmpegConcatMode? requestedMode, bool autoSubtitleFix, CancellationToken token,
-        string? title = null)
+    internal static async Task<FileTaskResult> ExecuteAsync(FileTaskOptions options, CancellationToken token)
     {
-        files = ToolInputResolver.Expand(operation, files, pattern, token);
+        var operation = options.Operation;
+        var output = options.Output;
+        if (operation is not ("concat" or "merge" or "mux"))
+            throw new ArgumentException("Unsupported file operation.");
+        if (string.IsNullOrWhiteSpace(output))
+            throw new ArgumentException("Output is required.");
+        token.ThrowIfCancellationRequested();
+        var files = options.Inputs;
+        files = ToolInputResolver.Expand(operation, files, options.Pattern, token);
         var inputs = files.Select(file => file.FilePath).ToArray();
         // 目录输入先规划分片，输出保护必须覆盖源目录中的全部文件，包括未选用的原始 init。
         var tracks = new RecordingTrack?[inputs.Length];
@@ -30,7 +36,7 @@ internal static class FileToolUtil
             else if (!File.Exists(inputs[i]))
                 throw new FileNotFoundException($"{ResString.toolsInputMissing}: {inputs[i]}", inputs[i]);
         }
-        var mode = requestedMode ?? ToolInputResolver.SelectMergeMode(inputs, tracks);
+        var mode = options.ConcatMode ?? ToolInputResolver.SelectMergeMode(inputs, tracks);
         var sources = inputs.SelectMany((input, i) => tracks[i]?.Sources ?? [input]).ToArray();
         output = Path.GetFullPath(output);
         var comparer = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
@@ -45,18 +51,18 @@ internal static class FileToolUtil
         }
         if (conflictingInput != null)
             throw new ArgumentException(string.Format(ResString.toolsOutputIsInput, output, conflictingInput, Environment.NewLine));
-        if (File.Exists(output) && !overwrite)
+        if (File.Exists(output) && !options.Overwrite)
             throw new IOException(ResString.toolsOutputExists);
         var format = Path.GetExtension(output).ToLowerInvariant();
         if (operation != "concat" && format is not (".mp4" or ".mkv" or ".ts" or ".m4a"))
             throw new ArgumentException(ResString.toolsFormatInvalid);
-        if (operation == "mux" && muxer == "mkvmerge" && format != ".mkv")
+        if (operation == "mux" && options.Muxer == "mkvmerge" && format != ".mkv")
             throw new ArgumentException(ResString.toolsMkvmergeFormat);
         Logger.Info(string.Format(ResString.toolsProcessing, operation, inputs.Length));
         Logger.InfoMarkUp($"[deepskyblue3]{output.EscapeMarkup()}[/]");
         if (operation == "merge")
             Logger.Info(string.Format(ResString.toolsMergeMode, mode));
-        if (dryRun)
+        if (options.DryRun)
         {
             foreach (var file in files)
                 LanguageCodeUtil.ConvertLangCodeAndDisplayName(file);
@@ -73,22 +79,22 @@ internal static class FileToolUtil
                 if (info.LangCode != null || info.Description != null)
                     Logger.Info($"    lang={info.LangCode} name={info.Description}");
             }
-            if (title != null)
-                Logger.Info($"title={title}");
+            if (options.Title != null)
+                Logger.Info($"title={options.Title}");
             Logger.Info(ResString.toolsDryRun);
-            Console.WriteLine($"{operation} => {output}");
-            return 0;
+            return new(true, output);
         }
-        var binary = operation == "concat" ? null : muxer == "mkvmerge"
-            ? BinaryToolUtil.Resolve("mkvmerge", mkvmergePath) : BinaryToolUtil.Resolve("ffmpeg", ffmpegPath);
+        var binary = operation == "concat" ? null : options.Muxer == "mkvmerge"
+            ? BinaryToolUtil.Resolve("mkvmerge", options.MkvmergeBinaryPath) : BinaryToolUtil.Resolve("ffmpeg", options.FFmpegBinaryPath);
         if (operation != "concat" && binary == null)
-            throw new FileNotFoundException(muxer == "mkvmerge" ? ResString.mkvmergeNotFound : ResString.ffmpegNotFound);
+            throw new FileNotFoundException(options.Muxer == "mkvmerge" ? ResString.mkvmergeNotFound : ResString.ffmpegNotFound);
         if (binary != null)
-            Logger.Info($"{(muxer == "mkvmerge" ? "mkvmerge" : "ffmpeg")}: {binary}");
+            Logger.Info($"{(options.Muxer == "mkvmerge" ? "mkvmerge" : "ffmpeg")}: {binary}");
 
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         // 先写同目录临时文件，失败或取消时保留原输出；完成后才替换。
         var temporary = Path.Combine(Path.GetDirectoryName(output)!, $".re-{Guid.NewGuid():N}{format}");
+        string? errorMessage = null;
         var success = await MediaProcessingProgress.RunAsync(operation, async processing =>
         {
             string? trackDirectory = null;
@@ -109,9 +115,10 @@ internal static class FileToolUtil
                             prepared.Add(muxFiles[i]);
                             continue;
                         }
-                        processing.Begin(muxer == "ffmpeg" && track.Info.MediaType != MediaType.SUBTITLES
-                            ? ResString.processingPreparing : $"{ResString.processingMerge}: {Path.GetFileName(track.Info.FilePath)}");
-                        var file = await track.PrepareAsync(trackDirectory, i, token, processing.Report, virtualInput: muxer == "ffmpeg");
+                        var preparing = options.Muxer == "ffmpeg" && track.Info.MediaType != MediaType.SUBTITLES;
+                        processing.Begin(preparing ? MediaProcessingStage.Preparing : MediaProcessingStage.Merging,
+                            preparing ? null : $"{ResString.processingMerge}: {Path.GetFileName(track.Info.FilePath)}");
+                        var file = await track.PrepareAsync(trackDirectory, i, token, processing.Report, virtualInput: options.Muxer == "ffmpeg");
                         if (file != null)
                             prepared.Add(file);
                     }
@@ -134,11 +141,11 @@ internal static class FileToolUtil
                         return tracks[i]?.Inputs ?? [input];
                     }).ToArray();
                 }
-                using var timeline = operation == "mux" && autoSubtitleFix
-                    ? await MuxSubtitleTimeline.CreateAsync(muxFiles, ffmpegPath, token,
+                using var timeline = operation == "mux" && options.AutoSubtitleFix
+                    ? await MuxSubtitleTimeline.CreateAsync(muxFiles, options.FFmpegBinaryPath, token,
                         alignMedia: tracks.Any(track => track != null), temporaryDirectory: trackDirectory) : null;
                 var muxInputs = timeline?.Inputs.ToArray() ?? inputs.ToArray();
-                if (operation == "mux" && muxer == "ffmpeg")
+                if (operation == "mux" && options.Muxer == "ffmpeg")
                 {
                     for (var i = 0; i < muxFiles.Length; i++)
                     {
@@ -151,15 +158,15 @@ internal static class FileToolUtil
                 }
                 if (operation == "concat")
                 {
-                    processing.Begin(ResString.processingMerge);
+                    processing.Begin(MediaProcessingStage.Merging);
                     await MergeUtil.CombineMultipleFilesIntoSingleFileAsync(inputs, temporary, overwrite: false, token: token, progress: processing.Report);
                 }
                 else
                 {
-                    processing.Begin(operation == "mux" ? ResString.processingMux : ResString.processingMerge);
+                    processing.Begin(operation == "mux" ? MediaProcessingStage.Muxing : MediaProcessingStage.Merging);
                     var exitCode = operation == "mux"
                         ? await MergeUtil.MuxInputsAsync(binary!, muxFiles,
-                            temporary, useMkvmerge: muxer == "mkvmerge", timeline: timeline, title: title, token: token, progress: processing.Report,
+                            temporary, useMkvmerge: options.Muxer == "mkvmerge", timeline: timeline, title: options.Title, token: token, progress: processing.Report,
                             inputPaths: muxInputs, loopbackInput: servers.Count > 0)
                         : await MergeUtil.MergeByFFmpegAsync(binary!, inputs, temporary, mode, token: token, progress: processing.Report,
                             inputPaths: servers.Count > 0 ? inputs : null, loopbackInput: servers.Count > 0,
@@ -168,15 +175,16 @@ internal static class FileToolUtil
                         if (server.Error is { } error)
                             throw new IOException(string.Format(ResString.ffmpegConcatInputFailed, error.Message), error);
                     // mkvmerge 的 1 表示成功但有警告，2 才是错误。
-                    if (exitCode != 0 && !(muxer == "mkvmerge" && exitCode == 1))
+                    if (exitCode != 0 && !(options.Muxer == "mkvmerge" && exitCode == 1))
                     {
-                        Logger.Error(string.Format(ResString.toolsProcessFailed, operation, exitCode));
+                        errorMessage = string.Format(ResString.toolsProcessFailed, operation, exitCode);
+                        Logger.Error(errorMessage);
                         return false;
                     }
                 }
                 token.ThrowIfCancellationRequested();
-                processing.Begin(ResString.processingFinishing);
-                File.Move(temporary, output, overwrite);
+                processing.Begin(MediaProcessingStage.Finalizing);
+                File.Move(temporary, output, options.Overwrite);
                 processing.Report(new(Bytes: new FileInfo(output).Length));
                 return true;
             }
@@ -195,9 +203,7 @@ internal static class FileToolUtil
                 }
             }
         });
-        if (success)
-            Console.WriteLine(output);
-        return success ? 0 : 1;
+        return new(success, output, errorMessage);
     }
 
     [StructLayout(LayoutKind.Sequential)]

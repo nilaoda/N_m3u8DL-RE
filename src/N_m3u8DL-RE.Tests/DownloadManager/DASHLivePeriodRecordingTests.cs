@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using System.Net;
 using N_m3u8DL_RE.Config;
 using N_m3u8DL_RE.DownloadManager;
@@ -96,7 +97,7 @@ public class DASHLivePeriodRecordingTests
                 extractor.RawFiles["meta.json"] = "new metadata";
                 extractor.RawFiles["meta_selected.json"] = "selected metadata";
                 options.WriteMetaJson = true;
-                createdMetadataFiles = await Program.WriteRawFilesAsync(options, extractor, Path.Combine(root, "tmp"));
+                createdMetadataFiles = await DownloadTaskRunner.WriteRawFilesAsync(options, extractor, Path.Combine(root, "tmp"));
             }
             var manager = new SimpleLiveRecordManager2(new DownloaderConfig
                 { DirPrefix = Path.Combine(root, "tmp"), MyOptions = options, CreatedMetadataFiles = createdMetadataFiles }, streams, extractor);

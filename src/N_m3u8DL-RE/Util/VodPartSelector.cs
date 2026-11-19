@@ -1,3 +1,5 @@
+using N_m3u8DL_RE.Runtime;
+using N_m3u8DL_RE.ConsoleUI;
 using System.Globalization;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
@@ -80,8 +82,9 @@ internal static partial class VodPartSelector
 
     internal static bool ShouldPrompt(MyOption options) => options.VodSelectParts ??
         (!options.AutoSelect && !options.SubOnly && options.VideoFilter == null && options.AudioFilter == null &&
-         options.SubtitleFilter == null && options.VodDropParts == null && !Console.IsInputRedirected &&
-         CustomAnsiConsole.Console.Profile.Capabilities.Interactive);
+         options.SubtitleFilter == null && options.VodDropParts == null &&
+         (TaskExecutionContext.Current?.IsWorker == true ||
+          !Console.IsInputRedirected && CustomAnsiConsole.Console.Profile.Capabilities.Interactive));
 
     internal static bool HasMultipleSections(List<StreamSpec> streams) => streams
         .SelectMany(s => s.Playlist?.MediaParts ?? []).Select(Id).Distinct().Skip(1).Any();
@@ -364,10 +367,11 @@ internal static partial class VodPartSelector
         EnsureVod(streams);
         if (!HasMultipleSections(streams))
             return;
-        if (Console.IsInputRedirected || !CustomAnsiConsole.Console.Profile.Capabilities.Interactive)
+        var context = TaskExecutionContext.Current;
+        if (context?.IsWorker != true && (Console.IsInputRedirected || !CustomAnsiConsole.Console.Profile.Capabilities.Interactive))
             throw new NotSupportedException(ResString.vodPartsRequireInteractive);
         var preview = PreviewStreams(streams, options.AdKeywords);
-        var groups = inspectInit
+        var groups = inspectInit && context?.IsWorker != true
             ? await CustomAnsiConsole.Console.Status().StartAsync(ResString.vodReadingConfigs,
                 _ => InspectGroupsAsync(preview, options, inspectInit))
             : await InspectGroupsAsync(preview, options, inspectInit);
@@ -376,13 +380,9 @@ internal static partial class VodPartSelector
         // 仅 init URL 改变而配置相同，无需用户重复确认；显式要求交互时仍展示唯一配置。
         if (groups.Count < 2 && options.VodSelectParts != true)
             return;
-        var prompt = new MultiSelectionPrompt<PartGroup>()
-            .Title(ResString.vodPromptTitle).UseConverter(g => g.Display.EscapeMarkup())
-            .Required().PageSize(10).MoreChoicesText(ResString.promptChoiceText)
-            .InstructionsText(ResString.vodPromptInfo);
-        prompt.AddChoices(groups);
-        foreach (var group in groups) prompt.Select(group);
-        KeepGroups(streams, groups, CustomAnsiConsole.Console.Prompt(prompt));
+        var interaction = context?.Interaction ?? new ConsoleUserInteraction();
+        var selected = await interaction.SelectPartsAsync(groups, context?.Control.CancellationToken ?? default);
+        KeepGroups(streams, groups, selected);
     }
 
     private static void EnsureVod(List<StreamSpec> streams)

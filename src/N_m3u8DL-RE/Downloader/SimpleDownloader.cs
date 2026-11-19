@@ -27,6 +27,8 @@ internal class SimpleDownloader : IDownloader
 
     public async Task<DownloadResult?> DownloadSegmentAsync(MediaSegment segment, string savePath, SpeedContainer speedContainer, Dictionary<string, string>? headers = null, bool singleFile = false, CancellationToken cancellationToken = default, bool throwOnFailure = false, TimeSpan? networkTimeout = null)
     {
+        using var operation = OperationCancellation.Link(cancellationToken);
+        cancellationToken = operation.Token;
         var url = segment.Url;
         var (des, dResult) = await DownClipAsync(url, savePath, speedContainer, segment.StartRange, segment.StopRange, headers, DownloaderConfig.MyOptions.DownloadRetryCount, singleFile, cancellationToken, throwOnFailure, networkTimeout);
         if (dResult is { Success: true } && dResult.ActualFilePath != des)
@@ -95,7 +97,7 @@ internal class SimpleDownloader : IDownloader
             // 已下载跳过
             if (File.Exists(des))
             {
-                speedContainer.Add(new FileInfo(des).Length);
+                speedContainer.AddDownloaded(new FileInfo(des).Length);
                 return (des, new DownloadResult() { ActualContentLength = 0, ActualFilePath = des });
             }
 
@@ -103,7 +105,7 @@ internal class SimpleDownloader : IDownloader
             var dec = Path.Combine(Path.GetDirectoryName(des)!, Path.GetFileNameWithoutExtension(des) + "_dec" + Path.GetExtension(des));
             if (File.Exists(dec))
             {
-                speedContainer.Add(new FileInfo(dec).Length);
+                speedContainer.AddDownloaded(new FileInfo(dec).Length);
                 return (dec, new DownloadResult() { ActualContentLength = 0, ActualFilePath = dec });
             }
 
@@ -170,6 +172,10 @@ internal class SimpleDownloader : IDownloader
             return (des, result);
 
             throw new Exception("please retry");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {

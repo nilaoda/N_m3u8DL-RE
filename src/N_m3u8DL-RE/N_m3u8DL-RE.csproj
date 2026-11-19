@@ -17,6 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\N_m3u8DL-RE.Protocol\N_m3u8DL-RE.Protocol.csproj" />
     <ProjectReference Include="..\N_m3u8DL-RE.Parser\N_m3u8DL-RE.Parser.csproj" />
   </ItemGroup>
 
@@ -26,6 +27,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="N_m3u8DL-RE.Tests" />
+    <InternalsVisibleTo Include="WorkerApiDocs" />
     <AssemblyMetadata Include="BuildDate" Value="$(BuildDate)" />
   </ItemGroup>
 

@@ -1,6 +1,6 @@
 ﻿using N_m3u8DL_RE.Common.Log;
+using N_m3u8DL_RE.Runtime;
 using Spectre.Console;
-using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using N_m3u8DL_RE.Config;
@@ -13,24 +13,21 @@ internal static class PipeUtil
     {
         if (OperatingSystem.IsWindows())
         {
-            return new NamedPipeServerStream(pipeName, PipeDirection.InOut);
+            return new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
         }
 
-        var path = Path.Combine(Path.GetTempPath(), pipeName);
-        using var p = new Process();
-        p.StartInfo = new ProcessStartInfo()
-        {
-            FileName = "mkfifo",
-            Arguments = path,
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-        };
-        p.Start();
-        p.WaitForExit();
-        Thread.Sleep(200);
-        return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read);
+        var directory = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeTmpDir, Path.GetTempPath());
+        Directory.CreateDirectory(directory);
+        var path = Path.GetFullPath(Path.Combine(directory, pipeName));
+        // Unix Worker 使用 .NET 命名管道对应的域套接字，异步写入和连接等待可被取消。
+        if (TaskExecutionContext.Current?.IsWorker == true)
+            return new NamedPipeServerStream(path, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+        var result = ProcessUtil.RunAsync("mkfifo", [path], default).GetAwaiter().GetResult();
+        if (result.ExitCode != 0)
+            throw new IOException(result.Error);
+        // FFmpeg 使用相同目录；流关闭后删除 FIFO，避免多次录制遗留管道文件。
+        return new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096,
+            FileOptions.Asynchronous | FileOptions.DeleteOnClose);
     }
 
     public static async Task<bool> StartPipeMuxAsync(string binary, string[] pipeNames, string outputPath)
@@ -45,7 +42,9 @@ internal static class PipeUtil
     public static bool StartPipeMux(string binary, string[] pipeNames, string outputPath)
     {
         var dateString = DateTime.Now.ToString("o");
-        var command = new StringBuilder("-y -fflags +genpts -loglevel quiet ");
+        var isWorker = TaskExecutionContext.Current?.IsWorker == true;
+        var logLevel = isWorker ? "warning" : "quiet";
+        var command = new StringBuilder($"-y -fflags +genpts -loglevel {logLevel} ");
 
         var customDest = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeOptions);
         var pipeDir = OtherUtil.GetEnvironmentVariable(EnvConfigKey.ReLivePipeTmpDir, Path.GetTempPath());
@@ -60,8 +59,11 @@ internal static class PipeUtil
             if (OperatingSystem.IsWindows())
                 command.Append($" -i \"\\\\.\\pipe\\{item}\" ");
             else
-                // command.Append($" -i \"unix://{Path.Combine(Path.GetTempPath(), $"CoreFxPipe_{item}")}\" ");
-                command.Append($" -i \"{Path.Combine(pipeDir, item)}\" ");
+            {
+                var path = Path.GetFullPath(Path.Combine(pipeDir, item));
+                var input = isWorker ? "unix://" + path : path;
+                command.Append($" -i \"{input}\" ");
+            }
         }
 
         for (var i = 0; i < pipeNames.Length; i++)
@@ -87,19 +89,8 @@ internal static class PipeUtil
             command.Append($" -f mpegts -shortest \"{outputPath}\"");
         }
 
-        using var p = new Process();
-        p.StartInfo = new ProcessStartInfo()
-        {
-            WorkingDirectory = Environment.CurrentDirectory,
-            FileName = binary,
-            Arguments = command.ToString(),
-            CreateNoWindow = true,
-            UseShellExecute = false
-        };
-        // p.StartInfo.Environment.Add("FFREPORT", "file=ffreport.log:level=42");
-        p.Start();
-        p.WaitForExit();
-
-        return p.ExitCode == 0;
+        var result = ProcessUtil.RunCommandAsync(binary, command.ToString(), Environment.CurrentDirectory,
+            line => Logger.Warn(line)).GetAwaiter().GetResult();
+        return result.ExitCode == 0;
     }
 }

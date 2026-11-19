@@ -16,7 +16,7 @@ public sealed class DoctorUtilTests : IDisposable
         var slow = Script("/bin/sleep 6\nprintf 'ffmpeg version test\\n'\n");
         var fast = Script("printf 'mkvmerge v1.0\\n'\n");
         var started = false;
-        var fastCompleted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completed = new List<string>();
         var task = DoctorUtil.InspectAsync(slow, fast, null, DecryptEngine.MP4DECRYPT, null, true, default,
             report =>
             {
@@ -24,17 +24,13 @@ public sealed class DoctorUtilTests : IDisposable
                 Assert.Empty(report.Tools);
                 Assert.False(report.ConfigurationEnabled);
             },
-            tool =>
-            {
-                if (tool.Name == "mkvmerge")
-                    fastCompleted.SetResult();
-            });
+            tool => completed.Add(tool.Name));
         Assert.True(started);
-        await fastCompleted.Task.WaitAsync(TimeSpan.FromSeconds(1));
-        Assert.False(task.IsCompleted);
-        var report = await task;
+        var report = await task.WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.True(completed.IndexOf("mkvmerge") < completed.IndexOf("ffmpeg"));
         Assert.Equal(new[] { "ffmpeg", "mkvmerge", "mp4decrypt", "shaka-packager" }, report.Tools.Select(t => t.Name));
         Assert.All(report.Tools.Take(2), tool => Assert.Equal("ok", tool.Status));
+        Assert.Equal(report.Tools.Select(tool => tool.Name).Order(), completed.Order());
     }
 
     [Fact]

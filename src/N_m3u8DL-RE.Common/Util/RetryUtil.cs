@@ -30,6 +30,7 @@ public static class RetryUtil
 
         while (retryCount < maxRetries)
         {
+            OperationCancellation.Token.ThrowIfCancellationRequested();
             try
             {
                 result = await funcAsync();
@@ -40,7 +41,7 @@ public static class RetryUtil
                 currentException = ex;
                 retryCount++;
                 Logger.WarnMarkUp($"[grey]{ex.Message.EscapeMarkup()} ({retryCount}/{maxRetries})[/]");
-                await Task.Delay(retryDelayMilliseconds + (retryDelayIncrementMilliseconds * (retryCount - 1)));
+                await Task.Delay(retryDelayMilliseconds + (retryDelayIncrementMilliseconds * (retryCount - 1)), OperationCancellation.Token);
             }
         }
 

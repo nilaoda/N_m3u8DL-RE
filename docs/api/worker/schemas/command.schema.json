@@ -1,0 +1,571 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "由 tools/WorkerApiDocs.cs 根据 Worker JSON 契约生成；业务规则见使用指南。",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "protocolVersion": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "operation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "request": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "input": {
+          "type": "string"
+        },
+        "saveDir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tmpDir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "saveName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "savePattern": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "urlProcessorArgs": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "headers": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cookies": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoSelect": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "subOnly": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "subFormat": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selectVideo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selectAudio": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selectSubtitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dropVideo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dropAudio": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dropSubtitle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "vodSelectParts": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "vodListParts": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "vodDropParts": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "threadCount": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "downloadRetryCount": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "httpRequestTimeout": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "httpVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxSpeed": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "concurrentDownload": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "skipMerge": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "skipDownload": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "binaryMerge": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ffmpegConcatMode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoSubtitleFix": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "checkSegmentsCount": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noDateInfo": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "writeMetaJson": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "delAfterDone": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ffmpegBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decryptionBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decryptionEngine": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mp4RealTimeDecryption": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "customHlsMethod": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "customHlsKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "customHlsIv": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "customHlsScope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "allowHlsMultiExtMap": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "keys": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "keyTextFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "muxAfterDone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "muxImports": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "customProxy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "useSystemProxy": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "networkInterface": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "baseUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "appendUrlParams": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "customRange": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "adKeywords": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "livePerformAsVod": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "liveRealTimeMerge": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "livePipeMux": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "liveFixVttByAudio": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "liveKeepSegments": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "liveRecordLimit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "liveWaitTime": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "liveIdleTimeout": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "liveTakeCount": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "liveCatchup": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "taskStartAt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logFilePath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logLevel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "noLog": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    "fileRequest": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "language": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "output": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "overwrite": {
+          "type": "boolean"
+        },
+        "dryRun": {
+          "type": "boolean"
+        },
+        "ffmpegBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mkvmergeBinaryPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "muxer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "concatMode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoSubtitleFix": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "inputs",
+        "output"
+      ],
+      "additionalProperties": false
+    },
+    "interactionId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "selectedIds": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "type",
+    "id"
+  ],
+  "additionalProperties": false
+}

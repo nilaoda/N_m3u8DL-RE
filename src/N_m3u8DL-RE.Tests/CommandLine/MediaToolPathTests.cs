@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Enum;
 
@@ -28,7 +29,7 @@ public class MediaToolPathTests
                 Keys = ["00000000000000000000000000000000"]
             };
 
-            Program.CheckMediaTools(options);
+            DownloadTaskRunner.CheckMediaTools(options);
 
             Assert.Equal(decrypt, options.DecryptionBinaryPath);
             Assert.Equal(ffmpeg, options.FFmpegBinaryPath);
@@ -54,7 +55,7 @@ public class MediaToolPathTests
                 DecryptionBinaryPath = missing, KeyTextFile = Path.Combine(root, "keys.txt")
             };
 
-            Assert.Throws<FileNotFoundException>(() => Program.CheckMediaTools(options));
+            Assert.Throws<FileNotFoundException>(() => DownloadTaskRunner.CheckMediaTools(options));
             Assert.Equal(missing, options.DecryptionBinaryPath);
         }
         finally { Directory.Delete(root, true); }
@@ -74,7 +75,7 @@ public class MediaToolPathTests
                 Keys = ["00000000000000000000000000000000"]
             };
 
-            Program.CheckMediaTools(options);
+            DownloadTaskRunner.CheckMediaTools(options);
 
             Assert.Equal(ffmpeg, options.DecryptionBinaryPath);
         }

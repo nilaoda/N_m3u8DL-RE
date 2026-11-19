@@ -12,6 +12,9 @@ public static class ResString
     public static string iptvTsRequired => GetText("iptvTsRequired");
     public static string iptvEntryInvalid => GetText("iptvEntryInvalid");
     public static string iptvVideoFilterRequired => GetText("iptvVideoFilterRequired");
+    public static string cmd_worker => GetText("cmd_worker");
+    public static string cmd_workerStdio => GetText("cmd_workerStdio");
+    public static string workerStdioRequired => GetText("workerStdioRequired");
     public static string cmd_toolsConcat => GetText("cmd_toolsConcat");
     public static string cmd_toolsMerge => GetText("cmd_toolsMerge");
     public static string cmd_toolsMux => GetText("cmd_toolsMux");

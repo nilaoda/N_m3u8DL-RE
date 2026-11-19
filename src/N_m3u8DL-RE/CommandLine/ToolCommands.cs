@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using System.ComponentModel;
 using System.Net.Sockets;
 using System.CommandLine;
@@ -113,7 +114,7 @@ internal static class ToolCommands
         var autoSubtitleFix = CommandInvoker.CreateAutoSubtitleFixOption();
         autoSubtitleFix.Description = ResString.cmd_toolsAutoSubtitleFix;
         var mkvmerge = CreateMkvmergeOption();
-        var muxer = new Option<string>("--muxer") { Description = ResString.cmd_toolsMuxer, DefaultValueFactory = _ => "ffmpeg" };
+        var muxer = new Option<string>("--muxer") { Description = ResString.cmd_toolsMuxer, DefaultValueFactory = _ => FileTaskOptions.DefaultMuxer };
         muxer.AcceptOnlyFromAmong("ffmpeg", "mkvmerge");
         var imports = CommandInvoker.CreateMuxImportsOption();
         imports.Description = ResString.cmd_toolsMuxImport;
@@ -172,14 +173,21 @@ internal static class ToolCommands
                 var files = name == "mux" ? inputs.Select(CommandInvoker.ParseMuxInput)
                     .Concat(result.GetValue(imports) ?? []).ToArray() : inputs.Select((path, index) =>
                         new OutputFile { Index = index, FilePath = path }).ToArray();
-                return await FileToolUtil.ExecuteAsync(name, files, result.GetValue(output)!,
-                    result.GetValue(pattern),
-                    result.GetValue(overwrite), result.GetValue(dryRun),
-                    name == "concat" ? null : result.GetValue(ffmpeg), name == "mux" ? result.GetValue(mkvmerge) : null,
-                    name == "mux" ? result.GetValue(muxer)! : "ffmpeg",
-                    name == "merge" && result.GetResult(mode) is { Implicit: false } ? result.GetValue(mode) : null,
-                    name == "mux" && result.GetValue(autoSubtitleFix), token,
-                    name == "mux" ? result.GetValue(title) : null);
+                var options = new FileTaskOptions
+                {
+                    Operation = name, Inputs = files, Output = result.GetValue(output)!,
+                    Pattern = result.GetValue(pattern), Overwrite = result.GetValue(overwrite), DryRun = result.GetValue(dryRun),
+                    FFmpegBinaryPath = name == "concat" ? null : result.GetValue(ffmpeg),
+                    MkvmergeBinaryPath = name == "mux" ? result.GetValue(mkvmerge) : null,
+                    Muxer = name == "mux" ? result.GetValue(muxer)! : FileTaskOptions.DefaultMuxer,
+                    ConcatMode = name == "merge" && result.GetResult(mode) is { Implicit: false } ? result.GetValue(mode) : null,
+                    AutoSubtitleFix = name == "mux" && result.GetValue(autoSubtitleFix),
+                    Title = name == "mux" ? result.GetValue(title) : null
+                };
+                var execution = await FileToolUtil.ExecuteAsync(options, token);
+                if (execution.Success)
+                    Console.WriteLine(options.DryRun ? $"{name} => {execution.Output}" : execution.Output);
+                return execution.Success ? 0 : 1;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or
                 Win32Exception or SocketException or OperationCanceledException or FormatException or OverflowException)

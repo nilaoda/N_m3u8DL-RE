@@ -58,6 +58,24 @@ internal static class StaticText
             zhTW: "目錄包含多條 RE 軌道，請用 mux -i 任務目錄混流，或分別指定單軌道目錄進行合併",
             enUS: "Directory contains multiple RE tracks; use mux -i TASK_DIR or merge individual track directories"
         ),
+        ["cmd_worker"] = new TextContainer
+        (
+            zhCN: "通过结构化协议执行一个下载或录制任务",
+            zhTW: "透過結構化協定執行一個下載或錄製工作",
+            enUS: "Execute one download or recording task using a structured protocol"
+        ),
+        ["cmd_workerStdio"] = new TextContainer
+        (
+            zhCN: "通过标准输入输出交换 NDJSON 消息",
+            zhTW: "透過標準輸入輸出交換 NDJSON 訊息",
+            enUS: "Exchange NDJSON messages over standard input and output"
+        ),
+        ["workerStdioRequired"] = new TextContainer
+        (
+            zhCN: "worker 需要启用 --stdio",
+            zhTW: "worker 需要啟用 --stdio",
+            enUS: "worker requires --stdio to be enabled"
+        ),
         ["cmd_toolsConcat"] = new TextContainer
         (
             zhCN: "按顺序二进制拼接文件，无需 FFmpeg",

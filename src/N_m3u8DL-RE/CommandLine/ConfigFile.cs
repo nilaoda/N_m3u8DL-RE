@@ -6,6 +6,9 @@ namespace N_m3u8DL_RE.CommandLine;
 
 internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
 {
+    internal static bool IsWorkerRequest(string[] args) =>
+        ParseSyntax(args).CommandResult.Command.Name == WorkerCommandDefinition.Name;
+
     internal static bool IsUtilityRequest(string[] args) =>
         ParseSyntax(args).CommandResult.Command is not RootCommand;
 
@@ -35,14 +38,16 @@ internal sealed record ConfigFile(string[] Arguments, string[] Defaults)
         return Path.Combine(directory, "N_m3u8DL-RE", "config.conf");
     }
 
-    internal static ConfigFile Load(string[] args, string? defaultPath = null)
-    {
-        // 补全只需要参数定义，不读取用户配置，也不展开待补全文本中的 @。
-        if (IsCompletionRequest(args))
-            return new(args, []);
+    internal static string[] PrepareArguments(string[] args) =>
+        IsCompletionRequest(args) ? args : ExpandResponseFiles(args);
 
-        args = ExpandResponseFiles(args);
-        if (IsCompletionRequest(args))
+    internal static ConfigFile Load(string[] args, string? defaultPath = null) =>
+        LoadPrepared(PrepareArguments(args), defaultPath);
+
+    internal static ConfigFile LoadPrepared(string[] args, string? defaultPath = null)
+    {
+        // 补全只读取命令定义；Worker 的下载配置由 stdio 请求提供。
+        if (IsCompletionRequest(args) || IsWorkerRequest(args))
             return new(args, []);
 
         // 完整的选项定义才能区分 --save-name 的值与真正的配置控制选项。

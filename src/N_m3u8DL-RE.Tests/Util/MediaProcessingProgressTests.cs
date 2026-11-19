@@ -80,6 +80,18 @@ public class MediaProcessingProgressTests
         Assert.Equal(1, updates[^1].Fraction);
     }
 
+    [Fact]
+    public void ProcessingPhaseIsIndependentOfItsDisplayText()
+    {
+        var task = new ProgressTask(0, "video", 100);
+        using var processing = new MediaProcessingProgress(task);
+        processing.Begin(MediaProcessingStage.Merging, "自定义片段处理 (1/2)");
+        Assert.Equal("merging", processing.Phase);
+        Assert.Contains("自定义片段处理 (1/2)", task.Description);
+        processing.Download();
+        Assert.Equal("downloading", processing.Phase);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -91,7 +103,7 @@ public class MediaProcessingProgressTests
         var column = new MediaProcessingColumn(new DownloadSpeedColumn(new ConcurrentDictionary<int, SpeedContainer>(
             [new KeyValuePair<int, SpeedContainer>(task.Id, speed)])));
         using var processing = new MediaProcessingProgress(task);
-        processing.Begin(ResString.processingMerge);
+        processing.Begin(MediaProcessingStage.Merging);
         processing.Report(new(1, 100000, 100000));
         column.Render(new RenderOptions(AnsiConsole.Console.Profile.Capabilities, new Size(100, 30)), task, TimeSpan.Zero);
         Assert.Equal(5, task.Value);
@@ -103,7 +115,7 @@ public class MediaProcessingProgressTests
         Assert.Contains("(2/2)", task.Description);
         task.Increment(1);
         Assert.Equal(6, task.Value);
-        processing.Begin(ResString.processingDecrypt);
+        processing.Begin(MediaProcessingStage.Decrypting);
         Assert.True(processing.DisplayTask.IsIndeterminate);
         processing.Complete(success);
         Assert.Equal(!success, processing.Failed);
@@ -120,7 +132,7 @@ public class MediaProcessingProgressTests
         var column = new MediaProcessingColumn(downloadPercentage ? new MyPercentageColumn() : new PercentageColumn());
         var options = new RenderOptions(AnsiConsole.Console.Profile.Capabilities, new Size(80, 25));
         using var processing = new MediaProcessingProgress(task);
-        processing.Begin(ResString.processingMux);
+        processing.Begin(MediaProcessingStage.Muxing);
         processing.Report(new(0.713));
         void AssertPercentage(string expected)
         {
@@ -153,13 +165,16 @@ public class MediaProcessingProgressTests
             });
             CustomAnsiConsole.Console.Profile.Width = 80;
             CustomAnsiConsole.Console.Profile.Height = 25;
+            var normalization = $"{ResString.processingNormalize} (1/2)";
             Assert.True(await MediaProcessingProgress.RunAsync("mux", processing =>
             {
-                processing.Begin(ResString.processingMux);
+                processing.Begin(MediaProcessingStage.Preparing, normalization);
+                processing.Begin(MediaProcessingStage.Muxing);
                 processing.Report(new(0.713, 1024));
                 return Task.FromResult(true);
             }));
             var text = output.ToString();
+            Assert.Contains(normalization, text);
             Assert.Contains(ResString.processingMux, text);
             Assert.Contains(ResString.toolsCompleted, text);
             Assert.DoesNotContain('━', text);

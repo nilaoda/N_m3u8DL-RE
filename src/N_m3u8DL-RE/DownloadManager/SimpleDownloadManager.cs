@@ -1,4 +1,5 @@
-﻿using Mp4SubtitleParser;
+﻿using N_m3u8DL_RE.Runtime;
+using Mp4SubtitleParser;
 using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
@@ -432,6 +433,7 @@ internal partial class SimpleDownloadManager
         // 开始下载
         var options = new ParallelOptions()
         {
+            CancellationToken = TaskExecutionContext.Current?.Control.CancellationToken ?? default,
             MaxDegreeOfParallelism = DownloaderConfig.MyOptions.ThreadCount
         };
         speedContainer.SingleSegment = singleSegment && !isPart;
@@ -512,7 +514,7 @@ internal partial class SimpleDownloadManager
         }
 
         if (!DownloaderConfig.MyOptions.SkipMerge)
-            processing?.Begin(streamSpec.MediaType == MediaType.SUBTITLES ? ResString.processingSubtitles : ResString.processingPreparing);
+            processing?.Begin(streamSpec.MediaType == MediaType.SUBTITLES ? MediaProcessingStage.Subtitles : MediaProcessingStage.Preparing);
 
         // 字幕分片可以与音视频并发下载；仅修正时间轴时才依赖媒体的源 PTS。
         // 媒体失败时结束等待并保留字幕输入，避免挂起或使用不完整的原点。
@@ -771,7 +773,7 @@ internal partial class SimpleDownloadManager
                 }
                 LogPartOnce("binary-merge", () => Logger.InfoMarkUp(ResString.binaryMerge));
                 var files = FileDic.OrderBy(s => s.Key.Index).Select(s => s.Value).Select(v => v!.ActualFilePath).ToArray();
-                processing?.Begin(ResString.processingMerge, logStart: false);
+                processing?.Begin(MediaProcessingStage.Merging, logStart: false);
                 MergeUtil.CombineMultipleFilesIntoSingleFile(files, output, processing == null ? null : processing.Report);
                 mergeSuccess = true;
             }
@@ -794,7 +796,7 @@ internal partial class SimpleDownloadManager
                 if (MergeUtil.ShouldPartialMerge(files.Length, concatMode))
                 {
                     Logger.WarnMarkUp(ResString.partMerge);
-                    processing?.Begin(ResString.processingMerge, logStart: false);
+                    processing?.Begin(MediaProcessingStage.Merging, logStart: false);
                     files = MergeUtil.PartialCombineMultipleFiles(files, processing == null ? null : processing.Report);
                     FileDic.Clear();
                     foreach (var item in files)
@@ -805,7 +807,7 @@ internal partial class SimpleDownloadManager
                         };
                     }
                 }
-                processing?.Begin(ResString.processingMerge, logStart: false);
+                processing?.Begin(MediaProcessingStage.Merging, logStart: false);
                 mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, concatMode: concatMode,
                     progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration, mediaInfos: mediaInfos, preserveInitialNonKeyFrames: isPart);
                 if (mergeSuccess) output = ffOut;
@@ -813,7 +815,12 @@ internal partial class SimpleDownloadManager
         }
 
         if (DownloaderConfig.MyOptions.SkipMerge)
+        {
+            foreach (var result in FileDic.Values)
+                if (result is { Success: true })
+                    TaskExecutionContext.Current?.AddOutput(result.ActualFilePath);
             return true;
+        }
         if (!mergeSuccess || !File.Exists(output))
             return false;
 
@@ -845,7 +852,7 @@ internal partial class SimpleDownloadManager
             // 整轨解密使用独立临时文件，不能让固定的 _dec 名称覆盖另一条轨道的输出。
             var dec = Path.Combine(tmpDir, $"{Guid.NewGuid():N}{Path.GetExtension(enc)}");
             mp4Info = MP4DecryptUtil.GetMP4Info(enc);
-            processing?.Begin(ResString.processingDecrypt, logStart: false);
+            processing?.Begin(MediaProcessingStage.Decrypting, logStart: false);
             Logger.InfoMarkUp($"[grey]Decrypting using {decryptEngine}...[/]");
             try
             {
@@ -868,7 +875,7 @@ internal partial class SimpleDownloadManager
             return false;
         }
 
-        processing?.Begin(ResString.processingFinishing);
+        processing?.Begin(MediaProcessingStage.Finalizing);
         // 删除临时文件夹：合并及解密都成功后再清理，失败时保留可重试的输入。
         if (DownloaderConfig.MyOptions.DelAfterDone)
         {
@@ -892,6 +899,7 @@ internal partial class SimpleDownloadManager
                 });
         }
 
+        TaskExecutionContext.Current?.AddOutput(output);
         processing?.Report(new(Bytes: new FileInfo(output).Length));
         return true;
     }
@@ -943,7 +951,7 @@ internal partial class SimpleDownloadManager
         if (DownloaderConfig.MyOptions is { MP4RealTimeDecryption: true, DecryptionEngine: not DecryptEngine.SHAKA_PACKAGER, Keys.Length: > 0 })
             Logger.WarnMarkUp($"[darkorange3_1]{ResString.realTimeDecMessage}[/]");
 
-        await progress.StartAsync(async ctx =>
+        await ProgressSession.RunAsync(progress, SpeedContainerDic, async ctx =>
         {
             // 创建任务
             var dic = SelectedSteams.Select(item =>
@@ -987,6 +995,7 @@ internal partial class SimpleDownloadManager
                 {
                     foreach (var kp in batch)
                     {
+                        TaskExecutionContext.Current?.ThrowIfCancelled();
                         var result = await DownloadTrackAsync(kp.Key, kp.Value);
                         Results[kp.Key] = result;
                         if (!result)
@@ -1072,7 +1081,7 @@ internal partial class SimpleDownloadManager
             Logger.WarnMarkUp($"Muxing to [grey]{outName.EscapeMarkup()}[/]");
             var muxSuccess = await MediaProcessingProgress.RunAsync(ResString.processingMux, async processing =>
             {
-                processing.Begin(ResString.processingMux, logStart: false);
+                processing.Begin(MediaProcessingStage.Muxing, logStart: false);
                 var exitCode = await MergeUtil.MuxInputsAsync(
                     DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge ? DownloaderConfig.MyOptions.MkvmergeBinaryPath! : DownloaderConfig.MyOptions.FFmpegBinaryPath!,
                     OutputFiles.ToArray(), outPath + ext, useMkvmerge: DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge,
@@ -1080,7 +1089,7 @@ internal partial class SimpleDownloadManager
                 var result = exitCode == 0 || DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge && exitCode == 1;
                 if (result)
                 {
-                    processing.Begin(ResString.processingFinishing);
+                    processing.Begin(MediaProcessingStage.Finalizing);
                     processing.Report(new(Bytes: new FileInfo(outPath + ext).Length));
                 }
                 // 完成后删除本次下载的各轨道文件，保留外部导入源
@@ -1102,6 +1111,8 @@ internal partial class SimpleDownloadManager
                     Logger.WarnMarkUp($"Rename to [grey]{Path.GetFileName(newPath).EscapeMarkup()}[/]");
                     File.Move(outPath + ext, newPath);
                 }
+                if (result)
+                    TaskExecutionContext.Current?.AddOutput(File.Exists(outPath + ext) ? outPath + ext : newPath);
                 return result;
             });
             success &= muxSuccess;

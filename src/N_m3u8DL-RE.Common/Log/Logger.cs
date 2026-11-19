@@ -25,6 +25,9 @@ public static partial class Logger
     /// </summary>
     public static string? LogFilePath { get; set; }
 
+    public static Action<LogEntry>? Sink { get; set; }
+    public static bool ConsoleOutputEnabled { get; set; } = true;
+
     // 读写锁
     static ReaderWriterLockSlim LogWriteLock = new ReaderWriterLockSlim();
 
@@ -119,15 +122,16 @@ public static partial class Logger
         }
     }
 
-    private static void HandleLog(string write, string subWrite = "")
+    private static void HandleLog(string write, string subWrite = "", LogLevel level = LogLevel.INFO)
     {
         try
         {
-            if (subWrite == "")
+            Sink?.Invoke(new LogEntry(level, write.RemoveMarkup() + subWrite));
+            if (ConsoleOutputEnabled && subWrite == "")
             {
                 CustomAnsiConsole.MarkupLine(write);
             }
-            else
+            else if (ConsoleOutputEnabled)
             {
                 // 前缀和正文必须在同一次渲染中输出，避免正文绕过进度条的光标管理。
                 var console = CustomAnsiConsole.Console;
@@ -152,7 +156,7 @@ public static partial class Logger
         }
         catch (Exception)
         {
-            Console.WriteLine("Failed to write: " + write);
+            Console.Error.WriteLine("Failed to write: " + write);
         }
     }
 
@@ -172,7 +176,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : ";
-        HandleLog(write, data);
+        HandleLog(write, data, LogLevel.INFO);
     }
 
     public static void InfoMarkUp(string data, params object[] ps)
@@ -181,7 +185,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #548c26]INFO[/] : " + data;
-        HandleLog(write);
+        HandleLog(write, level: LogLevel.INFO);
     }
 
     public static void Debug(string data, params object[] ps)
@@ -190,7 +194,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: ";
-        HandleLog(write, data);
+        HandleLog(write, data, LogLevel.DEBUG);
     }
 
     public static void DebugMarkUp(string data, params object[] ps)
@@ -199,7 +203,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline grey]DEBUG[/]: " + data;
-        HandleLog(write);
+        HandleLog(write, level: LogLevel.DEBUG);
     }
 
     public static void Warn(string data, params object[] ps)
@@ -208,7 +212,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : ";
-        HandleLog(write, data);
+        HandleLog(write, data, LogLevel.WARN);
     }
 
     public static void WarnMarkUp(string data, params object[] ps)
@@ -217,7 +221,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline #a89022]WARN[/] : " + data;
-        HandleLog(write);
+        HandleLog(write, level: LogLevel.WARN);
     }
 
     public static void Error(string data, params object[] ps)
@@ -226,7 +230,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: ";
-        HandleLog(write, data);
+        HandleLog(write, data, LogLevel.ERROR);
     }
 
     public static void ErrorMarkUp(string data, params object[] ps)
@@ -235,7 +239,7 @@ public static partial class Logger
         
         data = ReplaceVars(data, ps);
         var write = GetCurrTime() + " " + "[underline red1]ERROR[/]: " + data;
-        HandleLog(write);
+        HandleLog(write, level: LogLevel.ERROR);
     }
 
     public static void ErrorMarkUp(Exception exception)

@@ -63,6 +63,8 @@ public static class HTTPUtil
     private static async Task<HttpResponseMessage> DoGetAsync(string url, Dictionary<string, string>? headers = null,
         bool identityEncoding = false, int redirectCount = 0, CancellationToken cancellationToken = default)
     {
+        using var operation = OperationCancellation.Link(cancellationToken);
+        cancellationToken = operation.Token;
         if (redirectCount > 10)
         {
             throw new HttpRequestException(HttpRequestError.ConfigurationLimitExceeded, ResString.httpTooManyRedirects);
@@ -131,7 +133,7 @@ public static class HTTPUtil
             return await File.ReadAllBytesAsync(new Uri(url).LocalPath, cancellationToken);
         }
 
-        using var readTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var readTimeout = OperationCancellation.Link(cancellationToken);
         if (requestTimeout is { } timeout)
             readTimeout.CancelAfter(timeout);
         // 直播 key 从发起请求到读完共用一个计时，重定向也不能延长等待。
@@ -152,7 +154,7 @@ public static class HTTPUtil
     public static async Task<string> GetWebSourceAsync(string url, Dictionary<string, string>? headers = null)
     {
         var webResponse = await DoGetAsync(url, headers);
-        string htmlCode = await webResponse.Content.ReadAsStringAsync();
+        string htmlCode = await webResponse.Content.ReadAsStringAsync(OperationCancellation.Token);
         Logger.Debug(htmlCode);
         return htmlCode;
     }
@@ -174,7 +176,7 @@ public static class HTTPUtil
     /// </summary>
     public static async Task<WebSourceResult> GetWebSourceResultAsync(string url, Dictionary<string, string>? headers = null, CancellationToken cancellationToken = default, TimeSpan? requestTimeout = null)
     {
-        using var readTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var readTimeout = OperationCancellation.Link(cancellationToken);
         if (requestTimeout is { } timeout)
             readTimeout.CancelAfter(timeout);
         // 仅直播刷新传入独立超时；初始解析和点播保留全局请求、正文分别计时的行为。
@@ -281,8 +283,8 @@ public static class HTTPUtil
         request.Headers.TryAddWithoutValidation("Content-Type", "application/json");
         request.Headers.TryAddWithoutValidation("Content-Length", postData.Length.ToString());
         request.Content = new ByteArrayContent(postData);
-        var webResponse = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-        htmlCode = await webResponse.Content.ReadAsStringAsync();
+        var webResponse = await AppHttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, OperationCancellation.Token);
+        htmlCode = await webResponse.Content.ReadAsStringAsync(OperationCancellation.Token);
         return htmlCode;
     }
 }

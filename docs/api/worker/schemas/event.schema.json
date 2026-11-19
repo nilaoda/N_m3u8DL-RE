@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "由 tools/WorkerApiDocs.cs 根据 Worker JSON 契约生成；业务规则见使用指南。",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer"
+    },
+    "commandId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "protocolVersion": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "programVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "capabilities": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "phase": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tracks": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "codecs": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resolution": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bandwidth": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "durationSeconds": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "partIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "progress": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "trackId": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "downloadedBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "receivedBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "totalBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "speedBytesPerSecond": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "completedSegments": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "totalSegments": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "recordedSeconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "fraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "processedBytes": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "processedSeconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "trackId",
+        "phase"
+      ],
+      "additionalProperties": false
+    },
+    "interaction": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/properties/tracks/items"
+          }
+        },
+        "defaultIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "choices",
+        "defaultIds"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "size": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "additionalProperties": false,
+          "default": null
+        }
+      },
+      "required": [
+        "status",
+        "outputs"
+      ],
+      "additionalProperties": false
+    },
+    "level": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "error": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "additionalProperties": false
+}

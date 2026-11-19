@@ -1,4 +1,5 @@
-﻿using N_m3u8DL_RE.Common.Log;
+﻿using N_m3u8DL_RE.Common.Util;
+using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
 using N_m3u8DL_RE.Entity;
 using Spectre.Console;
@@ -27,6 +28,9 @@ internal static class MergeUtil
     internal static async Task CombineMultipleFilesIntoSingleFileAsync(string[] files, string outputFilePath,
         bool overwrite = true, CancellationToken token = default, Action<MediaProgress>? progress = null)
     {
+        using var operation = OperationCancellation.Link(token);
+        token = operation.Token;
+        token.ThrowIfCancellationRequested();
         if (files.Length == 0)
             return;
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputFilePath))!);
@@ -186,7 +190,7 @@ internal static class MergeUtil
                 // 中间文件的起始非关键帧可能依赖前一 part，归一化时也不能丢弃。
                 var path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(inputs[i]))!, $"{Guid.NewGuid():N}.normalized.mp4");
                 normalized.Add(path);
-                progress?.Begin($"{ResString.processingNormalize} ({i + 1}/{inputs.Length})");
+                progress?.Begin(MediaProcessingStage.Preparing, $"{ResString.processingNormalize} ({i + 1}/{inputs.Length})");
                 var infos = i == 0 && mediaInfos != null ? mediaInfos : MediainfoUtil.ReadTrackInfoAsync(binary,
                     new OutputFile { Index = i, FilePath = inputs[i] }, default).GetAwaiter().GetResult();
                 if (i == 0)
@@ -215,7 +219,7 @@ internal static class MergeUtil
                     new OutputFile { Index = 0, FilePath = files[0] }, default).GetAwaiter().GetResult();
                 videoTags = " " + string.Join(" ", VideoTags(format, mediaInfos));
             }
-            progress?.Begin(ResString.processingMerge, logStart: false);
+            progress?.Begin(MediaProcessingStage.Merging, logStart: false);
             return InvokeFFmpeg(binary,
                 $"-loglevel warning -nostdin -y{copyTs}{offset} -f concat -safe 0 -i \"{listPath}\" -map 0:v? -map 0:a? -map 0:s? -c copy {BinaryToolUtil.FFmpegStrictOptions}{tsOptions}{formatOptions}{videoTags} \"{Path.GetFullPath(output)}\"",
                 Path.GetDirectoryName(Path.GetFullPath(files[0]))!, progress == null ? null : progress.Report,

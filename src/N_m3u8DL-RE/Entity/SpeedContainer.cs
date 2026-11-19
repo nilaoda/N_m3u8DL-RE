@@ -6,7 +6,21 @@ internal class SpeedContainer
     public long NowSpeed { get; set; } = 0L; // 当前每秒速度
     public long SpeedLimit { get; set; } = long.MaxValue; // 限速设置
     public long? ResponseLength { get; set; }
-    public long RDownloaded => _Rdownloaded;
+    public long RDownloaded => Interlocked.Read(ref _Rdownloaded);
+    private long _received;
+    public long Received => Interlocked.Read(ref _received);
+
+    public void Sample(TimeSpan elapsed, bool detectStall)
+    {
+        if (elapsed <= TimeSpan.Zero)
+            return;
+        var bytes = Reset();
+        NowSpeed = (long)(bytes / elapsed.TotalSeconds);
+        if (detectStall && bytes == 0)
+            AddLowSpeedCount();
+        else
+            ResetLowSpeedCount();
+    }
     private int _zeroSpeedCount = 0;
     public int LowSpeedCount => _zeroSpeedCount;
     public bool ShouldStop => LowSpeedCount >= 20;
@@ -15,7 +29,7 @@ internal class SpeedContainer
 
     private long _downloaded = 0;
     private long _Rdownloaded = 0;
-    public long Downloaded => _downloaded;
+    public long Downloaded => Interlocked.Read(ref _downloaded);
 
     public int AddLowSpeedCount()
     {
@@ -34,7 +48,11 @@ internal class SpeedContainer
     }
 
     // 速度统计包含重传流量；下载进度只计入本次仍然有效的文件字节。
-    public long AddReceived(long size) => Interlocked.Add(ref _downloaded, size);
+    public long AddReceived(long size)
+    {
+        Interlocked.Add(ref _received, size);
+        return Interlocked.Add(ref _downloaded, size);
+    }
 
     public long AddDownloaded(long size) => Interlocked.Add(ref _Rdownloaded, size);
 
@@ -50,6 +68,6 @@ internal class SpeedContainer
         ResetLowSpeedCount();
         SingleSegment = false;
         ResponseLength = null;
-        _Rdownloaded = 0L;
+        Interlocked.Exchange(ref _Rdownloaded, 0L);
     }
 }

@@ -34,7 +34,7 @@ public class StreamExtractor : IDisposable
         if (url.StartsWith("file:"))
         {
             var uri = new Uri(url);
-            this.rawText = await File.ReadAllTextAsync(uri.LocalPath);
+            this.rawText = await File.ReadAllTextAsync(uri.LocalPath, OperationCancellation.Token);
             parserConfig.OriginalUrl = parserConfig.Url = url;
         }
         else if (url.StartsWith("http"))
@@ -61,7 +61,7 @@ public class StreamExtractor : IDisposable
         else if (File.Exists(url))
         {
             url = Path.GetFullPath(url);
-            this.rawText = await File.ReadAllTextAsync(url);
+            this.rawText = await File.ReadAllTextAsync(url, OperationCancellation.Token);
             parserConfig.OriginalUrl = parserConfig.Url = new Uri(url).AbsoluteUri;
         }
 
@@ -146,9 +146,9 @@ public class StreamExtractor : IDisposable
     /// <returns></returns>
     public async Task<List<StreamSpec>> ExtractStreamsAsync()
     {
+        await semaphore.WaitAsync(OperationCancellation.Token);
         try
         {
-            await semaphore.WaitAsync();
             Logger.Info(ResString.parsingStream);
             return await extractor.ExtractStreamsAsync(rawText);
         }
@@ -164,9 +164,9 @@ public class StreamExtractor : IDisposable
     /// <param name="streamSpecs"></param>
     public async Task FetchPlayListAsync(List<StreamSpec> streamSpecs)
     {
+        await semaphore.WaitAsync(OperationCancellation.Token);
         try
         {
-            await semaphore.WaitAsync();
             Logger.Info(ResString.parsingStream);
             await extractor.FetchPlayListAsync(streamSpecs);
         }

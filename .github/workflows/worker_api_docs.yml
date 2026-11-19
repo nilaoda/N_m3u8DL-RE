@@ -1,0 +1,69 @@
+name: Worker API Docs
+
+on:
+  pull_request:
+    paths:
+      - 'src/N_m3u8DL-RE.Protocol/**'
+      - 'src/N_m3u8DL-RE/Worker/**'
+      - 'src/N_m3u8DL-RE/CommandLine/CommandInvoker.cs'
+      - 'src/N_m3u8DL-RE/CommandLine/ComplexParamParser.cs'
+      - 'src/N_m3u8DL-RE/CommandLine/ConfigFile.cs'
+      - 'src/N_m3u8DL-RE/CommandLine/MyOption.cs'
+      - 'src/N_m3u8DL-RE/Runtime/OptionNormalizer.cs'
+      - 'src/N_m3u8DL-RE/Runtime/FileTaskOptions.cs'
+      - 'src/N_m3u8DL-RE/Enum/**'
+      - 'src/N_m3u8DL-RE.Common/Enum/EncryptMethod.cs'
+      - 'src/N_m3u8DL-RE.Common/Enum/CustomHlsScope.cs'
+      - 'src/N_m3u8DL-RE.Common/Log/LogLevel.cs'
+      - 'src/N_m3u8DL-RE.Tests/Worker/WorkerApiDocumentationTests.cs'
+      - 'src/**/*.csproj'
+      - '**/Directory.Build.props'
+      - '**/Directory.Build.targets'
+      - '**/Directory.Packages.props'
+      - 'global.json'
+      - 'tools/WorkerApiDocs.cs'
+      - 'docs/api/worker/**'
+      - 'docs/usage/stdio-worker.md'
+      - '.github/workflows/worker_api_docs.yml'
+  push:
+    paths:
+      - 'src/N_m3u8DL-RE.Protocol/**'
+      - 'src/N_m3u8DL-RE/Worker/**'
+      - 'src/N_m3u8DL-RE/CommandLine/CommandInvoker.cs'
+      - 'src/N_m3u8DL-RE/CommandLine/ComplexParamParser.cs'
+      - 'src/N_m3u8DL-RE/CommandLine/ConfigFile.cs'
+      - 'src/N_m3u8DL-RE/CommandLine/MyOption.cs'
+      - 'src/N_m3u8DL-RE/Runtime/OptionNormalizer.cs'
+      - 'src/N_m3u8DL-RE/Runtime/FileTaskOptions.cs'
+      - 'src/N_m3u8DL-RE/Enum/**'
+      - 'src/N_m3u8DL-RE.Common/Enum/EncryptMethod.cs'
+      - 'src/N_m3u8DL-RE.Common/Enum/CustomHlsScope.cs'
+      - 'src/N_m3u8DL-RE.Common/Log/LogLevel.cs'
+      - 'src/N_m3u8DL-RE.Tests/Worker/WorkerApiDocumentationTests.cs'
+      - 'src/**/*.csproj'
+      - '**/Directory.Build.props'
+      - '**/Directory.Build.targets'
+      - '**/Directory.Packages.props'
+      - 'global.json'
+      - 'tools/WorkerApiDocs.cs'
+      - 'docs/api/worker/**'
+      - 'docs/usage/stdio-worker.md'
+      - '.github/workflows/worker_api_docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.300'
+      - name: Check generated API reference
+        run: dotnet run tools/WorkerApiDocs.cs -c Release -- --check
+      - name: Check guide examples
+        run: dotnet test src/N_m3u8DL-RE.Tests/N_m3u8DL-RE.Tests.csproj -c Release -p:PublishAot=false --filter FullyQualifiedName~WorkerApiDocumentationTests --verbosity normal

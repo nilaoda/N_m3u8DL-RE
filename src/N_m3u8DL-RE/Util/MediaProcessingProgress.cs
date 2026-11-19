@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Log;
 using N_m3u8DL_RE.Common.Resource;
@@ -7,6 +8,16 @@ using System.Diagnostics;
 using System.Globalization;
 
 namespace N_m3u8DL_RE.Util;
+
+internal enum MediaProcessingStage
+{
+    Preparing,
+    Decrypting,
+    Subtitles,
+    Merging,
+    Muxing,
+    Finalizing
+}
 
 internal sealed record MediaProgress(double? Fraction = null, long? Bytes = null, long? TotalBytes = null, double? Seconds = null);
 
@@ -19,9 +30,10 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
     private readonly Stopwatch elapsed = new();
     private MediaProgress progress = new();
     private Timer? logTimer;
-    private string stage = "";
+    private string stageLabel = "";
     public ProgressTask DisplayTask { get; private set; } = null!;
     public MediaProgress Progress => Volatile.Read(ref progress);
+    public string Phase { get; private set; } = "preparing";
     public bool Finished { get; private set; }
     public bool Failed { get; private set; }
     public TimeSpan Elapsed => elapsed.Elapsed;
@@ -34,10 +46,23 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
 
     public static MediaProcessingProgress? Get(ProgressTask task) => task.Tag is MediaProcessingProgress { active: true } progress ? progress : null;
 
-    public void Begin(string name, bool logStart = true)
+    public void Begin(MediaProcessingStage processingStage, string? name = null, bool logStart = true)
     {
+        // 执行阶段与显示文本分开，语言和自定义描述不会改变机器事件的含义。
+        var (phase, label) = processingStage switch
+        {
+            MediaProcessingStage.Preparing => ("preparing", ResString.processingPreparing),
+            MediaProcessingStage.Decrypting => ("decrypting", ResString.processingDecrypt),
+            MediaProcessingStage.Subtitles => ("subtitles", ResString.processingSubtitles),
+            MediaProcessingStage.Merging => ("merging", ResString.processingMerge),
+            MediaProcessingStage.Muxing => ("muxing", ResString.processingMux),
+            MediaProcessingStage.Finalizing => ("finalizing", ResString.processingFinishing),
+            _ => throw new ArgumentOutOfRangeException(nameof(processingStage), processingStage, null)
+        };
         Dispose();
-        stage = name;
+        stageLabel = name ?? label;
+        Phase = phase;
+        TaskExecutionContext.Current?.State(Phase);
         Finished = Failed = false;
         Volatile.Write(ref progress, new());
         elapsed.Restart();
@@ -46,23 +71,27 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
         DisplayTask = new ProgressTask(task.Id, description, 100) { IsIndeterminate = true };
         task.Tag = this;
         active = true;
-        task.Description = $"{description} [turquoise4]{Part}{name.EscapeMarkup()}[/]";
+        task.Description = $"{description} [turquoise4]{Part}{stageLabel.EscapeMarkup()}[/]";
         // 短暂的准备/保存阶段只更新进度行；已有开始日志的调用方也不重复打印。
         if (logStart)
-            WriteLog($"{description.RemoveMarkup()} {Part}{name}",
-                plainOutput && name != ResString.processingPreparing && name != ResString.processingFinishing);
+            WriteLog($"{description.RemoveMarkup()} {Part}{stageLabel}",
+                plainOutput && (name != null || processingStage is not (MediaProcessingStage.Preparing or MediaProcessingStage.Finalizing)));
     }
 
     public void Download()
     {
         Dispose();
         active = false;
+        Phase = "downloading";
+        TaskExecutionContext.Current?.State(Phase);
         task.Description = Part == null ? description : $"{description} [turquoise4]{Part}{ResString.processingDownload.EscapeMarkup()}[/]";
     }
 
     public void Report(MediaProgress value)
     {
         Volatile.Write(ref progress, value);
+        TaskExecutionContext.Current?.Observer.Progress(new TrackSnapshot(task.Id.ToString(CultureInfo.InvariantCulture),
+            Phase, Fraction: value.Fraction, ProcessedBytes: value.Bytes, ProcessedSeconds: value.Seconds));
         DisplayTask.IsIndeterminate = value.Fraction == null;
         if (value.Fraction is { } fraction)
             // 工具汇报结束后仍需等待退出码、文件提交和清理，不能提前显示成功。
@@ -100,7 +129,7 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
     private void LogProgress()
     {
         if (!Finished && Get(task) == this)
-            WriteLog($"{description.RemoveMarkup()} {Part}{stage}: {Details(Progress)} ({string.Format(ResString.processingElapsed, Elapsed.ToString(@"hh\:mm\:ss"))})", plainOutput);
+            WriteLog($"{description.RemoveMarkup()} {Part}{stageLabel}: {Details(Progress)} ({string.Format(ResString.processingElapsed, Elapsed.ToString(@"hh\:mm\:ss"))})", plainOutput);
     }
 
     private static void WriteLog(string message, bool display)
@@ -132,7 +161,7 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
         async Task<bool> Run(ProgressTask task)
         {
             using var progress = new MediaProcessingProgress(task);
-            progress.Begin(ResString.processingPreparing);
+            progress.Begin(MediaProcessingStage.Preparing);
             try
             {
                 var success = await action(progress);
@@ -146,7 +175,7 @@ internal sealed class MediaProcessingProgress(ProgressTask task) : IDisposable
             }
         }
         var console = CustomAnsiConsole.Console;
-        if (IsPlainOutput() || Logger.LogLevel == LogLevel.OFF)
+        if (TaskExecutionContext.Current?.IsWorker == true || IsPlainOutput() || Logger.LogLevel == LogLevel.OFF)
             return await Run(new ProgressTask(0, description, 100));
         return await console.Progress().AutoClear(true).Columns(
             new TaskDescriptionColumn(),

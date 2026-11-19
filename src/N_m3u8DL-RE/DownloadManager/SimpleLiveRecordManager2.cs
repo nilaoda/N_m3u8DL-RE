@@ -1,4 +1,5 @@
-﻿using Mp4SubtitleParser;
+﻿using N_m3u8DL_RE.Runtime;
+using Mp4SubtitleParser;
 using N_m3u8DL_RE.Column;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
@@ -38,6 +39,7 @@ internal class SimpleLiveRecordManager2
     List<OutputFile> OutputFiles = [];
     private readonly LiveRecordingCleanup recordingCleanup;
     private Task<bool>? pipeMuxTask;
+    private string? pipeMuxOutput;
     private readonly HashSet<string> reservedOutputPaths = new(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
         ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     DateTime? PublishDateTime;
@@ -87,6 +89,19 @@ internal class SimpleLiveRecordManager2
             var finalOutput = OtherUtil.HandleFileCollision(output, streamSpec, reservedOutputPaths);
             var names = PipeSteamNamesDic.OrderBy(i => i.Key).Select(k => k.Value).ToArray();
             return (names, finalOutput);
+        }
+    }
+
+    private async Task<bool> MuxPipesAsync(string binary, string[] names, string output)
+    {
+        try
+        {
+            return await PipeUtil.StartPipeMuxAsync(binary, names, output);
+        }
+        finally
+        {
+            // 混流进程提前退出时也要释放等待连接或写入的轨道。
+            StopRecording();
         }
     }
 
@@ -268,14 +283,32 @@ internal class SimpleLiveRecordManager2
         bool firstSub = true;
         bool CompleteRecording()
         {
-            if (fileOutputStream != null && !DownloaderConfig.MyOptions.LivePipeMux)
+            if (fileOutputStream == null && TaskExecutionContext.Current?.IsWorker == true &&
+                DownloaderConfig.MyOptions.LivePipeMux && streamSpec.MediaType != MediaType.SUBTITLES &&
+                !DownloadCancellationTokenSource.IsCancellationRequested)
+            {
+                // 没有分片的轨道不会注册管道，其他轨道无法等到混流进程连接。
+                Logger.Error("Live pipe mux could not start because a selected track has no media: " +
+                    streamSpec.ToShortString().RemoveMarkup());
+                StopRecording();
+                return false;
+            }
+            if (!DownloaderConfig.MyOptions.LiveRealTimeMerge)
+                foreach (var result in FileDic.Values)
+                    if (result is { Success: true })
+                        TaskExecutionContext.Current?.AddOutput(result.ActualFilePath);
+            if (fileOutputStream is FileStream file &&
+                (!DownloaderConfig.MyOptions.LivePipeMux || streamSpec.MediaType == MediaType.SUBTITLES))
+                TaskExecutionContext.Current?.AddOutput(file.Name);
+            // 管道模式的字幕仍是产物，但不能单独进入录制后的混流。
+            if (fileOutputStream is FileStream trackFile && !DownloaderConfig.MyOptions.LivePipeMux)
             {
                 lock (lockObj)
                 {
                     OutputFiles.Add(new OutputFile
                     {
                         Index = task.Id,
-                        FilePath = ((FileStream)fileOutputStream).Name,
+                        FilePath = trackFile.Name,
                         LangCode = streamSpec.Language,
                         Description = streamSpec.Name,
                         Mediainfos = mediaInfos,
@@ -791,12 +824,12 @@ internal class SimpleLiveRecordManager2
                             if (mux is { } ready)
                             {
                                 Logger.WarnMarkUp($"{ResString.namedPipeMux} [deepskyblue3]{Path.GetFileName(ready.Output).EscapeMarkup()}[/]");
-                                pipeMuxTask = PipeUtil.StartPipeMuxAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, ready.Names, ready.Output);
+                                pipeMuxOutput = ready.Output;
+                                pipeMuxTask = MuxPipesAsync(DownloaderConfig.MyOptions.FFmpegBinaryPath!, ready.Names, ready.Output);
                             }
 
-                            // Windows only
-                            if (OperatingSystem.IsWindows())
-                                await (fileOutputStream as NamedPipeServerStream)!.WaitForConnectionAsync();
+                            if (fileOutputStream is NamedPipeServerStream pipe)
+                                await pipe.WaitForConnectionAsync(DownloadCancellationTokenSource.Token);
                         }
                     }
 
@@ -817,8 +850,11 @@ internal class SimpleLiveRecordManager2
                             using (var inputStream = File.OpenRead(inputFilePath))
                             {
                                 var startPosition = inputStream.Position;
-                                inputStream.CopyTo(fileOutputStream);
-                                // CopyTo 成功后，用输入流的位置差累计实际写出的字节数。
+                                if (fileOutputStream is NamedPipeServerStream)
+                                    await inputStream.CopyToAsync(fileOutputStream, DownloadCancellationTokenSource.Token);
+                                else
+                                    inputStream.CopyTo(fileOutputStream);
+                                // 复制成功后，用输入流的位置差累计实际写出的字节数。
                                 mergedBytesWritten += inputStream.Position - startPosition;
                             }
                         }
@@ -1132,8 +1168,12 @@ internal class SimpleLiveRecordManager2
             args.Cancel = true;
             StopRecording();
         };
-        Console.CancelKeyPress += handler;
-        using var registration = cancellationToken.Register(() => StopRecording());
+        var context = TaskExecutionContext.Current;
+        if (context?.IsWorker != true)
+            Console.CancelKeyPress += handler;
+        using var operation = OperationCancellation.Link(cancellationToken);
+        using var registration = operation.Token.Register(() => StopRecording());
+        using var stopRegistration = context?.Control.StopToken.Register(() => StopRecording(cancelDownloads: false)) ?? default;
         try
         {
             return await StartRecordCoreAsync();
@@ -1141,7 +1181,8 @@ internal class SimpleLiveRecordManager2
         finally
         {
             StopRecording();
-            Console.CancelKeyPress -= handler;
+            if (context?.IsWorker != true)
+                Console.CancelKeyPress -= handler;
         }
     }
 
@@ -1214,7 +1255,7 @@ internal class SimpleLiveRecordManager2
         }
         progress.Columns(progressColumns);
 
-        await progress.StartAsync(async ctx =>
+        await ProgressSession.RunAsync(progress, SpeedContainerDic, async ctx =>
         {
             // 创建任务
             var dic = SelectedSteams.Select(item =>
@@ -1288,7 +1329,7 @@ internal class SimpleLiveRecordManager2
                 await producerTask;
                 await idleTask;
             }
-        });
+        }, RecordedDurDic);
 
         var success = !fatalError && Results.Values.All(v => v == true);
 
@@ -1300,6 +1341,8 @@ internal class SimpleLiveRecordManager2
                 var muxSuccess = await pipeMuxTask;
                 if (!muxSuccess)
                     Logger.Error("Mux failed");
+                if (muxSuccess && pipeMuxOutput != null)
+                    TaskExecutionContext.Current?.AddOutput(pipeMuxOutput);
                 success &= muxSuccess;
             }
             catch (Exception ex)
@@ -1344,7 +1387,7 @@ internal class SimpleLiveRecordManager2
                     DownloaderConfig.MyOptions.FFmpegBinaryPath, CancellationToken.None) : null;
             var muxSuccess = await MediaProcessingProgress.RunAsync(ResString.processingMux, async processing =>
             {
-                processing.Begin(ResString.processingMux, logStart: false);
+                processing.Begin(MediaProcessingStage.Muxing, logStart: false);
                 var exitCode = await MergeUtil.MuxInputsAsync(
                     DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge ? DownloaderConfig.MyOptions.MkvmergeBinaryPath! : DownloaderConfig.MyOptions.FFmpegBinaryPath!,
                     OutputFiles.ToArray(), outPath + ext, useMkvmerge: DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge,
@@ -1352,7 +1395,7 @@ internal class SimpleLiveRecordManager2
                 var result = exitCode == 0 || DownloaderConfig.MyOptions.MuxOptions.UseMkvmerge && exitCode == 1;
                 if (result)
                 {
-                    processing.Begin(ResString.processingFinishing);
+                    processing.Begin(MediaProcessingStage.Finalizing);
                     processing.Report(new(Bytes: new FileInfo(outPath + ext).Length));
                 }
                 // 完成后删除本次录制的各轨道文件，保留外部导入源
@@ -1372,6 +1415,8 @@ internal class SimpleLiveRecordManager2
                     Logger.WarnMarkUp($"Rename to [grey]{Path.GetFileName(newPath).EscapeMarkup()}[/]");
                     File.Move(outPath + ext, newPath);
                 }
+                if (result)
+                    TaskExecutionContext.Current?.AddOutput(File.Exists(outPath + ext) ? outPath + ext : newPath);
                 return result;
             });
             success &= muxSuccess;

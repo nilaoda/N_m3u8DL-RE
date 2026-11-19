@@ -489,3 +489,10 @@ N_m3u8DL-RE "URL" --live-catchup "2026-10-10T21:00:00+08:00" --live-record-limit
 ## 赞助
 
 <a href="https://www.buymeacoffee.com/nilaoda" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+
+## 开发文档与程序接入
+
+GUI、WebUI 等客户端开发者可通过 `N_m3u8DL-RE worker --stdio` 接入下载器。Worker 每个进程执行一个任务，通过 JSON 消息提供实时进度、轨道与清晰度选择、取消、直播停止及文件处理能力，欢迎 GUI 项目适配 Worker 模式。
+
+接入请参考 [stdio Worker 使用指南](docs/usage/stdio-worker.md)、[Worker API](docs/api/worker/README.md) 和 [Python 示例](docs/examples/README.md)。项目组织与其他说明见 [项目文档](docs/README.md)。

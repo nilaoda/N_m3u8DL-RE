@@ -1,3 +1,4 @@
+using N_m3u8DL_RE.Runtime;
 using N_m3u8DL_RE.CommandLine;
 using N_m3u8DL_RE.Parser;
 using N_m3u8DL_RE.Parser.Config;
@@ -21,13 +22,13 @@ public class LiveRecordingCleanupTests
             extractor.RawFiles["meta.json"] = "new metadata";
             extractor.RawFiles["raw.m3u8"] = "new manifest";
             var options = new MyOption();
-            Assert.Empty(await Program.WriteRawFilesAsync(options, extractor, root));
+            Assert.Empty(await DownloadTaskRunner.WriteRawFilesAsync(options, extractor, root));
             Assert.False(File.Exists(Path.Combine(root, "raw.m3u8")));
             options.WriteMetaJson = true;
-            var created = await Program.WriteRawFilesAsync(options, extractor, root);
+            var created = await DownloadTaskRunner.WriteRawFilesAsync(options, extractor, root);
             Assert.Equal(Path.Combine(root, "raw.m3u8"), Assert.Single(created));
             Assert.Equal("new manifest", File.ReadAllText(created[0]));
-            Assert.Empty(await Program.WriteRawFilesAsync(options, extractor, root));
+            Assert.Empty(await DownloadTaskRunner.WriteRawFilesAsync(options, extractor, root));
 
             var cleanup = new LiveRecordingCleanup(root);
             foreach (var file in created) cleanup.DeleteFile(file);
