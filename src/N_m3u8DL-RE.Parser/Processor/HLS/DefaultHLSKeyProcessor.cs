@@ -30,7 +30,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
     {
         var iv = ParserUtil.GetAttribute(keyLine, "IV");
         var method = ParserUtil.GetAttribute(keyLine, "METHOD");
-        var uri = ParserUtil.GetAttribute(keyLine, "URI");
+        var uri = ParserUtil.GetAttribute(keyLine, "URI") ?? string.Empty;
 
         Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
@@ -61,15 +61,15 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             }
             else if (uri.ToLower().StartsWith("base64:"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                encryptInfo.Key = DecodeInlineKey(uri[7..], isAes128);
             }
             else if (uri.ToLower().StartsWith("data:;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[13..]);
+                encryptInfo.Key = DecodeInlineKey(uri[13..], isAes128);
             }
             else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[23..]);
+                encryptInfo.Key = DecodeInlineKey(uri[23..], isAes128);
             }
             else if (File.Exists(uri))
             {
@@ -111,8 +111,9 @@ public class DefaultHLSKeyProcessor : KeyProcessor
                 KeyCache[cacheKey] = encryptInfo.Key!;
             }
             keyDone:;
+            // 缺少 key 时同样无法解密，需在下载分片前终止。
             if (isAes128)
-                encryptInfo.Key = NormalizeAes128Key(encryptInfo.Key);
+                encryptInfo.Key = NormalizeAes128Key(encryptInfo.Key) ?? throw new InvalidHLSKeyException(ResString.hlsKeyMissing);
         }
         // 直播刷新保留网络异常交给录制器重试，避免把新 key 下载失败误判为未知加密。
         // 无效的 AES-128 key 无法解密任何分片，必须在下载分片前终止，不能当作未知加密继续下载。
@@ -149,6 +150,18 @@ public class DefaultHLSKeyProcessor : KeyProcessor
                 return HexUtil.HexToBytes(base64Hex);
         }
         throw new InvalidHLSKeyException(string.Format(ResString.hlsKeyInvalidLength, key.Length));
+    }
+
+    private static byte[] DecodeInlineKey(string base64, bool isAes128)
+    {
+        try
+        {
+            return Convert.FromBase64String(base64);
+        }
+        catch (FormatException) when (isAes128)
+        {
+            throw new InvalidHLSKeyException(ResString.hlsKeyInvalidInline);
+        }
     }
 
     /// <summary>

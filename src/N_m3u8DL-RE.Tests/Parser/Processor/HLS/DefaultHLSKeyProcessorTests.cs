@@ -114,6 +114,29 @@ public class DefaultHLSKeyProcessorTests
         }
     }
 
+    [Theory]
+    [InlineData("#EXT-X-KEY:METHOD=AES-128,IV=0x01", false)]
+    [InlineData("#EXT-X-KEY:METHOD=AES-128,IV=0x01", true)]
+    [InlineData("#EXT-X-KEY:METHOD=AES-128,URI=\"base64:!\",IV=0x01", false)]
+    [InlineData("#EXT-X-KEY:METHOD=AES-128,URI=\"base64:!\",IV=0x01", true)]
+    [InlineData("#EXT-X-KEY:METHOD=AES-128,URI=\"data:;base64,!\",IV=0x01", false)]
+    public void Process_RejectsMissingOrMalformedInlineAes128Key(string keyLine, bool customMethod)
+    {
+        // 缺少 URI 或内联 Base64 无效时同样无法解密，必须在解析清单时终止。
+        var config = new ParserConfig { CustomMethod = customMethod ? EncryptMethod.AES_128 : null };
+        Should.Throw<InvalidHLSKeyException>(() =>
+            new DefaultHLSKeyProcessor().Process(keyLine, "https://example.com/playlist.m3u8", string.Empty, config));
+    }
+
+    [Fact]
+    public void Process_DecodesValidInlineBase64Key()
+    {
+        var info = new DefaultHLSKeyProcessor().Process(
+            "#EXT-X-KEY:METHOD=AES-128,URI=\"base64:oKGio6SlpqeoqaqrrK2urw==\",IV=0x01",
+            "https://example.com/playlist.m3u8", string.Empty, new ParserConfig());
+        info.Key.ShouldBe(Aes128Key);
+    }
+
     private static byte[] InvalidKey(int length) =>
         Enumerable.Range(0, length).Select(i => (byte)(i * 37 % 256)).ToArray();
 

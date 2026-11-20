@@ -2142,6 +2142,18 @@ internal static class StaticText
             zhTW: "AES-128 金鑰應為 16 位元組，實際為 {0} 位元組，金鑰可能經過二次加密，可使用 --custom-hls-key 指定",
             enUS: "AES-128 key must be 16 bytes but got {0} bytes; the key may be wrapped or encrypted, use --custom-hls-key to supply it"
         ),
+        ["hlsKeyMissing"] = new TextContainer
+        (
+            zhCN: "AES-128 加密缺少密钥：#EXT-X-KEY 未提供 URI，可使用 --custom-hls-key 指定",
+            zhTW: "AES-128 加密缺少金鑰：#EXT-X-KEY 未提供 URI，可使用 --custom-hls-key 指定",
+            enUS: "AES-128 key is missing: #EXT-X-KEY has no URI, use --custom-hls-key to supply it"
+        ),
+        ["hlsKeyInvalidInline"] = new TextContainer
+        (
+            zhCN: "无法解码 #EXT-X-KEY 中的内联 AES-128 密钥，可使用 --custom-hls-key 指定",
+            zhTW: "無法解碼 #EXT-X-KEY 中的內嵌 AES-128 金鑰，可使用 --custom-hls-key 指定",
+            enUS: "Cannot decode the inline AES-128 key in #EXT-X-KEY, use --custom-hls-key to supply it"
+        ),
         ["decryptionFailed"] = new TextContainer
         (
             zhCN: "解密失败",
