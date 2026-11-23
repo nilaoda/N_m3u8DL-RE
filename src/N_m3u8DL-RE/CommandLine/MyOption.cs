@@ -322,4 +322,12 @@ internal class MyOption
     /// See: <see cref="CommandInvoker.LiveFixVttByAudio"/>.
     /// </summary>
     public bool LiveFixVttByAudio { get; set; }
+    /// <summary>
+    /// See: <see cref="CommandInvoker.CustomTXVDRMKey"/>.
+    /// </summary>
+    public byte[]? CustomTXVDRMKey { get; set; }
+    /// <summary>
+    /// See: <see cref="CommandInvoker.CustomTXVDRMIv"/>.
+    /// </summary>
+    public byte[]? CustomTXVDRMIv { get; set; }
 }

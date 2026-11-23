@@ -115,6 +115,8 @@ internal static partial class CommandInvoker
     private static readonly Option<byte[]?> CustomHLSKey = new Option<byte[]?>("--custom-hls-key") { HelpName = "FILE|HEX|BASE64", Arity = ArgumentArity.ExactlyOne, CustomParser = ParseHLSCustomKey }.WithDescription(() => ResString.cmd_customHLSKey);
     private static readonly Option<byte[]?> CustomHLSIv = new Option<byte[]?>(name: "--custom-hls-iv") { HelpName = "FILE|HEX|BASE64", Arity = ArgumentArity.ExactlyOne, CustomParser = ParseHLSCustomKey }.WithDescription(() => ResString.cmd_customHLSIv);
     private static readonly Option<CustomHlsScope> CustomHLSScope = new Option<CustomHlsScope>("--custom-hls-scope") { HelpName = "SCOPE", DefaultValueFactory = _ => CustomHlsScope.ALL }.WithDescription(() => ResString.cmd_customHLSScope);
+    private static readonly Option<byte[]?> CustomTXVDRMKey = new Option<byte[]?>("--custom-txvdrm-key") { HelpName = "FILE|HEX|BASE64", Arity = ArgumentArity.ExactlyOne, CustomParser = ParseHLSCustomKey }.WithDescription(() => ResString.cmd_customTXVDRMKey);
+    private static readonly Option<byte[]?> CustomTXVDRMIv = new Option<byte[]?>(name: "--custom-txvdrm-iv") { HelpName = "FILE|HEX|BASE64", Arity = ArgumentArity.ExactlyOne, CustomParser = ParseHLSCustomKey }.WithDescription(() => ResString.cmd_customTXVDRMIv);
     private static readonly Option<string[]?> Keys = new Option<string[]?>("--key") { Arity = ArgumentArity.OneOrMore, AllowMultipleArgumentsPerToken = false, CustomParser = ParseCustomKeys }.WithDescription(() => ResString.cmd_keys);
 
     // 任务开始时间
@@ -747,6 +749,9 @@ internal static partial class CommandInvoker
         if (result.HasOption(CustomHLSMethod)) option.CustomHLSMethod = result.GetValue(CustomHLSMethod);
         if (result.HasOption(CustomHLSKey)) option.CustomHLSKey = result.GetValue(CustomHLSKey);
         if (result.HasOption(CustomHLSIv)) option.CustomHLSIv = result.GetValue(CustomHLSIv);
+        if (result.HasOption(CustomTXVDRMKey)) option.CustomTXVDRMKey = result.GetValue(CustomTXVDRMKey);
+        if (result.HasOption(CustomTXVDRMIv)) option.CustomTXVDRMIv = result.GetValue(CustomTXVDRMIv);
+
         option.CustomHLSScope = result.GetValue(CustomHLSScope);
 
         var parsedHeaders = result.GetValue(Headers);
@@ -807,7 +812,8 @@ internal static partial class CommandInvoker
             MuxAfterDone,
             CustomHLSMethod, CustomHLSKey, CustomHLSIv, CustomHLSScope, UseSystemProxy, CustomProxy, NetworkInterface, CustomRange, TaskStartAt,
             LivePerformAsVod, LiveRealTimeMerge, LiveKeepSegments, LivePipeMux, LiveFixVttByAudio, LiveRecordLimit, LiveWaitTime, LiveIdleTimeout, LiveTakeCount, LiveCatchupOption,
-            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp, GenerateCompletion
+            MuxImports, VideoFilter, AudioFilter, SubtitleFilter, DropVideoFilter, DropAudioFilter, DropSubtitleFilter, AdKeywords, VodSelectParts, VodListParts, VodDropParts, DisableUpdateCheck, AllowHlsMultiExtMap, MoreHelp, GenerateCompletion,
+            CustomTXVDRMKey, CustomTXVDRMIv,
         };
         // 根命令仍可直接下载；参数边界解析时不能强制要求子命令。
         root.SetAction(_ => { });

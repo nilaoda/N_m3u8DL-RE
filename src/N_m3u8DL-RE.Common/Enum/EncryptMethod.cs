@@ -9,5 +9,6 @@ public enum EncryptMethod
     SAMPLE_AES_CTR,
     CENC,
     CHACHA20,
+    TXVDRM,
     UNKNOWN
 }

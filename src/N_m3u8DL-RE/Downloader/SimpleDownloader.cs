@@ -57,6 +57,16 @@ internal class SimpleDownloader : IDownloader
                     await File.WriteAllBytesAsync(dResult.ActualFilePath, decrypted);
                     break;
                 }
+                case EncryptMethod.TXVDRM:
+                {
+                    DecrypterTXV.Decrypt(
+                        dResult.ActualFilePath,
+                        segment.EncryptInfo.Key ?? DownloaderConfig.MyOptions.CustomHLSKey,
+                        segment.EncryptInfo.IV ?? DownloaderConfig.MyOptions.CustomHLSIv,
+                        DownloaderConfig.MyOptions.CustomTXVDRMKey,
+                        DownloaderConfig.MyOptions.CustomTXVDRMIv);
+                    break;
+                }
                 case EncryptMethod.SAMPLE_AES_CTR:
                     // throw new NotSupportedException("SAMPLE-AES-CTR");
                     break;
