@@ -232,6 +232,30 @@ internal static class StaticText
             zhTW: "處理失敗",
             enUS: "Processing failed"
         ),
+        ["hlsAacClockScan"] = new TextContainer
+        (
+            zhCN: "封装前检查 AAC 音频时间戳",
+            zhTW: "封裝前檢查 AAC 音訊時間戳記",
+            enUS: "Checking AAC timestamps before muxing"
+        ),
+        ["hlsAacScanUnavailable"] = new TextContainer
+        (
+            zhCN: "当前 FFmpeg 缺少扫描 AAC 时间戳所需的功能，将按原音轨封装。",
+            zhTW: "目前的 FFmpeg 缺少掃描 AAC 時間戳所需的功能，將按原音軌封裝。",
+            enUS: "This FFmpeg build lacks AAC timestamp scanning support. Muxing the original audio."
+        ),
+        ["hlsAacGapsFilled"] = new TextContainer
+        (
+            zhCN: "已补入 {0} 个静音 AAC 帧，保留了原音视频帧。",
+            zhTW: "已補入 {0} 個靜音 AAC 幀，保留了原音視訊幀。",
+            enUS: "Filled gaps with {0} silent AAC frames. Original audio and video frames were preserved."
+        ),
+        ["hlsAacRepairFailed"] = new TextContainer
+        (
+            zhCN: "无法从已下载分片准备 AAC 音轨：{0}",
+            zhTW: "無法從已下載分片準備 AAC 音軌：{0}",
+            enUS: "Unable to prepare the AAC track from the downloaded segments: {0}"
+        ),
         ["processingFinishing"] = new TextContainer
         (
             zhCN: "保存文件",

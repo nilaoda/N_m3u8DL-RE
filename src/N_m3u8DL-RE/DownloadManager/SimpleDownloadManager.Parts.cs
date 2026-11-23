@@ -30,6 +30,8 @@ internal partial class SimpleDownloadManager
         var logMessages = new HashSet<string>();
         var cache = new VodInitCache(Path.Combine(partsDir, "_init-cache"));
         var sharedInitInfoCache = new VodInitInfoCache(DownloaderConfig.MyOptions.FFmpegBinaryPath!);
+        var copySingle = parts.Count == 1 && SelectedSteams.Where(s => s.MediaType != MediaType.SUBTITLES)
+            .All(CanUseSinglePartOutput);
 
         for (var i = 0; i < parts.Count; i++)
         {
@@ -73,7 +75,7 @@ internal partial class SimpleDownloadManager
             manager.hlsMediaOrigins = hlsMediaOrigins;
             manager.hlsMediaReady = hlsMediaReady;
             manager.hlsSubtitleOnlyCuts = hlsSubtitleOnlyCuts;
-            if (!await manager.DownloadStreamAsync(partStream, task, speed, isPart: true))
+            if (!await manager.DownloadStreamAsync(partStream, task, speed, isPart: true, finalMerge: copySingle))
                 return false;
             if (options.SkipMerge)
                 continue;
@@ -122,8 +124,6 @@ internal partial class SimpleDownloadManager
 
         // 单段且没有裁剪/输出偏移时，子下载器的合并结果就是最终文件。
         // 转封装时，若其它媒体轨道需要保留公共时间轴，本轨道也需要完成时间轴归一化。
-        var copySingle = outputs.Count == 1 && SelectedSteams.Where(s => s.MediaType != MediaType.SUBTITLES)
-            .All(CanUseSinglePartOutput);
         bool success;
         if (subtitle)
         {
@@ -151,7 +151,8 @@ internal partial class SimpleDownloadManager
         {
             Logger.InfoMarkUp($"[grey]{(parts.Count > 1 ? string.Format(ResString.vodPartsConcat, parts.Count) : ResString.ffmpegMerge)}[/]");
             success = MergeUtil.ConcatMediaParts(DownloaderConfig.MyOptions.FFmpegBinaryPath!,
-                outputs.Select(o => o.FilePath).ToArray(), parts, outputPath, processing, first.Mediainfos);
+                outputs.Select(o => o.FilePath).ToArray(), parts, outputPath, processing, first.Mediainfos,
+                checkAacClock: IsHlsTsVod(stream));
         }
         if (!success)
         {

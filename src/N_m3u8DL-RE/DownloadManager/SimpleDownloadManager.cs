@@ -139,7 +139,15 @@ internal partial class SimpleDownloadManager
         return true;
     }
 
-    private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer, bool isPart = false)
+    private bool IsHlsTsVod(StreamSpec stream) =>
+        StreamExtractor.ExtractorType == ExtractorType.HLS && !DownloaderConfig.MyOptions.BinaryMerge &&
+        stream.MediaType != MediaType.SUBTITLES && stream.Extension is null or "ts" or "aac" &&
+        stream.Playlist is { } playlist && playlist.MediaParts.All(part => part.MediaInit == null &&
+            part.MediaSegments.All(segment => segment.EncryptInfo.Method is EncryptMethod.NONE or EncryptMethod.AES_128
+                or EncryptMethod.AES_128_ECB or EncryptMethod.CHACHA20));
+
+    private async Task<bool> DownloadStreamAsync(StreamSpec streamSpec, ProgressTask task, SpeedContainer speedContainer,
+        bool isPart = false, bool finalMerge = true)
     {
         // HLS 文本字幕可能使用连续 PTS，也可能在 discontinuity 重启。
         // 有共享媒体原点或纯字幕裁剪时按 part 映射；未裁剪的纯字幕沿用原有逐片修复流程。
@@ -807,7 +815,8 @@ internal partial class SimpleDownloadManager
                 }
                 processing?.Begin(ResString.processingMerge, logStart: false);
                 mergeSuccess = MergeUtil.MergeByFFmpeg(DownloaderConfig.MyOptions.FFmpegBinaryPath!, files, Path.ChangeExtension(ffOut, null), ext, useAACFilter, writeDate: !DownloaderConfig.MyOptions.NoDateInfo, concatMode: concatMode,
-                    progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration, mediaInfos: mediaInfos, preserveInitialNonKeyFrames: isPart);
+                    progress: processing == null ? null : processing.Report, duration: streamSpec.Playlist.TotalDuration,
+                    mediaInfos: mediaInfos, preserveInitialNonKeyFrames: isPart, checkAacClock: finalMerge && IsHlsTsVod(streamSpec));
                 if (mergeSuccess) output = ffOut;
             }
         }
