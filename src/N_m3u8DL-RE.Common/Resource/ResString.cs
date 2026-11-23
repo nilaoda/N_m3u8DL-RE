@@ -269,6 +269,9 @@ public static class ResString
     public static string readingInfo => GetText("readingInfo");
     public static string searchKey => GetText("searchKey");
     public static string decryptionFailed => GetText("decryptionFailed");
+    public static string hlsKeyInvalidLength => GetText("hlsKeyInvalidLength");
+    public static string hlsKeyMissing => GetText("hlsKeyMissing");
+    public static string hlsKeyInvalidInline => GetText("hlsKeyInvalidInline");
     public static string segmentCountCheckNotPass => GetText("segmentCountCheckNotPass");
     public static string selectedStream => GetText("selectedStream");
     public static string startDownloading => GetText("startDownloading");

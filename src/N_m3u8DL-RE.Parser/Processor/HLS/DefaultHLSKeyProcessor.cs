@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text;
 using N_m3u8DL_RE.Common.Entity;
 using N_m3u8DL_RE.Common.Enum;
 using N_m3u8DL_RE.Common.Log;
@@ -29,7 +30,7 @@ public class DefaultHLSKeyProcessor : KeyProcessor
     {
         var iv = ParserUtil.GetAttribute(keyLine, "IV");
         var method = ParserUtil.GetAttribute(keyLine, "METHOD");
-        var uri = ParserUtil.GetAttribute(keyLine, "URI");
+        var uri = ParserUtil.GetAttribute(keyLine, "URI") ?? string.Empty;
 
         Logger.Debug("METHOD:{},URI:{},IV:{}", method, uri, iv);
 
@@ -49,6 +50,8 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             encryptInfo.IV = parserConfig.CustomeIV;
         }
 
+        var isAes128 = (parserConfig.CustomMethod ?? encryptInfo.Method) is EncryptMethod.AES_128 or EncryptMethod.AES_128_ECB;
+
         // KEY
         try
         {
@@ -58,15 +61,15 @@ public class DefaultHLSKeyProcessor : KeyProcessor
             }
             else if (uri.ToLower().StartsWith("base64:"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[7..]);
+                encryptInfo.Key = DecodeInlineKey(uri[7..], isAes128);
             }
             else if (uri.ToLower().StartsWith("data:;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[13..]);
+                encryptInfo.Key = DecodeInlineKey(uri[13..], isAes128);
             }
             else if (uri.ToLower().StartsWith("data:text/plain;base64,"))
             {
-                encryptInfo.Key = Convert.FromBase64String(uri[23..]);
+                encryptInfo.Key = DecodeInlineKey(uri[23..], isAes128);
             }
             else if (File.Exists(uri))
             {
@@ -84,12 +87,11 @@ public class DefaultHLSKeyProcessor : KeyProcessor
 
                 // 直播 key 失败后重刷最新清单，避免在一个旧 key 上重试而阻塞其他轨道刷新。
                 var retryCount = liveRefresh ? 0 : parserConfig.KeyRetryCount;
+                byte[] bytes;
                 getHttpKey:
                 try
                 {
-                    var bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers, cancellationToken, requestTimeout).GetAwaiter().GetResult();
-                    KeyCache[cacheKey] = bytes;
-                    encryptInfo.Key = bytes;
+                    bytes = HTTPUtil.GetBytesAsync(segUrl, parserConfig.Headers, cancellationToken, requestTimeout).GetAwaiter().GetResult();
                 }
                 catch (Exception _ex) when (!_ex.Message.Contains("scheme is not supported."))
                 {
@@ -104,12 +106,19 @@ public class DefaultHLSKeyProcessor : KeyProcessor
                     }
                     throw;
                 }
+                // 校验通过后再缓存，避免无效 key 被后续清单复用。
+                encryptInfo.Key = isAes128 ? NormalizeAes128Key(bytes) : bytes;
+                KeyCache[cacheKey] = encryptInfo.Key!;
             }
             keyDone:;
+            // 缺少 key 时同样无法解密，需在下载分片前终止。
+            if (isAes128)
+                encryptInfo.Key = NormalizeAes128Key(encryptInfo.Key) ?? throw new InvalidHLSKeyException(ResString.hlsKeyMissing);
         }
         // 直播刷新保留网络异常交给录制器重试，避免把新 key 下载失败误判为未知加密。
-        catch (Exception ex) when (!liveRefresh ||
-            (!RetryUtil.IsTransientNetworkError(ex) && ex is not HttpRequestException))
+        // 无效的 AES-128 key 无法解密任何分片，必须在下载分片前终止，不能当作未知加密继续下载。
+        catch (Exception ex) when (ex is not InvalidHLSKeyException && (!liveRefresh ||
+            (!RetryUtil.IsTransientNetworkError(ex) && ex is not HttpRequestException)))
         {
             Logger.Error(ResString.cmd_loadKeyFailed + ": " + ex.Message);
             encryptInfo.Method = EncryptMethod.UNKNOWN;
@@ -122,6 +131,37 @@ public class DefaultHLSKeyProcessor : KeyProcessor
         Logger.Warn("METHOD changed from {} to {}", method, encryptInfo.Method);
 
         return encryptInfo;
+    }
+
+    /// <summary>
+    /// AES-128 密钥必须为 16 字节。部分服务器以 HEX 或 Base64 文本返回密钥，这里转换为原始字节；
+    /// 其它长度（如二次加密的密钥）提前报错，避免下载开始后在解密分片时崩溃。
+    /// </summary>
+    internal static byte[]? NormalizeAes128Key(byte[]? key)
+    {
+        if (key == null || key.Length == 16)
+            return key;
+        if (key.Length <= 64 && key.All(b => b is >= 0x20 and < 0x7F or (byte)'\r' or (byte)'\n' or (byte)'\t'))
+        {
+            var text = Encoding.ASCII.GetString(key).Trim();
+            if (HexUtil.TryParseHexString(text, out var hexKey) && hexKey!.Length == 16)
+                return hexKey;
+            if (HexUtil.TryParseBase64(text, out var base64Hex) && base64Hex!.Length == 32)
+                return HexUtil.HexToBytes(base64Hex);
+        }
+        throw new InvalidHLSKeyException(string.Format(ResString.hlsKeyInvalidLength, key.Length));
+    }
+
+    private static byte[] DecodeInlineKey(string base64, bool isAes128)
+    {
+        try
+        {
+            return Convert.FromBase64String(base64);
+        }
+        catch (FormatException) when (isAes128)
+        {
+            throw new InvalidHLSKeyException(ResString.hlsKeyInvalidInline);
+        }
     }
 
     /// <summary>
@@ -140,3 +180,5 @@ public class DefaultHLSKeyProcessor : KeyProcessor
         return url;
     }
 }
+
+public sealed class InvalidHLSKeyException(string message) : Exception(message);
